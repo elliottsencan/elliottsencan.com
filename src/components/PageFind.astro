@@ -1,0 +1,171 @@
+---
+import Search from "astro-pagefind/components/Search";
+---
+
+<aside data-pagefind-ignore>
+  <div
+    transition:persist
+    id="backdrop"
+    class="pointer-events-none fixed inset-0 z-50 overflow-y-auto bg-gray-500/25 p-4 opacity-0 transition-opacity duration-300 ease-out sm:p-6 md:p-20"
+  >
+    <div
+      id="pagefind-container"
+      class="mx-auto max-w-2xl scale-95 transform overflow-hidden rounded-xl bg-white opacity-0 shadow-2xl ring-1 ring-black/5 transition-all duration-200 ease-in dark:bg-neutral-900 dark:ring-white/10"
+    >
+      <Search
+        id="search"
+        className="pagefind-ui"
+        uiOptions={{
+          showImages: false,
+          excerptLength: 15,
+          resetStyles: false,
+        }}
+      />
+    </div>
+  </div>
+</aside>
+
+<script is:inline>
+  (function () {
+    var isMac =
+      navigator.platform?.toUpperCase().startsWith("MAC") ||
+      navigator.userAgentData?.platform?.toUpperCase().startsWith("MAC") ||
+      false;
+    var el = document.getElementById("search-shortcut");
+    if (el) el.textContent = isMac ? "\u2318K" : "Ctrl+K";
+  })();
+</script>
+
+<script is:inline>
+  var magnifyingGlass = document.getElementById("magnifying-glass");
+  var backdrop = document.getElementById("backdrop");
+  var pagefindContainer = document.getElementById("pagefind-container");
+
+  function openPagefind() {
+    var searchDiv = document.getElementById("search");
+    var search = searchDiv.querySelector("input");
+    setTimeout(function () {
+      search.focus();
+    }, 0);
+    backdrop?.classList.remove("opacity-0", "pointer-events-none");
+    backdrop?.classList.add("opacity-100", "pointer-events-auto");
+    pagefindContainer?.classList.remove("scale-95", "opacity-0");
+    pagefindContainer?.classList.add("scale-100", "opacity-100");
+  }
+
+  function closePagefind() {
+    var search = document.getElementById("search");
+    search.value = "";
+    pagefindContainer?.classList.add("scale-95", "opacity-0");
+    pagefindContainer?.classList.remove("scale-100", "opacity-100");
+    backdrop?.classList.add("opacity-0", "pointer-events-none");
+    backdrop?.classList.remove("opacity-100", "pointer-events-auto");
+  }
+
+  // open pagefind
+  magnifyingGlass?.addEventListener("click", function () {
+    openPagefind();
+  });
+
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "/") {
+      e.preventDefault();
+      openPagefind();
+    } else if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+      e.preventDefault();
+      openPagefind();
+    }
+  });
+
+  // close pagefind
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") {
+      closePagefind();
+    }
+  });
+
+  // close pagefind when searched result(link) clicked
+  document.addEventListener("click", function (event) {
+    if (event.target.classList.contains("pagefind-ui__result-link")) {
+      closePagefind();
+    }
+  });
+
+  backdrop?.addEventListener("click", function (event) {
+    if (!event.target.closest("#pagefind-container")) {
+      closePagefind();
+    }
+  });
+
+  // prevent form submission
+  var form = document.getElementById("form");
+  form?.addEventListener("submit", function (event) {
+    event.preventDefault();
+  });
+</script>
+
+<style is:global>
+  :root {
+    --pagefind-ui-scale: 0.8;
+    --pagefind-ui-border-width: 0;
+    --pagefind-ui-border-radius: 8px;
+    --pagefind-ui-font: "Satoshi", sans-serif;
+    --pagefind-ui-primary: #111827;
+    --pagefind-ui-text: #374151;
+    --pagefind-ui-background: transparent;
+    --pagefind-ui-border: transparent;
+    --pagefind-ui-tag: #f3f4f6;
+  }
+
+  .dark {
+    --pagefind-ui-primary: #d4d4d4;
+    --pagefind-ui-text: #d4d4d4;
+    --pagefind-ui-background: transparent;
+    --pagefind-ui-border: transparent;
+  }
+
+  #search .pagefind-ui__search-input {
+    font-weight: normal;
+    height: 3rem;
+    padding-left: 2.75rem;
+    background-color: transparent;
+    border: none;
+    border-bottom: 1px solid #e5e7eb;
+    border-radius: 0;
+    outline: none;
+    font-size: 0.875rem;
+  }
+
+  .dark #search .pagefind-ui__search-input {
+    border-bottom-color: #374151;
+  }
+
+  #search .pagefind-ui__search-clear {
+    top: calc(50% - 12px);
+  }
+
+  #search .pagefind-ui__form::before {
+    top: calc(1.5rem - 9px);
+    left: 1rem;
+    opacity: 0.4;
+  }
+
+  #search .pagefind-ui__results-area {
+    padding: 0.5rem 1rem 1rem;
+    max-height: 20rem;
+    overflow-y: auto;
+  }
+
+  #search p {
+    font-weight: normal;
+  }
+
+  #search .pagefind-ui__result-title {
+    font-weight: 600;
+  }
+
+  #search .pagefind-ui__message {
+    padding: 0.5rem 1rem;
+    padding-bottom: 0.75rem;
+  }
+</style>

@@ -1,0 +1,105 @@
+---
+import { type CollectionEntry, getCollection, render } from "astro:content";
+import BackToPrevious from "@components/BackToPrevious.astro";
+import Container from "@components/Container.astro";
+import FormattedDate from "@components/FormattedDate.astro";
+import Link from "@components/Link.astro";
+import TableOfContents from "@components/TableOfContents.astro";
+import Layout from "@layouts/Layout.astro";
+import { readingTime } from "@lib/utils";
+
+export async function getStaticPaths() {
+  const projects = (await getCollection("projects"))
+    .filter((post) => !post.data.draft)
+    .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+  return projects.map((project) => ({
+    params: { id: project.id },
+    props: project,
+  }));
+}
+type Props = CollectionEntry<"projects">;
+
+const project = Astro.props;
+const { Content, headings } = await render(project);
+
+const statusColors: Record<string, string> = {
+  active: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
+  archived: "bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400",
+  killed: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
+};
+---
+
+<Layout title={project.data.title} description={project.data.description}>
+  <Container>
+    <div class="animate">
+      <BackToPrevious href="/projects">Back to projects</BackToPrevious>
+    </div>
+    <div class="animate my-10 space-y-2">
+      <div class="flex items-center gap-1.5">
+        <div class="font-base text-sm">
+          <FormattedDate date={project.data.date} />
+        </div>
+        &bull;
+        {project.body && (
+          <div class="font-base text-sm">
+            {readingTime(project.body)}
+          </div>
+        )}
+      </div>
+      <h1 class="font-heading text-3xl font-medium text-black dark:text-white">
+        {project.data.title}
+      </h1>
+
+      <div class="flex flex-wrap items-center gap-2">
+        {project.data.status && project.data.status !== "active" && (
+          <span class={`rounded-sm px-2 py-0.5 text-xs font-medium ${statusColors[project.data.status]}`}>
+            {project.data.status}
+          </span>
+        )}
+        {project.data.role && (
+          <span class="text-sm text-neutral-500">{project.data.role}</span>
+        )}
+      </div>
+
+      {project.data.stack && project.data.stack.length > 0 && (
+        <div class="flex flex-wrap gap-1.5 pt-1">
+          {project.data.stack.map((tech) => (
+            <span class="rounded-sm border border-black/10 px-2 py-0.5 text-xs dark:border-white/15">
+              {tech}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {(project.data.demoURL || project.data.repoURL) && (
+        <nav class="flex gap-1">
+          {project.data.demoURL && (
+            <Link href={project.data.demoURL} external>demo</Link>
+          )}
+          {project.data.demoURL && project.data.repoURL && <span>/</span>}
+          {project.data.repoURL && (
+            <Link href={project.data.repoURL} external>repo</Link>
+          )}
+        </nav>
+      )}
+    </div>
+
+    {project.data.impact && project.data.impact.length > 0 && (
+      <div class="animate mb-8 grid grid-cols-2 gap-4 sm:grid-cols-3">
+        {project.data.impact.map((item) => (
+          <div class="rounded-sm border border-black/10 p-3 dark:border-white/15">
+            <div class="font-heading text-lg font-medium text-black dark:text-white">
+              {item.value}
+            </div>
+            <div class="text-xs text-neutral-500">{item.metric}</div>
+          </div>
+        ))}
+      </div>
+    )}
+
+    <TableOfContents headings={headings} />
+    <article class="animate">
+      <Content />
+    </article>
+  </Container>
+</Layout>

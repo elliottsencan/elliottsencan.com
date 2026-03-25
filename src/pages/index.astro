@@ -1,0 +1,109 @@
+---
+import { getCollection } from "astro:content";
+import ArrowCard from "@components/ArrowCard.astro";
+import Container from "@components/Container.astro";
+import Link from "@components/Link.astro";
+import { HOME, SITE, SOCIALS } from "@consts";
+import Layout from "@layouts/Layout.astro";
+
+const blog = (await getCollection("blog"))
+  .filter((post) => !post.data.draft)
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
+  .slice(0, SITE.NUM_POSTS_ON_HOMEPAGE);
+
+const projects = (await getCollection("projects"))
+  .filter((project) => !project.data.draft)
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
+  .slice(0, SITE.NUM_PROJECTS_ON_HOMEPAGE);
+---
+
+<Layout title={HOME.TITLE} description={HOME.DESCRIPTION}>
+  <Container>
+    <aside data-pagefind-ignore>
+      <!-- <h1 class="font-heading text-4xl font-medium text-black dark:text-white">
+        Elliott Sencan
+      </h1> -->
+      <div class="space-y-16">
+        <section>
+          <article class="space-y-4">
+            <p>
+              Software engineer building tools worth using. Interested in
+              architecture, developer experience, and the craft of building
+              software that lasts.
+            </p>
+          </article>
+        </section>
+
+        {
+          blog.length > 0 && (
+            <section class="animate space-y-6">
+              <div class="flex flex-wrap items-center justify-between gap-y-2">
+                <h2 class="font-heading text-xl font-medium text-black dark:text-white">
+                  Latest posts
+                </h2>
+                <Link href="/blog">See all posts</Link>
+              </div>
+              <ul class="not-prose flex flex-col gap-4">
+                {blog.map((post) => (
+                  <li>
+                    <ArrowCard entry={post} />
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )
+        }
+
+        {
+          projects.length > 0 && (
+            <section class="animate space-y-6">
+              <div class="flex flex-wrap items-center justify-between gap-y-2">
+                <h2 class="font-heading text-xl font-medium text-black dark:text-white">
+                  Projects
+                </h2>
+                <Link href="/projects">See all projects</Link>
+              </div>
+              <ul class="not-prose flex flex-col gap-4">
+                {projects.map((project) => (
+                  <li>
+                    <ArrowCard entry={project} />
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )
+        }
+
+        <section class="animate space-y-4">
+          <h2 class="font-heading text-xl font-medium text-black dark:text-white">
+            Connect
+          </h2>
+          <ul class="not-prose flex flex-wrap gap-2">
+            {
+              SOCIALS.map((SOCIAL) => (
+                <li class="flex gap-x-2 text-nowrap">
+                  <Link
+                    href={SOCIAL.HREF}
+                    external
+                    aria-label={`${SITE.TITLE} on ${SOCIAL.NAME}`}
+                  >
+                    {SOCIAL.NAME}
+                  </Link>
+                  {"/"}
+                </li>
+              ))
+            }
+            <li class="line-clamp-1">
+              <Link
+                href={`mailto:${SITE.EMAIL}`}
+                aria-label={`Email ${SITE.TITLE}`}
+              >
+                {SITE.EMAIL}
+              </Link>
+            </li>
+          </ul>
+        </section>
+      </div>
+    </aside>
+  </Container>
+</Layout>

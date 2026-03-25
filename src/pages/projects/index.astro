@@ -1,0 +1,64 @@
+---
+import { getCollection } from "astro:content";
+import ArrowCard from "@components/ArrowCard.astro";
+import Container from "@components/Container.astro";
+import { PROJECTS } from "@consts";
+import Layout from "@layouts/Layout.astro";
+
+const allProjects = (await getCollection("projects"))
+  .filter((project) => !project.data.draft)
+  .sort((a, b) => {
+    if (a.data.order !== undefined && b.data.order !== undefined)
+      return a.data.order - b.data.order;
+    if (a.data.order !== undefined) return -1;
+    if (b.data.order !== undefined) return 1;
+    return b.data.date.valueOf() - a.data.date.valueOf();
+  });
+
+const caseStudies = allProjects.filter((p) => p.data.isCaseStudy);
+const otherProjects = allProjects.filter((p) => !p.data.isCaseStudy);
+---
+
+<Layout title={PROJECTS.TITLE} description={PROJECTS.DESCRIPTION}>
+  <Container>
+    <aside data-pagefind-ignore>
+      <div class="space-y-10">
+        {
+          caseStudies.length > 0 && (
+            <section class="animate space-y-6">
+              <h2 class="font-heading text-xl font-medium text-black dark:text-white">
+                Case Studies
+              </h2>
+              <ul class="not-prose flex flex-col gap-4">
+                {caseStudies.map((project) => (
+                  <li>
+                    <ArrowCard entry={project} />
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )
+        }
+
+        <section class="animate space-y-6">
+          <h2 class="font-heading text-xl font-medium text-black dark:text-white">
+            {caseStudies.length > 0 ? "Other Projects" : "Projects"}
+          </h2>
+          {
+            otherProjects.length > 0 ? (
+              <ul class="not-prose flex flex-col gap-4">
+                {otherProjects.map((project) => (
+                  <li>
+                    <ArrowCard entry={project} />
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p class="text-sm text-neutral-500">Coming soon.</p>
+            )
+          }
+        </section>
+      </div>
+    </aside>
+  </Container>
+</Layout>

@@ -1,0 +1,57 @@
+import { defineCollection, z } from "astro:content";
+import { glob } from "astro/loaders";
+
+const blog = defineCollection({
+  loader: glob({ pattern: "**/*.{md,mdx}", base: "./src/content/blog" }),
+  schema: z.object({
+    title: z.string(),
+    description: z.string(),
+    date: z.coerce.date(),
+    draft: z.boolean().optional(),
+    tags: z.array(z.string()).optional(),
+    image: z.string().optional(),
+    canonical: z.string().url().optional(),
+    updated: z.coerce.date().optional(),
+  }),
+});
+
+const projects = defineCollection({
+  loader: glob({ pattern: "**/*.{md,mdx}", base: "./src/content/projects" }),
+  schema: z.object({
+    title: z.string(),
+    description: z.string(),
+    date: z.coerce.date(),
+    draft: z.boolean().optional(),
+    demoURL: z.string().optional(),
+    repoURL: z.string().optional(),
+    isCaseStudy: z.boolean().default(false),
+    status: z.enum(["active", "archived", "killed"]).default("active"),
+    role: z.string().optional(),
+    stack: z.array(z.string()).optional(),
+    impact: z
+      .array(
+        z.object({
+          metric: z.string(),
+          value: z.string(),
+        }),
+      )
+      .optional(),
+    thumbnail: z.string().optional(),
+    order: z.number().optional(),
+  }),
+});
+
+const work = defineCollection({
+  loader: glob({ pattern: "**/*.{md,mdx}", base: "./src/content/work" }),
+  schema: z.object({
+    company: z.string(),
+    role: z.string(),
+    dateStart: z.coerce.date(),
+    dateEnd: z.coerce.date().optional(),
+    description: z.string(),
+    url: z.string().optional(),
+    draft: z.boolean().optional(),
+  }),
+});
+
+export const collections = { blog, projects, work };
