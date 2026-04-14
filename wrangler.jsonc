@@ -1,6 +1,0 @@
-{
-  "$schema": "https://raw.githubusercontent.com/cloudflare/workers-sdk/main/packages/wrangler/schemas/config.schema.json",
-  "name": "elliottsencandotcom",
-  "compatibility_date": "2026-03-23",
-  "pages_build_output_dir": "dist"
-}
