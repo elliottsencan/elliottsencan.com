@@ -1,0 +1,37 @@
+---
+import Container from "@components/Container.astro";
+import EditorialRule from "@components/EditorialRule.astro";
+import Layout from "@layouts/Layout.astro";
+
+// Hand-edit this when the focus shifts. A "now" page is only useful if the
+// update date is honest — no auto-stamp.
+const lastUpdated = "APR 2026";
+---
+
+<Layout
+  title="Now"
+  description="What I'm working on right now."
+>
+  <Container width="reading">
+    <div class="space-y-10">
+      <div>
+        <h1 class="sr-only">Now</h1>
+        <p
+          class="font-mono text-xs uppercase tracking-wider text-black/55 dark:text-white/55"
+          style="font-variant-numeric: tabular-nums;"
+        >
+          Now &middot; Updated {lastUpdated}
+        </p>
+      </div>
+
+      <EditorialRule />
+
+      <section class="animate space-y-6 text-base leading-relaxed text-black/85 dark:text-white/85">
+        <p>
+          Building <em>herald-ui</em> &mdash; a design system for teams that
+          don't want to re-solve the same primitives every quarter.
+        </p>
+      </section>
+    </div>
+  </Container>
+</Layout>

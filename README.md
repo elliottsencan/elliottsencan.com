@@ -1,11 +1,46 @@
-# Introducing [Astro Micro 🔬](https://astro-micro.vercel.app/)
+# elliottsencan.com
 
-Astro Micro is an accessible theme for Astro. It's a fork of [Mark Horn's](https://github.com/markhorn-dev) popular theme [Astro Nano](https://astro-nano-demo.vercel.app/). Like Nano, Micro comes with zero frameworks installed.
+Personal site and blog for Elliott Sencan. Built with Astro, self-hosted typography, and deployed to Cloudflare Pages.
 
-Micro adds features like [Pagefind](https://pagefind.app) for search, [Giscus](https://giscus.app) for comments, and more. For a full list of changes, see this [blog post](https://astro-micro.vercel.app/blog/00-micro-changelog).
+## Stack
 
-Micro still comes with everything great about Nano — full type safety, a sitemap, an RSS feed, and Markdown + MDX support. Styled with TailwindCSS and preconfigured with system, light, and dark themes.
+- **Framework:** [Astro](https://astro.build/) with type-safe content collections (MDX)
+- **Styling:** [TailwindCSS](https://tailwindcss.com/) v4
+- **Typography:** Neue Montreal (headings), Satoshi (body), JetBrains Mono (code) — all self-hosted as WOFF2
+- **Search:** [Pagefind](https://pagefind.app/) — client-side, built into the output
+- **Hosting:** Cloudflare Pages (config in `wrangler.jsonc`)
+- **Tooling:** [Biome](https://biomejs.dev/) for lint + format, pnpm for packages
 
----
+## Local development
 
-![astro-micro](https://github.com/user-attachments/assets/fc9b55b9-53e5-4933-9d23-936e1c61e6c2)
+```sh
+pnpm install
+pnpm dev            # http://localhost:4321
+pnpm build          # runs astro check then astro build
+pnpm preview        # serves the built site locally
+pnpm check          # biome: lint + format --write
+```
+
+### Optional build-time env
+
+The footer contributions rail fetches GitHub activity at build time via the GraphQL API. Set `GITHUB_TOKEN` in your build environment with a classic PAT (`public_repo` + `read:user`) or a fine-grained equivalent. Without the token the rail is omitted — the build still succeeds.
+
+For local dev: create `.env` with `GITHUB_TOKEN=ghp_…` (gitignored).
+
+## Content
+
+Entries live under `src/content/{blog,projects,work}`. Schemas are defined in `src/content.config.ts`:
+
+- **Blog post:** `src/content/blog/<slug>.{md,mdx}` — `title`, `description`, `date`, optional `draft`, `tags`, `image`, `canonical`, `updated`
+- **Project:** `src/content/projects/<slug>.md` — `title`, `description`, `date`, `isCaseStudy`, `status`, optional `demoURL`, `repoURL`, `role`, `stack`, `impact`, `thumbnail`, `order`
+- **Work:** `src/content/work/<slug>.md` — `company`, `role`, `dateStart`, optional `dateEnd`, `description`, `url`
+
+Set `draft: true` to keep an entry out of production builds. Dates use ISO format (`YYYY-MM-DD`).
+
+## Deploy
+
+Cloudflare Pages, configured via `wrangler.jsonc`. Pushes to `main` trigger production deploys; PRs get preview deploys. `GITHUB_TOKEN` must be set in the Pages project's build-environment variables for the contributions rail to render.
+
+## License
+
+MIT — see [LICENSE](./LICENSE).

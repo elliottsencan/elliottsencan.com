@@ -1,16 +1,22 @@
 import type { Metadata, Site, Socials } from "@types";
 
+const STANDFIRST =
+  "Engineer. I work on developer tools and complex systems — currently at GrupBlox, previously staff at ServiceNow.";
+
 export const SITE: Site = {
   TITLE: "Elliott Sencan",
-  DESCRIPTION: "Software engineer. Building tools worth using.",
+  DESCRIPTION: STANDFIRST,
   EMAIL: "hello@elliottsencan.com",
+  LOCATION: "San Diego, CA",
+  STANDFIRST,
+  GITHUB_LOGIN: "elliottsencan",
   NUM_POSTS_ON_HOMEPAGE: 3,
   NUM_PROJECTS_ON_HOMEPAGE: 3,
 };
 
 export const HOME: Metadata = {
   TITLE: "Home",
-  DESCRIPTION: "Software engineer. Building tools worth using.",
+  DESCRIPTION: STANDFIRST,
 };
 
 export const BLOG: Metadata = {
@@ -24,16 +30,16 @@ export const PROJECTS: Metadata = {
 };
 
 export const SOCIALS: Socials = [
-  {
-    NAME: "GitHub",
-    HREF: "https://github.com/elliottsencan",
-  },
+  // {
+  //   NAME: "GitHub",
+  //   HREF: "https://github.com/elliottsencan",
+  // },
   {
     NAME: "LinkedIn",
     HREF: "https://linkedin.com/in/elliottsencan",
   },
-  {
-    NAME: "X (formerly Twitter)",
-    HREF: "https://twitter.com/elliottsencan",
-  },
+  // {
+  //   NAME: "X (formerly Twitter)",
+  //   HREF: "https://twitter.com/elliottsencan",
+  // },
 ];

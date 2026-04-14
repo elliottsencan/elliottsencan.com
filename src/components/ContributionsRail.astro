@@ -1,0 +1,177 @@
+---
+import type { ContributionsSummary } from "@lib/github";
+
+type Props = {
+  data: ContributionsSummary;
+};
+
+const { data } = Astro.props;
+
+// Opacity ramp: non-zero weeks bucket into four intensity levels relative to
+// the year's max. Zero-contribution weeks keep a faint dot so the rail reads
+// as a continuous line rather than a gappy one.
+const max = Math.max(1, ...data.weeks.map((w) => w.total));
+
+function opacityFor(weekTotal: number): number {
+  if (weekTotal === 0) return 0.15;
+  const ratio = weekTotal / max;
+  if (ratio <= 0.25) return 0.6;
+  if (ratio <= 0.5) return 0.8;
+  if (ratio <= 0.75) return 1;
+  return 0.95;
+}
+
+const formattedTotal = new Intl.NumberFormat("en-US").format(data.total);
+---
+
+<div
+  class="rail-root relative flex w-full items-center justify-between py-3 text-emerald-500 dark:text-emerald-400"
+  role="img"
+  aria-label={`GitHub activity: ${formattedTotal} contributions in the last year`}
+>
+  {
+    data.weeks.map((week) => (
+      <span
+        class="rail-dot inline-block size-0.5 bg-current will-change-transform"
+        style={`opacity: ${opacityFor(week.total)}; transform-origin: center center; transition: transform 140ms cubic-bezier(0.2, 0, 0, 1);`}
+        data-total={week.total}
+        data-date={week.startDate}
+      />
+    ))
+  }
+  <div
+    class="rail-tooltip pointer-events-none absolute -translate-x-1/2 whitespace-nowrap font-mono text-xs uppercase tracking-wider text-black/70 opacity-0 transition-opacity duration-150 ease-out dark:text-white/70"
+    style="font-variant-numeric: tabular-nums; bottom: 100%; left: 0; margin-bottom: 0.25rem;"
+    role="status"
+    aria-live="polite"
+  >
+  </div>
+</div>
+
+<script>
+  // macOS Dock-style magnification + hover tooltip on the contributions rail:
+  //   - mousemove computes each dot's distance to the cursor in page pixels
+  //   - dots within INFLUENCE px lift and scale on a cosine falloff curve
+  //   - CSS `transition` on transform smooths both the approach and the return
+  //     to rest once the cursor leaves
+  //   - the nearest dot's data is piped into a floating tooltip, positioned
+  //     above the dot with translateX
+  //   - cx is read from getBoundingClientRect once per layout (not per event);
+  //     cached centers are resampled on resize
+  //
+  // Uses astro:page-load so handlers re-bind after client-side nav
+  // (view transitions are enabled site-wide).
+
+  const INFLUENCE = 60; // pixels — wider halo than the old SVG-unit radius
+  const MAX_SCALE = 3.4;
+  const MAX_LIFT = -8; // px — negative Y arches dots above the baseline
+  const TOOLTIP_NEAREST_THRESHOLD = 60; // px — only show tooltip within this distance
+
+  function cosineFalloff(t: number): number {
+    // t in [0, 1]. Returns 0 at t=0 (edge of influence), 1 at t=1 (cursor).
+    return 0.5 - 0.5 * Math.cos(Math.PI * t);
+  }
+
+  function formatDate(isoDate: string): string {
+    if (!isoDate) return "";
+    const d = new Date(`${isoDate}T00:00:00Z`);
+    return d
+      .toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        timeZone: "UTC",
+      })
+      .toUpperCase();
+  }
+
+  function initRail(root: Element) {
+    const host = root as HTMLElement;
+    const dots = Array.from(host.querySelectorAll<HTMLElement>(".rail-dot"));
+    const tooltipEl = host.querySelector<HTMLElement>(".rail-tooltip");
+    if (dots.length === 0 || !tooltipEl) return;
+    const tooltip: HTMLElement = tooltipEl;
+
+    const prefersReduced =
+      typeof matchMedia !== "undefined" &&
+      matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    let centers: number[] = [];
+    let hostLeft = 0;
+
+    function sampleCenters() {
+      const hostRect = host.getBoundingClientRect();
+      hostLeft = hostRect.left;
+      centers = dots.map((dot) => {
+        const rect = dot.getBoundingClientRect();
+        // transform-origin is center, so the visual center is stable under
+        // scale/translate; reading rect directly is accurate.
+        return rect.left + rect.width / 2;
+      });
+    }
+
+    function update(event: MouseEvent) {
+      let nearestIdx = -1;
+      let nearestDist = Number.POSITIVE_INFINITY;
+
+      for (let i = 0; i < dots.length; i++) {
+        const dist = Math.abs(centers[i] - event.clientX);
+
+        if (!prefersReduced) {
+          if (dist >= INFLUENCE) {
+            dots[i].style.transform = "";
+          } else {
+            const t = 1 - dist / INFLUENCE;
+            const f = cosineFalloff(t);
+            const scale = 1 + (MAX_SCALE - 1) * f;
+            const lift = MAX_LIFT * f;
+            dots[i].style.transform = `translateY(${lift}px) scale(${scale})`;
+          }
+        }
+
+        if (dist < nearestDist) {
+          nearestDist = dist;
+          nearestIdx = i;
+        }
+      }
+
+      if (nearestIdx >= 0 && nearestDist < TOOLTIP_NEAREST_THRESHOLD) {
+        const dot = dots[nearestIdx];
+        const total = dot.dataset.total ?? "0";
+        const date = dot.dataset.date ?? "";
+        const formattedDate = formatDate(date);
+        if (formattedDate) {
+          const word = total === "1" ? "CONTRIBUTION" : "CONTRIBUTIONS";
+          tooltip.textContent = `${formattedDate} · ${total} ${word}`;
+          // Position tooltip center above the nearest dot, anchored to host.
+          const offsetX = centers[nearestIdx] - hostLeft;
+          tooltip.style.left = `${offsetX}px`;
+          tooltip.style.opacity = "1";
+        }
+      } else {
+        tooltip.style.opacity = "0";
+      }
+    }
+
+    function reset() {
+      if (!prefersReduced) {
+        for (const dot of dots) {
+          dot.style.transform = "";
+        }
+      }
+      tooltip.style.opacity = "0";
+    }
+
+    // Sample on the next frame so layout has settled.
+    requestAnimationFrame(sampleCenters);
+
+    host.addEventListener("mousemove", update);
+    host.addEventListener("mouseleave", reset);
+    window.addEventListener("resize", sampleCenters);
+  }
+
+  function setup() {
+    document.querySelectorAll(".rail-root").forEach(initRail);
+  }
+
+  document.addEventListener("astro:page-load", setup);
+</script>

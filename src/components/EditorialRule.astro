@@ -1,0 +1,15 @@
+---
+/**
+ * Thin horizontal dot-grid rule. Pure CSS (radial gradient on background image).
+ * Uses currentColor so it inherits text color in both light and dark mode.
+ * Decorative — hidden from assistive tech.
+ */
+---
+
+<div
+  role="presentation"
+  aria-hidden="true"
+  class="my-8 h-px w-full opacity-30 dark:opacity-40"
+  style="background-image: radial-gradient(circle, currentColor 0.5px, transparent 0.5px); background-size: 6px 1px; background-repeat: repeat-x; background-position: center;"
+>
+</div>

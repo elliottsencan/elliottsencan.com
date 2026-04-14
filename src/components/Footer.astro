@@ -1,7 +1,17 @@
 ---
 import BackToTop from "@components/BackToTop.astro";
 import Container from "@components/Container.astro";
-import { SITE } from "@consts";
+import ContributionsRail from "@components/ContributionsRail.astro";
+import Link from "@components/Link.astro";
+import { SITE, SOCIALS } from "@consts";
+import { getContributions } from "@lib/github";
+
+// Build-time fetch. Returns null on missing token / fetch failure — the rail
+// is simply omitted in that case, so the footer collapses cleanly and the
+// build never fails because of this.
+const contributions = await getContributions(SITE.GITHUB_LOGIN);
+
+const githubProfile = `https://github.com/${SITE.GITHUB_LOGIN}`;
 ---
 
 <footer class="animate">
@@ -11,93 +21,66 @@ import { SITE } from "@consts";
         <BackToTop />
       </div>
     </div>
-    <div class="flex items-center justify-between">
-      <div class="flex items-center gap-2">
-        <span>&copy; {new Date().getFullYear()} {SITE.TITLE}</span>
-        <a
-          href="/rss.xml"
-          aria-label="RSS Feed"
-          class="text-neutral-500 transition-colors hover:text-black dark:hover:text-white"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M4 11a9 9 0 0 1 9 9"></path>
-            <path d="M4 4a16 16 0 0 1 16 16"></path>
-            <circle cx="5" cy="19" r="1"></circle>
-          </svg>
-        </a>
-      </div>
-      <div class="flex flex-wrap items-center gap-1.5">
-        <button
-          id="light-theme-button"
-          aria-label="Light theme"
-          class="group flex size-9 items-center justify-center rounded-sm border border-black/15 hover:bg-black/5 focus-visible:bg-black/5 dark:border-white/20 dark:hover:bg-white/5 dark:focus-visible:bg-white/5"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="transition-colors duration-300 ease-in-out group-hover:animate-pulse group-hover:stroke-black group-focus-visible:animate-pulse group-focus-visible:stroke-black dark:group-hover:stroke-white dark:group-focus-visible:stroke-white"
+    <div class="flex flex-col-reverse gap-3 md:flex-row items-center md:justify-between md:gap-x-4">
+      <ul class="not-prose flex flex-wrap items-baseline gap-x-3 gap-y-1 text-xs md:text-sm">
+        <li><span>&copy; {new Date().getFullYear()}</span></li>
+        {
+          SOCIALS.map((social) => (
+            <li class="flex items-baseline gap-3">
+              <span aria-hidden="true" class="text-black/40 dark:text-white/40">
+                &middot;
+              </span>
+              <Link
+                href={social.HREF}
+                external
+                aria-label={`${SITE.TITLE} on ${social.NAME}`}
+              >
+                {social.NAME}
+              </Link>
+            </li>
+          ))
+        }
+        <li class="flex items-baseline gap-3">
+          <span aria-hidden="true" class="text-black/40 dark:text-white/40">
+            &middot;
+          </span>
+          <Link href={`mailto:${SITE.EMAIL}`} aria-label={`Email ${SITE.TITLE}`}>
+            <span class="md:hidden">Email</span>
+            <span class="hidden md:inline">Email</span>
+          </Link>
+        </li>
+        <li class="flex items-baseline gap-3">
+          <span aria-hidden="true" class="text-black/40 dark:text-white/40">
+            &middot;
+          </span>
+          <Link href="/rss.xml" aria-label="RSS Feed">RSS</Link>
+        </li>
+        <li class="flex items-baseline gap-3">
+          <span aria-hidden="true" class="text-black/40 dark:text-white/40">
+            &middot;
+          </span>
+          <button
+            id="theme-cycle"
+            aria-label="Cycle theme"
+            class="inline-block cursor-pointer text-current underline decoration-black/30 underline-offset-[3px] transition-colors duration-300 ease-in-out hover:text-black hover:decoration-black/50 focus-visible:text-black focus-visible:decoration-black/50 dark:decoration-white/30 dark:hover:text-white dark:hover:decoration-white/50 dark:focus-visible:text-white dark:focus-visible:decoration-white/50"
           >
-            <circle cx="12" cy="12" r="5"></circle>
-            <line x1="12" y1="1" x2="12" y2="3"></line>
-            <line x1="12" y1="21" x2="12" y2="23"></line>
-            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-            <line x1="1" y1="12" x2="3" y2="12"></line>
-            <line x1="21" y1="12" x2="23" y2="12"></line>
-            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-          </svg>
-        </button>
-        <button
-          id="dark-theme-button"
-          aria-label="Dark theme"
-          class="group flex size-9 items-center justify-center rounded-sm border border-black/15 hover:bg-black/5 focus-visible:bg-black/5 dark:border-white/20 dark:hover:bg-white/5 dark:focus-visible:bg-white/5"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="transition-colors duration-300 ease-in-out group-hover:animate-pulse group-hover:stroke-black group-focus-visible:animate-pulse group-focus-visible:stroke-black dark:group-hover:stroke-white dark:group-focus-visible:stroke-white"
+            theme: <span id="theme-cycle-label" aria-live="polite">auto</span>
+          </button>
+        </li>
+      </ul>
+      {
+        contributions && (
+          <a
+            href={githubProfile}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="GitHub profile — one year of contributions"
+            class="mx-auto block w-full max-w-xs md:mx-0 md:w-auto md:max-w-xs md:flex-1"
           >
-            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-          </svg>
-        </button>
-        <button
-          id="system-theme-button"
-          aria-label="System theme"
-          class="group flex size-9 items-center justify-center rounded-sm border border-black/15 hover:bg-black/5 focus-visible:bg-black/5 dark:border-white/20 dark:hover:bg-white/5 dark:focus-visible:bg-white/5"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="transition-colors duration-300 ease-in-out group-hover:animate-pulse group-hover:stroke-black group-focus-visible:animate-pulse group-focus-visible:stroke-black dark:group-hover:stroke-white dark:group-focus-visible:stroke-white"
-          >
-            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-            <line x1="8" y1="21" x2="16" y2="21"></line>
-            <line x1="12" y1="17" x2="12" y2="21"></line>
-          </svg>
-        </button>
-      </div>
+            <ContributionsRail data={contributions} />
+          </a>
+        )
+      }
     </div>
   </Container>
 </footer>

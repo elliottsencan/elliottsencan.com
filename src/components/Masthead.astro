@@ -1,0 +1,35 @@
+---
+import { SITE } from "@consts";
+
+// Build-time stamp — regenerates on every deploy, signalling the site is alive.
+const buildDate = new Date();
+const editionDate = new Intl.DateTimeFormat("en-US", {
+  day: "2-digit",
+  month: "short",
+  year: "numeric",
+})
+  .format(buildDate)
+  .toUpperCase();
+
+const location = SITE.LOCATION.toUpperCase();
+---
+
+<!--
+  The site nav (Header.astro) already renders the site title. Repeating it here
+  as a big visible h1 creates a redundancy that reads as template scaffolding.
+  Instead: keep an sr-only h1 for semantics, and show only the editorial
+  dateline — location + build date — in small caps. The standfirst below becomes
+  the primary visual anchor, which is the correct editorial move.
+
+  Intentionally <div>, not <header>. See memory/project_global_header_trap.md:
+  bare <header> elements inherit fixed-banner styling from global.css.
+-->
+<div>
+  <h1 class="sr-only">{SITE.TITLE}</h1>
+  <p
+    class="font-mono text-xs uppercase tracking-wider text-black/55 dark:text-white/55"
+    style="font-variant-numeric: tabular-nums;"
+  >
+    {location} &middot; {editionDate}
+  </p>
+</div>

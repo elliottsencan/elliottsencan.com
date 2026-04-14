@@ -1,0 +1,48 @@
+---
+import Container from "@components/Container.astro";
+import EditorialRule from "@components/EditorialRule.astro";
+import Link from "@components/Link.astro";
+import Layout from "@layouts/Layout.astro";
+import { SITE } from "@consts";
+---
+
+<Layout
+  title="Colophon"
+  description="Typography, stack, and credits for this site."
+>
+  <Container width="reading">
+    <div class="space-y-10">
+      <div>
+        <h1 class="sr-only">Colophon</h1>
+        <p
+          class="font-mono text-xs uppercase tracking-wider text-black/55 dark:text-white/55"
+          style="font-variant-numeric: tabular-nums;"
+        >
+          Colophon
+        </p>
+      </div>
+
+      <EditorialRule />
+
+      <section class="animate space-y-6 text-base leading-relaxed text-black/85 dark:text-white/85">
+        <p>
+          Set in <em>Neue Montreal</em> for headings and interface text,
+          <em>Satoshi</em> for running copy, and <em>JetBrains Mono</em> for
+          code and small typographic marks. All three self-hosted as WOFF2.
+        </p>
+        <p>
+          Built with <Link href="https://astro.build/" external>Astro</Link>
+          and
+          <Link href="https://tailwindcss.com/" external>Tailwind CSS</Link>.
+          Search by
+          <Link href="https://pagefind.app/" external>Pagefind</Link>,
+          indexed at build time. Hosted on Cloudflare Pages.
+        </p>
+        <p>
+          Written in {SITE.LOCATION}. The footer activity rail is generated at
+          build time from the GitHub GraphQL API.
+        </p>
+      </section>
+    </div>
+  </Container>
+</Layout>
