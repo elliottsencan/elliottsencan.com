@@ -29,9 +29,7 @@ function opacityFor(weekTotal: number): number {
 function formatMonthYear(iso: string | undefined): string {
   if (!iso) return "";
   const d = new Date(`${iso}T00:00:00Z`);
-  const month = d
-    .toLocaleDateString("en-US", { month: "short", timeZone: "UTC" })
-    .toUpperCase();
+  const month = d.toLocaleDateString("en-US", { month: "short", timeZone: "UTC" }).toUpperCase();
   const yy = d.getUTCFullYear().toString().slice(-2);
   return `${month} '${yy}`;
 }
@@ -71,7 +69,7 @@ const formattedTotal = new Intl.NumberFormat("en-US").format(data.total);
       row, so the rail can fill the remaining space without overflow. */}
   <div class="flex min-w-0 flex-1 flex-col">
     <div
-      class="md:hidden rail-caption flex items-baseline justify-between font-mono text-[0.5rem] uppercase tracking-[0.08em] text-black/55 transition-opacity duration-150 ease-out dark:text-white/55"
+      class="md:hidden rail-caption flex items-baseline justify-between font-mono text-[0.625rem] uppercase tracking-[0.08em] text-black/55 transition-opacity duration-150 ease-out dark:text-white/55"
       style="font-variant-numeric: tabular-nums;"
     >
       <span>{startLabel}</span>

@@ -10,8 +10,6 @@ import { getContributions } from "@lib/github";
 // is simply omitted in that case, so the footer collapses cleanly and the
 // build never fails because of this.
 const contributions = await getContributions(SITE.GITHUB_LOGIN);
-
-const githubProfile = `https://github.com/${SITE.GITHUB_LOGIN}`;
 ---
 
 <footer class="animate">
@@ -22,7 +20,7 @@ const githubProfile = `https://github.com/${SITE.GITHUB_LOGIN}`;
       </div>
     </div>
     <div class="flex flex-col-reverse gap-3 md:flex-row items-center md:justify-between md:gap-x-4">
-      <ul class="not-prose flex flex-wrap items-baseline gap-x-3 gap-y-1 text-xs md:text-sm">
+      <ul class="not-prose flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm">
         <li><span>&copy; {new Date().getFullYear()}</span></li>
         {
           SOCIALS.map((social) => (
@@ -71,10 +69,8 @@ const githubProfile = `https://github.com/${SITE.GITHUB_LOGIN}`;
       {
         contributions && (
           <a
-            href={githubProfile}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="GitHub profile — one year of contributions"
+            href="/github"
+            aria-label="GitHub — one year of contributions, pinned repos, and recent activity"
             class="mx-auto block w-full max-w-xs md:mx-0 md:w-auto md:max-w-xs md:flex-1"
           >
             <ContributionsRail data={contributions} />

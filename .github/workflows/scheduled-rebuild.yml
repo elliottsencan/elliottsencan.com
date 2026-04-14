@@ -1,0 +1,37 @@
+name: Scheduled rebuild
+
+# The /github page (and footer contributions rail) bake their data at build
+# time via src/lib/github.ts. Without a redeploy, the data drifts. This
+# workflow pings a Cloudflare Pages deploy hook on a cron so the site
+# refreshes even when no code changes land.
+#
+# One-time setup:
+#   1. In the Cloudflare Pages project settings, create a Deploy Hook and
+#      copy its URL.
+#   2. In this repo, add a GitHub Actions secret named CF_PAGES_DEPLOY_HOOK
+#      with that URL as the value (Settings -> Secrets and variables ->
+#      Actions -> New repository secret).
+#   3. Ensure the Cloudflare Pages build environment has GITHUB_TOKEN set
+#      (classic PAT with public_repo + read:user, or a fine-grained token
+#      with metadata + contents read on public repos).
+
+on:
+  schedule:
+    # Daily at 12:00 UTC (~04:00 Pacific). Once a day is plenty for a
+    # personal site; bump frequency if activity feels stale.
+    - cron: "0 12 * * *"
+  workflow_dispatch:
+
+jobs:
+  trigger-cf-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Cloudflare Pages deploy
+        env:
+          HOOK: ${{ secrets.CF_PAGES_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "::error::CF_PAGES_DEPLOY_HOOK secret is not set; see workflow comment for setup."
+            exit 1
+          fi
+          curl --fail --silent --show-error -X POST "$HOOK"

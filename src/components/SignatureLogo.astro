@@ -58,7 +58,7 @@ const { class: className } = Astro.props;
 <style>
   .signature-logo {
     display: block;
-    height: clamp(1.75rem, 1.5rem + 1.25vw, 2.75rem);
+    height: clamp(2rem, 1.5rem + 1.5vw, 2.75rem);
     width: auto;
     /* tightened viewBox is 3660 × 833 (~4.4:1) — height drives layout */
     /* Explicit color so fill is fully opaque during the draw; the 75% rest
@@ -113,7 +113,7 @@ const { class: className } = Astro.props;
   .sig-stroke-2 {
     animation-name: sig-reveal;
     animation-duration: 1250ms;
-    animation-delay: 1750ms; /* stroke-1 end (1150ms) + 150ms pen-lift */
+    animation-delay: 1750ms; /* stroke-1 end (1250ms) + 500ms pen-lift */
   }
 
   @keyframes sig-reveal {

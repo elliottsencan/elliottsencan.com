@@ -1,0 +1,212 @@
+---
+import Container from "@components/Container.astro";
+import EditorialRule from "@components/EditorialRule.astro";
+import Link from "@components/Link.astro";
+import { SITE } from "@consts";
+import Layout from "@layouts/Layout.astro";
+import { getPinnedRepos, getProfile, getRecentActivity } from "@lib/github";
+
+// Every block fetches independently so a failure in one doesn't blank the
+// rest. All three helpers return null on any error (missing token, network,
+// rate limit) and never throw; see src/lib/github.ts. The contributions rail
+// deliberately isn't rendered here — it already lives in the footer on every
+// page, so duplicating it on /github would be chrome-on-chrome.
+const [profile, pinned, activity] = await Promise.all([
+  getProfile(SITE.GITHUB_LOGIN),
+  getPinnedRepos(SITE.GITHUB_LOGIN),
+  getRecentActivity(SITE.GITHUB_LOGIN),
+]);
+
+const anyData =
+  Boolean(profile) ||
+  (pinned !== null && pinned.length > 0) ||
+  (activity !== null && activity.length > 0);
+
+const githubProfileUrl = `https://github.com/${SITE.GITHUB_LOGIN}`;
+
+// "14 APR" — matches homepage's tabular font-mono styling but drops the year
+// for activity which is always within the last ~90 days (the events API cap).
+const eventDateFormatter = new Intl.DateTimeFormat("en-US", {
+  day: "2-digit",
+  month: "short",
+});
+
+const formatCount = (n: number): string => new Intl.NumberFormat("en-US").format(n);
+---
+
+<Layout
+  title="GitHub"
+  description={`GitHub presence for ${SITE.TITLE} — pinned repositories and recent public activity.`}
+>
+  <Container width="reading">
+    <div class="space-y-10">
+      <div>
+        <h1 class="sr-only">GitHub</h1>
+        <p
+          class="font-mono text-xs uppercase tracking-wider text-black/55 dark:text-white/55"
+          style="font-variant-numeric: tabular-nums;"
+        >
+          GitHub
+        </p>
+      </div>
+
+      <EditorialRule />
+
+      {
+        !anyData && (
+          <section class="animate">
+            <p class="text-base text-black/75 dark:text-white/75">
+              Live data from GitHub isn&rsquo;t available right now. Visit{" "}
+              <Link href={githubProfileUrl} external>
+                github.com/{SITE.GITHUB_LOGIN}
+              </Link>{" "}
+              for the source of truth.
+            </p>
+          </section>
+        )
+      }
+
+      {
+        profile && (
+          <section class="animate space-y-6">
+            <div class="flex items-start gap-5">
+              <img
+                src={profile.avatarUrl}
+                alt={profile.name ?? profile.login}
+                class="size-14 shrink-0 rounded-full"
+                width="56"
+                height="56"
+                loading="eager"
+                decoding="async"
+              />
+              <div class="space-y-1">
+                <h2 class="font-heading text-2xl font-medium text-black dark:text-white">
+                  {profile.name ?? profile.login}
+                </h2>
+                <p
+                  class="font-mono text-xs uppercase tracking-wider text-black/55 dark:text-white/55"
+                >
+                  <Link href={profile.url} external>
+                    @{profile.login}
+                  </Link>
+                  {profile.location && (
+                    <>
+                      <span aria-hidden="true" class="text-black/30 dark:text-white/30">
+                        {" "}&middot;{" "}
+                      </span>
+                      {profile.location.toUpperCase()}
+                    </>
+                  )}
+                </p>
+              </div>
+            </div>
+            {profile.bio && (
+              <p class="text-base text-black/75 dark:text-white/75">
+                {profile.bio}
+              </p>
+            )}
+            <ul
+              class="not-prose flex flex-wrap items-baseline gap-x-3 gap-y-1 font-mono text-xs uppercase tracking-wider text-black/60 dark:text-white/60"
+              style="font-variant-numeric: tabular-nums;"
+            >
+              <li>{formatCount(profile.publicRepos)} repos</li>
+              <li aria-hidden="true" class="text-black/30 dark:text-white/30">
+                &middot;
+              </li>
+              <li>{formatCount(profile.followers)} followers</li>
+              <li aria-hidden="true" class="text-black/30 dark:text-white/30">
+                &middot;
+              </li>
+              <li>{formatCount(profile.following)} following</li>
+            </ul>
+          </section>
+        )
+      }
+
+      {
+        pinned && pinned.length > 0 && (
+          <section class="animate space-y-4">
+            <div class="flex items-baseline justify-between">
+              <h2 class="font-mono text-xs uppercase tracking-wider text-black/60 dark:text-white/60">
+                Pinned
+              </h2>
+              <Link href={`${githubProfileUrl}?tab=repositories`} external>
+                <span class="text-sm">All repositories &rarr;</span>
+              </Link>
+            </div>
+            <ul class="not-prose flex flex-col gap-3 text-sm">
+              {pinned.map((repo) => (
+                <li class="flex items-baseline gap-4">
+                  <span
+                    aria-hidden="true"
+                    class="shrink-0 font-mono text-xs text-black/50 dark:text-white/50"
+                  >
+                    &middot;
+                  </span>
+                  <span>
+                    <Link href={repo.url} external>
+                      {repo.name}
+                    </Link>
+                    {repo.description && (
+                      <span class="text-black/60 dark:text-white/60">
+                        {" — "}
+                        {repo.description}
+                      </span>
+                    )}
+                    <span
+                      class="ml-2 whitespace-nowrap font-mono text-xs uppercase tracking-wider text-black/50 dark:text-white/50"
+                      style="font-variant-numeric: tabular-nums;"
+                    >
+                      {repo.primaryLanguage && (
+                        <>
+                          {repo.primaryLanguage.name}
+                          {" · "}
+                        </>
+                      )}
+                      {formatCount(repo.stargazerCount)} &#9733;
+                    </span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )
+      }
+
+      {
+        activity && activity.length > 0 && (
+          <section class="animate space-y-4">
+            <div class="flex items-baseline justify-between">
+              <h2 class="font-mono text-xs uppercase tracking-wider text-black/60 dark:text-white/60">
+                Activity
+              </h2>
+              <Link href={githubProfileUrl} external>
+                <span class="text-sm">Full timeline &rarr;</span>
+              </Link>
+            </div>
+            <ul class="not-prose flex flex-col gap-2 text-sm">
+              {activity.map((event) => (
+                <li class="flex items-baseline gap-4">
+                  <time
+                    datetime={event.createdAt}
+                    class="shrink-0 font-mono text-xs uppercase tracking-wider text-black/50 dark:text-white/50"
+                    style="font-variant-numeric: tabular-nums;"
+                  >
+                    {eventDateFormatter.format(new Date(event.createdAt)).toUpperCase()}
+                  </time>
+                  <span>
+                    {event.summary}
+                    {" in "}
+                    <Link href={event.repo.url} external>
+                      {event.repo.nameWithOwner}
+                    </Link>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )
+      }
+    </div>
+  </Container>
+</Layout>

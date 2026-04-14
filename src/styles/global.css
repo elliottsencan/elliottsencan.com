@@ -124,13 +124,13 @@
   }
 
   header {
-    @apply fixed left-0 right-0 top-0 z-50 py-6;
+    @apply fixed left-0 right-0 top-0 z-50 py-4 md:py-6;
     @apply bg-neutral-100/75 dark:bg-neutral-900/75;
     @apply saturate-200 backdrop-blur-xs;
   }
 
   main {
-    @apply flex-1 py-32;
+    @apply flex-1 py-20 md:py-32;
   }
 
   footer {

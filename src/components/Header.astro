@@ -11,18 +11,31 @@ import SignatureLogo from "./SignatureLogo.astro";
       <Link href="/" underline={false}>
         <SignatureLogo />
       </Link>
-      <nav class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+      <nav class="flex items-center gap-x-3 gap-y-1 text-base md:flex-wrap md:gap-x-4 md:text-sm">
         <Link href="/blog">blog</Link>
         <Link href="/projects">projects</Link>
         <Link href="/work">work</Link>
-        <Link href="/now">now</Link>
-        <Link href="/colophon">colophon</Link>
+        <span class="hidden md:inline"><Link href="/now">now</Link></span>
+        <span class="hidden md:inline"><Link href="/colophon">colophon</Link></span>
         <button
           id="magnifying-glass"
           aria-label="Search"
-          class="cursor-pointer text-black/50 transition-colors duration-300 ease-in-out hover:text-black focus-visible:text-black dark:text-white/50 dark:hover:text-white dark:focus-visible:text-white"
+          class="inline-flex cursor-pointer items-center text-black/50 transition-colors duration-300 ease-in-out hover:text-black focus-visible:text-black dark:text-white/50 dark:hover:text-white dark:focus-visible:text-white"
         >
-          <kbd id="search-shortcut" class="font-mono text-xs"></kbd>
+          <kbd id="search-shortcut" class="hidden font-mono text-xs md:inline"></kbd>
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="size-5 md:hidden"
+          >
+            <circle cx="10.5" cy="10.5" r="6.5" />
+            <line x1="15.5" y1="15.5" x2="21" y2="21" />
+          </svg>
         </button>
       </nav>
     </div>
