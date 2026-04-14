@@ -2,15 +2,14 @@
 import Container from "@components/Container.astro";
 import Link from "@components/Link.astro";
 import { SITE } from "@consts";
+import SignatureLogo from "./SignatureLogo.astro";
 ---
 
 <header transition:persist>
   <Container>
     <div class="flex flex-wrap items-center justify-between gap-y-2">
       <Link href="/" underline={false}>
-        <div class="font-heading font-medium">
-          {SITE.TITLE}
-        </div>
+        <SignatureLogo />
       </Link>
       <nav class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
         <Link href="/blog">blog</Link>

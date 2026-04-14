@@ -9,42 +9,97 @@ const { data } = Astro.props;
 
 // Opacity ramp: non-zero weeks bucket into four intensity levels relative to
 // the year's max. Zero-contribution weeks keep a faint dot so the rail reads
-// as a continuous line rather than a gappy one.
+// as a continuous line rather than a gappy one. Must be monotonically
+// increasing so the most active weeks are the brightest.
 const max = Math.max(1, ...data.weeks.map((w) => w.total));
 
 function opacityFor(weekTotal: number): number {
   if (weekTotal === 0) return 0.15;
   const ratio = weekTotal / max;
-  if (ratio <= 0.25) return 0.6;
-  if (ratio <= 0.5) return 0.8;
-  if (ratio <= 0.75) return 1;
-  return 0.95;
+  if (ratio <= 0.25) return 0.55;
+  if (ratio <= 0.5) return 0.7;
+  if (ratio <= 0.75) return 0.85;
+  return 1;
 }
 
+// Caption: start of the window (oldest week's Sunday) → end (latest week's
+// Saturday). Formatted as "MMM 'YY" in UTC so the label stays stable
+// regardless of the visitor's locale/timezone and fits inside the 320px
+// footer cap alongside the total count.
+function formatMonthYear(iso: string | undefined): string {
+  if (!iso) return "";
+  const d = new Date(`${iso}T00:00:00Z`);
+  const month = d
+    .toLocaleDateString("en-US", { month: "short", timeZone: "UTC" })
+    .toUpperCase();
+  const yy = d.getUTCFullYear().toString().slice(-2);
+  return `${month} '${yy}`;
+}
+
+function addDays(iso: string, days: number): string {
+  const d = new Date(`${iso}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+const firstWeek = data.weeks.at(0);
+const lastWeek = data.weeks.at(-1);
+const startLabel = formatMonthYear(firstWeek?.startDate);
+const endLabel = formatMonthYear(lastWeek ? addDays(lastWeek.startDate, 6) : undefined);
 const formattedTotal = new Intl.NumberFormat("en-US").format(data.total);
 ---
 
 <div
-  class="rail-root relative flex w-full items-center justify-between py-3 text-emerald-500 dark:text-emerald-400"
+  class="rail-group flex items-center gap-2"
   role="img"
-  aria-label={`GitHub activity: ${formattedTotal} contributions in the last year`}
+  aria-label={`GitHub contributions: ${formattedTotal} from ${startLabel} to ${endLabel}`}
 >
-  {
-    data.weeks.map((week) => (
-      <span
-        class="rail-dot inline-block size-0.5 bg-current will-change-transform"
-        style={`opacity: ${opacityFor(week.total)}; transform-origin: center center; transition: transform 140ms cubic-bezier(0.2, 0, 0, 1);`}
-        data-total={week.total}
-        data-date={week.startDate}
-      />
-    ))
-  }
-  <div
-    class="rail-tooltip pointer-events-none absolute -translate-x-1/2 whitespace-nowrap font-mono text-xs uppercase tracking-wider text-black/70 opacity-0 transition-opacity duration-150 ease-out dark:text-white/70"
-    style="font-variant-numeric: tabular-nums; bottom: 100%; left: 0; margin-bottom: 0.25rem;"
-    role="status"
-    aria-live="polite"
+  {/* Inline GitHub mark — sits to the left of the rail on every breakpoint,
+      labelling the module. Decorative; screen readers rely on the group's
+      aria-label. Color tracks the caption's muted treatment. */}
+  <svg
+    aria-hidden="true"
+    viewBox="0 0 16 16"
+    class="rail-logo size-3.5 shrink-0 fill-current text-black/55 dark:text-white/55"
   >
+    <path
+      d="M8 .198a8 8 0 0 0-2.529 15.59c.4.074.547-.174.547-.386 0-.19-.007-.693-.01-1.36-2.226.483-2.695-1.073-2.695-1.073-.364-.924-.888-1.17-.888-1.17-.726-.496.055-.486.055-.486.803.056 1.226.824 1.226.824.714 1.223 1.872.87 2.328.665.072-.517.28-.87.508-1.07-1.777-.202-3.644-.888-3.644-3.954 0-.873.312-1.588.824-2.147-.083-.202-.357-1.016.077-2.118 0 0 .672-.215 2.2.82a7.67 7.67 0 0 1 2.003-.269 7.67 7.67 0 0 1 2.003.27c1.527-1.036 2.198-.821 2.198-.821.435 1.102.161 1.916.079 2.118.513.559.823 1.274.823 2.147 0 3.074-1.87 3.75-3.652 3.948.287.247.543.735.543 1.481 0 1.07-.01 1.932-.01 2.195 0 .214.145.463.55.385A8.001 8.001 0 0 0 8 .198Z"
+    />
+  </svg>
+  {/* Rail body: caption (mobile only) stacked above the dot row. min-w-0
+      lets the inner column shrink below its intrinsic width inside a flex
+      row, so the rail can fill the remaining space without overflow. */}
+  <div class="flex min-w-0 flex-1 flex-col">
+    <div
+      class="md:hidden rail-caption flex items-baseline justify-between font-mono text-[0.5rem] uppercase tracking-[0.08em] text-black/55 transition-opacity duration-150 ease-out dark:text-white/55"
+      style="font-variant-numeric: tabular-nums;"
+    >
+      <span>{startLabel}</span>
+      <span class="text-black/70 dark:text-white/70">{formattedTotal}</span>
+      <span>{endLabel}</span>
+    </div>
+    <div
+      class="rail-root relative flex w-full items-center justify-between py-2 text-emerald-500 dark:text-emerald-400"
+    >
+      {
+        data.weeks.map((week) => (
+          <span
+            class="rail-dot inline-block size-0.5 bg-current will-change-transform"
+            style={`opacity: ${opacityFor(week.total)}; transform-origin: center center; transition: transform 140ms cubic-bezier(0.2, 0, 0, 1);`}
+            data-total={week.total}
+            data-date={week.startDate}
+          />
+        ))
+      }
+      <div
+        class="rail-tooltip pointer-events-none absolute -translate-x-1/2 whitespace-nowrap font-mono text-xs uppercase tracking-wider text-black/70 opacity-0 dark:text-white/70"
+        style="font-variant-numeric: tabular-nums; bottom: 150%; left: 0; margin-bottom: 0.25rem; transition: opacity 150ms ease-out, left 220ms cubic-bezier(0.2, 0.8, 0.2, 1);"
+        role="status"
+        aria-live="polite"
+      >
+        <span class="rail-tooltip-inner inline-block" />
+      </div>
+    </div>
   </div>
 </div>
 
@@ -72,16 +127,27 @@ const formattedTotal = new Intl.NumberFormat("en-US").format(data.total);
     return 0.5 - 0.5 * Math.cos(Math.PI * t);
   }
 
-  function formatDate(isoDate: string): string {
-    if (!isoDate) return "";
-    const d = new Date(`${isoDate}T00:00:00Z`);
-    return d
-      .toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        timeZone: "UTC",
-      })
+  // A GitHub contribution week runs Sunday → Saturday. We have the Sunday in
+  // data-date; derive the Saturday six days later and format the span as
+  // "APR 14–20" when same-month, "APR 28–MAY 4" when spanning months.
+  function formatWeekRange(startIso: string): string {
+    if (!startIso) return "";
+    const start = new Date(`${startIso}T00:00:00Z`);
+    const end = new Date(start.getTime());
+    end.setUTCDate(end.getUTCDate() + 6);
+
+    const startMonth = start
+      .toLocaleDateString("en-US", { month: "short", timeZone: "UTC" })
       .toUpperCase();
+    const endMonth = end
+      .toLocaleDateString("en-US", { month: "short", timeZone: "UTC" })
+      .toUpperCase();
+    const startDay = start.getUTCDate();
+    const endDay = end.getUTCDate();
+
+    return startMonth === endMonth
+      ? `${startMonth} ${startDay}\u2013${endDay}`
+      : `${startMonth} ${startDay}\u2013${endMonth} ${endDay}`;
   }
 
   function initRail(root: Element) {
@@ -90,6 +156,14 @@ const formattedTotal = new Intl.NumberFormat("en-US").format(data.total);
     const tooltipEl = host.querySelector<HTMLElement>(".rail-tooltip");
     if (dots.length === 0 || !tooltipEl) return;
     const tooltip: HTMLElement = tooltipEl;
+    // The inner span carries the text so we can animate text swaps (dip +
+    // lift) without interfering with the outer tooltip's position transition.
+    const innerEl =
+      tooltip.querySelector<HTMLElement>(".rail-tooltip-inner") ?? null;
+    // Caption sits in the parent .rail-group; fade it out while the tooltip
+    // is shown so the two don't collide on narrow footers.
+    const caption =
+      host.parentElement?.querySelector<HTMLElement>(".rail-caption") ?? null;
 
     const prefersReduced =
       typeof matchMedia !== "undefined" &&
@@ -97,6 +171,13 @@ const formattedTotal = new Intl.NumberFormat("en-US").format(data.total);
 
     let centers: number[] = [];
     let hostLeft = 0;
+    // Track which dot the tooltip is currently showing; only play the swap
+    // animation when it actually changes. Rate-limit the animation so rapid
+    // scrubbing across many dots doesn't stutter — text still updates every
+    // frame, but the dip+lift only plays at a human-readable cadence.
+    let lastIdx = -1;
+    let lastSwapAt = 0;
+    const SWAP_MIN_INTERVAL = 160; // ms
 
     function sampleCenters() {
       const hostRect = host.getBoundingClientRect();
@@ -138,17 +219,51 @@ const formattedTotal = new Intl.NumberFormat("en-US").format(data.total);
         const dot = dots[nearestIdx];
         const total = dot.dataset.total ?? "0";
         const date = dot.dataset.date ?? "";
-        const formattedDate = formatDate(date);
-        if (formattedDate) {
+        const range = formatWeekRange(date);
+        if (range) {
           const word = total === "1" ? "CONTRIBUTION" : "CONTRIBUTIONS";
-          tooltip.textContent = `${formattedDate} · ${total} ${word}`;
+          const nextText = `${range} · ${total} ${word}`;
+          const target = innerEl ?? tooltip;
+
+          if (nearestIdx !== lastIdx) {
+            target.textContent = nextText;
+            // Gentle dip + lift when the week changes; skipped when the
+            // last swap animation is still within SWAP_MIN_INTERVAL so
+            // fast scrubbing reads as continuous text updates, not strobe.
+            const now =
+              typeof performance !== "undefined" ? performance.now() : Date.now();
+            if (
+              innerEl &&
+              !prefersReduced &&
+              typeof innerEl.animate === "function" &&
+              now - lastSwapAt >= SWAP_MIN_INTERVAL
+            ) {
+              innerEl.animate(
+                [
+                  { opacity: 0.25, transform: "translateY(2px)" },
+                  { opacity: 1, transform: "translateY(0)" },
+                ],
+                {
+                  duration: 180,
+                  easing: "cubic-bezier(0.2, 0.8, 0.2, 1)",
+                },
+              );
+              lastSwapAt = now;
+            }
+            lastIdx = nearestIdx;
+          }
+
           // Position tooltip center above the nearest dot, anchored to host.
+          // CSS transition on `left` smooths the slide between dots.
           const offsetX = centers[nearestIdx] - hostLeft;
           tooltip.style.left = `${offsetX}px`;
           tooltip.style.opacity = "1";
+          if (caption) caption.style.opacity = "0";
         }
       } else {
         tooltip.style.opacity = "0";
+        if (caption) caption.style.opacity = "";
+        lastIdx = -1;
       }
     }
 
@@ -159,6 +274,37 @@ const formattedTotal = new Intl.NumberFormat("en-US").format(data.total);
         }
       }
       tooltip.style.opacity = "0";
+      if (caption) caption.style.opacity = "";
+      lastIdx = -1;
+      lastSwapAt = 0;
+    }
+
+    // Touch scrubbing: drag a finger along the rail to magnify and show the
+    // tooltip for the nearest week. We reuse the mousemove handler by
+    // synthesizing the one field it reads (clientX). Passive listeners and
+    // no preventDefault preserve two behaviors:
+    //   1. Vertical page scroll still works when a swipe starts on the rail.
+    //   2. The wrapping anchor still navigates to the GitHub profile on a
+    //      genuine tap — the browser auto-suppresses `click` once a horizontal
+    //      drag exceeds its movement threshold, so scrubbing doesn't navigate.
+    function updateFromTouch(event: TouchEvent) {
+      const t = event.touches[0] ?? event.changedTouches[0];
+      if (!t) return;
+      update({ clientX: t.clientX } as MouseEvent);
+    }
+
+    let touchResetTimer: number | undefined;
+    function scheduleTouchReset() {
+      if (touchResetTimer !== undefined) window.clearTimeout(touchResetTimer);
+      // Keep the tooltip visible briefly after finger-up so the user can
+      // read it without needing hover.
+      touchResetTimer = window.setTimeout(reset, 1200);
+    }
+    function cancelTouchReset() {
+      if (touchResetTimer !== undefined) {
+        window.clearTimeout(touchResetTimer);
+        touchResetTimer = undefined;
+      }
     }
 
     // Sample on the next frame so layout has settled.
@@ -166,6 +312,16 @@ const formattedTotal = new Intl.NumberFormat("en-US").format(data.total);
 
     host.addEventListener("mousemove", update);
     host.addEventListener("mouseleave", reset);
+    host.addEventListener("touchstart", (e) => {
+      cancelTouchReset();
+      updateFromTouch(e);
+    }, { passive: true });
+    host.addEventListener("touchmove", (e) => {
+      cancelTouchReset();
+      updateFromTouch(e);
+    }, { passive: true });
+    host.addEventListener("touchend", scheduleTouchReset);
+    host.addEventListener("touchcancel", reset);
     window.addEventListener("resize", sampleCenters);
   }
 

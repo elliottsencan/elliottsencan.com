@@ -6,7 +6,7 @@ const STANDFIRST =
 export const SITE: Site = {
   TITLE: "Elliott Sencan",
   DESCRIPTION: STANDFIRST,
-  EMAIL: "hello@elliottsencan.com",
+  EMAIL: "elliottsencan88@gmail.com",
   LOCATION: "San Diego, CA",
   STANDFIRST,
   GITHUB_LOGIN: "elliottsencan",

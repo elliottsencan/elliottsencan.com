@@ -36,6 +36,20 @@ const { title, description, image = "/favicon.ico" } = Astro.props;
 <!-- Canonical URL -->
 <link rel="canonical" href={canonicalURL} />
 
+<!-- Signature draw: play once per fresh page load.
+     Hard load / reload / new tab gets a fresh window, so the animation plays.
+     ClientRouter soft navigation would otherwise re-trigger it (html attrs
+     are swapped), so we mark the incoming <html> before each swap. -->
+<script is:inline>
+  if (window.__sigPlayed) {
+    document.documentElement.classList.add("sig-played");
+  }
+  window.__sigPlayed = true;
+  document.addEventListener("astro:before-swap", (e) => {
+    e.newDocument.documentElement.classList.add("sig-played");
+  });
+</script>
+
 <!-- Primary Meta Tags -->
 <title>{title}</title>
 <meta name="title" content={title} />
@@ -136,44 +150,67 @@ const { title, description, image = "/favicon.ico" } = Astro.props;
     });
   }
 
-  function toggleTheme(dark) {
-    const css = document.createElement("style");
-
-    css.appendChild(
-      document.createTextNode(
-        `* {
-             -webkit-transition: none !important;
-             -moz-transition: none !important;
-             -o-transition: none !important;
-             -ms-transition: none !important;
-             transition: none !important;
-          }
-        `,
-      ),
-    );
-
-    document.head.appendChild(css);
-
+  function applyTheme(dark) {
     if (dark) {
       document.documentElement.classList.add("dark");
     } else {
       document.documentElement.classList.remove("dark");
     }
-
-    window.getComputedStyle(css).opacity;
-    document.head.removeChild(css);
-
     setGiscusTheme();
   }
 
-  function preloadTheme() {
-    const userTheme = localStorage.theme;
-
-    if (userTheme === "light" || userTheme === "dark") {
-      toggleTheme(userTheme === "dark");
+  // User-initiated or system-preference change. Delegate the crossfade
+  // to the browser's View Transitions API so the animation happens at
+  // the compositor level in a single snapshot-to-snapshot fade, which
+  // sidesteps all the per-element `transition-colors` / `transition-all`
+  // utilities on the page trying to animate the same inherited `color`
+  // at different cascade depths (which produces visible flicker).
+  //
+  // The `theme-transition` class on <html> does two jobs while the
+  // transition is in flight (see global.css): suppresses CSS transitions
+  // so the new snapshot captures the true final colors (preventing the
+  // post-transition pop on links and the footer), and lengthens the
+  // pseudo-element crossfade for a more graceful feel.
+  //
+  // Fallback: instant apply on unsupported browsers or when the user
+  // prefers reduced motion.
+  function toggleTheme(dark) {
+    const reduceMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    if (document.startViewTransition && !reduceMotion) {
+      document.documentElement.classList.add("theme-transition");
+      const transition = document.startViewTransition(() => applyTheme(dark));
+      transition.finished.finally(() => {
+        document.documentElement.classList.remove("theme-transition");
+      });
     } else {
-      toggleTheme(window.matchMedia("(prefers-color-scheme: dark)").matches);
+      applyTheme(dark);
     }
+  }
+
+  // Pre-paint (initial load) and post-swap (Astro ClientRouter): we must
+  // apply the theme instantly to avoid a flash from the SSR default.
+  // Inject a transient rule that kills all transitions, flip the class,
+  // force a reflow, then remove the rule.
+  function preloadTheme() {
+    const css = document.createElement("style");
+    css.appendChild(
+      document.createTextNode(
+        `*,*::before,*::after{transition:none !important}`,
+      ),
+    );
+    document.head.appendChild(css);
+
+    const userTheme = localStorage.theme;
+    if (userTheme === "light" || userTheme === "dark") {
+      applyTheme(userTheme === "dark");
+    } else {
+      applyTheme(window.matchMedia("(prefers-color-scheme: dark)").matches);
+    }
+
+    window.getComputedStyle(css).opacity;
+    document.head.removeChild(css);
   }
 
   function addCopyCodeButtons() {

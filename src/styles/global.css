@@ -156,6 +156,32 @@
   }
 }
 
+/* Theme toggle crossfade.
+
+   During a theme toggle the browser's View Transitions API takes a
+   snapshot before and after the class flip, then crossfades between
+   them. Two things must hold while this class is active:
+
+   1. CSS transitions on real elements are suppressed — otherwise the
+      post-callback snapshot captures links (transition-colors) and
+      the footer (transition-all on .animate) still at their old
+      colors, causing a visible pop when the real DOM is revealed.
+   2. The ::view-transition-*(root) pseudo-elements run a longer,
+      eased animation than the browser default ~250ms linear, for a
+      more graceful feel. Scoped to this class so Astro's page-nav
+      view transitions keep their default snappier timing. */
+html.theme-transition *,
+html.theme-transition *::before,
+html.theme-transition *::after {
+  transition: none !important;
+}
+
+html.theme-transition::view-transition-old(root),
+html.theme-transition::view-transition-new(root) {
+  animation-duration: 500ms;
+  animation-timing-function: ease-in-out;
+}
+
 .animate {
   @apply -translate-y-3 opacity-0;
   @apply transition-all duration-300 ease-out;
@@ -171,6 +197,18 @@ html #back-to-top {
 
 html.scrolled #back-to-top {
   @apply pointer-events-auto opacity-100;
+}
+
+/* Signature logo: once-per-session gate. Flag is set by inline script in
+   Head.astro; when present, skip the draw + opacity animations and show the
+   final rest state immediately. */
+html.sig-played .sig-stroke {
+  animation: none !important;
+  stroke-dashoffset: 0 !important;
+}
+
+html.sig-played .signature-logo {
+  animation: none !important;
 }
 
 /* shiki config */
