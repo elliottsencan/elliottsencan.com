@@ -1,0 +1,31 @@
+---
+/**
+ * Layout wrapper for a project / case-study page. Mirrors PostLayout but emits
+ * `Article` schema (rather than `BlogPosting`) and draws tag metadata from the
+ * `stack` field instead of post tags.
+ *
+ * Falls back to the dynamic OG image (/og/projects/{id}.png) when no thumbnail
+ * is set on the project frontmatter.
+ */
+import type { CollectionEntry } from "astro:content";
+import Layout from "@layouts/Layout.astro";
+
+type Props = {
+  project: CollectionEntry<"projects">;
+};
+
+const { project } = Astro.props;
+const ogImage = project.data.thumbnail ?? `/og/projects/${project.id}.png`;
+---
+
+<Layout
+  title={project.data.title}
+  description={project.data.description}
+  ogType="article"
+  schemaType="Article"
+  publishedTime={project.data.date}
+  tags={project.data.stack}
+  image={ogImage}
+>
+  <slot />
+</Layout>

@@ -1,0 +1,69 @@
+---
+import { REPO } from "@consts";
+/**
+ * Inline commit-history block for a blog post or case study.
+ *
+ * Replaces the "view on GitHub" link with an on-page reading: lets the article
+ * carry its own edit trail so an interested reader doesn't have to leave.
+ * Styled as an editorial end-matter section (mono small-caps label + dateline
+ * rows), matching the Masthead / PostMeta visual grammar.
+ *
+ * Renders nothing when the file has no commit history (e.g. a freshly drafted
+ * post on a branch with nothing pushed yet).
+ */
+import { getRevisions } from "@lib/git";
+
+type Props = {
+  /** Project-relative path of the source file, from `entry.filePath`. */
+  filePath: string | undefined;
+};
+
+const { filePath } = Astro.props;
+const revisions = filePath ? getRevisions(filePath) : [];
+
+const dateFormatter = new Intl.DateTimeFormat("en-GB", {
+  day: "2-digit",
+  month: "short",
+  year: "2-digit",
+  timeZone: "UTC",
+});
+
+const commitBaseURL = filePath ? `https://github.com/${REPO.OWNER}/${REPO.NAME}/commit` : null;
+---
+
+{
+  revisions.length > 0 && (
+    <section class="not-prose mt-16 border-t border-black/10 pt-6 dark:border-white/15">
+      <p
+        class="mb-4 font-mono text-xs uppercase tracking-wider text-black/55 dark:text-white/55"
+        style="font-variant-numeric: tabular-nums;"
+      >
+        Revisions &middot; {revisions.length}
+      </p>
+      <ol class="space-y-2 text-sm">
+        {revisions.map((revision) => (
+          <li
+            class="grid grid-cols-[auto_auto_1fr] items-baseline gap-x-4 text-black/75 dark:text-white/75"
+            style="font-variant-numeric: tabular-nums;"
+          >
+            <time
+              datetime={revision.date.toISOString()}
+              class="font-mono text-xs uppercase tracking-wider text-black/55 dark:text-white/55"
+            >
+              {dateFormatter.format(revision.date).toUpperCase()}
+            </time>
+            <a
+              href={commitBaseURL ? `${commitBaseURL}/${revision.sha}` : undefined}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="font-mono text-xs text-black/45 underline decoration-black/20 underline-offset-[3px] transition-colors duration-300 hover:text-black hover:decoration-black/50 dark:text-white/45 dark:decoration-white/20 dark:hover:text-white dark:hover:decoration-white/50"
+            >
+              {revision.sha}
+            </a>
+            <span>{revision.subject}</span>
+          </li>
+        ))}
+      </ol>
+    </section>
+  )
+}

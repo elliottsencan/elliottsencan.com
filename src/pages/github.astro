@@ -54,7 +54,7 @@ const formatCount = (n: number): string => new Intl.NumberFormat("en-US").format
 
       {
         !anyData && (
-          <section class="animate">
+          <section>
             <p class="text-base text-black/75 dark:text-white/75">
               Live data from GitHub isn&rsquo;t available right now. Visit{" "}
               <Link href={githubProfileUrl} external>
@@ -68,7 +68,7 @@ const formatCount = (n: number): string => new Intl.NumberFormat("en-US").format
 
       {
         profile && (
-          <section class="animate space-y-6">
+          <section class="space-y-6">
             <div class="flex items-start gap-5">
               <img
                 src={profile.avatarUrl}
@@ -125,7 +125,7 @@ const formatCount = (n: number): string => new Intl.NumberFormat("en-US").format
 
       {
         pinned && pinned.length > 0 && (
-          <section class="animate space-y-4">
+          <section class="space-y-4">
             <div class="flex items-baseline justify-between">
               <h2 class="font-mono text-xs uppercase tracking-wider text-black/60 dark:text-white/60">
                 Pinned
@@ -175,7 +175,7 @@ const formatCount = (n: number): string => new Intl.NumberFormat("en-US").format
 
       {
         activity && activity.length > 0 && (
-          <section class="animate space-y-4">
+          <section class="space-y-4">
             <div class="flex items-baseline justify-between">
               <h2 class="font-mono text-xs uppercase tracking-wider text-black/60 dark:text-white/60">
                 Activity

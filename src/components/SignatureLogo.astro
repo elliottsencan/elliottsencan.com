@@ -66,25 +66,26 @@ const { class: className } = Astro.props;
        This matches the other nav items visually while letting us pop to
        full opacity during the draw animation. */
     color: #000;
-    opacity: 0.75;
+    opacity: 0.9;
     transition: opacity 250ms ease-out;
-    animation: sig-fade 4s linear 150ms;
+    animation: sig-fade 2.3s linear 150ms;
   }
 
   :global(html.dark) .signature-logo {
     color: #fff;
   }
 
-  /* Hold opacity at 1 through the draw, then settle to rest. Keyframe split
-     lines up with end of stroke-2 (~2.1s after delay) so the fade starts
-     right as the pen lifts. */
+  /* Hold opacity at 1 through the draw, then settle to rest. With the 2.3s
+     duration and 150ms delay, the 89% split puts the fade start at ~2.2s,
+     just after stroke-2 ends at 2.0s — the fade begins right as the pen
+     lifts on "Sencan". */
   @keyframes sig-fade {
     0%,
     89% {
       opacity: 1;
     }
     100% {
-      opacity: 0.75;
+      opacity: 0.9;
     }
   }
 
@@ -106,14 +107,14 @@ const { class: className } = Astro.props;
 
   .sig-stroke-1 {
     animation-name: sig-reveal;
-    animation-duration: 1250ms;
+    animation-duration: 850ms;
     animation-delay: 150ms;
   }
 
   .sig-stroke-2 {
     animation-name: sig-reveal;
-    animation-duration: 1250ms;
-    animation-delay: 1750ms; /* stroke-1 end (1250ms) + 500ms pen-lift */
+    animation-duration: 850ms;
+    animation-delay: 1150ms; /* stroke-1 end (150ms + 850ms = 1000ms) + 150ms pen-lift */
   }
 
   @keyframes sig-reveal {
@@ -125,7 +126,7 @@ const { class: className } = Astro.props;
     }
   }
 
-  /* Once-per-session skip rule lives in global.css (html.sig-played .sig-stroke)
+  /* Once-per-session skip rule lives in global.css (html.intro-played .sig-stroke)
      so it can target across the scoped style boundary without :global() quirks. */
 
   @media (prefers-reduced-motion: reduce) {

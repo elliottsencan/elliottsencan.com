@@ -19,7 +19,9 @@
     "@astrojs/sitemap": "^3.6.0",
     "@tailwindcss/vite": "^4.1.13",
     "astro": "^5.13.9",
+    "astro-og-canvas": "^0.11.0",
     "astro-pagefind": "^1.8.5",
+    "canvaskit-wasm": "^0.41.1",
     "clsx": "^2.1.1",
     "tailwind-merge": "^3.3.1",
     "tailwindcss": "^4.1.13",
@@ -32,5 +34,6 @@
   },
   "pnpm": {
     "onlyBuiltDependencies": ["@biomejs/biome", "esbuild"]
-  }
+  },
+  "packageManager": "pnpm@10.33.0+sha512.10568bb4a6afb58c9eb3630da90cc9516417abebd3fabbe6739f0ae795728da1491e9db5a544c76ad8eb7570f5c4bb3d6c637b2cb41bfdcdb47fa823c8649319"
 }
