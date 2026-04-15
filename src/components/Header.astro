@@ -16,9 +16,8 @@ import SignatureLogo from "./SignatureLogo.astro";
         <button
           id="magnifying-glass"
           aria-label="Search"
-          class="inline-flex cursor-pointer items-center text-black/50 transition-colors duration-300 ease-in-out hover:text-black focus-visible:text-black dark:text-white/50 dark:hover:text-white dark:focus-visible:text-white"
+          class="inline-flex cursor-pointer items-center gap-1.5 text-black/75 transition-colors duration-300 ease-in-out hover:text-black focus-visible:text-black dark:text-white/75 dark:hover:text-white dark:focus-visible:text-white"
         >
-          <kbd id="search-shortcut" class="hidden font-mono text-xs md:inline"></kbd>
           <svg
             aria-hidden="true"
             viewBox="0 0 24 24"
@@ -31,6 +30,67 @@ import SignatureLogo from "./SignatureLogo.astro";
           >
             <circle cx="10.5" cy="10.5" r="6.5" />
             <line x1="15.5" y1="15.5" x2="21" y2="21" />
+          </svg>
+          <kbd
+            id="search-shortcut"
+            class="hidden rounded-[3px] border border-black/15 px-2 py-2 font-mono text-[11px] leading-none md:inline-block dark:border-white/20"
+          ></kbd>
+        </button>
+        <button
+          id="theme-cycle"
+          aria-label="Switch theme"
+          title="Theme: Auto"
+          class="inline-flex cursor-pointer items-center text-black/75 transition-colors duration-300 ease-in-out hover:text-black focus-visible:text-black dark:text-white/75 dark:hover:text-white dark:focus-visible:text-white"
+        >
+          <!-- Auto (system): circle outline with right half filled. The user-
+               selected mode — shown regardless of what the OS resolves to. -->
+          <svg
+            data-icon="system"
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            class="size-5"
+          >
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 3 a9 9 0 0 1 0 18 z" fill="currentColor" stroke="none" />
+          </svg>
+          <!-- Light: sun. -->
+          <svg
+            data-icon="light"
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="hidden size-5"
+          >
+            <circle cx="12" cy="12" r="4" />
+            <line x1="12" y1="2.5" x2="12" y2="4.5" />
+            <line x1="12" y1="19.5" x2="12" y2="21.5" />
+            <line x1="2.5" y1="12" x2="4.5" y2="12" />
+            <line x1="19.5" y1="12" x2="21.5" y2="12" />
+            <line x1="5.3" y1="5.3" x2="6.7" y2="6.7" />
+            <line x1="17.3" y1="17.3" x2="18.7" y2="18.7" />
+            <line x1="5.3" y1="18.7" x2="6.7" y2="17.3" />
+            <line x1="17.3" y1="6.7" x2="18.7" y2="5.3" />
+          </svg>
+          <!-- Dark: crescent moon. -->
+          <svg
+            data-icon="dark"
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="hidden size-5"
+          >
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" />
           </svg>
         </button>
       </nav>

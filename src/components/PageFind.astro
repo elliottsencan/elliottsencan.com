@@ -6,11 +6,11 @@ import Search from "astro-pagefind/components/Search";
   <div
     transition:persist
     id="backdrop"
-    class="pointer-events-none fixed inset-0 z-50 overflow-y-auto bg-gray-500/25 p-4 opacity-0 transition-opacity duration-300 ease-out sm:p-6 md:p-20"
+    class="pointer-events-none fixed inset-0 z-50 overflow-y-auto bg-black/50 p-4 opacity-0 transition-opacity duration-200 ease-out sm:p-6 md:p-20"
   >
     <div
       id="pagefind-container"
-      class="mx-auto max-w-2xl scale-95 transform overflow-hidden rounded-xl bg-white opacity-0 shadow-2xl ring-1 ring-black/5 transition-all duration-200 ease-in dark:bg-neutral-900 dark:ring-white/10"
+      class="mx-auto max-w-2xl overflow-hidden rounded-md border border-black/10 bg-[#f6f4ef] opacity-0 shadow-lg transition-opacity duration-150 ease-in dark:border-white/15 dark:bg-[#18161a]"
     >
       <Search
         id="search"
@@ -54,15 +54,15 @@ import Search from "astro-pagefind/components/Search";
     }, 0);
     backdrop?.classList.remove("opacity-0", "pointer-events-none");
     backdrop?.classList.add("opacity-100", "pointer-events-auto");
-    pagefindContainer?.classList.remove("scale-95", "opacity-0");
-    pagefindContainer?.classList.add("scale-100", "opacity-100");
+    pagefindContainer?.classList.remove("opacity-0");
+    pagefindContainer?.classList.add("opacity-100");
   }
 
   function closePagefind() {
     var search = document.getElementById("search");
     search.value = "";
-    pagefindContainer?.classList.add("scale-95", "opacity-0");
-    pagefindContainer?.classList.remove("scale-100", "opacity-100");
+    pagefindContainer?.classList.add("opacity-0");
+    pagefindContainer?.classList.remove("opacity-100");
     backdrop?.classList.add("opacity-0", "pointer-events-none");
     backdrop?.classList.remove("opacity-100", "pointer-events-auto");
   }
@@ -123,28 +123,35 @@ import Search from "astro-pagefind/components/Search";
     --pagefind-ui-border: transparent;
   }
 
+  /* Editorial prompt treatment: heading font, larger type, hairline rule.
+     The input is the palette's centerpiece — it should read as a small
+     editorial moment ("Search writing, projects, about…") rather than a
+     form field. Border color matches the canvas hairlines used elsewhere. */
   #search .pagefind-ui__search-input {
-    font-weight: normal;
-    height: 3rem;
+    font-family: "Neue Montreal", "Satoshi", ui-sans-serif, system-ui, sans-serif;
+    font-weight: 500;
+    height: 3.5rem;
     padding-left: 2.75rem;
     background-color: transparent;
     border: none;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
     border-radius: 0;
     outline: none;
-    font-size: 0.875rem;
+    font-size: 1.125rem;
   }
 
   .dark #search .pagefind-ui__search-input {
-    border-bottom-color: #374151;
+    border-bottom-color: rgba(255, 255, 255, 0.15);
   }
 
   #search .pagefind-ui__search-clear {
     top: calc(50% - 12px);
   }
 
+  /* Magnifying glass pseudo-element sits to the left of the input. Vertically
+     center it inside the 3.5rem input (1.75rem midline, minus ~half icon). */
   #search .pagefind-ui__form::before {
-    top: calc(1.5rem - 9px);
+    top: calc(1.75rem - 9px);
     left: 1rem;
     opacity: 0.4;
   }

@@ -1,0 +1,249 @@
+---
+title: "Hello World"
+description: "A long and intentionally incoherent rehearsal of every feature the site can render, used to stress-test typography, spacing, code, tables, and the rest of the editorial chrome."
+date: 2026-03-23
+updated: 2026-04-14
+draft: false
+tags: ["meta", "stress test", "typography", "kitchen sink"]
+aiAssistance: "light"
+aiNote: "Draft outline and word-salad prose generated with model assistance; structure and styling decisions by the author."
+canonical: "https://elliottsencan.com/writing/hello-world"
+---
+import Callout from "@components/Callout.astro";
+import EditorialRule from "@components/EditorialRule.astro";
+
+This is not an essay. It is a rehearsal. Every paragraph below exists to put a particular piece of the site through its paces — leading, color, spacing, syntax highlighting, the shape of a footnote, the density of a table. The words are only the pretext. If any of it reads like sense, treat that as coincidence; the purpose is stress, not signal.
+
+## Typography
+
+Plain prose is the baseline: a calm measure, a comfortable line-height, a soft contrast between ink and page. Within it, words earn emphasis only when they must — **bold** for weight, *italic* for voice, ***both together*** for the rare case where one reinforces the other, and ~~strikethrough~~ when a thought is retracted but worth leaving on the page. Inline code like `const verdant = "moss"` should break from the prose the way a bell breaks from a sentence: quickly, quietly, and without swallowing the line.
+
+Links carry two jobs. An [internal link to the about page](/about) points at somewhere on this site and should feel continuous with the prose, while an [external link to example.com](https://example.com) hands the reader off to another world entirely. Hover them and the underline should firm up without the color doing anything dramatic. Keyboard hints like <kbd>⌘</kbd><kbd>K</kbd> belong inline, the way a stage direction sits inside a scene. Highlighted fragments like <mark>this phrase is conspicuous</mark> draw the eye without stealing it. Chemistry gets a look in — H<sub>2</sub>O, CO<sub>2</sub>, C<sub>8</sub>H<sub>10</sub>N<sub>4</sub>O<sub>2</sub> — and so do equations in passing, like E=mc<sup>2</sup> or x<sup>n</sup> + y<sup>n</sup> = z<sup>n</sup>, because subscripts and superscripts share the same vertical jitter budget and it is worth seeing them behave.
+
+## Headings
+
+Subordinate headings should nest without argument. The table of contents collects h2 and h3 by default and keeps the deeper levels tucked away, but the styling of those deeper headings still matters when they surface inside long sections.
+
+### Third-level
+
+The third level reads like the start of a subsection — a small shift in weight, a smaller shift in size, no drama.
+
+#### Fourth-level
+
+By the fourth level the differences are quieter still, and the page is trusting the reader to follow along.
+
+##### Fifth-level
+
+Fifth-level headings are rare in practice. They exist mostly to make sure the cascade doesn't collapse into body text.
+
+###### Sixth-level
+
+The sixth level is the floor. If it ever appears in a real post, the outline probably needs pruning.
+
+## Lists
+
+Lists should breathe. Unordered lists carry bullets that recede into the margin; ordered lists carry numerals that hold their own column.
+
+- First item, plainspoken, with no embellishment.
+- Second item, slightly longer, with a clause or two to see how wrap behaves inside a list marker's indent.
+- Third item, with a nested list beneath it:
+  - Nested bullet one.
+  - Nested bullet two, which itself has children:
+    - Leaf one.
+    - Leaf two.
+- Fourth item, back at the top level, to close the rhythm.
+
+Ordered lists carry their own discipline:
+
+1. One.
+2. Two, with a paragraph that runs a little longer so the marker's alignment with the paragraph's second line is visible.
+3. Three, with children:
+   1. One-of-three.
+   2. Two-of-three.
+4. Four, the closer.
+
+Task lists are a GFM flourish — useful for a reading list, a TODO, or a post-mortem checklist:
+
+- [x] Write the kitchen sink post.
+- [x] Test tables at narrow widths.
+- [ ] Publish before the next merge freeze.
+- [ ] Ask someone to read the typography with fresh eyes.
+
+A definition list earns its keep in a glossary:
+
+<dl>
+  <dt>Measure</dt>
+  <dd>The width of the text column, expressed in characters. A comfortable measure sits between 55 and 75 characters per line.</dd>
+  <dt>Leading</dt>
+  <dd>The vertical space between lines of text. In body prose, roughly 1.5× the type size is a reliable starting point.</dd>
+  <dt>Hanging indent</dt>
+  <dd>When the first line starts at the margin and wrapped lines indent beneath it. Common in bibliographies and definition lists.</dd>
+</dl>
+
+## Quotes and rules
+
+A blockquote should sit inside the prose like a quiet guest at a dinner party — present, marked, never shouting:
+
+> A short one first. Terse, confident, and worth the vertical space it takes.
+
+A longer one, with multiple paragraphs, is a different test entirely. The border should continue cleanly down the left margin, the paragraphs should space normally, and the whole block should still read as one sustained voice:
+
+> First paragraph of a longer quote. It runs on past one line so the wrapping behaviour is visible, and carries enough clauses to see whether the rhythm inside the quote matches the rhythm outside of it.
+>
+> Second paragraph of the same quote. By this point the reader has settled into the other voice, and the typographic treatment needs to support that without calling attention to itself.
+>
+> > A nested blockquote, quieter still, sits inside the outer one like a memory the speaker is surfacing. The nesting should read naturally even without elaborate chrome.
+
+Between sections, a plain horizontal rule does unobtrusive work:
+
+---
+
+And when a section deserves more ceremony, the dot-grid editorial rule steps in:
+
+<EditorialRule />
+
+## Code
+
+Code blocks are where Expressive Code earns its keep. Themes switch with the color mode, line numbers appear unless the language explicitly opts out, and titles sit above the frame like a file tab.
+
+```ts title="src/lib/greet.ts"
+// A small function to demonstrate TypeScript in the theme.
+export type Greeting = {
+  subject: string;
+  tone: "warm" | "neutral" | "cold";
+};
+
+export function greet({ subject, tone }: Greeting): string {
+  const prefix = tone === "warm" ? "Hello" : tone === "cold" ? "Hey" : "Hi";
+  return `${prefix}, ${subject}.`;
+}
+```
+
+```python title="etl/transform.py" {3-5}
+import pandas as pd
+
+def normalize(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.copy()
+    df["email"] = df["email"].str.strip().str.lower()
+    return df.reset_index(drop=True)
+```
+
+```bash
+# Install dependencies, build, and verify.
+pnpm install
+pnpm build
+pnpm preview
+```
+
+```json title="package excerpt"
+{
+  "name": "elliottsencan.com",
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build"
+  }
+}
+```
+
+Plain text blocks opt out of line numbers, so a scribble like the one below reads as a dialogue scrap rather than a compilable artefact:
+
+```text
+notes to self:
+  — check the footnotes twice
+  — the revisions block is too loud
+  — ask someone about the masthead
+```
+
+Inline `code` keeps its restrained treatment, so something like `--masthead-height: 3.5rem;` doesn't break the line's rhythm.
+
+## Tables
+
+Tables need enough content to stress-test horizontal rhythm. First, a compact alignment test:
+
+| Feature | Default | Notes |
+| --- | :---: | ---: |
+| Headings | ✓ | rendered h2–h6 |
+| Footnotes | ✓ | GFM footnote pipeline |
+| Callouts | — | MDX only |
+| Revisions | ✓ | derived from git log |
+
+A wider table tests what happens on a narrow viewport. A horizontal scroll is acceptable; a broken row is not:
+
+| Column | Description | Type | Default | Example | Notes |
+| --- | --- | --- | --- | --- | --- |
+| `title` | Post title used in header and OG card | string | — | `"Hello World"` | Required. |
+| `description` | Short summary for listings and OG | string | — | `"A rehearsal."` | Required. |
+| `date` | Publication date, coerced to UTC | Date | — | `2026-03-23` | Required. |
+| `updated` | Last meaningful edit | Date | — | `2026-04-14` | Optional. |
+| `tags` | Flat list of tag strings | string[] | — | `["meta", "stress test"]` | Optional. |
+| `aiAssistance` | Disclosure level | enum | — | `"light"` | `none · light · heavy · full`. |
+
+## Callouts
+
+Callouts are an MDX-only affair. Use them sparingly — an essay with four callouts reads like a form.
+
+<Callout type="default">
+  The default callout is a gentle aside. Use it for context that supports the surrounding prose without demanding a response.
+</Callout>
+
+<Callout type="info">
+  Informational callouts explain a convention, a caveat, or the reasoning behind a choice. They belong next to passages where the reader might otherwise pause to ask "why".
+</Callout>
+
+<Callout type="warning">
+  Warnings point at sharp edges — gotchas, deprecations, non-obvious failure modes. If you've seen the failure happen in production, say so here.
+</Callout>
+
+<Callout type="error">
+  Errors are the loudest tool in the box. Reach for one when the reader's default behaviour will break something. If you find yourself using this twice in a post, you probably need to rewrite the section around it.
+</Callout>
+
+## Media
+
+Images centre themselves in the column and take whatever room the prose gives them. A semantic `<figure>` with a `<figcaption>` is the right call when the image needs a line of context:
+
+<figure>
+  <img src="https://picsum.photos/seed/kitchen-sink/960/540" alt="A placeholder image in a 16:9 frame, used here only to exercise the figure and figcaption pairing." />
+  <figcaption>A stand-in image. Captions should feel quieter than the body text — smaller, cooler, and aligned with the image's natural column.</figcaption>
+</figure>
+
+## Details
+
+Native disclosure widgets are handy for end-matter — a long revision history, an appendix of caveats, a list of sources. They ship with defaults the browser agrees on, but the triangle and tight line-height can read as rough without a light hand applied.
+
+<details>
+  <summary>An appendix the reader can open if they want.</summary>
+
+  Inside the disclosure, regular prose rules should still apply — paragraphs space normally, inline emphasis like **bold** and *italic* still works, and the content is not penalised for being collapsed by default.
+
+  A second paragraph inside the disclosure, just to confirm the stacking and the spacing.
+</details>
+
+## Footnotes
+
+Footnotes are for the aside that doesn't belong in the paragraph but is worth not losing entirely.[^measure] They can be used to cite a source, to hedge a claim, or to hand the curious reader a thread to pull.[^pulled-thread] A third footnote exists here[^third] mostly to test that the "back to reference" affordance at the end of each note does what it says.
+
+## Long prose
+
+What follows is a long stretch of deliberately unstructured prose. Its only job is to occupy vertical space so the reader can test scroll rhythm, masthead auto-hide, sticky table of contents, and the compact footer variant.
+
+The first paragraph moves at a normal pace. It carries no headings, no images, no code, no tables — just words, chosen less for what they mean than for the shapes they make together on the page. Reading it back should feel like reading nothing in particular, which is the point. Good kitchen sink prose disappears under inspection, because anything loud in the writing would distract from what the rendering is actually doing.
+
+The second paragraph sustains the same register but puts a few more demands on the line. It runs longer, with more clauses and more incidental punctuation, and it occasionally surfaces words that are slightly unusual — palimpsest, catenary, parataxis — to confirm that unfamiliar shapes hyphenate and wrap cleanly. Somewhere in the middle it will drop a clause that is, strictly speaking, unnecessary, because real prose does that and the rendering should handle it the same way.
+
+The third paragraph introduces a rhetorical shift. It starts confidently, then undercuts itself, then recovers. The undercutting is important: it ensures the reader experiences the kind of pacing changes a real essay would produce, so the spacing between paragraphs — the air, not the ink — gets exercised in a realistic way.
+
+The fourth paragraph is plainer. Short sentences. A few of them. Back to back. No decoration. The idea is that short sentences reveal the leading more cleanly than long ones do. If leading is wrong, it will show here first.
+
+The fifth paragraph is a compensating opposite — one long sustained sentence without a paragraph break in it, running on from clause to clause, piling up subordinate ideas and qualifications, pivoting mid-thought, doubling back on itself, and generally refusing to resolve, until at last it reaches a closing clause that the reader accepts less because the sentence has earned it and more because the sentence was clearly, at this point, going to stop sooner or later whether the reader was ready or not.
+
+The sixth paragraph returns to normal. It's conversational, unhurried, and contains at least one phrase — *the nap of the paper* — that could only mean something to someone who has thought about paper. It also contains an internal aside (parenthetical, naturally) whose job is to test that italic and parenthetical punctuation don't collide awkwardly.
+
+The seventh paragraph runs quoted material past the line. "A sentence like this one," the author says, "sits inside quotation marks, which is a different test from a blockquote because the surrounding prose has to keep reading normally." The quotation marks should be typographic — curly, not straight — and the transitions in and out of the quoted voice should not require special handling from the reader.
+
+The eighth paragraph is the closer. After this, the footnotes section appears, and with it a small mono "NOTES" label, understated, sitting above the footnote list like a stage manager's cue. If the post has done its work, the reader will have scrolled through every feature the site offers without once needing to think about any of them. That is the definition of a good rehearsal: the audience, if there were one, would not have noticed the stage at all.
+
+[^measure]: A "measure" is the width of the text column — the number of characters per line. Comfortable prose sits between about 55 and 75 characters. This post's measure is constrained by the article container.
+[^pulled-thread]: The thread here is that footnotes are under-used on the web. They're cheap to render, they let the main prose stay lean, and they respect the reader's time in a way that parenthetical asides often don't.
+[^third]: The third footnote mostly exists so the footnote list has a third row and the backref affordance can be tested when there is more than one to distinguish.

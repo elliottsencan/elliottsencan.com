@@ -8,6 +8,9 @@ import { REPO } from "@consts";
  * Styled as an editorial end-matter section (mono small-caps label + dateline
  * rows), matching the Masthead / PostMeta visual grammar.
  *
+ * Collapsed behind <details> so a single-commit file doesn't claim 100px of
+ * vertical chrome at the end of the article; open to reveal the full list.
+ *
  * Renders nothing when the file has no commit history (e.g. a freshly drafted
  * post on a branch with nothing pushed yet).
  */
@@ -29,18 +32,31 @@ const dateFormatter = new Intl.DateTimeFormat("en-GB", {
 });
 
 const commitBaseURL = filePath ? `https://github.com/${REPO.OWNER}/${REPO.NAME}/commit` : null;
+const latestFormatted =
+  revisions.length > 0 ? dateFormatter.format(revisions[0].date).toUpperCase() : null;
 ---
 
 {
   revisions.length > 0 && (
-    <section class="not-prose mt-16 border-t border-black/10 pt-6 dark:border-white/15">
-      <p
-        class="mb-4 font-mono text-xs uppercase tracking-wider text-black/55 dark:text-white/55"
+    <details class="group not-prose mt-16 border-t border-black/10 dark:border-white/15">
+      <summary
+        class="flex cursor-pointer items-center justify-between gap-4 py-3 font-mono text-xs uppercase tracking-wider text-black/55 transition-colors duration-300 hover:text-black dark:text-white/55 dark:hover:text-white"
         style="font-variant-numeric: tabular-nums;"
       >
-        Revisions &middot; {revisions.length}
-      </p>
-      <ol class="space-y-2 text-sm">
+        <span>
+          Revisions &middot; {revisions.length}
+          {latestFormatted && (
+            <span class="ml-2 text-black/40 dark:text-white/40">— latest {latestFormatted}</span>
+          )}
+        </span>
+        <span
+          aria-hidden="true"
+          class="text-black/40 transition-transform duration-300 group-open:rotate-90 dark:text-white/40"
+        >
+          &rsaquo;
+        </span>
+      </summary>
+      <ol class="space-y-2 pb-4 text-sm">
         {revisions.map((revision) => (
           <li
             class="grid grid-cols-[auto_auto_1fr] items-baseline gap-x-4 text-black/75 dark:text-white/75"
@@ -64,6 +80,6 @@ const commitBaseURL = filePath ? `https://github.com/${REPO.OWNER}/${REPO.NAME}/
           </li>
         ))}
       </ol>
-    </section>
+    </details>
   )
 }

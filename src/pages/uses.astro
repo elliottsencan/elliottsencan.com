@@ -1,12 +1,16 @@
 ---
-import { Code } from "astro:components";
 import Container from "@components/Container.astro";
 import EditorialRule from "@components/EditorialRule.astro";
 import Layout from "@layouts/Layout.astro";
+import { Code } from "astro-expressive-code/components";
 
 // The /uses page, done the hacker-blog way: the configs ARE the answer. Each
 // section is a real file path + an excerpt of what's in it. The "why" lives
 // in inline comments, not in marketing prose.
+//
+// Expressive Code handles the editor-frame chrome, filename titlebar, copy
+// button, and line numbers — all from the `title` prop plus global config in
+// astro.config.mjs.
 //
 // Replace the TODO blocks below with actual excerpts from your dotfiles.
 // Trim to the parts that are interesting / opinionated — nobody needs to see
@@ -16,7 +20,7 @@ type ConfigBlock = {
   id: string;
   path: string;
   purpose?: string;
-  lang: Parameters<typeof Code>[0]["lang"];
+  lang: string;
   code: string;
 };
 
@@ -100,19 +104,6 @@ const configs: ConfigBlock[] = [
 }
 `,
   },
-  {
-    id: "browser",
-    path: "# browser",
-    purpose: "Not a config file — just what I use.",
-    lang: "text",
-    code: `# TODO — browser of choice + extensions that earn their keep.
-# Each one gets one line on why it's still installed.
-
-# Arc — vertical tabs, Spaces for context switching
-# 1Password — obvious
-# ...
-`,
-  },
 ];
 ---
 
@@ -151,25 +142,38 @@ const configs: ConfigBlock[] = [
         configs.map((config) => (
           <>
             <EditorialRule />
-            <section class="space-y-3">
-              <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                <code
-                  id={config.id}
-                  class="scroll-mt-24 font-mono text-sm text-black dark:text-white"
-                >
-                  {config.path}
-                </code>
-                {config.purpose && (
-                  <p class="text-sm text-black/60 dark:text-white/60">
-                    {config.purpose}
-                  </p>
-                )}
-              </div>
-              <Code code={config.code} lang={config.lang} theme="css-variables" />
+            <section id={config.id} class="space-y-3 scroll-mt-24">
+              {config.purpose && (
+                <p class="text-sm text-black/60 dark:text-white/60">
+                  {config.purpose}
+                </p>
+              )}
+              <Code code={config.code} lang={config.lang} title={config.path} />
             </section>
           </>
         ))
       }
+
+      <EditorialRule />
+
+      <section class="space-y-4">
+        <h2
+          id="browser"
+          class="font-mono text-xs uppercase tracking-wider text-black/60 dark:text-white/60"
+        >
+          Browser
+        </h2>
+        <ul class="not-prose flex flex-col gap-4 text-sm">
+          <li class="space-y-1">
+            <span class="font-medium text-black dark:text-white">TODO — browser of choice</span>
+            <p class="text-black/70 dark:text-white/70">TODO — why.</p>
+          </li>
+          <li class="space-y-1">
+            <span class="font-medium text-black dark:text-white">TODO — extensions that earn their keep</span>
+            <p class="text-black/70 dark:text-white/70">TODO — one line each.</p>
+          </li>
+        </ul>
+      </section>
 
       <EditorialRule />
 

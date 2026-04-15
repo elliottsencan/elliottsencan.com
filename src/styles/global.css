@@ -133,6 +133,19 @@
     @apply backdrop-blur-xs;
   }
 
+  /* Approximate masthead height; downstream sticky offsets (e.g. the TOC
+     right rail) key their `top` value off this so they don't pin under
+     the fixed header. */
+  :root {
+    --masthead-height: 3.5rem;
+  }
+
+  @media (min-width: 768px) {
+    :root {
+      --masthead-height: 4.5rem;
+    }
+  }
+
   main {
     @apply flex-1 py-20 md:py-32;
   }
@@ -185,8 +198,8 @@
       revealed.
    2. The ::view-transition-*(root) pseudo-elements run a longer,
       eased animation than the browser default ~250ms linear, for a
-      more graceful feel. Scoped to this class so Astro's page-nav
-      view transitions keep their default snappier timing. */
+      more graceful feel. Scoped to this class so theme-toggle timing
+      stays independent from the page-nav crossfade defined below. */
 html.theme-transition *,
 html.theme-transition *::before,
 html.theme-transition *::after {
@@ -195,15 +208,38 @@ html.theme-transition *::after {
 
 html.theme-transition::view-transition-old(root),
 html.theme-transition::view-transition-new(root) {
-  animation-duration: 500ms;
+  animation-duration: 750ms;
   animation-timing-function: ease-in-out;
+}
+
+/* Route view transitions (Astro ClientRouter).
+
+   The browser's default crossfade runs ~250ms linear, which reads as a
+   cut more than a transition. Lengthen and ease it so navigation
+   registers as a considered moment — still subtle, not showy. Symmetric
+   timing on both sides keeps the crossfade as a single graceful gesture.
+
+   The html.theme-transition rule above wins on specificity, so theme
+   toggles keep their own 750ms crossfade unchanged. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 375ms;
+  animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 1ms;
+  }
 }
 
 html #back-to-top {
   @apply pointer-events-none opacity-0;
+  transition: opacity 300ms ease;
 }
 
-html.scrolled #back-to-top {
+html.scrolled-deep #back-to-top {
   @apply pointer-events-auto opacity-100;
 }
 
@@ -273,48 +309,16 @@ article a.data-footnote-backref:hover {
   @apply text-black/70 dark:text-white/70;
 }
 
-/* shiki config */
-pre {
-  @apply border border-black/15 py-5 dark:border-white/20;
-}
-
+/* Expressive Code chrome tokens. Astro Expressive Code reads these via
+   styleOverrides (see astro.config.mjs) so the editor frame borders and
+   titlebar tone sit alongside the rest of the editorial shell in both
+   light and dark mode. */
 :root {
-  --astro-code-foreground: #09090b;
-  --astro-code-background: #fafafa;
-  --astro-code-token-comment: #a19595;
-  --astro-code-token-keyword: #f47067;
-  --astro-code-token-string: #00a99a;
-  --astro-code-token-function: #429996;
-  --astro-code-token-constant: #2b70c5;
-  --astro-code-token-parameter: #4e8fdf;
-  --astro-code-token-string-expression: #ae42a0;
-  --astro-code-token-punctuation: #8996a3;
-  --astro-code-token-link: #8d85ff;
+  --ec-border: rgb(0 0 0 / 0.15);
+  --ec-titlebar-bg: rgb(0 0 0 / 0.025);
 }
 
 .dark {
-  --astro-code-foreground: #fafafa;
-  --astro-code-background: #09090b;
-  --astro-code-token-comment: #a19595;
-  --astro-code-token-keyword: #f47067;
-  --astro-code-token-string: #00a99a;
-  --astro-code-token-function: #6eafad;
-  --astro-code-token-constant: #b3cceb;
-  --astro-code-token-parameter: #4e8fdf;
-  --astro-code-token-string-expression: #bf7db6;
-  --astro-code-token-punctuation: #8996a3;
-  --astro-code-token-link: #8d85ff;
-}
-
-/* copy code button on codeblocks */
-.copy-code {
-  @apply absolute right-3 top-3 grid size-9 place-content-center rounded-sm border border-black/15 bg-[#f6f4ef] text-center duration-300 ease-in-out dark:border-white/20 dark:bg-[#18161a];
-}
-
-.copy-code:hover {
-  @apply bg-[#E9E9E9] transition-colors dark:bg-[#232323];
-}
-
-.copy-code:active {
-  @apply scale-90 transition-transform;
+  --ec-border: rgb(255 255 255 / 0.2);
+  --ec-titlebar-bg: rgb(255 255 255 / 0.04);
 }

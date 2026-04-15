@@ -20,7 +20,7 @@ const contributions = await getContributions(SITE.GITHUB_LOGIN);
       </div>
     </div>
     <div class="flex flex-col-reverse gap-3 md:flex-row items-center md:justify-between md:gap-x-4">
-      <ul class="not-prose flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm">
+      <ul class="not-prose flex flex-wrap items-baseline gap-x-2 gap-y-1 text-xs">
         <li><span>&copy; {new Date().getFullYear()}</span></li>
         {
           SOCIALS.map((social) => (
@@ -43,8 +43,7 @@ const contributions = await getContributions(SITE.GITHUB_LOGIN);
             &middot;
           </span>
           <Link href={`mailto:${SITE.EMAIL}`} aria-label={`Email ${SITE.TITLE}`}>
-            <span class="md:hidden">Email</span>
-            <span class="hidden md:inline">Email</span>
+            Email
           </Link>
         </li>
         <li class="flex items-baseline gap-3">
@@ -52,18 +51,6 @@ const contributions = await getContributions(SITE.GITHUB_LOGIN);
             &middot;
           </span>
           <Link href="/rss.xml" aria-label="RSS Feed">RSS</Link>
-        </li>
-        <li class="flex items-baseline gap-3">
-          <span aria-hidden="true" class="text-black/40 dark:text-white/40">
-            &middot;
-          </span>
-          <button
-            id="theme-cycle"
-            aria-label="Cycle theme"
-            class="inline-block cursor-pointer text-current underline decoration-black/30 underline-offset-[3px] transition-colors duration-300 ease-in-out hover:text-black hover:decoration-black/50 focus-visible:text-black focus-visible:decoration-black/50 dark:decoration-white/30 dark:hover:text-white dark:hover:decoration-white/50 dark:focus-visible:text-white dark:focus-visible:decoration-white/50"
-          >
-            Theme: <span id="theme-cycle-label" aria-live="polite">Auto</span>
-          </button>
         </li>
       </ul>
       {

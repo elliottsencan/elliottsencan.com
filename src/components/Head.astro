@@ -196,8 +196,7 @@ const articleSchema =
   function init() {
     preloadTheme();
     onScroll();
-    updateThemeLabel();
-    addCopyCodeButtons();
+    updateThemeIcon();
 
     const backToTop = document.getElementById("back-to-top");
     backToTop?.addEventListener("click", (event) => scrollToTop(event));
@@ -216,7 +215,7 @@ const articleSchema =
         (next === "system" &&
           window.matchMedia("(prefers-color-scheme: dark)").matches);
       toggleTheme(dark);
-      updateThemeLabel();
+      updateThemeIcon();
     });
 
     window
@@ -230,18 +229,41 @@ const articleSchema =
     document.addEventListener("scroll", onScroll);
   }
 
-  function updateThemeLabel() {
+  // The icon tracks the user-selected mode (system/light/dark), not the
+  // resolved color scheme — so "auto" stays recognizable even when the OS
+  // is currently dark. aria-label announces what clicking next will do;
+  // the native title tooltip shows the current mode for sighted users
+  // hovering the glyph (the half-circle "auto" icon isn't self-evident).
+  function updateThemeIcon() {
     const theme = localStorage.getItem("theme") || "system";
-    const label = document.getElementById("theme-cycle-label");
-    if (!label) return;
-    label.textContent = theme === "system" ? "auto" : theme;
+    const button = document.getElementById("theme-cycle");
+    if (!button) return;
+    const currentLabel = theme === "system" ? "Auto" : theme === "light" ? "Light" : "Dark";
+    const next = theme === "system" ? "light" : theme === "light" ? "dark" : "auto";
+    button.setAttribute("aria-label", `Switch theme to ${next}`);
+    button.setAttribute("title", `Theme: ${currentLabel}`);
+    for (const icon of button.querySelectorAll("[data-icon]")) {
+      icon.classList.toggle("hidden", icon.dataset.icon !== theme);
+    }
   }
 
   function onScroll() {
-    if (window.scrollY > 0) {
-      document.documentElement.classList.add("scrolled");
+    const root = document.documentElement;
+    const y = window.scrollY;
+    if (y > 0) {
+      root.classList.add("scrolled");
     } else {
-      document.documentElement.classList.remove("scrolled");
+      root.classList.remove("scrolled");
+    }
+    // `scrolled-deep` keys visibility for chrome that's only useful once
+    // the reader is genuinely far into the page — currently `back-to-top`.
+    // Threshold is ~80% of the viewport height, so on a typical phone or
+    // laptop the button surfaces after the reader has clearly committed to
+    // scrolling, not on the first flick.
+    if (y > window.innerHeight * 0.8) {
+      root.classList.add("scrolled-deep");
+    } else {
+      root.classList.remove("scrolled-deep");
     }
   }
 
@@ -313,43 +335,6 @@ const articleSchema =
 
     window.getComputedStyle(css).opacity;
     document.head.removeChild(css);
-  }
-
-  function addCopyCodeButtons() {
-    let copyButtonLabel = "📋";
-    let codeBlocks = Array.from(document.querySelectorAll("pre"));
-
-    async function copyCode(codeBlock, copyButton) {
-      const codeText = codeBlock.innerText;
-      const buttonText = copyButton.innerText;
-      const textToCopy = codeText.replace(buttonText, "");
-
-      await navigator.clipboard.writeText(textToCopy);
-      copyButton.innerText = "✅";
-
-      setTimeout(() => {
-        copyButton.innerText = copyButtonLabel;
-      }, 2000);
-    }
-
-    for (let codeBlock of codeBlocks) {
-      const wrapper = document.createElement("div");
-      wrapper.style.position = "relative";
-
-      const copyButton = document.createElement("button");
-      copyButton.innerText = copyButtonLabel;
-      copyButton.classList = "copy-code";
-
-      codeBlock.setAttribute("tabindex", "0");
-      codeBlock.appendChild(copyButton);
-
-      codeBlock.parentNode.insertBefore(wrapper, codeBlock);
-      wrapper.appendChild(codeBlock);
-
-      copyButton?.addEventListener("click", async () => {
-        await copyCode(codeBlock, copyButton);
-      });
-    }
   }
 
   document.addEventListener("DOMContentLoaded", () => init());

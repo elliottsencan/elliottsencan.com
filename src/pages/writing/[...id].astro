@@ -1,6 +1,5 @@
 ---
 import { type CollectionEntry, getCollection, render } from "astro:content";
-import BackToPrevious from "@components/BackToPrevious.astro";
 import Container from "@components/Container.astro";
 import PostMeta from "@components/PostMeta.astro";
 import PostNavigation from "@components/PostNavigation.astro";
@@ -48,40 +47,54 @@ const prevPost = getPrevPost();
 
 const post = Astro.props;
 const { Content, headings } = await render(post);
+
+// Header meta row: tags + AI-assistance badge rendered as a single
+// dot-separated line in the same mono/uppercase treatment as PostMeta, so
+// the dateline reads as one continuous editorial label rather than a
+// competing chip row.
+type MetaRowItem = { label: string; href: string; title?: string };
+const metaRow: MetaRowItem[] = [];
+for (const tag of post.data.tags ?? []) {
+  metaRow.push({ label: tag, href: `/tags/${tag}` });
+}
+if (post.data.aiAssistance) {
+  metaRow.push({
+    label: `AI · ${post.data.aiAssistance}`,
+    href: `/process#${post.data.aiAssistance}`,
+    title: post.data.aiNote,
+  });
+}
 ---
 
 <PostLayout post={post}>
   <Container>
-    <div>
-      <BackToPrevious href="/">Back to writing</BackToPrevious>
-    </div>
-    <div class="my-10 space-y-4">
-      <div>
-        <PostMeta post={post} />
-      </div>
+    <div class="mb-10 space-y-3">
+      <PostMeta post={post} />
       <h1 class="font-heading text-3xl font-medium tracking-tight text-black dark:text-white">
         {post.data.title}
       </h1>
       {
-        ((post.data.tags && post.data.tags.length > 0) || post.data.aiAssistance) && (
-          <div class="flex flex-wrap gap-2 pt-3">
-            {post.data.tags?.map((tag) => (
-              <a
-                href={`/tags/${tag}`}
-                class="rounded-sm border border-black/15 px-2 py-1 text-sm transition-colors duration-300 ease-in-out hover:bg-black/5 hover:text-black focus-visible:bg-black/5 focus-visible:text-black dark:border-white/20 dark:hover:bg-white/5 dark:hover:text-white dark:focus-visible:bg-white/5 dark:focus-visible:text-white"
-              >
-                {tag}
-              </a>
+        metaRow.length > 0 && (
+          <div
+            class="flex flex-wrap items-center gap-x-3 gap-y-2 font-mono text-xs uppercase tracking-wider text-black/55 dark:text-white/55"
+            style="font-variant-numeric: tabular-nums;"
+          >
+            {metaRow.map((item, i) => (
+              <>
+                {i > 0 && (
+                  <span aria-hidden="true" class="text-black/30 dark:text-white/30">
+                    &middot;
+                  </span>
+                )}
+                <a
+                  href={item.href}
+                  title={item.title}
+                  class="transition-colors duration-300 ease-in-out hover:text-black focus-visible:text-black dark:hover:text-white dark:focus-visible:text-white"
+                >
+                  {item.label}
+                </a>
+              </>
             ))}
-            {post.data.aiAssistance && (
-              <a
-                href={`/process#${post.data.aiAssistance}`}
-                title={post.data.aiNote}
-                class="rounded-sm border border-black/15 px-2 py-1 text-sm transition-colors duration-300 ease-in-out hover:bg-black/5 hover:text-black focus-visible:bg-black/5 focus-visible:text-black dark:border-white/20 dark:hover:bg-white/5 dark:hover:text-white dark:focus-visible:bg-white/5 dark:focus-visible:text-white"
-              >
-                AI &middot; {post.data.aiAssistance}
-              </a>
-            )}
           </div>
         )
       }
@@ -98,7 +111,7 @@ const { Content, headings } = await render(post);
       <Content />
     </article>
     <RevisionHistory filePath={post.filePath} />
-    <div class="mt-24">
+    <div class="mt-16">
       <PostNavigation prevPost={prevPost} nextPost={nextPost} />
     </div>
   </Container>

@@ -28,16 +28,127 @@ function buildToc(headings: Heading[]) {
 ---
 
 <details
-  open
-  class="group rounded-lg border border-black/15 dark:border-white/20"
+  class="group toc not-prose mt-6 border-t border-black/10 dark:border-white/15"
 >
   <summary
-    class="cursor-pointer rounded-t-lg px-3 py-1.5 font-medium transition-colors group-open:bg-black/5 hover:bg-black/5 dark:group-open:bg-white/5 hover:dark:bg-white/5"
-    >Table of Contents</summary
+    class="flex cursor-pointer items-center justify-between gap-4 py-3 font-mono text-xs uppercase tracking-wider text-black/55 transition-colors duration-300 hover:text-black dark:text-white/55 dark:hover:text-white"
   >
+    <span>Contents &middot; {headings.filter((h: Heading) => h.depth === 2).length}</span>
+    <span
+      aria-hidden="true"
+      class="text-black/40 transition-transform duration-300 group-open:rotate-90 dark:text-white/40"
+    >
+      &rsaquo;
+    </span>
+  </summary>
   <nav>
-    <ul class="py-3">
+    <ul class="pb-4">
       {toc.map((heading) => <TableOfContentsHeading heading={heading} />)}
     </ul>
   </nav>
 </details>
+
+<style is:global>
+  /* Active-section highlighting. The inline script below sets
+     data-active="true" on the currently-visible heading's TOC link;
+     unmarked links stay muted. Scoped to `.toc` so this doesn't touch
+     links elsewhere on the page. `is:global` because the <a> tags
+     live inside a nested <TableOfContentsHeading> component, outside
+     this file's scoped-style reach. */
+  .toc a {
+    color: inherit;
+    opacity: 0.6;
+    transition: opacity 300ms ease, color 300ms ease;
+  }
+  .toc a:hover {
+    opacity: 1;
+  }
+  .toc a[data-active="true"] {
+    opacity: 1;
+    color: black;
+  }
+  .dark .toc a[data-active="true"] {
+    color: white;
+  }
+</style>
+
+<script>
+  // Active-section tracking: observe every heading the TOC references, and
+  // mark the TOC link whose target is furthest into the viewport as active.
+  // Re-runs on Astro soft-nav via astro:page-load.
+  function initToc() {
+    const toc = document.querySelector(".toc");
+    if (!toc) return;
+
+    const links = Array.from(
+      toc.querySelectorAll<HTMLAnchorElement>('a[href^="#"]'),
+    );
+    if (links.length === 0) return;
+
+    const targets: HTMLElement[] = [];
+    const linkBySlug = new Map<string, HTMLAnchorElement>();
+    for (const link of links) {
+      const slug = decodeURIComponent(link.getAttribute("href")!.slice(1));
+      const el = document.getElementById(slug);
+      if (el) {
+        targets.push(el);
+        linkBySlug.set(slug, link);
+      }
+    }
+    if (targets.length === 0) return;
+
+    // Track which headings are currently within the "reading zone" — the
+    // top third of the viewport. The topmost intersecting heading wins.
+    const visible = new Set<string>();
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          const id = entry.target.id;
+          if (entry.isIntersecting) {
+            visible.add(id);
+          } else {
+            visible.delete(id);
+          }
+        }
+
+        // Pick the first-in-document heading that's visible; fall back to
+        // the last heading scrolled past so the active state doesn't blank
+        // out while reading prose between headings.
+        let activeId: string | null = null;
+        if (visible.size > 0) {
+          for (const target of targets) {
+            if (visible.has(target.id)) {
+              activeId = target.id;
+              break;
+            }
+          }
+        } else {
+          // No heading in zone: find the last one above the zone.
+          const scrollY = window.scrollY;
+          for (const target of targets) {
+            if (target.getBoundingClientRect().top + scrollY <= scrollY + 120) {
+              activeId = target.id;
+            }
+          }
+        }
+
+        for (const link of links) {
+          const slug = decodeURIComponent(link.getAttribute("href")!.slice(1));
+          if (slug === activeId) {
+            link.setAttribute("data-active", "true");
+          } else {
+            link.removeAttribute("data-active");
+          }
+        }
+      },
+      {
+        rootMargin: "-10% 0px -66% 0px",
+        threshold: 0,
+      },
+    );
+
+    for (const target of targets) observer.observe(target);
+  }
+
+  document.addEventListener("astro:page-load", initToc);
+</script>
