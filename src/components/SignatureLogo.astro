@@ -62,9 +62,9 @@ const { class: className } = Astro.props;
     width: auto;
     /* tightened viewBox is 3660 × 833 (~4.4:1) — height drives layout */
     /* Explicit color so fill is fully opaque during the draw; the 75% rest
-       state comes from our own opacity, not from the Link's text-*/75 alpha.
-       This matches the other nav items visually while letting us pop to
-       full opacity during the draw animation. */
+       state comes from our own opacity, not from the Link's text-foo/75
+       alpha. This matches the other nav items visually while letting us
+       pop to full opacity during the draw animation. */
     color: #000;
     opacity: 0.9;
     transition: opacity 250ms ease-out;
