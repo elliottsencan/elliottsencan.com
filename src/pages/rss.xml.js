@@ -29,11 +29,14 @@ export async function GET(context) {
       const { Content } = await render(entry);
       const contentHTML = await container.renderToString(Content);
       const tagCategories = entry.collection === "blog" ? (entry.data.tags ?? []) : [];
+      // Blog collection entries are exposed at /writing/[id] — map the
+      // internal collection name to its public URL prefix.
+      const urlPrefix = entry.collection === "blog" ? "writing" : entry.collection;
       return {
         title: entry.data.title,
         description: entry.data.description,
         pubDate: entry.data.date,
-        link: `/${entry.collection}/${entry.id}/`,
+        link: `/${urlPrefix}/${entry.id}/`,
         content: contentHTML,
         categories: [entry.collection, ...tagCategories],
       };

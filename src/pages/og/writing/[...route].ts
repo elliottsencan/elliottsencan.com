@@ -1,5 +1,5 @@
 /**
- * Dynamic OG image for blog posts: /og/blog/{post-id}.png
+ * Dynamic OG image for writing posts: /og/writing/{post-id}.png
  *
  * Rendered at build time via `astro-og-canvas` (CanvasKit under the hood).
  * Fonts: currently the system sans-serif stack. The site's brand fonts ship

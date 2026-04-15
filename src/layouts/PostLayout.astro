@@ -4,7 +4,7 @@
  * derives every SEO/OpenGraph/JSON-LD field from its frontmatter, so the page
  * itself only supplies body content.
  *
- * Falls back to the dynamically generated OG image (/og/blog/{id}.png) when
+ * Falls back to the dynamically generated OG image (/og/writing/{id}.png) when
  * the post frontmatter doesn't specify one explicitly.
  */
 import type { CollectionEntry } from "astro:content";
@@ -15,7 +15,7 @@ type Props = {
 };
 
 const { post } = Astro.props;
-const ogImage = post.data.image ?? `/og/blog/${post.id}.png`;
+const ogImage = post.data.image ?? `/og/writing/${post.id}.png`;
 ---
 
 <Layout

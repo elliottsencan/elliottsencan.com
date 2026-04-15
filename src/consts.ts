@@ -1,7 +1,10 @@
 import type { Metadata, Person, Repo, Site, Socials } from "@types";
 
+// STANDFIRST is the site's one-line self-description. It's no longer rendered
+// on-page (the homepage is a writing feed, not a hero) — it now only powers
+// <meta name="description">, og:description, and the WebSite JSON-LD.
 const STANDFIRST =
-  "Engineer. I work on developer tools and complex systems — currently at GrupBlox, previously staff at ServiceNow.";
+  "Engineer in San Diego writing about developer tools, complex systems, and building software at scale.";
 
 export const SITE: Site = {
   TITLE: "Elliott Sencan",
@@ -15,13 +18,8 @@ export const SITE: Site = {
 };
 
 export const HOME: Metadata = {
-  TITLE: "Home",
+  TITLE: "Writing",
   DESCRIPTION: STANDFIRST,
-};
-
-export const BLOG: Metadata = {
-  TITLE: "Blog",
-  DESCRIPTION: "Writing about software engineering, architecture, and craft.",
 };
 
 export const PROJECTS: Metadata = {

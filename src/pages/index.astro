@@ -4,24 +4,15 @@ import Container from "@components/Container.astro";
 import EditorialRule from "@components/EditorialRule.astro";
 import Link from "@components/Link.astro";
 import Masthead from "@components/Masthead.astro";
-import { HOME, SITE } from "@consts";
+import { HOME } from "@consts";
 import Layout from "@layouts/Layout.astro";
 
-const blog = (await getCollection("blog"))
+// The homepage IS the writing feed — flat reverse-chron, no slice, no year
+// grouping, no bio. Post titles + dates are the entire content below the
+// masthead dateline; full bio lives at /about.
+const posts = (await getCollection("blog"))
   .filter((post) => !post.data.draft)
-  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
-  .slice(0, SITE.NUM_POSTS_ON_HOMEPAGE);
-
-const projects = (await getCollection("projects"))
-  .filter((project) => !project.data.draft)
-  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
-  .slice(0, SITE.NUM_PROJECTS_ON_HOMEPAGE);
-
-const featured = blog[0];
-const restOfBlog = blog.slice(1);
-
-// Whether to render the rule + writing/work block beneath the standfirst.
-const hasWorkOrWriting = Boolean(featured) || restOfBlog.length > 0 || projects.length > 0;
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 
 const dateFormatter = new Intl.DateTimeFormat("en-US", {
   day: "2-digit",
@@ -30,104 +21,41 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
 });
 ---
 
-<Layout title={HOME.TITLE} description={HOME.DESCRIPTION} includePersonSchema>
+<Layout title={HOME.TITLE} description={HOME.DESCRIPTION}>
   <Container width="reading">
     <div class="space-y-10">
       <Masthead />
       <EditorialRule />
 
-      <section>
-        <p class="text-lg leading-relaxed text-black/85 dark:text-white/85">
-          {SITE.STANDFIRST}
-        </p>
-      </section>
-
       {
-        hasWorkOrWriting && (
-          <>
-            <EditorialRule />
-
-            {featured && (
-              <section class="space-y-3">
-                <p class="font-mono text-xs uppercase tracking-wider text-black/60 dark:text-white/60">
-                  Featured
-                </p>
-                <h2 class="font-heading text-2xl font-medium text-black dark:text-white">
-                  <Link href={`/blog/${featured.id}`} underline={false} group>
-                    {featured.data.title}
-                  </Link>
-                </h2>
-                <p class="text-base text-black/75 dark:text-white/75">
-                  {featured.data.description}
-                </p>
-                <p class="text-sm">
-                  <Link href={`/blog/${featured.id}`}>Read &rarr;</Link>
-                </p>
-              </section>
-            )}
-
-            {restOfBlog.length > 0 && (
-              <section class="space-y-4">
-                <div class="flex items-baseline justify-between">
-                  <h2 class="font-mono text-xs uppercase tracking-wider text-black/60 dark:text-white/60">
-                    Writing
-                  </h2>
-                  <Link href="/blog">
-                    <span class="text-sm">All writing &rarr;</span>
-                  </Link>
-                </div>
-                <ul class="not-prose flex flex-col gap-2 text-sm">
-                  {restOfBlog.map((post) => (
-                    <li class="flex items-baseline gap-4">
-                      <time
-                        datetime={post.data.date.toISOString()}
-                        class="shrink-0 font-mono text-xs uppercase tracking-wider text-black/50 dark:text-white/50"
-                        style="font-variant-numeric: tabular-nums;"
-                      >
-                        {dateFormatter.format(post.data.date)}
-                      </time>
-                      <Link href={`/blog/${post.id}`}>{post.data.title}</Link>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            )}
-
-            {projects.length > 0 && (
-              <section class="space-y-4">
-                <div class="flex items-baseline justify-between">
-                  <h2 class="font-mono text-xs uppercase tracking-wider text-black/60 dark:text-white/60">
-                    Work
-                  </h2>
-                  <Link href="/projects">
-                    <span class="text-sm">All projects &rarr;</span>
-                  </Link>
-                </div>
-                <ul class="not-prose flex flex-col gap-2 text-sm">
-                  {projects.map((project) => (
-                    <li class="flex items-baseline gap-4">
-                      <span
-                        aria-hidden="true"
-                        class="shrink-0 font-mono text-xs text-black/50 dark:text-white/50"
-                      >
-                        &middot;
+        posts.length > 0 ? (
+          <section>
+            <h2 class="sr-only">Writing</h2>
+            <ul class="not-prose flex flex-col gap-2 text-sm">
+              {posts.map((post) => (
+                <li class="flex items-baseline gap-4">
+                  <time
+                    datetime={post.data.date.toISOString()}
+                    class="shrink-0 font-mono text-xs uppercase tracking-wider text-black/50 dark:text-white/50"
+                    style="font-variant-numeric: tabular-nums;"
+                  >
+                    {dateFormatter.format(post.data.date)}
+                  </time>
+                  <span>
+                    <Link href={`/writing/${post.id}`}>{post.data.title}</Link>
+                    {post.data.description && (
+                      <span class="text-black/60 dark:text-white/60">
+                        {" — "}
+                        {post.data.description}
                       </span>
-                      <span>
-                        <Link href={`/projects/${project.id}`}>{project.data.title}</Link>
-                        <span class="text-black/60 dark:text-white/60">
-                          {" — "}
-                          {project.data.description}
-                        </span>
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            )}
-          </>
-        )
+                    )}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null
       }
-
     </div>
   </Container>
 </Layout>

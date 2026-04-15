@@ -1,0 +1,160 @@
+---
+import Container from "@components/Container.astro";
+import EditorialRule from "@components/EditorialRule.astro";
+import Link from "@components/Link.astro";
+import { SITE, SOCIALS } from "@consts";
+import Layout from "@layouts/Layout.astro";
+
+// Career and project blurbs are authored inline rather than via content
+// collections. This is a single page, the content changes rarely, and
+// collection ceremony earns nothing here. Dates are stored as plain strings
+// so the timeline reads in the order written; no coercion, no sorting.
+const career = [
+  {
+    company: "GrupBlox",
+    role: "Engineer",
+    dates: "2024 — present",
+    blurb:
+      "Developer tools and complex systems.",
+    url: "https://grupblox.com",
+  },
+  {
+    company: "ServiceNow",
+    role: "Staff Software Engineer",
+    dates: "2019 — 2024",
+    blurb:
+      "Platform and developer experience.",
+    url: "https://www.servicenow.com",
+  },
+];
+
+const projectBlurbs = [
+  {
+    title: "herald-ui",
+    blurb: "A design system for teams that don't want to re-solve the same primitives every quarter.",
+    href: "/projects",
+  },
+];
+---
+
+<Layout title="About" description={SITE.DESCRIPTION} includePersonSchema>
+  <Container width="reading">
+    <div class="space-y-10">
+      <div>
+        <h1 class="sr-only">About</h1>
+        <p
+          class="font-mono text-xs uppercase tracking-wider text-black/55 dark:text-white/55"
+          style="font-variant-numeric: tabular-nums;"
+        >
+          About
+        </p>
+      </div>
+
+      <EditorialRule />
+
+      <section class="space-y-4 text-base leading-relaxed text-black/85 dark:text-white/85">
+        <p>
+          Elliott Sencan is an engineer in San Diego working on developer tools and
+          complex systems. Currently at GrupBlox; previously staff at ServiceNow.
+        </p>
+        <p>
+          This site is where I write about software engineering, architecture,
+          and craft. If you want to see what I'm thinking about right now, the
+          <Link href="/now">/now page</Link> is more current than this one.
+        </p>
+      </section>
+
+      <EditorialRule />
+
+      <section class="space-y-4">
+        <h2 class="font-mono text-xs uppercase tracking-wider text-black/60 dark:text-white/60">
+          Career
+        </h2>
+        <ul class="not-prose flex flex-col gap-4 text-sm">
+          {
+            career.map((role) => (
+              <li class="space-y-1">
+                <div class="flex flex-wrap items-baseline justify-between gap-x-4">
+                  <span class="font-medium text-black dark:text-white">
+                    {role.role}
+                    {" at "}
+                    {role.url ? (
+                      <Link href={role.url} external>
+                        {role.company}
+                      </Link>
+                    ) : (
+                      role.company
+                    )}
+                  </span>
+                  <span
+                    class="shrink-0 font-mono text-xs uppercase tracking-wider text-black/50 dark:text-white/50"
+                    style="font-variant-numeric: tabular-nums;"
+                  >
+                    {role.dates}
+                  </span>
+                </div>
+                <p class="text-black/70 dark:text-white/70">{role.blurb}</p>
+              </li>
+            ))
+          }
+        </ul>
+      </section>
+
+      <EditorialRule />
+
+      <section class="space-y-4">
+        <div class="flex items-baseline justify-between">
+          <h2 class="font-mono text-xs uppercase tracking-wider text-black/60 dark:text-white/60">
+            Projects
+          </h2>
+          <Link href="/projects">
+            <span class="text-sm">All projects &rarr;</span>
+          </Link>
+        </div>
+        <ul class="not-prose flex flex-col gap-2 text-sm">
+          {
+            projectBlurbs.map((project) => (
+              <li class="flex items-baseline gap-4">
+                <span
+                  aria-hidden="true"
+                  class="shrink-0 font-mono text-xs text-black/50 dark:text-white/50"
+                >
+                  &middot;
+                </span>
+                <span>
+                  <Link href={project.href}>{project.title}</Link>
+                  <span class="text-black/60 dark:text-white/60">
+                    {" — "}
+                    {project.blurb}
+                  </span>
+                </span>
+              </li>
+            ))
+          }
+        </ul>
+      </section>
+
+      <EditorialRule />
+
+      <section class="space-y-4">
+        <h2 class="font-mono text-xs uppercase tracking-wider text-black/60 dark:text-white/60">
+          Contact
+        </h2>
+        <ul class="not-prose flex flex-col gap-2 text-sm">
+          <li>
+            <Link href={`mailto:${SITE.EMAIL}`}>{SITE.EMAIL}</Link>
+          </li>
+          {
+            SOCIALS.map((social) => (
+              <li>
+                <Link href={social.HREF} external>
+                  {social.NAME}
+                </Link>
+              </li>
+            ))
+          }
+        </ul>
+      </section>
+    </div>
+  </Container>
+</Layout>
