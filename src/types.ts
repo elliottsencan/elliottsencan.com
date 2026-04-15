@@ -18,3 +18,20 @@ export type Socials = {
   NAME: string;
   HREF: string;
 }[];
+
+/**
+ * Identity data for JSON-LD `Person` schema. Distinct from the footer `Socials`
+ * list because schema `sameAs` should include every public profile URL, even
+ * ones the footer UI hides.
+ */
+export type Person = {
+  NAME: string;
+  JOB_TITLE: string;
+  SAME_AS: string[];
+};
+
+/** GitHub repo coordinates for building per-commit URLs. */
+export type Repo = {
+  OWNER: string;
+  NAME: string;
+};

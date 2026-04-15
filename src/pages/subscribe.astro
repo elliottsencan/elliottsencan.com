@@ -1,0 +1,124 @@
+---
+import Container from "@components/Container.astro";
+import EditorialRule from "@components/EditorialRule.astro";
+import Link from "@components/Link.astro";
+import { SITE } from "@consts";
+import Layout from "@layouts/Layout.astro";
+
+const feedURL = "https://elliottsencan.com/rss.xml";
+---
+
+<Layout
+  title="Subscribe"
+  description={`Follow ${SITE.TITLE} via RSS — an open protocol, no middleman sorts it.`}
+>
+  <Container width="reading">
+    <div class="space-y-10">
+      <div>
+        <h1 class="sr-only">Subscribe</h1>
+        <p
+          class="font-mono text-xs uppercase tracking-wider text-black/55 dark:text-white/55"
+          style="font-variant-numeric: tabular-nums;"
+        >
+          Subscribe
+        </p>
+      </div>
+
+      <EditorialRule />
+
+      <section class="space-y-4">
+        <p class="text-lg leading-relaxed text-black/85 dark:text-white/85">
+          New writing lands in the feed below. Add it to any RSS reader; your
+          reader polls on its own schedule, nothing sorts or ranks, nothing
+          shows up in your inbox.
+        </p>
+      </section>
+
+      <section class="space-y-3">
+        <p
+          class="font-mono text-xs uppercase tracking-wider text-black/60 dark:text-white/60"
+        >
+          Feed URL
+        </p>
+        <div
+          class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
+        >
+          <code
+            id="feed-url"
+            class="break-all rounded-sm border border-black/15 bg-black/5 px-3 py-2 font-mono text-sm dark:border-white/20 dark:bg-white/5"
+            >{feedURL}</code
+          >
+          <button
+            id="copy-feed-url"
+            type="button"
+            class="shrink-0 cursor-pointer rounded-sm border border-black/15 px-3 py-2 text-sm transition-colors duration-300 ease-in-out hover:bg-black/5 dark:border-white/20 dark:hover:bg-white/5"
+          >
+            <span id="copy-feed-url-label">Copy</span>
+          </button>
+        </div>
+      </section>
+
+      <section class="space-y-4">
+        <p
+          class="font-mono text-xs uppercase tracking-wider text-black/60 dark:text-white/60"
+        >
+          Readers worth trying
+        </p>
+        <ul class="not-prose space-y-2 text-sm leading-relaxed">
+          <li>
+            <Link href="https://netnewswire.com/" external>NetNewsWire</Link>
+            &nbsp;&mdash; native macOS / iOS, free, unpretentious.
+          </li>
+          <li>
+            <Link href="https://feedly.com/" external>Feedly</Link>
+            &nbsp;&mdash; web, cross-device, solid mobile apps.
+          </li>
+          <li>
+            <Link href="https://readwise.io/read" external>Readwise Reader</Link>
+            &nbsp;&mdash; paid. Best if you also read long-form articles and highlight them.
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <p class="text-sm text-black/65 dark:text-white/65">
+          If RSS isn't your thing, the <Link href="/blog">blog index</Link> is
+          also updated by hand and stays in reverse-chronological order.
+        </p>
+      </section>
+    </div>
+  </Container>
+</Layout>
+
+<script>
+  // Copy-to-clipboard for the feed URL. Inline vanilla — no dep, no build
+  // step. Bound via astro:page-load so it survives Astro ClientRouter swaps.
+  function setupCopyButton() {
+    const button = document.getElementById("copy-feed-url");
+    const label = document.getElementById("copy-feed-url-label");
+    const code = document.getElementById("feed-url");
+    if (!button || !label || !code) return;
+
+    button.addEventListener("click", async () => {
+      const text = code.textContent?.trim();
+      if (!text) return;
+      try {
+        await navigator.clipboard.writeText(text);
+        label.textContent = "Copied";
+        setTimeout(() => {
+          label.textContent = "Copy";
+        }, 1600);
+      } catch {
+        // Clipboard API unavailable (e.g. non-HTTPS or unsupported browser).
+        // Surface the failure rather than silently swallowing so the user knows
+        // to select the URL manually.
+        label.textContent = "Couldn't copy";
+        setTimeout(() => {
+          label.textContent = "Copy";
+        }, 1600);
+      }
+    });
+  }
+
+  document.addEventListener("astro:page-load", setupCopyButton);
+</script>

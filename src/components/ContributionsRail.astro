@@ -58,7 +58,7 @@ const formattedTotal = new Intl.NumberFormat("en-US").format(data.total);
   <svg
     aria-hidden="true"
     viewBox="0 0 16 16"
-    class="rail-logo size-3.5 shrink-0 fill-current text-black/55 dark:text-white/55"
+    class="rail-logo size-3.5 shrink-0 fill-current text-black/85 dark:text-white/85"
   >
     <path
       d="M8 .198a8 8 0 0 0-2.529 15.59c.4.074.547-.174.547-.386 0-.19-.007-.693-.01-1.36-2.226.483-2.695-1.073-2.695-1.073-.364-.924-.888-1.17-.888-1.17-.726-.496.055-.486.055-.486.803.056 1.226.824 1.226.824.714 1.223 1.872.87 2.328.665.072-.517.28-.87.508-1.07-1.777-.202-3.644-.888-3.644-3.954 0-.873.312-1.588.824-2.147-.083-.202-.357-1.016.077-2.118 0 0 .672-.215 2.2.82a7.67 7.67 0 0 1 2.003-.269 7.67 7.67 0 0 1 2.003.27c1.527-1.036 2.198-.821 2.198-.821.435 1.102.161 1.916.079 2.118.513.559.823 1.274.823 2.147 0 3.074-1.87 3.75-3.652 3.948.287.247.543.735.543 1.481 0 1.07-.01 1.932-.01 2.195 0 .214.145.463.55.385A8.001 8.001 0 0 0 8 .198Z"
@@ -80,10 +80,10 @@ const formattedTotal = new Intl.NumberFormat("en-US").format(data.total);
       class="rail-root relative flex w-full items-center justify-between py-2 text-emerald-500 dark:text-emerald-400"
     >
       {
-        data.weeks.map((week) => (
+        data.weeks.map((week, index) => (
           <span
             class="rail-dot inline-block size-0.5 bg-current will-change-transform"
-            style={`opacity: ${opacityFor(week.total)}; transform-origin: center center; transition: transform 140ms cubic-bezier(0.2, 0, 0, 1);`}
+            style={`--rest-opacity: ${opacityFor(week.total)}; --i: ${index}; opacity: var(--rest-opacity); transform-origin: center center; transition: transform 140ms cubic-bezier(0.2, 0, 0, 1);`}
             data-total={week.total}
             data-date={week.startDate}
           />
@@ -100,6 +100,98 @@ const formattedTotal = new Intl.NumberFormat("en-US").format(data.total);
     </div>
   </div>
 </div>
+
+<style>
+  /* First-load reveal: dots fade and scale into their rest opacity sequentially
+     from oldest to newest week, echoing the signature's left-to-right pen
+     motion. Each dot reads its index from --i (0..N-1) and its target opacity
+     from --rest-opacity, both set inline above so the keyframe can interpolate
+     back to whatever the opacityFor() ramp assigned.
+
+     `backwards` fill keeps each dot invisible during its pre-start delay, so
+     the reveal reads as a clean wave instead of 52 dots flashing at t=0. No
+     `forwards` fill: once the animation ends the element reverts to inline
+     style (opacity: var(--rest-opacity); transition: transform ...), which is
+     exactly the rest state the hover-magnification JS expects. The
+     html.intro-played suppression rule in global.css gates this to fresh
+     page loads only — soft ClientRouter nav shows dots at rest instantly. */
+  /* Simple opacity ramp with a left-to-right stagger — no crest, no scale
+     peak. The rail wakes up right after the signature finishes drawing
+     (stroke-2 ends at 2.0s), so the two reveals read as a handoff:
+     signature draws, rail answers.
+
+     Timing:
+       first dot  starts 2050ms (50ms after stroke-2 ends)
+       last  dot  starts 2560ms (2050ms + 51 × 10ms stagger)
+       last  dot  settles 2910ms (+ 350ms fade) */
+  /* Two animations stacked on every dot:
+       1. rail-dot-in — one-shot intro, staggered L→R, fades each dot from
+          0 to its rest opacity. Gated to fresh loads via html.intro-played.
+       2. rail-pulse — perpetual ambient breath. Dots breathe between rest
+          and 82% of rest, synced across the rail, 4s cycle. Pauses while
+          the rail is hovered so it doesn't compete with magnification.
+     Pulse's 3500ms delay waits for the intro wave to fully settle
+     (last dot lands at 2910ms) before the breath kicks in. On soft-nav
+     (html.intro-played) the intro is stripped and the pulse runs from
+     t=0 — handled in global.css. */
+  .rail-dot {
+    animation:
+      rail-dot-in 350ms ease-out backwards,
+      rail-pulse 2.8s ease-in-out infinite;
+    animation-delay: calc(2050ms + var(--i, 0) * 10ms), 3500ms;
+  }
+
+  .rail-group:hover .rail-dot {
+    animation-play-state: running, paused;
+  }
+
+  /* Logo mark appears as the first dot wakes. */
+  .rail-logo {
+    animation: rail-aux-in 350ms ease-out 2050ms backwards;
+  }
+
+  /* Caption lands last, just after the final dot settles — it labels the
+     settled state so it shouldn't compete with the wave. */
+  .rail-caption {
+    animation: rail-aux-in 350ms ease-out 2950ms backwards;
+  }
+
+  @keyframes rail-dot-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: var(--rest-opacity);
+    }
+  }
+
+  @keyframes rail-pulse {
+    0%,
+    100% {
+      opacity: var(--rest-opacity);
+    }
+    50% {
+      opacity: calc(var(--rest-opacity) * 0.65);
+    }
+  }
+
+  @keyframes rail-aux-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .rail-dot,
+    .rail-logo,
+    .rail-caption {
+      animation: none;
+    }
+  }
+</style>
 
 <script>
   // macOS Dock-style magnification + hover tooltip on the contributions rail:

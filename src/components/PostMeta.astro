@@ -1,0 +1,59 @@
+---
+/**
+ * Dateline for a blog post: published date, reading time, last-updated.
+ *
+ * The full edit trail is rendered inline at the bottom of the post via
+ * `<RevisionHistory />`, so the header stays a compact "when + how long" glance.
+ *
+ * Styled to match the site's editorial label pattern (mono, uppercase,
+ * tabular-nums, muted) used on Masthead / homepage section headings — so the
+ * post header reads like a column break, not a form field.
+ */
+import type { CollectionEntry } from "astro:content";
+import { readingTime } from "@lib/utils";
+
+type Props = {
+  post: CollectionEntry<"blog">;
+};
+
+const { post } = Astro.props;
+
+// en-GB puts day before month natively (`23 Mar 26`), matching the dateline
+// pattern used in Masthead. UTC pinning prevents dates from shifting by one
+// when the build machine runs in a non-UTC timezone — frontmatter dates like
+// `2026-03-23` parse as UTC midnight, which becomes Mar 22 in Pacific time.
+const dateFormatter = new Intl.DateTimeFormat("en-GB", {
+  day: "2-digit",
+  month: "short",
+  year: "2-digit",
+  timeZone: "UTC",
+});
+
+const publishedFormatted = dateFormatter.format(post.data.date).toUpperCase();
+const updatedFormatted = post.data.updated
+  ? dateFormatter.format(post.data.updated).toUpperCase()
+  : null;
+
+const readingTimeFormatted = readingTime(post.body ?? "").toUpperCase();
+---
+
+<div
+  class="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-xs uppercase tracking-wider text-black/55 dark:text-white/55"
+  style="font-variant-numeric: tabular-nums;"
+>
+  <span>Published {publishedFormatted}</span>
+
+  {post.body && (
+    <>
+      <span aria-hidden="true" class="text-black/30 dark:text-white/30">&middot;</span>
+      <span>{readingTimeFormatted}</span>
+    </>
+  )}
+
+  {updatedFormatted && (
+    <>
+      <span aria-hidden="true" class="text-black/30 dark:text-white/30">&middot;</span>
+      <span>Updated {updatedFormatted}</span>
+    </>
+  )}
+</div>

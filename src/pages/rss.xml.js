@@ -1,25 +1,51 @@
-import { getCollection } from "astro:content";
+import { getCollection, render } from "astro:content";
 import rss from "@astrojs/rss";
 import { SITE } from "@consts";
+import { experimental_AstroContainer as AstroContainer } from "astro/container";
 
+/**
+ * RSS feed combining blog posts and project case studies.
+ *
+ * Renders full post HTML (including MDX components) into <content:encoded> via
+ * Astro's container API so readers see the whole piece instead of just the
+ * description. Categories include the collection name (`blog`/`projects`) so
+ * feed readers that support filtering can split the two.
+ *
+ * `<atom:link rel="self">` is required for feed readers to distinguish this
+ * URL as the canonical feed location, and matters for syndication services.
+ */
 export async function GET(context) {
-  const blog = (await getCollection("blog")).filter((post) => !post.data.draft);
+  const container = await AstroContainer.create();
 
+  const blog = (await getCollection("blog")).filter((post) => !post.data.draft);
   const projects = (await getCollection("projects")).filter((project) => !project.data.draft);
 
-  const items = [...blog, ...projects].sort(
+  const entries = [...blog, ...projects].sort(
     (a, b) => new Date(b.data.date).valueOf() - new Date(a.data.date).valueOf(),
+  );
+
+  const items = await Promise.all(
+    entries.map(async (entry) => {
+      const { Content } = await render(entry);
+      const contentHTML = await container.renderToString(Content);
+      const tagCategories = entry.collection === "blog" ? (entry.data.tags ?? []) : [];
+      return {
+        title: entry.data.title,
+        description: entry.data.description,
+        pubDate: entry.data.date,
+        link: `/${entry.collection}/${entry.id}/`,
+        content: contentHTML,
+        categories: [entry.collection, ...tagCategories],
+      };
+    }),
   );
 
   return rss({
     title: SITE.TITLE,
     description: SITE.DESCRIPTION,
     site: context.site,
-    items: items.map((item) => ({
-      title: item.data.title,
-      description: item.data.description,
-      pubDate: item.data.date,
-      link: `/${item.collection}/${item.id}/`,
-    })),
+    xmlns: { atom: "http://www.w3.org/2005/Atom" },
+    customData: `<language>en-us</language><atom:link href="${context.site}rss.xml" rel="self" type="application/rss+xml" />`,
+    items,
   });
 }

@@ -30,13 +30,13 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
 });
 ---
 
-<Layout title={HOME.TITLE} description={HOME.DESCRIPTION}>
+<Layout title={HOME.TITLE} description={HOME.DESCRIPTION} includePersonSchema>
   <Container width="reading">
     <div class="space-y-10">
       <Masthead />
       <EditorialRule />
 
-      <section class="animate">
+      <section>
         <p class="text-lg leading-relaxed text-black/85 dark:text-white/85">
           {SITE.STANDFIRST}
         </p>
@@ -48,7 +48,7 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
             <EditorialRule />
 
             {featured && (
-              <section class="animate space-y-3">
+              <section class="space-y-3">
                 <p class="font-mono text-xs uppercase tracking-wider text-black/60 dark:text-white/60">
                   Featured
                 </p>
@@ -67,7 +67,7 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
             )}
 
             {restOfBlog.length > 0 && (
-              <section class="animate space-y-4">
+              <section class="space-y-4">
                 <div class="flex items-baseline justify-between">
                   <h2 class="font-mono text-xs uppercase tracking-wider text-black/60 dark:text-white/60">
                     Writing
@@ -94,7 +94,7 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
             )}
 
             {projects.length > 0 && (
-              <section class="animate space-y-4">
+              <section class="space-y-4">
                 <div class="flex items-baseline justify-between">
                   <h2 class="font-mono text-xs uppercase tracking-wider text-black/60 dark:text-white/60">
                     Work

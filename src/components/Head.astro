@@ -1,16 +1,99 @@
 ---
 import "../styles/global.css";
 import { ClientRouter } from "astro:transitions";
+import { PERSON, SITE } from "@consts";
 
 interface Props {
   title: string;
   description: string;
   image?: string;
+  /** Defaults to "website". Posts pass "article" to unlock article:* meta + BlogPosting schema. */
+  ogType?: "website" | "article";
+  /**
+   * Overrides the computed `<link rel="canonical">` URL — used when a post
+   * is syndicated from another site (set via the `canonical` frontmatter field
+   * on the blog collection).
+   */
+  canonical?: string | URL;
+  publishedTime?: Date;
+  updatedTime?: Date;
+  tags?: string[];
+  author?: string;
+  /** BlogPosting for blog posts, Article for project/case-study pages. Ignored when ogType="website". */
+  schemaType?: "BlogPosting" | "Article";
+  /** Emit the Person JSON-LD block. Intended only for the homepage. */
+  includePersonSchema?: boolean;
 }
 
-const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+const {
+  title,
+  description,
+  image = "/favicon.ico",
+  ogType = "website",
+  canonical,
+  publishedTime,
+  updatedTime,
+  tags,
+  author,
+  schemaType = "BlogPosting",
+  includePersonSchema = false,
+} = Astro.props;
 
-const { title, description, image = "/favicon.ico" } = Astro.props;
+const canonicalURL = canonical
+  ? new URL(canonical.toString(), Astro.site)
+  : new URL(Astro.url.pathname, Astro.site);
+
+const imageURL = new URL(image, Astro.site);
+const siteURL = Astro.site?.toString() ?? "/";
+
+// ---- JSON-LD ----
+// Inline as `<script type="application/ld+json">` blocks; no client-side JS.
+
+const websiteSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: SITE.TITLE,
+  url: siteURL,
+  description: SITE.DESCRIPTION,
+};
+
+const personSchema = includePersonSchema
+  ? {
+      "@context": "https://schema.org",
+      "@type": "Person",
+      name: PERSON.NAME,
+      url: siteURL,
+      jobTitle: PERSON.JOB_TITLE,
+      email: `mailto:${SITE.EMAIL}`,
+      homeLocation: { "@type": "Place", name: SITE.LOCATION },
+      sameAs: PERSON.SAME_AS,
+    }
+  : null;
+
+// Only emit Article schema when we have enough signal: ogType=article AND a publish date.
+// Without a date the schema is invalid anyway, so skipping it keeps validators clean.
+const articleSchema =
+  ogType === "article" && publishedTime
+    ? {
+        "@context": "https://schema.org",
+        "@type": schemaType,
+        headline: title,
+        description,
+        datePublished: publishedTime.toISOString(),
+        ...(updatedTime && { dateModified: updatedTime.toISOString() }),
+        author: {
+          "@type": "Person",
+          name: author ?? PERSON.NAME,
+          url: siteURL,
+        },
+        image: imageURL.toString(),
+        ...(tags?.length && { keywords: tags.join(", ") }),
+        mainEntityOfPage: {
+          "@type": "WebPage",
+          "@id": canonicalURL.toString(),
+        },
+      }
+    : null;
 ---
 
 <!-- Global Metadata -->
@@ -33,41 +116,72 @@ const { title, description, image = "/favicon.ico" } = Astro.props;
 />
 <meta name="generator" content={Astro.generator} />
 
+<!-- Mobile browser UI chrome matches the canvas color in each mode. Kept in
+     sync with html { background-color } in global.css. -->
+<meta name="theme-color" content="#f6f4ef" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#18161a" media="(prefers-color-scheme: dark)" />
+
 <!-- Canonical URL -->
 <link rel="canonical" href={canonicalURL} />
 
-<!-- Signature draw: play once per fresh page load.
-     Hard load / reload / new tab gets a fresh window, so the animation plays.
-     ClientRouter soft navigation would otherwise re-trigger it (html attrs
-     are swapped), so we mark the incoming <html> before each swap. -->
+<!-- Intro animations (signature draw, contributions rail reveal): play
+     once per fresh page load. Hard load / reload / new tab gets a fresh
+     window, so the animations play. ClientRouter soft navigation would
+     otherwise re-trigger them (html attrs are swapped), so we mark the
+     incoming <html> before each swap. -->
 <script is:inline>
-  if (window.__sigPlayed) {
-    document.documentElement.classList.add("sig-played");
+  if (window.__introPlayed) {
+    document.documentElement.classList.add("intro-played");
   }
-  window.__sigPlayed = true;
+  window.__introPlayed = true;
   document.addEventListener("astro:before-swap", (e) => {
-    e.newDocument.documentElement.classList.add("sig-played");
+    e.newDocument.documentElement.classList.add("intro-played");
   });
 </script>
 
-<!-- Primary Meta Tags -->
-<title>{title}</title>
-<meta name="title" content={title} />
+<!-- Primary Meta Tags.
+     `<title>` carries the site suffix for the browser tab; og:title, twitter:title,
+     and JSON-LD `headline` stay raw because OG exposes site name separately via
+     `og:site_name` and adding the suffix twice makes social previews uglier. -->
+<title>{title} | {SITE.TITLE}</title>
+<meta name="title" content={`${title} | ${SITE.TITLE}`} />
 <meta name="description" content={description} />
 
 <!-- Open Graph / Facebook -->
-<meta property="og:type" content="website" />
-<meta property="og:url" content={Astro.url} />
+<meta property="og:type" content={ogType} />
+<meta property="og:url" content={canonicalURL} />
 <meta property="og:title" content={title} />
 <meta property="og:description" content={description} />
-<meta property="og:image" content={new URL(image, Astro.url)} />
+<meta property="og:image" content={imageURL} />
+<meta property="og:site_name" content={SITE.TITLE} />
+
+{
+  ogType === "article" && (
+    <>
+      {publishedTime && (
+        <meta property="article:published_time" content={publishedTime.toISOString()} />
+      )}
+      {updatedTime && (
+        <meta property="article:modified_time" content={updatedTime.toISOString()} />
+      )}
+      <meta property="article:author" content={author ?? PERSON.NAME} />
+      {tags?.map((tag) => <meta property="article:tag" content={tag} />)}
+    </>
+  )
+}
 
 <!-- Twitter -->
 <meta property="twitter:card" content="summary_large_image" />
-<meta property="twitter:url" content={Astro.url} />
+<meta property="twitter:url" content={canonicalURL} />
 <meta property="twitter:title" content={title} />
 <meta property="twitter:description" content={description} />
-<meta property="twitter:image" content={new URL(image, Astro.url)} />
+<meta property="twitter:image" content={imageURL} />
+
+<!-- JSON-LD structured data. `is:inline` is required because these are pure
+     data payloads (no TypeScript, no bundling) — Astro otherwise warns. -->
+<script is:inline type="application/ld+json" set:html={JSON.stringify(websiteSchema)} />
+{personSchema && <script is:inline type="application/ld+json" set:html={JSON.stringify(personSchema)} />}
+{articleSchema && <script is:inline type="application/ld+json" set:html={JSON.stringify(articleSchema)} />}
 
 <!-- PageFind -->
 <link href="/pagefind/pagefind-ui.css" rel="stylesheet" />
@@ -81,10 +195,8 @@ const { title, description, image = "/favicon.ico" } = Astro.props;
   function init() {
     preloadTheme();
     onScroll();
-    animate();
     updateThemeLabel();
     addCopyCodeButtons();
-    setGiscusTheme();
 
     const backToTop = document.getElementById("back-to-top");
     backToTop?.addEventListener("click", (event) => scrollToTop(event));
@@ -124,16 +236,6 @@ const { title, description, image = "/favicon.ico" } = Astro.props;
     label.textContent = theme === "system" ? "auto" : theme;
   }
 
-  function animate() {
-    const animateElements = document.querySelectorAll(".animate");
-
-    animateElements.forEach((element, index) => {
-      setTimeout(() => {
-        element.classList.add("show");
-      }, index * 100);
-    });
-  }
-
   function onScroll() {
     if (window.scrollY > 0) {
       document.documentElement.classList.add("scrolled");
@@ -156,7 +258,6 @@ const { title, description, image = "/favicon.ico" } = Astro.props;
     } else {
       document.documentElement.classList.remove("dark");
     }
-    setGiscusTheme();
   }
 
   // User-initiated or system-preference change. Delegate the crossfade
@@ -250,19 +351,32 @@ const { title, description, image = "/favicon.ico" } = Astro.props;
     }
   }
 
-  const setGiscusTheme = () => {
-    const giscus = document.querySelector(".giscus-frame");
-
-    const isDark = document.documentElement.classList.contains("dark");
-
-    if (giscus) {
-      const url = new URL(giscus.src);
-      url.searchParams.set("theme", isDark ? "dark" : "light");
-      giscus.src = url.toString();
-    }
-  };
-
   document.addEventListener("DOMContentLoaded", () => init());
   document.addEventListener("astro:after-swap", () => init());
   preloadTheme();
+</script>
+
+<script is:inline define:vars={{ email: SITE.EMAIL }}>
+  if (!window.__eeLoggedHoodPeek) {
+    window.__eeLoggedHoodPeek = true;
+    const logo = [
+      " ____    _____   ____        ____    _____  __     __",
+      "|___ \\  |_   _| / ___|      |  _ \\  | ____| \\ \\   / /",
+      "  __) |   | |   \\___ \\      | | | | |  _|    \\ \\ / / ",
+      " / __/    | |    ___) |  _  | |_| | | |___    \\ V /  ",
+      "|_____|   |_|   |____/  (_) |____/  |_____|    \\_/   ",
+    ].join("\n");
+    const fire = () => {
+      console.log(logo);
+      console.log(
+        "looking under the hood? I can tell you all about it. Email me here: " + email
+      );
+    };
+    const schedule = window.requestIdleCallback || ((cb) => setTimeout(cb, 300));
+    if (document.readyState === "complete") {
+      schedule(fire);
+    } else {
+      window.addEventListener("load", () => schedule(fire), { once: true });
+    }
+  }
 </script>
