@@ -9,35 +9,45 @@ import { defineEcConfig } from "astro-expressive-code";
 // useDarkModeMediaQuery stays false so we don't double-handle
 // prefers-color-scheme.
 //
-// Chrome is deliberately minimal: no line numbers, no extra plugins. EC's
-// built-in filename tab + hover copy button is the only chrome we keep —
-// anything else competes with the editorial prose around it.
+// We use min-light / min-dark — Anthony Fu's near-monochrome Shiki themes.
+// They lean on weight and italic rather than hue, so code reads as a quieter
+// register of the editorial prose around it.
+//
+// All frame chrome (border, radius, titlebar fill, dots, copy button) is
+// zeroed out here and in global.css — the filename tab is restyled there as
+// a small uppercase mono caption above the code body to match the site's
+// other section labels.
 export default defineEcConfig({
-  themes: ["vitesse-light", "vitesse-dark"],
+  themes: ["min-light", "min-dark"],
   themeCssRoot: ":root",
   themeCssSelector: (theme) => (theme.type === "dark" ? ".dark" : ":root"),
   useDarkModeMediaQuery: false,
   useThemedScrollbars: false,
   useThemedSelectionColors: false,
   styleOverrides: {
-    borderRadius: "0.25rem",
-    borderColor: "var(--ec-border)",
-    codeFontFamily:
-      "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
+    borderRadius: "0",
+    borderWidth: "0",
+    borderColor: "transparent",
+    codeFontFamily: "var(--font-mono)",
     codeFontSize: "0.8125rem",
-    codeLineHeight: "1.65",
+    codeLineHeight: "1.7",
     codePaddingBlock: "0.875rem",
     codePaddingInline: "1rem",
-    uiFontFamily: "inherit",
-    uiFontSize: "0.75rem",
+    uiFontFamily: "var(--font-mono)",
+    uiFontSize: "0.6875rem",
     frames: {
       frameBoxShadowCssValue: "none",
-      editorTabBarBackground: "var(--ec-titlebar-bg)",
-      editorActiveTabBackground: "var(--ec-titlebar-bg)",
+      editorTabBarBackground: "transparent",
+      editorActiveTabBackground: "transparent",
       editorActiveTabBorderColor: "transparent",
       editorActiveTabIndicatorBottomColor: "transparent",
-      editorTabBarBorderBottomColor: "var(--ec-border)",
-      terminalTitlebarDotsOpacity: "0.5",
+      editorTabBarBorderBottomColor: "transparent",
+      terminalTitlebarBackground: "transparent",
+      terminalTitlebarBorderBottomColor: "transparent",
+      terminalTitlebarDotsOpacity: "0",
+      terminalBackground: "transparent",
+      inlineButtonBorder: "transparent",
+      inlineButtonBackground: "transparent",
     },
   },
 });

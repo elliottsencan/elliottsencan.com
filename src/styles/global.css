@@ -309,16 +309,59 @@ article a.data-footnote-backref:hover {
   @apply text-black/70 dark:text-white/70;
 }
 
-/* Expressive Code chrome tokens. Astro Expressive Code reads these via
-   styleOverrides (see astro.config.mjs) so the editor frame borders and
-   titlebar tone sit alongside the rest of the editorial shell in both
-   light and dark mode. */
-:root {
-  --ec-border: rgb(0 0 0 / 0.15);
-  --ec-titlebar-bg: rgb(0 0 0 / 0.025);
+/* Expressive Code: blend into the editorial surface.
+   - Near-monochrome syntax (min-light / min-dark) — see ec.config.mjs.
+   - Code body is a thin ink-on-paper wash (~3.5% / 4%) so the block reads
+     as a quieter continuation of the prose, not a framed card.
+   - No border, no radius, no titlebar fill, no window dots. Filename tab
+     is restyled as a small uppercase mono caption matching the footnotes
+     / section-label pattern elsewhere on the site.
+   - Copy button hidden — delete the `.copy` display rule to bring it back. */
+.expressive-code {
+  margin-block: 1.5rem;
 }
 
-.dark {
-  --ec-border: rgb(255 255 255 / 0.2);
-  --ec-titlebar-bg: rgb(255 255 255 / 0.04);
+.expressive-code .frame,
+.expressive-code figure.frame {
+  background: transparent;
+  box-shadow: none;
+  border: 0;
+  border-radius: 0;
+}
+
+.expressive-code pre {
+  background: rgb(0 0 0 / 0.035);
+  border: 0;
+  border-radius: 0;
+}
+.dark .expressive-code pre {
+  background: rgb(255 255 255 / 0.04);
+}
+
+/* Filename tab → uppercase mono caption above the code body. */
+.expressive-code figcaption.header {
+  background: transparent;
+  border: 0;
+  padding: 0 0 0.5rem 0;
+}
+.expressive-code figcaption.header .title,
+.expressive-code figcaption.header::before {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgb(0 0 0 / 0.55);
+  background: transparent;
+  border: 0;
+  padding: 0;
+}
+.dark .expressive-code figcaption.header .title,
+.dark .expressive-code figcaption.header::before {
+  color: rgb(255 255 255 / 0.55);
+}
+
+/* No copy button — canvas stays uncluttered. */
+.expressive-code .copy {
+  display: none;
 }

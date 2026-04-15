@@ -1,5 +1,6 @@
 import { getCollection, render } from "astro:content";
 import rss from "@astrojs/rss";
+import mdxRenderer from "@astrojs/mdx/server.js";
 import { SITE } from "@consts";
 import { experimental_AstroContainer as AstroContainer } from "astro/container";
 
@@ -15,7 +16,11 @@ import { experimental_AstroContainer as AstroContainer } from "astro/container";
  * URL as the canonical feed location, and matters for syndication services.
  */
 export async function GET(context) {
+  // Register the MDX renderer so .mdx entries' Content component resolves
+  // inside the container. Without it, any MDX post breaks the whole feed
+  // with `NoMatchingRenderer: Unable to render Content`.
   const container = await AstroContainer.create();
+  container.addServerRenderer({ renderer: mdxRenderer });
 
   const blog = (await getCollection("blog")).filter((post) => !post.data.draft);
   const projects = (await getCollection("projects")).filter((project) => !project.data.draft);
