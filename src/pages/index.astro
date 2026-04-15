@@ -22,14 +22,14 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
 ---
 
 <Layout title={HOME.TITLE} description={HOME.DESCRIPTION}>
-  <Container width="reading">
+  <Container>
     <div class="space-y-10">
       <Masthead />
       <EditorialRule />
 
       {
         posts.length > 0 ? (
-          <section>
+          <section data-pagefind-ignore>
             <h2 class="sr-only">Writing</h2>
             <ul class="not-prose flex flex-col gap-2 text-sm">
               {posts.map((post) => (

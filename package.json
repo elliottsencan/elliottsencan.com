@@ -10,6 +10,7 @@
     "check": "biome check --write",
     "format": "biome format --write",
     "lint": "biome lint --write",
+    "favicons": "node scripts/build-favicons.mjs",
     "astro": "astro"
   },
   "dependencies": {
@@ -25,17 +26,19 @@
     "clsx": "^2.1.1",
     "tailwind-merge": "^3.3.1",
     "tailwindcss": "^4.1.13",
-    "typescript": "^6.0.2"
+    "typescript": "^5.9.3"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.12",
     "@tailwindcss/typography": "^0.5.18",
-    "pagefind": "^1.5.2"
+    "pagefind": "^1.5.2",
+    "sharp": "^0.34.2"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
       "@biomejs/biome",
-      "esbuild"
+      "esbuild",
+      "sharp"
     ]
   }
 }

@@ -6,14 +6,27 @@ import Layout from "@layouts/Layout.astro";
 // Hand-edit this when the focus shifts. A "now" page is only useful if the
 // update date is honest — no auto-stamp.
 const lastUpdated = "APR 2026";
+
+// Reformat the same human label into an ISO date for Pagefind meta so search
+// results can sort/filter by recency. The hand-edited string is the source of
+// truth; this is just a derived format.
+const [lastUpdatedMonth, lastUpdatedYear] = lastUpdated.split(" ");
+const lastUpdatedISO = new Date(`${lastUpdatedMonth} 1, ${lastUpdatedYear}`)
+  .toISOString()
+  .slice(0, 10);
 ---
 
 <Layout
   title="Now"
   description="What I'm working on right now."
 >
-  <Container width="reading">
-    <div class="space-y-10">
+  <Container>
+    <div
+      class="space-y-10"
+      data-pagefind-body
+      data-pagefind-filter="type:About"
+      data-pagefind-meta={`date:${lastUpdatedISO}`}
+    >
       <div>
         <h1 class="sr-only">Now</h1>
         <p

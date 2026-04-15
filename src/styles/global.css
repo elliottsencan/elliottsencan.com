@@ -142,9 +142,22 @@
   }
 
   article {
-    @apply prose prose-neutral max-w-full dark:prose-invert prose-img:mx-auto prose-img:my-auto;
+    @apply prose prose-neutral dark:prose-invert prose-img:mx-auto prose-img:my-auto;
     @apply prose-headings:font-heading prose-headings:font-medium;
     @apply prose-headings:text-black dark:prose-headings:text-white;
+  }
+
+  /* Editorial blockquote: thin rule, soft text, no auto-quote glyphs.
+     Overrides @tailwindcss/typography's heavy gray-300 4px border + curly
+     quote characters that ::before/::after inject. Scoped under article
+     so site chrome (header/footer/main) isn't affected. */
+  article blockquote {
+    @apply border-l-2 border-black/20 pl-6 font-normal not-italic text-black/75;
+    @apply dark:border-white/20 dark:text-white/75;
+  }
+  article blockquote p:first-of-type::before,
+  article blockquote p:last-of-type::after {
+    content: none;
   }
 }
 

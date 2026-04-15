@@ -46,7 +46,7 @@ const statusColors: Record<string, string> = {
           </div>
         )}
       </div>
-      <h1 class="font-heading text-3xl font-medium text-black dark:text-white">
+      <h1 class="font-heading text-3xl font-medium tracking-tight text-black dark:text-white">
         {project.data.title}
       </h1>
 
@@ -85,7 +85,7 @@ const statusColors: Record<string, string> = {
     </div>
 
     {project.data.impact && project.data.impact.length > 0 && (
-      <div class="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-3">
+      <div class="mb-12 grid grid-cols-2 gap-4 sm:grid-cols-3">
         {project.data.impact.map((item) => (
           <div class="rounded-sm border border-black/10 p-3 dark:border-white/15">
             <div class="font-heading text-lg font-medium text-black dark:text-white">
@@ -98,7 +98,14 @@ const statusColors: Record<string, string> = {
     )}
 
     <TableOfContents headings={headings} />
-    <article>
+    <article
+      data-pagefind-body
+      data-pagefind-filter="type:Projects"
+      data-pagefind-meta={`date:${project.data.date.toISOString().slice(0, 10)}`}
+    >
+      {project.data.stack && project.data.stack.length > 0 && (
+        <span data-pagefind-meta="tags" hidden>{project.data.stack.join(", ")}</span>
+      )}
       <Content />
     </article>
   </Container>

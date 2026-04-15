@@ -1,0 +1,151 @@
+---
+import Container from "@components/Container.astro";
+import EditorialRule from "@components/EditorialRule.astro";
+import Link from "@components/Link.astro";
+import Layout from "@layouts/Layout.astro";
+
+// Each AI-assistance level is addressable by anchor so the badge on a writing
+// post can deep-link straight to its definition (e.g. /process#light).
+const levels = [
+  {
+    id: "none",
+    label: "none",
+    blurb: "TODO: no AI involvement at any stage — research, structure, or prose.",
+  },
+  {
+    id: "light",
+    label: "light",
+    blurb:
+      "TODO: AI used for narrow tasks like spellcheck, rephrasing a stuck sentence, or looking up a reference. Voice and argument are entirely mine.",
+  },
+  {
+    id: "heavy",
+    label: "heavy",
+    blurb:
+      "TODO: AI used across research, outlining, or editing passes. Voice and argument still mine, but AI materially shaped the path from idea to draft.",
+  },
+  {
+    id: "full",
+    label: "full",
+    blurb:
+      "TODO: AI produced substantial prose that I edited rather than wrote from scratch. Reserved for experiments; flagged honestly when used.",
+  },
+];
+---
+
+<Layout
+  title="Process"
+  description="How posts get made, and what AI assistance does and doesn't do in that process."
+>
+  <Container>
+    <div
+      class="space-y-10"
+      data-pagefind-body
+      data-pagefind-filter="type:Process"
+    >
+      <div>
+        <h1 class="sr-only">Process</h1>
+        <p
+          class="font-mono text-xs uppercase tracking-wider text-black/55 dark:text-white/55"
+          style="font-variant-numeric: tabular-nums;"
+        >
+          Process
+        </p>
+      </div>
+
+      <EditorialRule />
+
+      <section class="space-y-4 text-base leading-relaxed text-black/85 dark:text-white/85">
+        <p>
+          {/* TODO: one- or two-paragraph opener. The point: every post on this
+          site carries a self-declared AI-assistance level; this page is what
+          those labels mean and how posts actually get made. */}
+          TODO — opener.
+        </p>
+      </section>
+
+      <EditorialRule />
+
+      <section class="space-y-4">
+        <h2
+          id="how-a-post-gets-made"
+          class="font-mono text-xs uppercase tracking-wider text-black/60 dark:text-white/60"
+        >
+          How a post gets made
+        </h2>
+        <div class="space-y-4 text-base leading-relaxed text-black/85 dark:text-white/85">
+          <p>
+            {/* TODO: voice memo (10–15 min), Whisper transcription, Claude
+            structures into an outline, I write/edit the draft myself, final
+            read-aloud pass. */}
+            TODO — workflow walkthrough.
+          </p>
+        </div>
+      </section>
+
+      <EditorialRule />
+
+      <section class="space-y-4">
+        <h2
+          id="where-ai-fits"
+          class="font-mono text-xs uppercase tracking-wider text-black/60 dark:text-white/60"
+        >
+          Where AI fits
+        </h2>
+        <div class="space-y-4 text-base leading-relaxed text-black/85 dark:text-white/85">
+          <p>
+            {/* TODO: research, brainstorming, outlining, code generation,
+            editing passes. */}
+            TODO — where AI helps.
+          </p>
+        </div>
+      </section>
+
+      <EditorialRule />
+
+      <section class="space-y-4">
+        <h2
+          id="where-ai-doesnt"
+          class="font-mono text-xs uppercase tracking-wider text-black/60 dark:text-white/60"
+        >
+          Where AI doesn't fit
+        </h2>
+        <div class="space-y-4 text-base leading-relaxed text-black/85 dark:text-white/85">
+          <p>
+            {/* TODO: voice, argument structure, final prose, editorial
+            judgment. The thinking is the signal — AI doesn't get to fake it. */}
+            TODO — where AI doesn't help.
+          </p>
+        </div>
+      </section>
+
+      <EditorialRule />
+
+      <section class="space-y-4">
+        <h2
+          id="ai-assistance-levels"
+          class="font-mono text-xs uppercase tracking-wider text-black/60 dark:text-white/60"
+        >
+          AI-assistance levels
+        </h2>
+        <p class="text-sm text-black/70 dark:text-white/70">
+          Every post on <Link href="/">writing</Link> is tagged with one of
+          these. The badge links back to the matching definition here.
+        </p>
+        <ul class="not-prose flex flex-col gap-4 text-sm">
+          {
+            levels.map((level) => (
+              <li id={level.id} class="space-y-1 scroll-mt-24">
+                <span class="font-medium text-black dark:text-white">
+                  AI &middot; {level.label}
+                </span>
+                <p class="text-black/70 dark:text-white/70">{level.blurb}</p>
+              </li>
+            ))
+          }
+        </ul>
+      </section>
+    </div>
+  </Container>
+</Layout>
+

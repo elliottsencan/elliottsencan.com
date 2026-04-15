@@ -38,8 +38,8 @@ const formatCount = (n: number): string => new Intl.NumberFormat("en-US").format
   title="GitHub"
   description={`GitHub presence for ${SITE.TITLE} — pinned repositories and recent public activity.`}
 >
-  <Container width="reading">
-    <div class="space-y-10">
+  <Container>
+    <div class="space-y-10" data-pagefind-ignore>
       <div>
         <h1 class="sr-only">GitHub</h1>
         <p
@@ -80,7 +80,7 @@ const formatCount = (n: number): string => new Intl.NumberFormat("en-US").format
                 decoding="async"
               />
               <div class="space-y-1">
-                <h2 class="font-heading text-2xl font-medium text-black dark:text-white">
+                <h2 class="font-heading text-2xl font-medium tracking-tight text-black dark:text-white">
                   {profile.name ?? profile.login}
                 </h2>
                 <p

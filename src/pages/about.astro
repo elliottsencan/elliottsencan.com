@@ -14,16 +14,14 @@ const career = [
     company: "GrupBlox",
     role: "Engineer",
     dates: "2024 — present",
-    blurb:
-      "Developer tools and complex systems.",
+    blurb: "Developer tools and complex systems.",
     url: "https://grupblox.com",
   },
   {
     company: "ServiceNow",
     role: "Staff Software Engineer",
     dates: "2019 — 2024",
-    blurb:
-      "Platform and developer experience.",
+    blurb: "Platform and developer experience.",
     url: "https://www.servicenow.com",
   },
 ];
@@ -31,15 +29,20 @@ const career = [
 const projectBlurbs = [
   {
     title: "herald-ui",
-    blurb: "A design system for teams that don't want to re-solve the same primitives every quarter.",
+    blurb:
+      "A design system for teams that don't want to re-solve the same primitives every quarter.",
     href: "/projects",
   },
 ];
 ---
 
 <Layout title="About" description={SITE.DESCRIPTION} includePersonSchema>
-  <Container width="reading">
-    <div class="space-y-10">
+  <Container>
+    <div
+      class="space-y-10"
+      data-pagefind-body
+      data-pagefind-filter="type:About"
+    >
       <div>
         <h1 class="sr-only">About</h1>
         <p
@@ -138,21 +141,51 @@ const projectBlurbs = [
 
       <section class="space-y-4">
         <h2 class="font-mono text-xs uppercase tracking-wider text-black/60 dark:text-white/60">
-          Contact
+          Elsewhere
         </h2>
         <ul class="not-prose flex flex-col gap-2 text-sm">
-          <li>
-            <Link href={`mailto:${SITE.EMAIL}`}>{SITE.EMAIL}</Link>
+          <li class="flex items-baseline gap-4">
+            <span
+              aria-hidden="true"
+              class="shrink-0 font-mono text-xs text-black/50 dark:text-white/50"
+            >
+              &middot;
+            </span>
+            <span>
+              <Link href="/colophon">colophon</Link>
+              <span class="text-black/60 dark:text-white/60">
+                {" — "}typography, stack, and credits.
+              </span>
+            </span>
           </li>
-          {
-            SOCIALS.map((social) => (
-              <li>
-                <Link href={social.HREF} external>
-                  {social.NAME}
-                </Link>
-              </li>
-            ))
-          }
+          <li class="flex items-baseline gap-4">
+            <span
+              aria-hidden="true"
+              class="shrink-0 font-mono text-xs text-black/50 dark:text-white/50"
+            >
+              &middot;
+            </span>
+            <span>
+              <Link href="/process">process</Link>
+              <span class="text-black/60 dark:text-white/60">
+                {" — "}writing workflow and what AI assistance means on each post.
+              </span>
+            </span>
+          </li>
+          <li class="flex items-baseline gap-4">
+            <span
+              aria-hidden="true"
+              class="shrink-0 font-mono text-xs text-black/50 dark:text-white/50"
+            >
+              &middot;
+            </span>
+            <span>
+              <Link href="/uses">uses</Link>
+              <span class="text-black/60 dark:text-white/60">
+                {" — "}tools, hardware, and workflow I actually reach for.
+              </span>
+            </span>
+          </li>
         </ul>
       </section>
     </div>
