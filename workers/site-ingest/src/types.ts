@@ -27,14 +27,11 @@ export interface Env {
   // KV
   NOW_INPUTS: KVNamespace;
 
-  // rate limiters (Workers Rate Limiting API)
-  TRIGGER_LIMITER: RateLimiter;
-  INPUT_LIMITER: RateLimiter;
-  LINK_LIMITER: RateLimiter;
-}
-
-interface RateLimiter {
-  limit(opts: { key: string }): Promise<{ success: boolean }>;
+  // rate limiters (Workers Rate Limiting API — first-class bindings under
+  // wrangler 4's [[ratelimits]] config block)
+  TRIGGER_LIMITER: RateLimit;
+  INPUT_LIMITER: RateLimit;
+  LINK_LIMITER: RateLimit;
 }
 
 // ---------- /now drafting ----------

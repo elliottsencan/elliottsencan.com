@@ -12,7 +12,7 @@
  */
 
 import { summarizeLink } from "./anthropic.ts";
-import { getBranchSha, getFile, putFile } from "./github.ts";
+import { createGitHubClient, getBranchSha, getFile, putFile } from "./github.ts";
 import { LINK_SUMMARY_SYSTEM } from "./prompts.ts";
 import type { Env, LinkRequest, LinkSummary } from "./types.ts";
 import { fileTimestamp, log, monthKey, slugify, yamlEscape } from "./util.ts";
@@ -256,15 +256,15 @@ async function commitEntry(args: {
   markdown: string;
   title: string;
 }): Promise<{ ok: true; commitSha: string } | { ok: false; error: string }> {
-  const deps = { token: args.env.GITHUB_TOKEN, repo: args.env.GITHUB_REPO };
+  const gh = createGitHubClient(args.env.GITHUB_TOKEN, args.env.GITHUB_REPO);
   // Confirm main exists (sanity check; also catches invalid repo config early).
-  const mainSha = await getBranchSha("main", deps);
+  const mainSha = await getBranchSha("main", gh);
   if (!mainSha.ok) return { ok: false, error: `failed to resolve main: ${mainSha.error}` };
 
   // Check whether the path already exists (extremely rare collision). If so,
   // pass the blob SHA so the PUT succeeds as an update. Usually this returns
   // not-found and we create the file fresh.
-  const existing = await getFile(args.path, "main", deps);
+  const existing = await getFile(args.path, "main", gh);
   const existingSha = existing.ok ? existing.data.sha : undefined;
 
   const put = await putFile({
@@ -273,7 +273,7 @@ async function commitEntry(args: {
     content: args.markdown,
     message: `reading: ${args.title.slice(0, 60)}`,
     ...(existingSha ? { sha: existingSha } : {}),
-    deps,
+    gh,
   });
   if (!put.ok) return { ok: false, error: put.error };
   return { ok: true, commitSha: put.data.commitSha };

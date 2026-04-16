@@ -38,7 +38,7 @@ Cron (weekly) ─▶ Worker ┼─▶ Linear API  (active projects)
           class="font-mono text-xs uppercase tracking-wider text-black/55 dark:text-white/55"
           style="font-variant-numeric: tabular-nums;"
         >
-          Now &middot; How this page works
+          Now &middot; How this page works (the secret sauce)
         </p>
       </div>
 
@@ -48,23 +48,22 @@ Cron (weekly) ─▶ Worker ┼─▶ Linear API  (active projects)
 
       <section class="space-y-6 text-base leading-relaxed text-black/85 dark:text-white/85">
         <p>
-          /now pages rot because updating them is manual and easy to forget.
-          This one doesn't.
+          "/now" pages tend to rot overtime because updating them is a manual process that requires dedicated time and attention.
+          This one doesn't! Its a HITL system that automatically drafts updates.
         </p>
         <p>
-          Every week, a Cloudflare Worker pulls active projects from Linear,
-          pulls whatever I've flagged from my phone during the week, and asks
-          Claude to draft an updated page in my voice — using a short
-          voice-reference file I maintain as a sample. The draft opens as a
-          GitHub PR. I skim it, fix anything that isn't quite right, merge.
+          Every week, a Cloudflare Worker with some fine grained permissions grabs a bunch of 
+          context from different sources. Personal dev work from Linear, recent activity from GitHub, and anything I've flagged on my phone. It
+          Then we pipe that into Claude to draft an updated page in my voice, using a short
+          voice-reference file and pushes a PR. There I can make any tweaks necessary, then merge.
           Five minutes a week, and the page tracks reality.
         </p>
         <p>
-          The phone piece is where most of the texture comes from. A single
-          iOS Shortcut on my home screen handles everything: tap it to pick
+          To make sourcing content easy, theres a single iOS shortcut that handles all 
+          the personal flavor I want to inject: tap it to pick
           a category (reading, listening, thinking, building, activity, or
           save link), or invoke it from the Safari share sheet to capture an
-          article's title and URL directly — zero typing. Everything queues
+          article's title and URL directly. Everything queues
           in Cloudflare KV until the next draft.
         </p>
         <p>

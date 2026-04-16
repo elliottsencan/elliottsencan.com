@@ -1,93 +1,30 @@
 /**
- * Linear GraphQL client — active-projects query + staleness computation.
+ * Linear GraphQL client via @linear/sdk.
  *
- * Scope: relies on the API token being scoped to the intended workspace. No
- * team filter: the plan explicitly says "do not hardcode project names or
- * filter by specific Linear project IDs". Use a read-only token.
+ * The SDK's generated types come from Linear's schema, so field drift on
+ * Linear's side surfaces as a TypeScript error on SDK upgrade — not a
+ * silent runtime failure. Trade-off: one initial `projects` query plus a
+ * pair of lazy fetches per project (issues + milestones). For ~5-10 active
+ * projects this is an acceptable N+1 on a weekly cron.
  */
 
+import { LinearClient, type Project } from "@linear/sdk";
 import type { ProjectSummary, Result } from "./types.ts";
 import { log } from "./util.ts";
 
-const ENDPOINT = "https://api.linear.app/graphql";
 const STALE_AFTER_DAYS = 14;
-
-const ACTIVE_PROJECTS_QUERY = `
-  query ActiveProjects {
-    projects(filter: { state: { type: { in: ["started", "planned"] } } }) {
-      nodes {
-        id
-        name
-        description
-        state { name type }
-        projectMilestones(first: 10) {
-          nodes { id name description targetDate }
-        }
-        issues(first: 50, orderBy: updatedAt) {
-          nodes { id completedAt updatedAt }
-        }
-      }
-    }
-  }
-`;
-
-interface LinearProjectNode {
-  id: string;
-  name: string;
-  description: string | null;
-  state: { name: string; type: string };
-  projectMilestones: {
-    nodes: Array<{
-      id: string;
-      name: string;
-      description: string | null;
-      targetDate: string | null;
-    }>;
-  };
-  issues: {
-    nodes: Array<{
-      id: string;
-      completedAt: string | null;
-      updatedAt: string;
-    }>;
-  };
-}
-
-interface ActiveProjectsResponse {
-  projects: { nodes: LinearProjectNode[] };
-}
-
-interface GraphQLEnvelope<T> {
-  data?: T;
-  errors?: Array<{ message: string }>;
-}
 
 export async function fetchActiveProjects(apiKey: string): Promise<Result<ProjectSummary[]>> {
   try {
-    const res = await fetch(ENDPOINT, {
-      method: "POST",
-      headers: {
-        Authorization: apiKey,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ query: ACTIVE_PROJECTS_QUERY }),
+    const client = new LinearClient({ apiKey });
+    // Linear deprecated the plain `state` string filter in favour of the
+    // `status` object. `status.type` is one of the built-in categories the
+    // SDK recognises: backlog | planned | started | completed | canceled | paused.
+    const { nodes: projects } = await client.projects({
+      filter: { status: { type: { in: ["started", "planned"] } } },
+      first: 50,
     });
-    if (!res.ok) {
-      log.warn("linear", "fetch", "non-ok response", { status: res.status });
-      return { ok: false, error: `HTTP ${res.status}` };
-    }
-    const payload = (await res.json()) as GraphQLEnvelope<ActiveProjectsResponse>;
-    if (payload.errors && payload.errors.length > 0) {
-      log.warn("linear", "graphql", "errors in response", {
-        count: payload.errors.length,
-      });
-      return { ok: false, error: payload.errors.map((e) => e.message).join("; ") };
-    }
-    if (!payload.data) {
-      return { ok: false, error: "missing data" };
-    }
-    const now = Date.now();
-    const summaries: ProjectSummary[] = payload.data.projects.nodes.map((p) => toSummary(p, now));
+    const summaries = await Promise.all(projects.map((p) => toSummary(p)));
     log.info("linear", "fetch", "projects summarized", {
       count: summaries.length,
       stale: summaries.filter((s) => s.stale).length,
@@ -100,26 +37,31 @@ export async function fetchActiveProjects(apiKey: string): Promise<Result<Projec
   }
 }
 
-function toSummary(project: LinearProjectNode, now: number): ProjectSummary {
-  const issues = project.issues.nodes;
+async function toSummary(project: Project): Promise<ProjectSummary> {
+  const [issuesConn, milestonesConn, status] = await Promise.all([
+    project.issues({ first: 50 }),
+    project.projectMilestones({ first: 10 }),
+    project.status,
+  ]);
+
+  const now = Date.now();
   let lastActivityMs: number | null = null;
   let completed = 0;
-  for (const issue of issues) {
-    const updated = Date.parse(issue.updatedAt);
-    if (!Number.isNaN(updated)) {
-      if (lastActivityMs === null || updated > lastActivityMs) lastActivityMs = updated;
-    }
+  for (const issue of issuesConn.nodes) {
+    const updated = issue.updatedAt.getTime();
+    if (lastActivityMs === null || updated > lastActivityMs) lastActivityMs = updated;
     if (issue.completedAt) completed += 1;
   }
-
   const stale =
     lastActivityMs === null || now - lastActivityMs > STALE_AFTER_DAYS * 24 * 60 * 60 * 1000;
 
-  const milestoneNode = project.projectMilestones.nodes[0];
+  const milestoneNode = milestonesConn.nodes[0];
   const milestone = milestoneNode
     ? {
         name: milestoneNode.name,
-        targetDate: milestoneNode.targetDate,
+        targetDate: milestoneNode.targetDate
+          ? new Date(milestoneNode.targetDate).toISOString()
+          : null,
       }
     : null;
 
@@ -127,9 +69,9 @@ function toSummary(project: LinearProjectNode, now: number): ProjectSummary {
     id: project.id,
     name: project.name,
     description: project.description,
-    stateName: project.state.name,
+    stateName: status?.name ?? "unknown",
     milestone,
-    progress: { completed, total: issues.length },
+    progress: { completed, total: issuesConn.nodes.length },
     lastActivityDate: lastActivityMs ? new Date(lastActivityMs).toISOString() : null,
     stale,
   };

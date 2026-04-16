@@ -17,6 +17,8 @@ Voice and tone:
 - First person. Casual but professional. Like talking to a sharp colleague.
 - Short paragraphs. No bullet points — write in prose.
 - Systems-forward: lead with the kind of system or problem space, not resume verbs. Noun-heavy phrasing.
+- Avoid jargon and buzzwords. Be specific about what the work actually is.
+- Avoid classic AI text tells like emdashes, parentheses, or qualifiers ("I think", "I'm excited about"). Just say what's going on.
 
 Page structure (use these as markdown H2 sections; omit any section that has no current content — do NOT emit empty headings):
 ## Building

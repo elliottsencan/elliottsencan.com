@@ -13,6 +13,13 @@
   "engines": {
     "node": ">=22"
   },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.90.0",
+    "@linear/sdk": "^81.0.0",
+    "@octokit/request-error": "^7.0.0",
+    "octokit": "^5.0.0",
+    "zod": "^3.24.0"
+  },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250101.0",
     "typescript": "^5.9.3",

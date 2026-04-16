@@ -1,5 +1,5 @@
 /**
- * GitHub REST API wrapper. Two commit shapes supported:
+ * GitHub client via Octokit. Two commit shapes supported:
  *   - PR flow (used by the /now weekly draft): create branch → commit file →
  *     open PR against main.
  *   - Direct commit to main (used by the /link reading pipeline): single PUT
@@ -9,214 +9,151 @@
  * elliottsencan.com repo only. No other scopes, no other repos.
  */
 
+import { Octokit } from "octokit";
+import { RequestError } from "@octokit/request-error";
 import type { Result } from "./types.ts";
 import { log } from "./util.ts";
 
-const API_ROOT = "https://api.github.com";
 const USER_AGENT = "site-ingest-worker";
 
-interface GitHubDeps {
-  token: string;
-  repo: string; // owner/name
+export interface GitHubClient {
+  octokit: Octokit;
+  owner: string;
+  repo: string;
 }
 
-async function ghFetch<T>(
-  path: string,
-  init: RequestInit,
-  deps: GitHubDeps,
-  op: string,
-): Promise<Result<T>> {
-  try {
-    const res = await fetch(`${API_ROOT}${path}`, {
-      ...init,
-      headers: {
-        Authorization: `Bearer ${deps.token}`,
-        Accept: "application/vnd.github+json",
-        "X-GitHub-Api-Version": "2022-11-28",
-        "User-Agent": USER_AGENT,
-        ...(init.body ? { "Content-Type": "application/json" } : {}),
-        ...(init.headers ?? {}),
-      },
-    });
-    if (!res.ok) {
-      const body = await res.text();
-      log.warn("github", op, "non-ok response", {
-        status: res.status,
-        path,
-        bodyLen: body.length,
-      });
-      return { ok: false, error: `HTTP ${res.status}` };
-    }
-    // 204 No Content paths (rare here) → empty data
-    if (res.status === 204) return { ok: true, data: {} as T };
-    return { ok: true, data: (await res.json()) as T };
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    log.error("github", op, "fetch threw", { path, msg });
-    return { ok: false, error: msg };
-  }
+export function createGitHubClient(token: string, fullRepo: string): GitHubClient {
+  const [owner, repo] = fullRepo.split("/");
+  if (!owner || !repo) throw new Error(`invalid repo "${fullRepo}" — expected owner/name`);
+  const octokit = new Octokit({ auth: token, userAgent: USER_AGENT });
+  return { octokit, owner, repo };
 }
 
 // ---------- file contents ----------
 
-interface ContentsResponse {
-  sha: string;
-  content: string;
-  encoding: string;
-}
-
-/**
- * Fetch a file from the repo at the given ref (defaults to main). Returns
- * decoded UTF-8 content plus the blob SHA needed to update the file.
- */
 export async function getFile(
   path: string,
   ref: string,
-  deps: GitHubDeps,
+  gh: GitHubClient,
 ): Promise<Result<{ content: string; sha: string }>> {
-  const url = `/repos/${deps.repo}/contents/${encodeURIComponent(path)}?ref=${encodeURIComponent(ref)}`;
-  const res = await ghFetch<ContentsResponse>(url, { method: "GET" }, deps, "get-file");
-  if (!res.ok) return res;
-  if (res.data.encoding !== "base64") {
-    return { ok: false, error: `unexpected encoding ${res.data.encoding}` };
+  try {
+    const { data } = await gh.octokit.rest.repos.getContent({
+      owner: gh.owner,
+      repo: gh.repo,
+      path,
+      ref,
+    });
+    if (Array.isArray(data) || data.type !== "file") {
+      return { ok: false, error: "path is not a file" };
+    }
+    if (data.encoding !== "base64") {
+      return { ok: false, error: `unexpected encoding ${data.encoding}` };
+    }
+    const binary = atob(data.content.replace(/\n/g, ""));
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    const content = new TextDecoder("utf-8").decode(bytes);
+    return { ok: true, data: { content, sha: data.sha } };
+  } catch (err) {
+    return mapError(err, "get-file", { path, ref });
   }
-  // atob works at the Workers runtime and yields a binary string; decode as UTF-8.
-  const binary = atob(res.data.content.replace(/\n/g, ""));
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-  const content = new TextDecoder("utf-8").decode(bytes);
-  return { ok: true, data: { content, sha: res.data.sha } };
 }
 
 // ---------- branches ----------
 
-interface RefResponse {
-  ref: string;
-  object: { sha: string };
-}
-
-/** Get the tip commit SHA for a branch. */
-export async function getBranchSha(branch: string, deps: GitHubDeps): Promise<Result<string>> {
-  const res = await ghFetch<RefResponse>(
-    `/repos/${deps.repo}/git/ref/heads/${encodeURIComponent(branch)}`,
-    { method: "GET" },
-    deps,
-    "get-branch",
-  );
-  if (!res.ok) return res;
-  return { ok: true, data: res.data.object.sha };
+export async function getBranchSha(branch: string, gh: GitHubClient): Promise<Result<string>> {
+  try {
+    const { data } = await gh.octokit.rest.git.getRef({
+      owner: gh.owner,
+      repo: gh.repo,
+      ref: `heads/${branch}`,
+    });
+    return { ok: true, data: data.object.sha };
+  } catch (err) {
+    return mapError(err, "get-branch", { branch });
+  }
 }
 
 /**
- * Create a new branch from an existing commit SHA. Returns `ok: true` with
- * `alreadyExists: true` if the branch exists — idempotent by design so a
- * re-run of the same day's cron doesn't fail.
+ * Create a new branch from an existing commit SHA. Returns `alreadyExists:
+ * true` if the branch exists — idempotent by design so a same-day re-run
+ * of the cron doesn't fail.
  */
 export async function createBranch(
   branch: string,
   fromSha: string,
-  deps: GitHubDeps,
+  gh: GitHubClient,
 ): Promise<Result<{ alreadyExists: boolean }>> {
-  const existing = await getBranchSha(branch, deps);
-  if (existing.ok) {
-    return { ok: true, data: { alreadyExists: true } };
+  const existing = await getBranchSha(branch, gh);
+  if (existing.ok) return { ok: true, data: { alreadyExists: true } };
+  try {
+    await gh.octokit.rest.git.createRef({
+      owner: gh.owner,
+      repo: gh.repo,
+      ref: `refs/heads/${branch}`,
+      sha: fromSha,
+    });
+    return { ok: true, data: { alreadyExists: false } };
+  } catch (err) {
+    return mapError(err, "create-branch", { branch });
   }
-  const res = await ghFetch<RefResponse>(
-    `/repos/${deps.repo}/git/refs`,
-    {
-      method: "POST",
-      body: JSON.stringify({ ref: `refs/heads/${branch}`, sha: fromSha }),
-    },
-    deps,
-    "create-branch",
-  );
-  if (!res.ok) return res;
-  return { ok: true, data: { alreadyExists: false } };
 }
 
 // ---------- file writes ----------
 
-interface PutFileResponse {
-  content: { sha: string; path: string };
-  commit: { sha: string };
-}
-
-/**
- * Create-or-update a file on a given branch. If the path already exists on
- * that branch, pass `sha` (the blob SHA from getFile); otherwise omit it.
- */
 export async function putFile(args: {
   path: string;
   branch: string;
   content: string;
   message: string;
   sha?: string;
-  deps: GitHubDeps;
+  gh: GitHubClient;
 }): Promise<Result<{ blobSha: string; commitSha: string }>> {
-  const { path, branch, content, message, sha, deps } = args;
-  // Encode content as base64 (UTF-8-safe).
+  const { path, branch, content, message, sha, gh } = args;
+  // base64-encode UTF-8.
   const bytes = new TextEncoder().encode(content);
   let binary = "";
   for (const byte of bytes) binary += String.fromCharCode(byte);
   const base64 = btoa(binary);
 
-  const body: Record<string, unknown> = {
-    message,
-    content: base64,
-    branch,
-  };
-  if (sha) body.sha = sha;
-
-  const res = await ghFetch<PutFileResponse>(
-    `/repos/${deps.repo}/contents/${encodeURIComponent(path)}`,
-    { method: "PUT", body: JSON.stringify(body) },
-    deps,
-    "put-file",
-  );
-  if (!res.ok) return res;
-  return {
-    ok: true,
-    data: { blobSha: res.data.content.sha, commitSha: res.data.commit.sha },
-  };
+  try {
+    const { data } = await gh.octokit.rest.repos.createOrUpdateFileContents({
+      owner: gh.owner,
+      repo: gh.repo,
+      path,
+      message,
+      content: base64,
+      branch,
+      ...(sha ? { sha } : {}),
+    });
+    if (!data.content?.sha || !data.commit?.sha) {
+      return { ok: false, error: "missing sha in response" };
+    }
+    return { ok: true, data: { blobSha: data.content.sha, commitSha: data.commit.sha } };
+  } catch (err) {
+    return mapError(err, "put-file", { path, branch });
+  }
 }
 
 // ---------- pull requests ----------
 
-interface PullRequestResponse {
-  number: number;
-  html_url: string;
-  state: string;
-}
-
-interface PullListItem {
-  number: number;
-  head: { ref: string };
-}
-
-/** Does an open PR exist with the given head branch? (Idempotency check.) */
 export async function findOpenPrByBranch(
   branch: string,
-  deps: GitHubDeps,
-): Promise<Result<PullRequestResponse | null>> {
-  const [owner] = deps.repo.split("/");
-  const res = await ghFetch<PullListItem[]>(
-    `/repos/${deps.repo}/pulls?state=open&head=${encodeURIComponent(`${owner}:${branch}`)}`,
-    { method: "GET" },
-    deps,
-    "find-pr",
-  );
-  if (!res.ok) return res;
-  if (res.data.length === 0) return { ok: true, data: null };
-  const found = res.data[0];
-  if (!found) return { ok: true, data: null };
-  return {
-    ok: true,
-    data: {
-      number: found.number,
-      html_url: "",
+  gh: GitHubClient,
+): Promise<Result<{ number: number } | null>> {
+  try {
+    const { data } = await gh.octokit.rest.pulls.list({
+      owner: gh.owner,
+      repo: gh.repo,
       state: "open",
-    },
-  };
+      head: `${gh.owner}:${branch}`,
+    });
+    const first = data[0];
+    if (!first) return { ok: true, data: null };
+    return { ok: true, data: { number: first.number } };
+  } catch (err) {
+    return mapError(err, "find-pr", { branch });
+  }
 }
 
 export async function openPullRequest(args: {
@@ -224,43 +161,62 @@ export async function openPullRequest(args: {
   body: string;
   head: string;
   base: string;
-  deps: GitHubDeps;
-}): Promise<Result<PullRequestResponse>> {
-  const { title, body, head, base, deps } = args;
-  return ghFetch<PullRequestResponse>(
-    `/repos/${deps.repo}/pulls`,
-    {
-      method: "POST",
-      body: JSON.stringify({ title, body, head, base }),
-    },
-    deps,
-    "open-pr",
-  );
+  gh: GitHubClient;
+}): Promise<Result<{ number: number; html_url: string }>> {
+  const { title, body, head, base, gh } = args;
+  try {
+    const { data } = await gh.octokit.rest.pulls.create({
+      owner: gh.owner,
+      repo: gh.repo,
+      title,
+      body,
+      head,
+      base,
+    });
+    return { ok: true, data: { number: data.number, html_url: data.html_url } };
+  } catch (err) {
+    return mapError(err, "open-pr", { head, base });
+  }
 }
 
-// ---------- directory listing (used to read recent reading entries) ----------
-
-interface DirEntry {
-  type: "file" | "dir";
-  name: string;
-  path: string;
-  sha: string;
-}
+// ---------- directory listing ----------
 
 export async function listDir(
   path: string,
   ref: string,
-  deps: GitHubDeps,
-): Promise<Result<DirEntry[]>> {
-  const res = await ghFetch<DirEntry[] | ContentsResponse>(
-    `/repos/${deps.repo}/contents/${encodeURIComponent(path)}?ref=${encodeURIComponent(ref)}`,
-    { method: "GET" },
-    deps,
-    "list-dir",
-  );
-  if (!res.ok) return res;
-  if (!Array.isArray(res.data)) {
-    return { ok: false, error: "path is a file, not a directory" };
+  gh: GitHubClient,
+): Promise<Result<Array<{ type: "file" | "dir"; name: string; path: string; sha: string }>>> {
+  try {
+    const { data } = await gh.octokit.rest.repos.getContent({
+      owner: gh.owner,
+      repo: gh.repo,
+      path,
+      ref,
+    });
+    if (!Array.isArray(data)) {
+      return { ok: false, error: "path is a file, not a directory" };
+    }
+    const entries = data
+      .filter((e): e is typeof e & { type: "file" | "dir" } => e.type === "file" || e.type === "dir")
+      .map((e) => ({ type: e.type, name: e.name, path: e.path, sha: e.sha }));
+    return { ok: true, data: entries };
+  } catch (err) {
+    return mapError(err, "list-dir", { path, ref });
   }
-  return { ok: true, data: res.data };
+}
+
+// ---------- error mapping ----------
+
+function mapError(
+  err: unknown,
+  op: string,
+  fields: Record<string, string>,
+): { ok: false; error: string } {
+  if (err instanceof RequestError) {
+    log.warn("github", op, "request failed", { status: err.status, ...fields });
+    return { ok: false, error: `HTTP ${err.status}` };
+  }
+  const msg = err instanceof Error ? err.message : String(err);
+  log.error("github", op, "threw", { msg, ...fields });
+  return { ok: false, error: msg };
 }

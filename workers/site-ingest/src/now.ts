@@ -13,7 +13,9 @@
 import { draftNow } from "./anthropic.ts";
 import {
   createBranch,
+  createGitHubClient,
   findOpenPrByBranch,
+  type GitHubClient,
   getBranchSha,
   getFile,
   listDir,
@@ -33,12 +35,12 @@ export async function handle(env: Env, source: "scheduled" | "trigger"): Promise
     date: dateKey(startedAt),
   });
 
-  const deps = { token: env.GITHUB_TOKEN, repo: env.GITHUB_REPO };
+  const gh = createGitHubClient(env.GITHUB_TOKEN, env.GITHUB_REPO);
   const today = dateKey(startedAt);
   const branch = `${env.GITHUB_BRANCH_PREFIX}/${today}`;
 
   // Early idempotency: if a PR already exists for this cycle's branch, bail.
-  const existingPr = await findOpenPrByBranch(branch, deps);
+  const existingPr = await findOpenPrByBranch(branch, gh);
   if (existingPr.ok && existingPr.data) {
     log.info("now", "idempotent", "PR already open — skipping", {
       number: existingPr.data.number,
@@ -47,7 +49,7 @@ export async function handle(env: Env, source: "scheduled" | "trigger"): Promise
   }
 
   // 1. Fetch the current /now page + voice reference + optional notes.
-  const currentNow = await getFile(env.NOW_CONTENT_PATH, "main", deps);
+  const currentNow = await getFile(env.NOW_CONTENT_PATH, "main", gh);
   if (!currentNow.ok) {
     log.error("now", "fetch-current", "missing current.md — seed file first", {
       error: currentNow.error,
@@ -55,10 +57,10 @@ export async function handle(env: Env, source: "scheduled" | "trigger"): Promise
     return respond({ ok: false, error: "current.md missing" }, 500);
   }
 
-  const voiceRef = await getFile(env.VOICE_REFERENCE_PATH, "main", deps);
+  const voiceRef = await getFile(env.VOICE_REFERENCE_PATH, "main", gh);
   const voiceReference = voiceRef.ok ? voiceRef.data.content : null;
 
-  const notesResult = await getFile(env.NOW_NOTES_PATH, "main", deps);
+  const notesResult = await getFile(env.NOW_NOTES_PATH, "main", gh);
   const notes = notesResult.ok ? notesResult.data.content : null;
 
   // 2. Linear projects.
@@ -74,7 +76,7 @@ export async function handle(env: Env, source: "scheduled" | "trigger"): Promise
   const inputs = await getInputs(env.NOW_INPUTS);
 
   // 4. Recent reading entries from the repo.
-  const recentReading = await fetchRecentReading(env, startedAt, deps);
+  const recentReading = await fetchRecentReading(env, startedAt, gh);
 
   // Skip-guard: nothing to draft against.
   if (projects.length === 0 && inputs.length === 0 && recentReading.length === 0) {
@@ -111,11 +113,11 @@ export async function handle(env: Env, source: "scheduled" | "trigger"): Promise
   }
 
   // 6. Create branch (idempotent — existing = fine, we'll update on it).
-  const mainSha = await getBranchSha("main", deps);
+  const mainSha = await getBranchSha("main", gh);
   if (!mainSha.ok) {
     return respond({ ok: false, error: `get main sha: ${mainSha.error}` }, 502);
   }
-  const branchResult = await createBranch(branch, mainSha.data, deps);
+  const branchResult = await createBranch(branch, mainSha.data, gh);
   if (!branchResult.ok) {
     return respond({ ok: false, error: `create branch: ${branchResult.error}` }, 502);
   }
@@ -126,13 +128,13 @@ export async function handle(env: Env, source: "scheduled" | "trigger"): Promise
     branch,
     today,
     currentContent: currentNow.data.content,
-    deps,
+    gh,
   });
 
   // 8. Update current.md on the branch.
   // If the branch already existed from a prior partial run, the file may
   // have been updated there too — fetch the branch-specific SHA.
-  const branchFile = await getFile(env.NOW_CONTENT_PATH, branch, deps);
+  const branchFile = await getFile(env.NOW_CONTENT_PATH, branch, gh);
   const fileSha = branchFile.ok ? branchFile.data.sha : currentNow.data.sha;
   const putResult = await putFile({
     path: env.NOW_CONTENT_PATH,
@@ -140,7 +142,7 @@ export async function handle(env: Env, source: "scheduled" | "trigger"): Promise
     content: drafted,
     message: `now: update for ${today}`,
     sha: fileSha,
-    deps,
+    gh,
   });
   if (!putResult.ok) {
     return respond({ ok: false, error: `put current: ${putResult.error}` }, 502);
@@ -162,7 +164,7 @@ export async function handle(env: Env, source: "scheduled" | "trigger"): Promise
     body: prBody,
     head: branch,
     base: "main",
-    deps,
+    gh,
   });
   if (!pr.ok) {
     return respond({ ok: false, error: `open PR: ${pr.error}` }, 502);
@@ -180,18 +182,18 @@ export async function handle(env: Env, source: "scheduled" | "trigger"): Promise
 async function fetchRecentReading(
   env: Env,
   now: Date,
-  deps: { token: string; repo: string },
+  gh: GitHubClient,
 ): Promise<ReadingContext[]> {
   const limit = Number.parseInt(env.READING_CONTEXT_LIMIT, 10) || 15;
   const months = currentAndPreviousMonth(now);
   const entries: ReadingContext[] = [];
   for (const month of months) {
     const dir = `${env.READING_DIR}/${month}`;
-    const list = await listDir(dir, "main", deps);
+    const list = await listDir(dir, "main", gh);
     if (!list.ok) continue;
     for (const item of list.data) {
       if (item.type !== "file" || !item.name.endsWith(".md")) continue;
-      const file = await getFile(item.path, "main", deps);
+      const file = await getFile(item.path, "main", gh);
       if (!file.ok) continue;
       const parsed = parseReadingFrontmatter(file.data.content);
       if (parsed) entries.push(parsed);
@@ -232,11 +234,11 @@ async function maybeWriteArchive(args: {
   branch: string;
   today: string;
   currentContent: string;
-  deps: { token: string; repo: string };
+  gh: GitHubClient;
 }): Promise<void> {
   const archivePath = `${args.env.NOW_ARCHIVE_DIR}/${args.today}.md`;
   // Skip if the archive file already exists on this branch (prior partial run).
-  const existing = await getFile(archivePath, args.branch, args.deps);
+  const existing = await getFile(archivePath, args.branch, args.gh);
   if (existing.ok) {
     log.info("now", "archive", "archive entry already exists — skipping", {
       path: archivePath,
@@ -253,7 +255,7 @@ async function maybeWriteArchive(args: {
     branch: args.branch,
     content: archiveContent,
     message: `now: archive snapshot ${args.today}`,
-    deps: args.deps,
+    gh: args.gh,
   });
   if (!put.ok) {
     log.warn("now", "archive", "failed to write archive (non-fatal)", {
