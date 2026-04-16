@@ -122,25 +122,3 @@ export function yamlEscape(value: string, maxLength = 500): string {
   return cleaned.length > maxLength ? cleaned.slice(0, maxLength) : cleaned;
 }
 
-// ---------- fetch helpers ----------
-
-/**
- * Retry a fetch-returning operation once with a short backoff. The second
- * attempt runs after 500ms; a third retry is not attempted.
- *
- * Used for Anthropic calls (brief outages and 429s are common enough that
- * one retry materially improves reliability without introducing latency
- * cliffs).
- */
-export async function retryOnce<T>(
-  fn: () => Promise<T>,
-  shouldRetry: (err: unknown) => boolean,
-): Promise<T> {
-  try {
-    return await fn();
-  } catch (err) {
-    if (!shouldRetry(err)) throw err;
-    await new Promise((r) => setTimeout(r, 500));
-    return fn();
-  }
-}

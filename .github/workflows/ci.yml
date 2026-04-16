@@ -34,7 +34,8 @@ jobs:
         with:
           # --offline skips network calls so flaky third parties don't redden
           # the build; lychee still validates internal hrefs and #fragment
-          # anchors against the built dist/. Run an online pass on a schedule
-          # if/when external link rot becomes a real concern.
-          args: --offline --include-fragments './dist/**/*.html'
+          # anchors against the built dist/. --root-dir lets root-relative
+          # hrefs like `/about` resolve to `dist/about/`. Run an online pass
+          # on a schedule if/when external link rot becomes a real concern.
+          args: --offline --include-fragments --root-dir "${{ github.workspace }}/dist" './dist/**/*.html'
           fail: true

@@ -6,7 +6,7 @@
  */
 
 import { writeInput } from "./kv.ts";
-import type { Env, NowInputType } from "./types.ts";
+import type { Env, NowInputType, Result } from "./types.ts";
 import { log } from "./util.ts";
 
 const MAX_CONTENT_LENGTH = 500;
@@ -40,18 +40,13 @@ export async function handle(request: Request, env: Env): Promise<Response> {
     return json({ ok: false, error: validation.error }, 400);
   }
 
-  await writeInput(env.NOW_INPUTS, validation.value);
+  await writeInput(env.NOW_INPUTS, validation.data);
   return json({ ok: true }, 200);
 }
 
-type ValidationResult =
-  | {
-      ok: true;
-      value: { type: NowInputType; content: string; url?: string };
-    }
-  | { ok: false; error: string };
+type ValidatedInput = { type: NowInputType; content: string; url?: string };
 
-function validate(input: unknown): ValidationResult {
+function validate(input: unknown): Result<ValidatedInput> {
   if (!input || typeof input !== "object") return { ok: false, error: "body must be an object" };
   const obj = input as Record<string, unknown>;
 
@@ -85,7 +80,7 @@ function validate(input: unknown): ValidationResult {
 
   return {
     ok: true,
-    value: {
+    data: {
       type: obj.type as NowInputType,
       content,
       ...(url ? { url } : {}),

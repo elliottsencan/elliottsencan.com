@@ -14,7 +14,7 @@
 import { summarizeLink } from "./anthropic.ts";
 import { createGitHubClient, getBranchSha, getFile, putFile } from "./github.ts";
 import { LINK_SUMMARY_SYSTEM } from "./prompts.ts";
-import type { Env, LinkRequest, LinkSummary } from "./types.ts";
+import type { Env, LinkRequest, LinkSummary, Result } from "./types.ts";
 import { fileTimestamp, log, monthKey, slugify, yamlEscape } from "./util.ts";
 
 const MAX_BODY_BYTES = 10_000;
@@ -43,7 +43,7 @@ export async function handle(
   if (!validation.ok) {
     return json({ ok: false, error: validation.error }, 400);
   }
-  const body = validation.value;
+  const body = validation.data;
 
   // Resolve title if missing. Best-effort; page fetch failures don't block.
   const resolvedTitle = body.title ?? (await fetchPageTitle(body.url));
@@ -105,9 +105,7 @@ export async function handle(
 
 // ---------- validation ----------
 
-type ValidationResult = { ok: true; value: LinkRequest } | { ok: false; error: string };
-
-function validate(input: unknown): ValidationResult {
+function validate(input: unknown): Result<LinkRequest> {
   if (!input || typeof input !== "object") return { ok: false, error: "body must be an object" };
   const obj = input as Record<string, unknown>;
 
@@ -136,7 +134,7 @@ function validate(input: unknown): ValidationResult {
 
   return {
     ok: true,
-    value: {
+    data: {
       url: obj.url,
       ...(title ? { title } : {}),
       ...(excerpt ? { excerpt } : {}),
@@ -155,30 +153,20 @@ async function fetchPageTitle(url: string): Promise<string | undefined> {
       signal: controller.signal,
       headers: { "User-Agent": "site-ingest-link-bot/0.1" },
     });
-    if (!res.ok) return undefined;
+    if (!res.ok || !res.body) return undefined;
 
-    // Read at most MAX_PAGE_FETCH_BYTES; HTML <title> is almost always near
-    // the top so a partial read is fine.
-    const reader = res.body?.getReader();
-    if (!reader) return undefined;
-    const chunks: Uint8Array[] = [];
-    let total = 0;
-    while (total < MAX_PAGE_FETCH_BYTES) {
+    // HTML <title> is near the top, so a partial read is sufficient.
+    // Stream-decode until we have enough characters, then cancel.
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder("utf-8");
+    let html = "";
+    while (html.length < MAX_PAGE_FETCH_BYTES) {
       const { done, value } = await reader.read();
       if (done) break;
-      chunks.push(value);
-      total += value.byteLength;
+      html += decoder.decode(value, { stream: true });
     }
     reader.cancel().catch(() => {});
 
-    const buffer = new Uint8Array(total);
-    let offset = 0;
-    for (const chunk of chunks) {
-      buffer.set(chunk.subarray(0, Math.min(chunk.byteLength, total - offset)), offset);
-      offset += chunk.byteLength;
-      if (offset >= total) break;
-    }
-    const html = new TextDecoder("utf-8").decode(buffer);
     const match = /<title[^>]*>([^<]+)<\/title>/i.exec(html);
     if (!match || !match[1]) return undefined;
     return decodeHtmlEntities(match[1].trim()).slice(0, 200);
