@@ -5,7 +5,9 @@ import Link from "@components/Link.astro";
 import Layout from "@layouts/Layout.astro";
 
 // Each AI-assistance level is addressable by anchor so the badge on a writing
-// post can deep-link straight to its definition (e.g. /process#light).
+// post can deep-link straight to its definition (e.g. /process/#light).
+// Trailing slash matters: Astro's static output is dir-style (/process/index.html),
+// and lychee can't resolve a fragment against /process (no trailing slash).
 const levels = [
   {
     id: "none",
