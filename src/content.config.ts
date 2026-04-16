@@ -44,4 +44,36 @@ const projects = defineCollection({
   }),
 });
 
-export const collections = { blog, projects };
+const now = defineCollection({
+  loader: glob({ pattern: "current.md", base: "./src/content/now" }),
+  schema: z.object({
+    title: z.string(),
+    description: z.string(),
+    updated: z.coerce.date(),
+    standfirst: z.string().max(180),
+  }),
+});
+
+const nowArchive = defineCollection({
+  loader: glob({ pattern: "**/*.md", base: "./src/content/now-archive" }),
+  schema: z.object({
+    title: z.string(),
+    description: z.string(),
+    archivedDate: z.coerce.date(),
+  }),
+});
+
+const reading = defineCollection({
+  loader: glob({ pattern: "**/*.md", base: "./src/content/reading" }),
+  schema: z.object({
+    title: z.string(),
+    url: z.url(),
+    summary: z.string(),
+    category: z.enum(["tech", "design", "music", "essay", "news", "other"]),
+    added: z.coerce.date(),
+    author: z.string().optional(),
+    source: z.string().optional(),
+  }),
+});
+
+export const collections = { blog, projects, now, nowArchive, reading };

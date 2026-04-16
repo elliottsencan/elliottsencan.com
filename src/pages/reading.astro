@@ -1,0 +1,122 @@
+---
+import { type CollectionEntry, getCollection } from "astro:content";
+import Container from "@components/Container.astro";
+import EditorialRule from "@components/EditorialRule.astro";
+import Link from "@components/Link.astro";
+import Layout from "@layouts/Layout.astro";
+
+// Reading log. Every entry is public — the site-ingest worker commits a
+// markdown file to src/content/reading/{YYYY-MM}/ each time the mobile
+// shortcut pings /link with a URL. Anthropic drafts the summary + category;
+// nothing is hand-edited post-commit unless I decide to.
+const entries = (await getCollection("reading")).sort(
+  (a, b) => b.data.added.valueOf() - a.data.added.valueOf(),
+);
+
+type Entry = CollectionEntry<"reading">;
+
+function monthKey(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function monthLabel(date: Date): string {
+  return `${date.toLocaleString("en-US", { month: "long" }).toUpperCase()} ${date.getFullYear()}`;
+}
+
+// Group into ordered buckets by month, preserving reverse-chron order so
+// the first bucket is the most recent month and entries within it are
+// newest-first.
+type Bucket = { key: string; label: string; entries: Entry[] };
+const buckets: Bucket[] = [];
+for (const entry of entries) {
+  const key = monthKey(entry.data.added);
+  const last = buckets[buckets.length - 1];
+  if (last && last.key === key) {
+    last.entries.push(entry);
+  } else {
+    buckets.push({ key, label: monthLabel(entry.data.added), entries: [entry] });
+  }
+}
+
+const dateFormatter = new Intl.DateTimeFormat("en-US", {
+  day: "2-digit",
+  month: "short",
+});
+---
+
+<Layout
+  title="Reading"
+  description="Articles, essays, and books I've been reading."
+>
+  <Container>
+    <div
+      class="space-y-10"
+      data-pagefind-body
+      data-pagefind-filter="type:Reading"
+    >
+      <div>
+        <h1 class="sr-only">Reading</h1>
+        <p
+          class="font-mono text-xs uppercase tracking-wider text-black/55 dark:text-white/55"
+          style="font-variant-numeric: tabular-nums;"
+        >
+          Reading
+        </p>
+      </div>
+
+      <EditorialRule />
+
+      {
+        buckets.length > 0 ? (
+          buckets.map((bucket, bucketIndex) => (
+            <section class="space-y-6">
+              <h2
+                class="font-mono text-xs uppercase tracking-wider text-black/50 dark:text-white/50"
+                style="font-variant-numeric: tabular-nums;"
+              >
+                {bucket.label}
+              </h2>
+              <ul class="not-prose flex flex-col gap-5 text-sm">
+                {bucket.entries.map((entry) => (
+                  <li class="space-y-1">
+                    <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                      <time
+                        datetime={entry.data.added.toISOString()}
+                        class="shrink-0 font-mono text-xs uppercase tracking-wider text-black/50 dark:text-white/50"
+                        style="font-variant-numeric: tabular-nums;"
+                      >
+                        {dateFormatter.format(entry.data.added)}
+                      </time>
+                      <Link href={entry.data.url} external>
+                        {entry.data.title}
+                      </Link>
+                      {(entry.data.author || entry.data.source) && (
+                        <span class="text-black/55 dark:text-white/55">
+                          {[entry.data.author, entry.data.source]
+                            .filter(Boolean)
+                            .join(", ")}
+                        </span>
+                      )}
+                      <span class="rounded-sm border border-black/10 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-black/60 dark:border-white/15 dark:text-white/60">
+                        {entry.data.category}
+                      </span>
+                    </div>
+                    <p class="text-sm leading-relaxed text-black/75 dark:text-white/75">
+                      {entry.data.summary}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+              {bucketIndex < buckets.length - 1 && <EditorialRule />}
+            </section>
+          ))
+        ) : (
+          <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
+            Nothing here yet. The pipeline is wired up — as soon as I start
+            saving links from my phone, they'll appear here.
+          </p>
+        )
+      }
+    </div>
+  </Container>
+</Layout>

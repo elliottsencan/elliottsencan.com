@@ -26,3 +26,8 @@ pnpm-debug.log*
 # font source files (only WOFF2 in public/fonts/ gets committed)
 PP Neue Montreal*/
 .envrc
+
+# Cloudflare Worker artifacts (see workers/site-ingest/)
+.wrangler/
+workers/**/node_modules/
+workers/**/.dev.vars

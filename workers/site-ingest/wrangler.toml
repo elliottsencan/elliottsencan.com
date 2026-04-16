@@ -1,0 +1,43 @@
+name = "site-ingest"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+
+# Weekly draft of /now: Mon 17:00 UTC = Mon 10:00 Pacific standard / 09:00
+# Pacific daylight. Picks up the week's KV inputs and opens a PR you can
+# review Monday morning PT.
+[triggers]
+crons = ["0 17 * * 1"]
+
+[vars]
+GITHUB_REPO = "elliottsencan/elliottsencan.com"
+GITHUB_BRANCH_PREFIX = "now-update"
+NOW_CONTENT_PATH = "src/content/now/current.md"
+NOW_ARCHIVE_DIR = "src/content/now-archive"
+READING_DIR = "src/content/reading"
+VOICE_REFERENCE_PATH = "now-voice-reference.md"
+NOW_NOTES_PATH = "now_notes.md"
+# Cap the recent-reading context passed to the /now draft step so the
+# prompt budget stays bounded regardless of how active the reading log gets.
+READING_CONTEXT_LIMIT = "25"
+
+[[kv_namespaces]]
+binding = "NOW_INPUTS"
+id = "bd8e73bf1e524f8783f64410a8f93eb7"
+
+# Rate limiters — Cloudflare Workers built-in Rate Limiting API. One per
+# endpoint, keyed by client IP. Limits are sized for personal use with a
+# wide margin; they exist to cap damage if the Bearer token ever leaks.
+[[ratelimits]]
+name = "TRIGGER_LIMITER"
+namespace_id = "1"
+simple = { limit = 5, period = 60 }
+
+[[ratelimits]]
+name = "INPUT_LIMITER"
+namespace_id = "2"
+simple = { limit = 60, period = 60 }
+
+[[ratelimits]]
+name = "LINK_LIMITER"
+namespace_id = "3"
+simple = { limit = 30, period = 60 }

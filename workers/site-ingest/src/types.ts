@@ -1,0 +1,108 @@
+/**
+ * Shared types for the site-ingest worker.
+ *
+ * All external API response shapes are narrowed to the fields we consume;
+ * raw GraphQL / REST payloads never leak across module boundaries.
+ */
+
+// ---------- runtime environment ----------
+
+export interface Env {
+  // secrets (wrangler secret put)
+  LINEAR_API_KEY: string;
+  ANTHROPIC_API_KEY: string;
+  GITHUB_TOKEN: string;
+  API_TOKEN: string;
+
+  // vars (wrangler.toml [vars])
+  GITHUB_REPO: string;
+  GITHUB_BRANCH_PREFIX: string;
+  NOW_CONTENT_PATH: string;
+  NOW_ARCHIVE_DIR: string;
+  READING_DIR: string;
+  VOICE_REFERENCE_PATH: string;
+  NOW_NOTES_PATH: string;
+  READING_CONTEXT_LIMIT: string;
+
+  // KV
+  NOW_INPUTS: KVNamespace;
+
+  // rate limiters (Workers Rate Limiting API)
+  TRIGGER_LIMITER: RateLimiter;
+  INPUT_LIMITER: RateLimiter;
+  LINK_LIMITER: RateLimiter;
+}
+
+interface RateLimiter {
+  limit(opts: { key: string }): Promise<{ success: boolean }>;
+}
+
+// ---------- /now drafting ----------
+
+/**
+ * Compact summary of one active Linear project, built from the GraphQL
+ * ActiveProjects query. Fed into the Anthropic prompt verbatim (as JSON).
+ */
+export interface ProjectSummary {
+  id: string;
+  name: string;
+  description: string | null;
+  stateName: string;
+  milestone: {
+    name: string;
+    targetDate: string | null;
+  } | null;
+  progress: {
+    completed: number;
+    total: number;
+  };
+  /** Max issue updatedAt across the project, as an ISO string. `null` if zero issues. */
+  lastActivityDate: string | null;
+  /** True when nothing has moved in ≥14 days (or there are no issues). */
+  stale: boolean;
+}
+
+/** An entry saved to KV by POST /input. */
+export type NowInputType = "reading" | "listening" | "thinking" | "building" | "activity";
+
+export interface NowInput {
+  type: NowInputType;
+  content: string;
+  url?: string;
+  createdAt: string;
+}
+
+/** Reading-log context passed to the /now drafting prompt. */
+export interface ReadingContext {
+  title: string;
+  url: string;
+  summary: string;
+  category: string;
+  added: string;
+}
+
+// ---------- link pipeline ----------
+
+/** Validated body for POST /link. */
+export interface LinkRequest {
+  url: string;
+  title?: string;
+  excerpt?: string;
+}
+
+/** Strict-JSON shape Anthropic returns for link summarization. */
+export interface LinkSummary {
+  summary: string;
+  category: "tech" | "design" | "music" | "essay" | "news" | "other";
+  author?: string;
+  source?: string;
+}
+
+// ---------- discriminated results ----------
+
+/**
+ * Used across external API wrappers so callers can check a single `ok`
+ * discriminator instead of try/catching everything. Mirrors the pattern in
+ * the Astro project's src/lib/github.ts.
+ */
+export type Result<T> = { ok: true; data: T } | { ok: false; error: string };

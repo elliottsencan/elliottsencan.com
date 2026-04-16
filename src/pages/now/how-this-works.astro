@@ -1,0 +1,86 @@
+---
+import Container from "@components/Container.astro";
+import EditorialRule from "@components/EditorialRule.astro";
+import Link from "@components/Link.astro";
+import Layout from "@layouts/Layout.astro";
+import { Code } from "astro-expressive-code/components";
+
+// Meta-engineering page describing how /now stays up to date. Intentionally
+// concise prose + a single ASCII data-flow diagram rendered through the
+// existing Expressive Code integration — no new diagram tooling, no binary
+// assets. Voice matches /now: direct, first person, no filler.
+
+const diagram = `iOS Shortcut ──▶ Cloudflare KV
+                      │
+Cron (weekly) ─▶ Worker ┼─▶ Linear API  (active projects)
+                        ├─▶ KV         (phone inputs)
+                        ├─▶ Anthropic  (draft markdown in my voice)
+                        ├─▶ GitHub     (branch + PR)
+                        └─▶ Me         (review + merge)
+                                       │
+                                       ▼
+                              Cloudflare Pages (deploy)`;
+---
+
+<Layout
+  title="How /now stays up to date"
+  description="The automation behind the /now page on elliottsencan.com."
+>
+  <Container>
+    <div
+      class="space-y-10"
+      data-pagefind-body
+      data-pagefind-filter="type:About"
+    >
+      <div>
+        <h1 class="sr-only">How /now stays up to date</h1>
+        <p
+          class="font-mono text-xs uppercase tracking-wider text-black/55 dark:text-white/55"
+          style="font-variant-numeric: tabular-nums;"
+        >
+          Now &middot; How this page works
+        </p>
+      </div>
+
+      <EditorialRule />
+
+      <Code code={diagram} lang="text" frame="none" />
+
+      <section class="space-y-6 text-base leading-relaxed text-black/85 dark:text-white/85">
+        <p>
+          /now pages rot because updating them is manual and easy to forget.
+          This one doesn't.
+        </p>
+        <p>
+          Every week, a Cloudflare Worker pulls active projects from Linear,
+          pulls whatever I've flagged from my phone during the week, and asks
+          Claude to draft an updated page in my voice — using a short
+          voice-reference file I maintain as a sample. The draft opens as a
+          GitHub PR. I skim it, fix anything that isn't quite right, merge.
+          Five minutes a week, and the page tracks reality.
+        </p>
+        <p>
+          The phone piece is where most of the texture comes from. A single
+          iOS Shortcut on my home screen handles everything: tap it to pick
+          a category (reading, listening, thinking, building, activity, or
+          save link), or invoke it from the Safari share sheet to capture an
+          article's title and URL directly — zero typing. Everything queues
+          in Cloudflare KV until the next draft.
+        </p>
+        <p>
+          Nothing here runs unreviewed. The AI proposes; I dispose.
+        </p>
+      </section>
+
+      <EditorialRule />
+
+      <p
+        class="font-mono text-xs uppercase tracking-wider text-black/55 dark:text-white/55"
+      >
+        <Link href="/now">back to now</Link>
+        &nbsp;&middot;&nbsp;
+        <Link href="/now/archive">archive</Link>
+      </p>
+    </div>
+  </Container>
+</Layout>

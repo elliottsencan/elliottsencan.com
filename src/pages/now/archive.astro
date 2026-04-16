@@ -1,0 +1,87 @@
+---
+import { getCollection } from "astro:content";
+import Container from "@components/Container.astro";
+import EditorialRule from "@components/EditorialRule.astro";
+import Link from "@components/Link.astro";
+import Layout from "@layouts/Layout.astro";
+
+// Reverse-chronological list of /now snapshots. Each entry lives in
+// src/content/now-archive/{YYYY-MM-DD}.md, committed by the site-ingest
+// worker alongside each /now update. The page itself is deliberately
+// sparse — think "git log for my professional life", not a gallery.
+const entries = (await getCollection("nowArchive")).sort(
+  (a, b) => b.data.archivedDate.valueOf() - a.data.archivedDate.valueOf(),
+);
+
+const dateFormatter = new Intl.DateTimeFormat("en-US", {
+  day: "2-digit",
+  month: "short",
+  year: "2-digit",
+});
+---
+
+<Layout
+  title="Now — archive"
+  description="Past snapshots of the /now page."
+>
+  <Container>
+    <div
+      class="space-y-10"
+      data-pagefind-body
+      data-pagefind-filter="type:About"
+    >
+      <div>
+        <h1 class="sr-only">Now — archive</h1>
+        <p
+          class="font-mono text-xs uppercase tracking-wider text-black/55 dark:text-white/55"
+          style="font-variant-numeric: tabular-nums;"
+        >
+          Now &middot; Archive
+        </p>
+      </div>
+
+      <EditorialRule />
+
+      {
+        entries.length > 0 ? (
+          <section>
+            <h2 class="sr-only">Snapshots</h2>
+            <ul class="not-prose flex flex-col gap-2 text-sm">
+              {entries.map((entry) => (
+                <li class="flex items-baseline gap-4">
+                  <time
+                    datetime={entry.data.archivedDate.toISOString()}
+                    class="shrink-0 font-mono text-xs uppercase tracking-wider text-black/50 dark:text-white/50"
+                    style="font-variant-numeric: tabular-nums;"
+                  >
+                    {dateFormatter.format(entry.data.archivedDate)}
+                  </time>
+                  <span>
+                    <Link href={`/now/archive/${entry.id}`}>
+                      {entry.data.title}
+                    </Link>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : (
+          <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
+            Nothing archived yet. Every time the /now page updates, the prior
+            version is snapshotted here.
+          </p>
+        )
+      }
+
+      <EditorialRule />
+
+      <p
+        class="font-mono text-xs uppercase tracking-wider text-black/55 dark:text-white/55"
+      >
+        <Link href="/now">back to now</Link>
+        &nbsp;&middot;&nbsp;
+        <Link href="/now/how-this-works">how this page works</Link>
+      </p>
+    </div>
+  </Container>
+</Layout>
