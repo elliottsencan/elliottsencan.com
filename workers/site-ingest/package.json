@@ -8,6 +8,8 @@
     "deploy": "wrangler deploy",
     "tail": "wrangler tail",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "kv:create": "wrangler kv namespace create NOW_INPUTS"
   },
   "engines": {
@@ -18,11 +20,12 @@
     "@linear/sdk": "^81.0.0",
     "@octokit/request-error": "^7.0.0",
     "octokit": "^5.0.0",
-    "zod": "^3.24.0"
+    "zod": "^4.0.0"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250101.0",
     "typescript": "^5.9.3",
+    "vitest": "^2.1.0",
     "wrangler": "^4.0.0"
   }
 }

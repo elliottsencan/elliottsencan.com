@@ -13,8 +13,12 @@
     "skipLibCheck": true,
     "isolatedModules": true,
     "noEmit": true,
-    "allowImportingTsExtensions": true
+    "allowImportingTsExtensions": true,
+    "baseUrl": ".",
+    "paths": {
+      "@shared/*": ["../../src/lib/*"]
+    }
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "../../src/lib/schemas/**/*.ts"],
   "exclude": ["node_modules", "dist", ".wrangler"]
 }

@@ -9,8 +9,8 @@
  * elliottsencan.com repo only. No other scopes, no other repos.
  */
 
-import { Octokit } from "octokit";
 import { RequestError } from "@octokit/request-error";
+import { Octokit } from "octokit";
 import type { Result } from "./types.ts";
 import { log } from "./util.ts";
 
@@ -197,7 +197,9 @@ export async function listDir(
       return { ok: false, error: "path is a file, not a directory" };
     }
     const entries = data
-      .filter((e): e is typeof e & { type: "file" | "dir" } => e.type === "file" || e.type === "dir")
+      .filter(
+        (e): e is typeof e & { type: "file" | "dir" } => e.type === "file" || e.type === "dir",
+      )
       .map((e) => ({ type: e.type, name: e.name, path: e.path, sha: e.sha }));
     return { ok: true, data: entries };
   } catch (err) {
@@ -213,8 +215,15 @@ function mapError(
   fields: Record<string, string>,
 ): { ok: false; error: string } {
   if (err instanceof RequestError) {
-    log.warn("github", op, "request failed", { status: err.status, ...fields });
-    return { ok: false, error: `HTTP ${err.status}` };
+    // Include err.message — GitHub's 422s carry semantic detail ("Reference
+    // already exists", "Invalid content encoding") that a bare "HTTP 422"
+    // would drop on the floor.
+    log.warn("github", op, "request failed", {
+      status: err.status,
+      msg: err.message,
+      ...fields,
+    });
+    return { ok: false, error: `HTTP ${err.status}: ${err.message}` };
   }
   const msg = err instanceof Error ? err.message : String(err);
   log.error("github", op, "threw", { msg, ...fields });

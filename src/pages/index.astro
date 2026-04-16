@@ -37,7 +37,10 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
       {
         standfirst ? (
           <>
-            <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
+            <p
+              class="text-base leading-relaxed text-black/85 dark:text-white/85"
+              data-pagefind-meta={`standfirst:${standfirst}`}
+            >
               {standfirst}
             </p>
             <EditorialRule />

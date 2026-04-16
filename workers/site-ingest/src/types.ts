@@ -5,6 +5,8 @@
  * raw GraphQL / REST payloads never leak across module boundaries.
  */
 
+import type { ReadingCategory } from "@shared/schemas/content.ts";
+
 // ---------- runtime environment ----------
 
 export interface Env {
@@ -23,6 +25,8 @@ export interface Env {
   VOICE_REFERENCE_PATH: string;
   NOW_NOTES_PATH: string;
   READING_CONTEXT_LIMIT: string;
+  /** Optional override for the Anthropic model ID. Empty/unset = default. */
+  ANTHROPIC_MODEL?: string;
 
   // KV
   NOW_INPUTS: KVNamespace;
@@ -55,7 +59,12 @@ export interface ProjectSummary {
   };
   /** Max issue updatedAt across the project, as an ISO string. `null` if zero issues. */
   lastActivityDate: string | null;
-  /** True when nothing has moved in ≥14 days (or there are no issues). */
+  /**
+   * Invariant: derived from `lastActivityDate` by `linear.deriveStale` —
+   * true when `lastActivityDate` is null or older than STALE_AFTER_DAYS.
+   * The field is kept on the wire so the Anthropic prompt can distinguish
+   * stale projects from active ones without recomputing.
+   */
   stale: boolean;
 }
 
@@ -90,7 +99,7 @@ export interface LinkRequest {
 /** Strict-JSON shape Anthropic returns for link summarization. */
 export interface LinkSummary {
   summary: string;
-  category: "tech" | "design" | "music" | "essay" | "news" | "other";
+  category: ReadingCategory;
   author?: string;
   source?: string;
 }

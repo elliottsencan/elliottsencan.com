@@ -10,6 +10,10 @@ import type { NowInput, NowInputType } from "./types.ts";
 import { log } from "./util.ts";
 
 const KEY_PREFIX = "input:";
+// Bound fan-out on list+get. Well above any realistic weekly input volume
+// (5/min rate limit on /input means ~200 max between crons) but cheap
+// insurance if inputs ever stop being cleared on schedule.
+const LIST_LIMIT = 200;
 
 function randomSuffix(): string {
   const bytes = crypto.getRandomValues(new Uint8Array(3));
@@ -39,7 +43,10 @@ export async function writeInput(
  * row shouldn't block the weekly draft.
  */
 export async function getInputs(kv: KVNamespace): Promise<NowInput[]> {
-  const list = await kv.list({ prefix: KEY_PREFIX });
+  const list = await kv.list({ prefix: KEY_PREFIX, limit: LIST_LIMIT });
+  if (list.list_complete === false) {
+    log.warn("kv", "list", "input list truncated at LIST_LIMIT", { limit: LIST_LIMIT });
+  }
   const keys = list.keys
     .map((k) => k.name)
     .sort()
@@ -63,10 +70,27 @@ export async function getInputs(kv: KVNamespace): Promise<NowInput[]> {
 /**
  * Delete every queued input. Called AFTER a /now PR is successfully opened;
  * if the PR fails mid-pipeline, inputs are preserved for the next run.
+ *
+ * Uses `Promise.allSettled` so a single KV delete failure doesn't drop the
+ * rest of the batch silently; failures are counted and logged, and the
+ * returned count reflects what actually succeeded.
  */
 export async function clearInputs(kv: KVNamespace): Promise<number> {
-  const list = await kv.list({ prefix: KEY_PREFIX });
-  await Promise.all(list.keys.map((k) => kv.delete(k.name)));
-  log.info("kv", "clear", "inputs cleared", { count: list.keys.length });
-  return list.keys.length;
+  const list = await kv.list({ prefix: KEY_PREFIX, limit: LIST_LIMIT });
+  const results = await Promise.allSettled(list.keys.map((k) => kv.delete(k.name)));
+  let succeeded = 0;
+  let failed = 0;
+  for (const result of results) {
+    if (result.status === "fulfilled") succeeded += 1;
+    else failed += 1;
+  }
+  if (failed > 0) {
+    log.error("kv", "clear", "some deletes failed — inputs may double-consume next run", {
+      failed,
+      succeeded,
+    });
+  } else {
+    log.info("kv", "clear", "inputs cleared", { count: succeeded });
+  }
+  return succeeded;
 }

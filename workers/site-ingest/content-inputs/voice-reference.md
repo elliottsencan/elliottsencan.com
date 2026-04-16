@@ -2,7 +2,7 @@
 
 Short excerpts that represent how Elliott actually writes. Match this tone, density, and sentence structure when drafting the /now page. These are examples, not instructions — study them, don't parrot them.
 
-Replace the placeholder excerpts below with real samples once a few Jevons Paradox posts (or other longform) have shipped. The worker re-fetches this file on every run, so updates take effect on the next draft without a redeploy.
+Add more excerpts here as longform ships. The worker re-fetches this file on every run, so updates take effect on the next draft without a redeploy.
 
 ---
 

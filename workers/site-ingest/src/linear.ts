@@ -37,17 +37,52 @@ export async function fetchActiveProjects(apiKey: string): Promise<Result<Projec
   }
 }
 
+/**
+ * Summarize a single project. Uses `Promise.allSettled` so a single failed
+ * sub-query (issues, milestones, or status) degrades that field to a
+ * sensible default rather than rejecting the whole project. One bad project
+ * shouldn't wipe the entire draft's context.
+ */
 async function toSummary(project: Project): Promise<ProjectSummary> {
-  const [issuesConn, milestonesConn, status] = await Promise.all([
+  const [issuesRes, milestonesRes, statusRes] = await Promise.allSettled([
     project.issues({ first: 50 }),
     project.projectMilestones({ first: 10 }),
     project.status,
   ]);
 
+  if (issuesRes.status === "rejected") {
+    log.warn("linear", "summarize", "issues query failed", {
+      id: project.id,
+      msg: errMsg(issuesRes.reason),
+    });
+  }
+  if (milestonesRes.status === "rejected") {
+    log.warn("linear", "summarize", "milestones query failed", {
+      id: project.id,
+      msg: errMsg(milestonesRes.reason),
+    });
+  }
+  if (statusRes.status === "rejected") {
+    log.warn("linear", "summarize", "status query failed", {
+      id: project.id,
+      msg: errMsg(statusRes.reason),
+    });
+  }
+
+  const issueNodes = issuesRes.status === "fulfilled" ? issuesRes.value.nodes : [];
+  const milestoneNodes = milestonesRes.status === "fulfilled" ? milestonesRes.value.nodes : [];
+  const status = statusRes.status === "fulfilled" ? statusRes.value : null;
+
+  if (statusRes.status === "fulfilled" && !status) {
+    log.warn("linear", "summarize", "status resolved null — using 'unknown'", {
+      id: project.id,
+    });
+  }
+
   const now = Date.now();
   let lastActivityMs: number | null = null;
   let completed = 0;
-  for (const issue of issuesConn.nodes) {
+  for (const issue of issueNodes) {
     const updated = issue.updatedAt.getTime();
     if (lastActivityMs === null || updated > lastActivityMs) lastActivityMs = updated;
     if (issue.completedAt) completed += 1;
@@ -55,7 +90,7 @@ async function toSummary(project: Project): Promise<ProjectSummary> {
   const stale =
     lastActivityMs === null || now - lastActivityMs > STALE_AFTER_DAYS * 24 * 60 * 60 * 1000;
 
-  const milestoneNode = milestonesConn.nodes[0];
+  const milestoneNode = milestoneNodes[0];
   const milestone = milestoneNode
     ? {
         name: milestoneNode.name,
@@ -71,8 +106,12 @@ async function toSummary(project: Project): Promise<ProjectSummary> {
     description: project.description,
     stateName: status?.name ?? "unknown",
     milestone,
-    progress: { completed, total: issuesConn.nodes.length },
+    progress: { completed, total: issueNodes.length },
     lastActivityDate: lastActivityMs ? new Date(lastActivityMs).toISOString() : null,
     stale,
   };
+}
+
+function errMsg(reason: unknown): string {
+  return reason instanceof Error ? reason.message : String(reason);
 }

@@ -5,10 +5,10 @@ import EditorialRule from "@components/EditorialRule.astro";
 import Link from "@components/Link.astro";
 import Layout from "@layouts/Layout.astro";
 
-// Source of truth: src/content/now/current.md. The site-ingest worker drafts
-// this file via PR; no hand-editing the lastUpdated stamp anymore. If the
-// entry is missing the build must fail — that would mean the content
-// collection is mis-configured.
+// Source of truth: src/content/now/current.md. The site-ingest worker
+// owns the `updated` field — hand-edits will be overwritten by the next
+// weekly draft PR. A missing entry fails the build, which means the
+// content collection is mis-configured.
 const entry = await getEntry("now", "current");
 if (!entry) throw new Error("src/content/now/current.md missing");
 

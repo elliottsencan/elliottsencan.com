@@ -11,6 +11,7 @@
  */
 
 import { draftNow } from "./anthropic.ts";
+import { validateNowDraft } from "./frontmatter.ts";
 import {
   createBranch,
   createGitHubClient,
@@ -48,7 +49,6 @@ export async function handle(env: Env, source: "scheduled" | "trigger"): Promise
     return respond({ ok: true, skipped: "pr-exists", prNumber: existingPr.data.number });
   }
 
-  // 1. Fetch the current /now page + voice reference + optional notes.
   const currentNow = await getFile(env.NOW_CONTENT_PATH, "main", gh);
   if (!currentNow.ok) {
     log.error("now", "fetch-current", "missing current.md — seed file first", {
@@ -58,12 +58,23 @@ export async function handle(env: Env, source: "scheduled" | "trigger"): Promise
   }
 
   const voiceRef = await getFile(env.VOICE_REFERENCE_PATH, "main", gh);
+  if (!voiceRef.ok) {
+    log.warn("now", "fetch-voice", "voice reference unavailable — using base prompt only", {
+      path: env.VOICE_REFERENCE_PATH,
+      error: voiceRef.error,
+    });
+  }
   const voiceReference = voiceRef.ok ? voiceRef.data.content : null;
 
   const notesResult = await getFile(env.NOW_NOTES_PATH, "main", gh);
+  if (!notesResult.ok) {
+    log.warn("now", "fetch-notes", "notes file unavailable — continuing without", {
+      path: env.NOW_NOTES_PATH,
+      error: notesResult.error,
+    });
+  }
   const notes = notesResult.ok ? notesResult.data.content : null;
 
-  // 2. Linear projects.
   const projectsResult = await fetchActiveProjects(env.LINEAR_API_KEY);
   const projects: ProjectSummary[] = projectsResult.ok ? projectsResult.data : [];
   if (!projectsResult.ok) {
@@ -72,10 +83,8 @@ export async function handle(env: Env, source: "scheduled" | "trigger"): Promise
     });
   }
 
-  // 3. KV inputs.
   const inputs = await getInputs(env.NOW_INPUTS);
 
-  // 4. Recent reading entries from the repo.
   const recentReading = await fetchRecentReading(env, startedAt, gh);
 
   // Skip-guard: nothing to draft against.
@@ -84,7 +93,6 @@ export async function handle(env: Env, source: "scheduled" | "trigger"): Promise
     return respond({ ok: true, skipped: "no-data" });
   }
 
-  // 5. Draft.
   const userMessage = buildUserMessage({
     currentNowContent: currentNow.data.content,
     projects,
@@ -96,6 +104,7 @@ export async function handle(env: Env, source: "scheduled" | "trigger"): Promise
   const systemPrompt = nowSystemPrompt(voiceReference);
   const draft = await draftNow({
     apiKey: env.ANTHROPIC_API_KEY,
+    model: env.ANTHROPIC_MODEL,
     systemPrompt,
     userMessage,
   });
@@ -107,12 +116,27 @@ export async function handle(env: Env, source: "scheduled" | "trigger"): Promise
   }
 
   const drafted = draft.data.trim();
+  // Byte-identical short-circuit: the model occasionally regenerates an
+  // identical page. Skipping here keeps the git log clean (no churn PRs).
   if (drafted === currentNow.data.content.trim()) {
     log.info("now", "no-change", "drafted content identical to current — skipping PR");
     return respond({ ok: true, skipped: "no-change" });
   }
 
-  // 6. Create branch (idempotent — existing = fine, we'll update on it).
+  // Gate: validate the draft against the shared `now` collection schema
+  // before touching the repo. An LLM that drops `standfirst` or overruns
+  // its 180-char cap would otherwise fail `astro build` in CI — here it
+  // fails the worker run instead, and main stays buildable.
+  const valid = validateNowDraft(drafted);
+  if (!valid.ok) {
+    log.error("now", "validate", "drafted content invalid — no PR opened", {
+      error: valid.error,
+    });
+    return respond({ ok: false, error: `draft invalid: ${valid.error}` }, 502);
+  }
+
+  // Create branch — idempotent on "already exists" so same-day reruns update
+  // the existing branch instead of failing.
   const mainSha = await getBranchSha("main", gh);
   if (!mainSha.ok) {
     return respond({ ok: false, error: `get main sha: ${mainSha.error}` }, 502);
@@ -122,7 +146,8 @@ export async function handle(env: Env, source: "scheduled" | "trigger"): Promise
     return respond({ ok: false, error: `create branch: ${branchResult.error}` }, 502);
   }
 
-  // 7. Archive step (best-effort). Skip silently if we can't or don't need to.
+  // Best-effort archive of the previous /now snapshot. Failure is logged
+  // but doesn't block the PR — archive entries are nice-to-have history.
   await maybeWriteArchive({
     env,
     branch,
@@ -131,7 +156,6 @@ export async function handle(env: Env, source: "scheduled" | "trigger"): Promise
     gh,
   });
 
-  // 8. Update current.md on the branch.
   // If the branch already existed from a prior partial run, the file may
   // have been updated there too — fetch the branch-specific SHA.
   const branchFile = await getFile(env.NOW_CONTENT_PATH, branch, gh);
@@ -148,7 +172,6 @@ export async function handle(env: Env, source: "scheduled" | "trigger"): Promise
     return respond({ ok: false, error: `put current: ${putResult.error}` }, 502);
   }
 
-  // 9. Open PR.
   const prBody = buildPrBody({
     projects,
     inputs,
@@ -170,8 +193,23 @@ export async function handle(env: Env, source: "scheduled" | "trigger"): Promise
     return respond({ ok: false, error: `open PR: ${pr.error}` }, 502);
   }
 
-  // 10. Clear KV inputs (only after successful PR).
-  await clearInputs(env.NOW_INPUTS);
+  // Clear KV inputs only after a successful PR — preserving them if the
+  // pipeline fails earlier lets the next run consume the same batch.
+  // Wrapped so a delete failure logs loudly instead of rejecting silently;
+  // the PR has already been opened at this point.
+  try {
+    await clearInputs(env.NOW_INPUTS);
+  } catch (err) {
+    log.error(
+      "now",
+      "clear-inputs",
+      "KV clear threw after PR opened — inputs may double-consume next run",
+      {
+        msg: err instanceof Error ? err.message : String(err),
+        pr: pr.data.number,
+      },
+    );
+  }
 
   log.info("now", "complete", "PR opened", { number: pr.data.number });
   return respond({ ok: true, prNumber: pr.data.number, branch });
@@ -184,7 +222,7 @@ async function fetchRecentReading(
   now: Date,
   gh: GitHubClient,
 ): Promise<ReadingContext[]> {
-  const limit = Number.parseInt(env.READING_CONTEXT_LIMIT, 10) || 15;
+  const limit = Number.parseInt(env.READING_CONTEXT_LIMIT, 10) || 25;
   const months = currentAndPreviousMonth(now);
   const entries: ReadingContext[] = [];
   for (const month of months) {
@@ -269,6 +307,11 @@ async function maybeWriteArchive(args: {
  * `nowArchive` collection expects: `title`, `description`, `archivedDate`.
  * Preserves the body verbatim. Returns null if the frontmatter block isn't
  * recognizable (malformed current.md).
+ *
+ * The archive title is always constructed from scratch — the draft's
+ * `title` field is prompt-locked to the literal `"Now"` (see prompts.ts),
+ * so reusing it would produce archive entries indistinguishable on the
+ * archive index. Dates live in the title, not the frontmatter `updated`.
  */
 function convertToArchiveFrontmatter(source: string, today: string): string | null {
   const match = /^---\n([\s\S]*?)\n---\n([\s\S]*)$/.exec(source);
@@ -276,12 +319,10 @@ function convertToArchiveFrontmatter(source: string, today: string): string | nu
 
   const block = match[1];
   const body = match[2];
-  const titleMatch = /^title:\s*(.+)$/m.exec(block);
   const descMatch = /^description:\s*(.+)$/m.exec(block);
-  const title = titleMatch?.[1]?.trim() ?? '"Now"';
   const description = descMatch?.[1]?.trim() ?? '"What I was working on."';
 
-  const archiveTitle = title.replace(/^"Now"$/, `"Now — ${formatDateLong(today)}"`);
+  const archiveTitle = `"Now — ${formatDateLong(today)}"`;
   return `---
 title: ${archiveTitle}
 description: ${description}

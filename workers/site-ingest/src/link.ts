@@ -48,9 +48,13 @@ export async function handle(
   // Resolve title if missing. Best-effort; page fetch failures don't block.
   const resolvedTitle = body.title ?? (await fetchPageTitle(body.url));
 
-  // Call Anthropic for summary + category. Falls back to a stub on failure.
+  // Falls back to a stub summary if Anthropic is unavailable so a transient
+  // outage doesn't lose the link entirely. The stub is committed to the
+  // repo but the response signals `degraded: true` so the client knows the
+  // entry needs a manual pass.
   const summaryResult = await summarizeLink({
     apiKey: env.ANTHROPIC_API_KEY,
+    model: env.ANTHROPIC_MODEL,
     systemPrompt: LINK_SUMMARY_SYSTEM,
     userMessage: buildLinkUserMessage({
       title: resolvedTitle,
@@ -59,6 +63,7 @@ export async function handle(
     }),
   });
 
+  const degraded = !summaryResult.ok;
   const summary: LinkSummary = summaryResult.ok
     ? summaryResult.data
     : { summary: "Saved link.", category: "other" };
@@ -68,7 +73,6 @@ export async function handle(
     });
   }
 
-  // Compose markdown + commit.
   const added = new Date();
   const finalTitle = resolvedTitle || new URL(body.url).hostname;
   const markdown = buildEntryMarkdown({
@@ -98,6 +102,7 @@ export async function handle(
       path,
       category: summary.category,
       commit: commitResult.commitSha,
+      ...(degraded ? { degraded: true } : {}),
     },
     200,
   );
@@ -105,7 +110,8 @@ export async function handle(
 
 // ---------- validation ----------
 
-function validate(input: unknown): Result<LinkRequest> {
+// Exported for unit tests; in-file callers use it directly.
+export function validate(input: unknown): Result<LinkRequest> {
   if (!input || typeof input !== "object") return { ok: false, error: "body must be an object" };
   const obj = input as Record<string, unknown>;
 

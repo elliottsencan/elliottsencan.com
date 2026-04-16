@@ -39,3 +39,15 @@ jobs:
           # on a schedule if/when external link rot becomes a real concern.
           args: --offline --include-fragments --root-dir "${{ github.workspace }}/dist" './dist/**/*.html'
           fail: true
+
+      - name: Worker install
+        working-directory: workers/site-ingest
+        run: pnpm install --frozen-lockfile
+
+      - name: Worker typecheck
+        working-directory: workers/site-ingest
+        run: pnpm typecheck
+
+      - name: Worker tests
+        working-directory: workers/site-ingest
+        run: pnpm test

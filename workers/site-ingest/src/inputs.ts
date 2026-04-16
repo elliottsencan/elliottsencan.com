@@ -9,6 +9,10 @@ import { writeInput } from "./kv.ts";
 import type { Env, NowInputType, Result } from "./types.ts";
 import { log } from "./util.ts";
 
+// Caps sized for the iOS Shortcut's typical payload: content is a single
+// typed line (500 chars is a comfortable tweet-sized limit), URLs stay
+// under browser path caps, and the 10 KB body cap absorbs both plus JSON
+// overhead with headroom. Raise these only if the Shortcut flow changes.
 const MAX_CONTENT_LENGTH = 500;
 const MAX_URL_LENGTH = 2000;
 const MAX_BODY_BYTES = 10_000;

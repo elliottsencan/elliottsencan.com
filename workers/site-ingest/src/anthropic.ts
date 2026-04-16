@@ -14,15 +14,16 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
+import { ReadingCategorySchema } from "@shared/schemas/content.ts";
 import { z } from "zod";
 import type { LinkSummary, Result } from "./types.ts";
 import { log } from "./util.ts";
 
-const MODEL = "claude-sonnet-4-6";
+const DEFAULT_MODEL = "claude-sonnet-4-6";
 
 const LinkSummarySchema = z.object({
   summary: z.string(),
-  category: z.enum(["tech", "design", "music", "essay", "news", "other"]),
+  category: ReadingCategorySchema,
   author: z.string().optional(),
   source: z.string().optional(),
 });
@@ -31,14 +32,19 @@ function client(apiKey: string): Anthropic {
   return new Anthropic({ apiKey });
 }
 
+function resolveModel(override: string | undefined): string {
+  return override?.trim() || DEFAULT_MODEL;
+}
+
 export async function draftNow(args: {
   apiKey: string;
+  model?: string;
   systemPrompt: string;
   userMessage: string;
 }): Promise<Result<string>> {
   try {
     const response = await client(args.apiKey).messages.create({
-      model: MODEL,
+      model: resolveModel(args.model),
       max_tokens: 2000,
       thinking: { type: "adaptive" },
       system: args.systemPrompt,
@@ -55,12 +61,13 @@ export async function draftNow(args: {
 
 export async function summarizeLink(args: {
   apiKey: string;
+  model?: string;
   systemPrompt: string;
   userMessage: string;
 }): Promise<Result<LinkSummary>> {
   try {
     const response = await client(args.apiKey).messages.parse({
-      model: MODEL,
+      model: resolveModel(args.model),
       max_tokens: 400,
       system: args.systemPrompt,
       messages: [{ role: "user", content: args.userMessage }],

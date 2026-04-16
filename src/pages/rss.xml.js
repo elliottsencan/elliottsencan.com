@@ -1,6 +1,6 @@
 import { getCollection, render } from "astro:content";
-import rss from "@astrojs/rss";
 import mdxRenderer from "@astrojs/mdx/server.js";
+import rss from "@astrojs/rss";
 import { SITE } from "@consts";
 import { experimental_AstroContainer as AstroContainer } from "astro/container";
 

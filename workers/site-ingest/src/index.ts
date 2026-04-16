@@ -59,9 +59,42 @@ export default {
       cron: event.cron,
       scheduledTime: new Date(event.scheduledTime).toISOString(),
     });
-    await now.handle(env, "scheduled");
+    // The scheduled handler has no visible response contract, so any failure
+    // that doesn't log explicitly is effectively invisible. Two things to
+    // cover: (1) exceptions thrown outside now.handle's Result pattern, and
+    // (2) `{ ok: false, error }` responses the Result pattern returns as
+    // non-200 — those need an explicit error log here.
+    try {
+      const response = await now.handle(env, "scheduled");
+      await logScheduledOutcome(response);
+    } catch (err) {
+      log.error("cron", "fire", "scheduled run threw", {
+        msg: err instanceof Error ? err.message : String(err),
+      });
+    }
   },
 };
+
+async function logScheduledOutcome(response: Response): Promise<void> {
+  const body = await response.clone().text();
+  let parsed: { ok?: unknown; error?: unknown } | null = null;
+  try {
+    parsed = JSON.parse(body);
+  } catch {
+    log.error("cron", "fire", "non-JSON response from now.handle", {
+      status: response.status,
+    });
+    return;
+  }
+  if (parsed?.ok === true) {
+    log.info("cron", "fire", "scheduled run complete", { status: response.status });
+    return;
+  }
+  log.error("cron", "fire", "scheduled run failed", {
+    status: response.status,
+    error: typeof parsed?.error === "string" ? parsed.error : "<unknown>",
+  });
+}
 
 function plain(message: string, status: number): Response {
   return new Response(message, {

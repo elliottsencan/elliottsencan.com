@@ -5,11 +5,6 @@ import Link from "@components/Link.astro";
 import Layout from "@layouts/Layout.astro";
 import { Code } from "astro-expressive-code/components";
 
-// Meta-engineering page describing how /now stays up to date. Intentionally
-// concise prose + a single ASCII data-flow diagram rendered through the
-// existing Expressive Code integration — no new diagram tooling, no binary
-// assets. Voice matches /now: direct, first person, no filler.
-
 const diagram = `iOS Shortcut ──▶ Cloudflare KV
                       │
 Cron (weekly) ─▶ Worker ┼─▶ Linear API  (active projects)
@@ -48,26 +43,29 @@ Cron (weekly) ─▶ Worker ┼─▶ Linear API  (active projects)
 
       <section class="space-y-6 text-base leading-relaxed text-black/85 dark:text-white/85">
         <p>
-          "/now" pages tend to rot overtime because updating them is a manual process that requires dedicated time and attention.
-          This one doesn't! Its a HITL system that automatically drafts updates.
+          Most "/now" pages rot over time. Updating them is manual, and
+          manual updates lose to the rest of the week. This one is a
+          human-in-the-loop system: a draft lands on Monday morning, I
+          review, I merge.
         </p>
         <p>
-          Every week, a Cloudflare Worker with some fine grained permissions grabs a bunch of 
-          context from different sources. Personal dev work from Linear, recent activity from GitHub, and anything I've flagged on my phone. It
-          Then we pipe that into Claude to draft an updated page in my voice, using a short
-          voice-reference file and pushes a PR. There I can make any tweaks necessary, then merge.
-          Five minutes a week, and the page tracks reality.
+          Each week a Cloudflare Worker with a narrowly-scoped GitHub token
+          pulls active projects from Linear, queued inputs from KV, and
+          recent entries from /reading. It hands that context plus a short
+          voice-reference file to Claude, which drafts an updated page in
+          my voice. The worker opens a pull request. Five minutes a week
+          of review, and the page tracks reality.
         </p>
         <p>
-          To make sourcing content easy, theres a single iOS shortcut that handles all 
-          the personal flavor I want to inject: tap it to pick
-          a category (reading, listening, thinking, building, activity, or
-          save link), or invoke it from the Safari share sheet to capture an
-          article's title and URL directly. Everything queues
-          in Cloudflare KV until the next draft.
+          An iOS shortcut feeds the queue. From the home screen I pick a
+          category (reading, listening, thinking, building, activity, or
+          save link) and type a line. From the Safari share sheet I send
+          an article's title and URL straight to /reading. Everything sits
+          in Cloudflare KV until the next draft consumes it.
         </p>
         <p>
-          Nothing here runs unreviewed. The AI proposes; I dispose.
+          Nothing here runs unreviewed. Every update is a pull request I
+          have to approve.
         </p>
       </section>
 

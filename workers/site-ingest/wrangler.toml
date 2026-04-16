@@ -18,11 +18,17 @@ GITHUB_BRANCH_PREFIX = "now-update"
 NOW_CONTENT_PATH = "src/content/now/current.md"
 NOW_ARCHIVE_DIR = "src/content/now-archive"
 READING_DIR = "src/content/reading"
-VOICE_REFERENCE_PATH = "now-voice-reference.md"
-NOW_NOTES_PATH = "now_notes.md"
+# Worker content inputs — the files the /now draft step reads into the
+# Anthropic prompt. Live next to the worker so their purpose is obvious
+# and they don't clutter the repo root.
+VOICE_REFERENCE_PATH = "workers/site-ingest/content-inputs/voice-reference.md"
+NOW_NOTES_PATH = "workers/site-ingest/content-inputs/notes.md"
 # Cap the recent-reading context passed to the /now draft step so the
 # prompt budget stays bounded regardless of how active the reading log gets.
 READING_CONTEXT_LIMIT = "25"
+# Leave unset (or set to "") to use the default `claude-sonnet-4-6`. Set
+# to swap models without a redeploy.
+ANTHROPIC_MODEL = ""
 
 [[kv_namespaces]]
 binding = "NOW_INPUTS"
@@ -31,6 +37,9 @@ id = "bd8e73bf1e524f8783f64410a8f93eb7"
 # Rate limiters — Cloudflare Workers built-in Rate Limiting API. One per
 # endpoint, keyed by client IP. Limits are sized for personal use with a
 # wide margin; they exist to cap damage if the Bearer token ever leaks.
+# `namespace_id` is an arbitrary per-worker limiter ID (any string unique
+# within this file); it does not reference a KV namespace or anything
+# external. Here we use "1"/"2"/"3" as positional labels.
 [[ratelimits]]
 name = "TRIGGER_LIMITER"
 namespace_id = "1"

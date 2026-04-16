@@ -39,7 +39,7 @@ cp .dev.vars.example .dev.vars   # fill in local secrets
 ### 2. Create the KV namespace
 
 ```sh
-pnpm wrangler kv:namespace create NOW_INPUTS
+pnpm wrangler kv namespace create NOW_INPUTS
 ```
 
 Paste the returned namespace ID into `wrangler.toml` under `[[kv_namespaces]]`.
@@ -219,4 +219,20 @@ No structured alerting in v1. If the cron starts failing regularly, add a Slack 
 - System prompts explicitly disregard instructions found in user content.
 - Anthropic key has a monthly spend cap set in the dashboard. Linear key is read-only. GitHub PAT is fine-grained, single-repo, contents + pull_requests only.
 
-See the plan at `/Users/2ts/.claude-personal/plans/i-want-to-implement-dynamic-sketch.md` for the full security rationale.
+## Configuration reference
+
+All non-secret configuration lives in `wrangler.toml` under `[vars]`. Every field listed is required at runtime (types enforce this in `src/types.ts`); leave `ANTHROPIC_MODEL` empty to use the default.
+
+| Var | Purpose |
+| --- | --- |
+| `GITHUB_REPO` | `owner/name` of the site repo the worker writes to. |
+| `GITHUB_BRANCH_PREFIX` | Prefix for branches the weekly draft opens (`<prefix>/YYYY-MM-DD`). |
+| `NOW_CONTENT_PATH` | Path in the repo to the canonical `/now` source (`src/content/now/current.md`). |
+| `NOW_ARCHIVE_DIR` | Directory for archive snapshots of previous `/now` content. |
+| `READING_DIR` | Directory for `/reading` entries committed by the /link pipeline. |
+| `VOICE_REFERENCE_PATH` | Path to the voice-reference excerpts file fed to the /now prompt. |
+| `NOW_NOTES_PATH` | Path to the freeform notes file fed to the /now prompt. |
+| `READING_CONTEXT_LIMIT` | Max recent reading entries included in the /now prompt. |
+| `ANTHROPIC_MODEL` | Optional override for the Anthropic model ID. Empty = default. |
+
+Worker content inputs (`VOICE_REFERENCE_PATH` and `NOW_NOTES_PATH`) live at `workers/site-ingest/content-inputs/` so their purpose is obvious next to the worker and they don't clutter the repo root. The worker re-fetches both on every run, so edits take effect on the next draft without a redeploy.

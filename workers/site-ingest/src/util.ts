@@ -121,4 +121,3 @@ export function yamlEscape(value: string, maxLength = 500): string {
     .trim();
   return cleaned.length > maxLength ? cleaned.slice(0, maxLength) : cleaned;
 }
-
