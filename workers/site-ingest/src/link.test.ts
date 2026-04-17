@@ -62,12 +62,13 @@ describe("link.validate", () => {
   });
 
   it("preserves and truncates excerpt", () => {
-    const longExcerpt = "e".repeat(5000);
+    // Truncation cap matches MAX_EXCERPT_LENGTH in link.ts (16_000).
+    const longExcerpt = "e".repeat(20_000);
     const r = validate({ url: "https://example.com/", excerpt: longExcerpt });
     expect(r.ok).toBe(true);
     if (r.ok) {
       expect(r.data.excerpt).toBeDefined();
-      expect((r.data.excerpt ?? "").length).toBeLessThanOrEqual(2000);
+      expect((r.data.excerpt ?? "").length).toBeLessThanOrEqual(16_000);
     }
   });
 });

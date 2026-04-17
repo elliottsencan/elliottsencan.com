@@ -18,8 +18,14 @@ import { LINK_SUMMARY_SYSTEM } from "./prompts.ts";
 import type { Env, LinkRequest, LinkSummary, Result } from "./types.ts";
 import { fileTimestamp, jsonResponse, log, monthKey, slugify, yamlEscape } from "./util.ts";
 
-const MAX_BODY_BYTES = 10_000;
-const MAX_EXCERPT_LENGTH = 2000;
+// iOS Safari share sheet can pass whole article text as `excerpt` when the
+// user hasn't selected anything. 10 KB bounces legit shares; 100 KB still
+// caps adversarial payloads and excerpt is truncated to MAX_EXCERPT_LENGTH
+// post-parse, so the stored value stays bounded regardless. 16 KB excerpt
+// gives Anthropic enough context for longform tech articles (~$0.015/call
+// at Sonnet 4.6 prices) while keeping prompt budget reasonable.
+const MAX_BODY_BYTES = 100_000;
+const MAX_EXCERPT_LENGTH = 16_000;
 const MAX_PAGE_FETCH_BYTES = 200_000;
 const PAGE_FETCH_TIMEOUT_MS = 5000;
 
