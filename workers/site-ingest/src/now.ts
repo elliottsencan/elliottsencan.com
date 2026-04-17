@@ -6,8 +6,9 @@
  * on branch, PR, or byte-identical-draft guards.
  *
  * Failure contract: each external step either returns ok data or bails
- * without side-effects further down. KV inputs are only cleared after a
- * successful PR is opened.
+ * without side-effects further down. KV inputs are not cleared here — the
+ * run records a `consumed:<branch>` snapshot of which keys fed the PR, and
+ * the keys are deleted later when the merge workflow calls `/consume`.
  */
 
 import { formatInTimeZone } from "date-fns-tz";
@@ -23,7 +24,7 @@ import {
   openPullRequest,
   putFile,
 } from "./github.ts";
-import { clearInputs, getInputs } from "./kv.ts";
+import { getInputs, writeConsumedSnapshot } from "./kv.ts";
 import { fetchActiveProjects } from "./linear.ts";
 import { nowSystemPrompt } from "./prompts.ts";
 import { fetchRecentReading } from "./reading-context.ts";
@@ -84,7 +85,10 @@ export async function handle(env: Env, source: "scheduled" | "trigger"): Promise
     });
   }
 
-  const inputs = await getInputs(env.NOW_INPUTS);
+  // Inputs come back paired with their KV keys so we can snapshot exactly
+  // which keys fed this PR; the merge workflow later clears just those.
+  const inputEntries = await getInputs(env.NOW_INPUTS);
+  const inputs = inputEntries.map((e) => e.input);
 
   const recentReading = await fetchRecentReading(env, startedAt, gh);
 
@@ -177,6 +181,27 @@ export async function handle(env: Env, source: "scheduled" | "trigger"): Promise
     return jsonResponse({ ok: false, error: `put current: ${putResult.error}` }, 502);
   }
 
+  // Record which input keys fed this run BEFORE opening the PR. If the
+  // snapshot write fails, we bail cleanly — no PR, no side-effects, and
+  // the input keys stay in KV for the next run to pick up. If the PR
+  // open fails after a successful snapshot, the stale snapshot is
+  // harmless: no /consume will ever fire for a branch whose PR was
+  // never created, and the next same-day retry overwrites the snapshot.
+  try {
+    await writeConsumedSnapshot(
+      env.NOW_INPUTS,
+      branch,
+      inputEntries.map((e) => e.key),
+    );
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    log.error("now", "snapshot", "consumed-snapshot write failed — aborting run", {
+      msg,
+      branch,
+    });
+    return jsonResponse({ ok: false, error: `write snapshot: ${msg}` }, 502);
+  }
+
   const prBody = buildPrBody({
     projects,
     inputs,
@@ -193,24 +218,6 @@ export async function handle(env: Env, source: "scheduled" | "trigger"): Promise
   });
   if (!pr.ok) {
     return jsonResponse({ ok: false, error: `open PR: ${pr.error}` }, 502);
-  }
-
-  // Clear KV inputs only after a successful PR — preserving them if the
-  // pipeline fails earlier lets the next run consume the same batch.
-  // Wrapped so a delete failure logs loudly instead of rejecting silently;
-  // the PR has already been opened at this point.
-  try {
-    await clearInputs(env.NOW_INPUTS);
-  } catch (err) {
-    log.error(
-      "now",
-      "clear-inputs",
-      "KV clear threw after PR opened — inputs may double-consume next run",
-      {
-        msg: err instanceof Error ? err.message : String(err),
-        pr: pr.data.number,
-      },
-    );
   }
 
   log.info("now", "complete", "PR opened", { number: pr.data.number });

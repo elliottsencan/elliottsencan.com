@@ -9,12 +9,15 @@
  *                    reading entry to the repo.
  *   POST /trigger  — ad-hoc run of the /now draft pipeline. Same logic as
  *                    the cron; used for seeding and manual refresh.
+ *   POST /consume  — clear the KV inputs snapshotted for a merged /now PR.
+ *                    Called by the now-consume.yml workflow on merge.
  *
  * Cron trigger: runs the /now draft weekly.
  *
  * Rate-limited per endpoint via Cloudflare's Workers Rate Limiting API.
  */
 
+import * as consume from "./consume.ts";
 import * as inputs from "./inputs.ts";
 import * as link from "./link.ts";
 import * as now from "./now.ts";
@@ -55,6 +58,16 @@ export default {
         return textResponse("rate limited", 429);
       }
       return now.handle(env, "trigger");
+    }
+
+    if (request.method === "POST" && url.pathname === "/consume") {
+      // Low volume (one call per /now merge), so reuse the trigger limiter
+      // rather than carving out a new binding.
+      const limited = await env.TRIGGER_LIMITER.limit({ key: ip });
+      if (!limited.success) {
+        return textResponse("rate limited", 429);
+      }
+      return consume.handle(request, env);
     }
 
     return textResponse("not found", 404);

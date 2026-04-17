@@ -78,6 +78,53 @@ export interface NowInput {
   createdAt: string;
 }
 
+/**
+ * A NowInput paired with its KV key, so callers can record exactly which
+ * keys fed a /now run and clear just those on PR merge.
+ */
+export interface KeyedNowInput {
+  key: string;
+  input: NowInput;
+}
+
+/**
+ * Minimal KV surface the worker actually uses. Cloudflare's full
+ * `KVNamespace` interface satisfies this structurally (it has all four
+ * methods with compatible signatures), so production code binds the
+ * real type here without conversion. Narrowing to this interface keeps
+ * test fakes honest — no `as unknown as KVNamespace` casts needed just
+ * to paper over methods we never call.
+ */
+export interface KVStore {
+  put(key: string, value: string): Promise<void>;
+  get(key: string): Promise<string | null>;
+  delete(key: string): Promise<void>;
+  list(opts?: { prefix?: string; limit?: number }): Promise<{
+    keys: Array<{ name: string }>;
+    list_complete: boolean;
+  }>;
+}
+
+/**
+ * Outcome of a consume call. Distinct states so callers (notably the
+ * /consume HTTP handler and the Actions workflow) can surface corrupt
+ * or partially-failed consumes as real errors instead of silent 200s.
+ *
+ * - `cleared`: snapshot existed, all referenced keys deleted, snapshot
+ *    deleted. Normal path.
+ * - `no-snapshot`: nothing to do (idempotent second call, or PR merged
+ *    without a snapshot ever being written).
+ * - `corrupt`: snapshot existed but parsed/validated wrong. Snapshot is
+ *    kept in place so a human can inspect it.
+ * - `partial-failure`: some referenced-key deletes failed. Snapshot is
+ *    kept so a retry (dispatching the workflow manually) can finish.
+ */
+export type ConsumeResult =
+  | { status: "cleared"; cleared: number }
+  | { status: "no-snapshot" }
+  | { status: "corrupt" }
+  | { status: "partial-failure"; cleared: number; failed: number };
+
 /** Reading-log context passed to the /now drafting prompt. */
 export interface ReadingContext {
   title: string;

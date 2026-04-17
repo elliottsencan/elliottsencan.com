@@ -1,0 +1,92 @@
+name: Consume KV inputs on /now merge
+
+# Fires when a `now-update/*` branch PR merges to main, and calls the
+# site-ingest worker's /consume endpoint to delete the KV inputs that
+# were snapshotted at PR-open time.
+#
+# One-time setup:
+#   1. Add a GitHub Actions secret named SITE_INGEST_URL with the worker's
+#      base URL (e.g. https://site-ingest.<subdomain>.workers.dev).
+#   2. Add a GitHub Actions secret named SITE_INGEST_API_TOKEN with the
+#      same value as the worker's API_TOKEN Cloudflare secret (wrangler
+#      secret put API_TOKEN).
+#
+# Manual retry: workflow_dispatch with a branch name if an auto-fire fails.
+
+on:
+  push:
+    branches: [main]
+    # Only fire on pushes that touch /now content — avoids running this
+    # (harmless but noisy) workflow on unrelated merges to main.
+    paths:
+      - "src/content/now/**"
+      - "src/content/now-archive/**"
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "now-update/<date> branch name to consume (bypasses the push-detection step)"
+        required: true
+        type: string
+
+# Explicit, minimal permissions. `contents: read` for checkout-less gh api
+# calls; `pull-requests: read` for the PR-lookup step. No write scopes.
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  consume:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Identify merged now-update branch
+        id: detect
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MANUAL_BRANCH: ${{ inputs.branch }}
+        run: |
+          set -euo pipefail
+          if [[ -n "${MANUAL_BRANCH:-}" ]]; then
+            BRANCH="$MANUAL_BRANCH"
+            echo "Manual dispatch for branch: $BRANCH"
+          else
+            # Direct commit -> PR lookup. Strongly consistent, unlike
+            # `gh pr list --search "sha:..."` which can miss very recent
+            # merges while the search index catches up.
+            PR_JSON=$(gh api \
+              "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/pulls" \
+              --jq '[.[] | select(.merged_at != null)][0] // empty')
+            BRANCH=$(echo "$PR_JSON" | jq -r '.head.ref // ""')
+            if [[ -z "$BRANCH" ]]; then
+              echo "No merged PR associated with ${GITHUB_SHA}; skipping."
+              echo "branch=" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          fi
+          if [[ "$BRANCH" != now-update/* ]]; then
+            echo "Merged PR branch '$BRANCH' is not a now-update/* branch; skipping."
+            echo "branch=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+
+      - name: Call worker /consume
+        if: steps.detect.outputs.branch != ''
+        env:
+          BRANCH: ${{ steps.detect.outputs.branch }}
+          WORKER_URL: ${{ secrets.SITE_INGEST_URL }}
+          API_TOKEN: ${{ secrets.SITE_INGEST_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${WORKER_URL:-}" || -z "${API_TOKEN:-}" ]]; then
+            echo "::error::SITE_INGEST_URL and SITE_INGEST_API_TOKEN must be set (see workflow comment)."
+            exit 1
+          fi
+          echo "Calling /consume for branch: $BRANCH"
+          # --fail-with-body prints the worker's error body on non-2xx so
+          # failures are debuggable from the Actions log without curl flags.
+          curl --fail-with-body --silent --show-error \
+            -X POST "${WORKER_URL%/}/consume" \
+            -H "Authorization: Bearer $API_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"branch\":\"$BRANCH\"}"
+          echo
