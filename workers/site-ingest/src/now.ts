@@ -130,8 +130,12 @@ export async function handle(env: Env, source: "scheduled" | "trigger"): Promise
   // fails the worker run instead, and main stays buildable.
   const valid = validateNowDraft(drafted);
   if (!valid.ok) {
+    // Preview the first 240 chars of the drafted content so bad LLM output
+    // is debuggable from the log. Newlines flattened for single-line tail.
     log.error("now", "validate", "drafted content invalid — no PR opened", {
       error: valid.error,
+      preview: drafted.slice(0, 240).replace(/\n/g, "\\n"),
+      length: drafted.length,
     });
     return jsonResponse({ ok: false, error: `draft invalid: ${valid.error}` }, 502);
   }

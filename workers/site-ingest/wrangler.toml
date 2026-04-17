@@ -53,3 +53,14 @@ simple = { limit = 60, period = 60 }
 name = "LINK_LIMITER"
 namespace_id = "3"
 simple = { limit = 30, period = 60 }
+
+# Persistent logs in the Cloudflare dashboard (last 7 days on free tier).
+# Keeps dashboard state in sync across deploys — without this, enabling
+# observability in the UI gets reset on every `wrangler deploy`.
+[observability]
+[observability.logs]
+enabled = true
+invocation_logs = true
+
+[observability.traces]
+enabled = false
