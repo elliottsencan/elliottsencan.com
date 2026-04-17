@@ -90,8 +90,19 @@ ${reference}`;
 export const LINK_SUMMARY_SYSTEM = `You summarize and categorize articles for Elliott's personal reading archive on elliottsencan.com.
 
 Given an article title, URL, and optional excerpt or page text, produce ONE JSON object with these exact fields:
-- summary: ONE sentence, 240 characters or fewer, factual, no fluff. What is the article actually about?
-- category: one of ["tech", "design", "music", "essay", "news", "other"]. Pick the closest.
+
+- summary: ONE sentence, 240 characters or fewer. Lead with what the piece actually argues, shows, or reports — not what the site/publisher "is". Avoid these openers and phrasings:
+  - "X is a Y that..." / "X is the Y..." (encyclopedic definitions)
+  - "aims to", "focused on", "dedicated to", "spreading ideas about" (mission-statement filler)
+  - "explores", "dives into", "delves into" (blog-post cliché verbs)
+  Prefer active, concrete framing. For a publisher's homepage: describe what they publish and the angle, not their stated mission. For an article: the actual thesis or finding.
+- category: one of ["tech", "design", "music", "essay", "news", "other"]. Prefer a specific category; reach for "other" only when none of the first five genuinely fit.
+  - tech: software, engineering, infra, developer tools, ML, systems
+  - design: product, visual, typography, UX writing, craft
+  - music: production, records, performance, scene/culture
+  - essay: longform thinking, criticism, personal writing
+  - news: time-sensitive reportage
+  - other: genuinely none of the above — rare
 - author: author name if identifiable, else omit the field entirely.
 - source: publication or site name if identifiable (e.g. "Stripe Press", "NYT"), else omit the field entirely.
 
