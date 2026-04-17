@@ -2,7 +2,17 @@
 title: "Now"
 description: "What I'm working on right now."
 updated: 2026-04-16
-standfirst: "Building elliottsencan.com and wiring up the auto-updater that keeps this page honest."
+standfirst: "Racing an August 24 deadline on the Same Same But Different festival platform while building open-source Angular AI chat primitives on the side."
 ---
 
-Building elliottsencan.com and wiring up the auto-updater that keeps this page honest.
+## Building
+
+SSBD Platform v2.0 is the main thing. It's a full festival operations platform for Same Same But Different, built backend-first. The current milestone covers maps, push notifications, and general festival readiness, with a hard ship date of August 24. The stack runs through a custom backend with Airtable sync, JuiceLabs integration, and an Expo/React Native mobile app. There are 40 open issues in the milestone and zero closed, so the next few months are heads-down.
+
+Alongside that, herald-ui is an open-source Angular port of assistant-ui. The idea is composable AI chat UI primitives for Angular, since that ecosystem has basically nothing comparable to what React developers have. It's sitting at 25 of 50 milestone issues closed and active. I'm using it as a personal agent test bed while the library takes shape.
+
+## Thinking about
+
+The overlap between festival operations tooling and general event tech. Building SSBD Platform forces decisions about data ownership, offline-first UX, and real-time sync that most off-the-shelf ticketing platforms don't let you make. There's probably something worth writing about there once the August crunch is done.
+
+On the herald-ui side, the Angular component model creates interesting constraints for streaming UI. React's concurrent rendering is what most AI chat libraries are designed around, so porting the primitives isn't a straight translation.
