@@ -7,8 +7,7 @@ compatibility_date = "2024-12-01"
 compatibility_flags = ["nodejs_compat"]
 
 # Weekly draft of /now: Mon 17:00 UTC = Mon 10:00 Pacific standard / 09:00
-# Pacific daylight. Picks up the week's KV inputs and opens a PR you can
-# review Monday morning PT.
+# Pacific daylight. Picks up the week's KV inputs and opens a PR Monday morning PT.
 [triggers]
 crons = ["0 17 * * 1"]
 
