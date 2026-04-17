@@ -71,9 +71,11 @@ export async function handle(
   });
 
   const degraded = !summaryResult.ok;
+  // On degraded path, title is empty so the fallback chain in the caller
+  // picks the page-fetched title (or hostname) instead.
   const summary: LinkSummary = summaryResult.ok
     ? summaryResult.data
-    : { summary: "Saved link.", category: "other" };
+    : { title: "", summary: "Saved link.", category: "other" };
   if (!summaryResult.ok) {
     log.warn("link", "summarize", "using stub summary after failure", {
       error: summaryResult.error,
@@ -81,7 +83,14 @@ export async function handle(
   }
 
   const added = new Date();
-  const finalTitle = resolvedTitle || new URL(body.url).hostname;
+  // Title priority: AI-cleaned > page-fetched > hostname. The AI-cleaned
+  // title strips GitHub's "GitHub - org/repo: description" boilerplate,
+  // publisher suffixes like " - NYT", and hostname-only fallbacks into a
+  // short archive-friendly form. Non-empty check guards against a
+  // degenerate empty string that would otherwise produce a blank title.
+  const cleanedTitle = summary.title?.trim();
+  const finalTitle =
+    cleanedTitle || resolvedTitle || new URL(body.url).hostname;
   const markdown = buildEntryMarkdown({
     title: finalTitle,
     url: body.url,

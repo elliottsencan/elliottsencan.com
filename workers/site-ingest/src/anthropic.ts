@@ -22,6 +22,7 @@ import { log } from "./util.ts";
 const DEFAULT_MODEL = "claude-sonnet-4-6";
 
 const LinkSummarySchema = z.object({
+  title: z.string(),
   summary: z.string(),
   category: ReadingCategorySchema,
   author: z.string().optional(),

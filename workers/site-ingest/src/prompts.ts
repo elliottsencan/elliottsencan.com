@@ -91,6 +91,12 @@ export const LINK_SUMMARY_SYSTEM = `You summarize and categorize articles for El
 
 Given an article title, URL, and optional excerpt or page text, produce ONE JSON object with these exact fields:
 
+- title: a clean, short title for the archive. Under 80 characters. Rules:
+  - GitHub repos: use "org/repo" (e.g., "langchain-ai/deepagents"). Strip the "GitHub - " prefix and the trailing ": README description" that GitHub puts in <title>.
+  - Articles: the article's actual title, with publisher suffixes stripped (" - Apollo GraphQL Blog", " | The New York Times", " — Substack", etc.).
+  - Publisher / landing pages: the publisher or site name alone (e.g., "Stripe Press", not "Stripe Press — Ideas for progress").
+  - If the raw title is already clean and under 80 chars, return it unchanged.
+  - If nothing useful can be extracted (hostname-only, empty), produce a sensible short title from the URL (e.g., for a hostname-only fallback like "www.apollographql.com", return "Apollo GraphQL").
 - summary: ONE sentence, 240 characters or fewer. Lead with what the piece actually argues, shows, or reports — not what the site/publisher "is". Avoid these openers and phrasings:
   - "X is a Y that..." / "X is the Y..." (encyclopedic definitions)
   - "aims to", "focused on", "dedicated to", "spreading ideas about" (mission-statement filler)

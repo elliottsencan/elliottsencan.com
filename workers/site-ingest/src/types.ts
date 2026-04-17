@@ -98,6 +98,12 @@ export interface LinkRequest {
 
 /** Strict-JSON shape Anthropic returns for link summarization. */
 export interface LinkSummary {
+  /**
+   * AI-cleaned title for the archive display. Strips publisher suffixes,
+   * GitHub's "GitHub - org/repo: description" boilerplate, etc. Falls back
+   * to the fetched page title if the model returns empty.
+   */
+  title: string;
   summary: string;
   category: ReadingCategory;
   author?: string;
