@@ -1,0 +1,55 @@
+name = "site-ingest"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+# @linear/sdk pulls in node:crypto for webhook signature verification (we
+# don't use that path, but the import is static). nodejs_compat is the
+# stable Workers flag that polyfills node:* modules.
+compatibility_flags = ["nodejs_compat"]
+
+# Weekly draft of /now: Mon 17:00 UTC = Mon 10:00 Pacific standard / 09:00
+# Pacific daylight. Picks up the week's KV inputs and opens a PR Monday morning PT.
+[triggers]
+crons = ["0 17 * * 1"]
+
+[vars]
+GITHUB_REPO = "elliottsencan/elliottsencan.com"
+GITHUB_BRANCH_PREFIX = "now-update"
+NOW_CONTENT_PATH = "src/content/now/current.md"
+NOW_ARCHIVE_DIR = "src/content/now-archive"
+READING_DIR = "src/content/reading"
+# Worker content inputs — the files the /now draft step reads into the
+# Anthropic prompt. Live next to the worker so their purpose is obvious
+# and they don't clutter the repo root.
+VOICE_REFERENCE_PATH = "workers/site-ingest/content-inputs/voice-reference.md"
+NOW_NOTES_PATH = "workers/site-ingest/content-inputs/notes.md"
+# Cap the recent-reading context passed to the /now draft step so the
+# prompt budget stays bounded regardless of how active the reading log gets.
+READING_CONTEXT_LIMIT = "25"
+# Leave unset (or set to "") to use the default `claude-sonnet-4-6`. Set
+# to swap models without a redeploy.
+ANTHROPIC_MODEL = ""
+
+[[kv_namespaces]]
+binding = "NOW_INPUTS"
+id = "bd8e73bf1e524f8783f64410a8f93eb7"
+
+# Rate limiters — Cloudflare Workers built-in Rate Limiting API. One per
+# endpoint, keyed by client IP. Limits are sized for personal use with a
+# wide margin; they exist to cap damage if the Bearer token ever leaks.
+# `namespace_id` is an arbitrary per-worker limiter ID (any string unique
+# within this file); it does not reference a KV namespace or anything
+# external. Here we use "1"/"2"/"3" as positional labels.
+[[ratelimits]]
+name = "TRIGGER_LIMITER"
+namespace_id = "1"
+simple = { limit = 5, period = 60 }
+
+[[ratelimits]]
+name = "INPUT_LIMITER"
+namespace_id = "2"
+simple = { limit = 60, period = 60 }
+
+[[ratelimits]]
+name = "LINK_LIMITER"
+namespace_id = "3"
+simple = { limit = 30, period = 60 }

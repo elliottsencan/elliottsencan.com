@@ -1,6 +1,11 @@
 import { defineCollection } from "astro:content";
 import { glob } from "astro/loaders";
 import { z } from "astro/zod";
+import {
+  NowArchiveFrontmatterSchema,
+  NowFrontmatterSchema,
+  ReadingFrontmatterSchema,
+} from "./lib/schemas/content.ts";
 
 const blog = defineCollection({
   loader: glob({ pattern: "**/*.{md,mdx}", base: "./src/content/blog" }),
@@ -44,4 +49,19 @@ const projects = defineCollection({
   }),
 });
 
-export const collections = { blog, projects };
+const now = defineCollection({
+  loader: glob({ pattern: "current.md", base: "./src/content/now" }),
+  schema: NowFrontmatterSchema,
+});
+
+const nowArchive = defineCollection({
+  loader: glob({ pattern: "**/*.md", base: "./src/content/now-archive" }),
+  schema: NowArchiveFrontmatterSchema,
+});
+
+const reading = defineCollection({
+  loader: glob({ pattern: "**/*.md", base: "./src/content/reading" }),
+  schema: ReadingFrontmatterSchema,
+});
+
+export const collections = { blog, projects, now, nowArchive, reading };
