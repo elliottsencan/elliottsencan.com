@@ -45,7 +45,11 @@ export async function draftNow(args: {
   try {
     const response = await client(args.apiKey).messages.create({
       model: resolveModel(args.model),
-      max_tokens: 2000,
+      // Headroom for adaptive thinking: the model spends tokens reasoning
+      // before emitting the final text block. With a tight cap, thinking
+      // can consume the whole budget and the response carries no text
+      // block at all — producing the cryptic "no text content" failure.
+      max_tokens: 8000,
       thinking: { type: "adaptive" },
       system: args.systemPrompt,
       messages: [{ role: "user", content: args.userMessage }],
@@ -55,7 +59,14 @@ export async function draftNow(args: {
         return { ok: true, data: block.text };
       }
     }
-    return { ok: false, error: "no text content in response" };
+    log.warn("anthropic", "draft-now", "no text block in response", {
+      stopReason: response.stop_reason,
+      blocks: response.content.map((b) => b.type).join(","),
+    });
+    return {
+      ok: false,
+      error: `no text content (stop_reason: ${response.stop_reason})`,
+    };
   } catch (err) {
     return mapError(err, "draft-now");
   }
