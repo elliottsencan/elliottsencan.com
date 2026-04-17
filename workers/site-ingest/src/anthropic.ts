@@ -45,12 +45,12 @@ export async function draftNow(args: {
   try {
     const response = await client(args.apiKey).messages.create({
       model: resolveModel(args.model),
-      // Headroom for adaptive thinking: the model spends tokens reasoning
-      // before emitting the final text block. With a tight cap, thinking
-      // can consume the whole budget and the response carries no text
-      // block at all — producing the cryptic "no text content" failure.
-      max_tokens: 8000,
-      thinking: { type: "adaptive" },
+      // No thinking: this task (voice-match + re-phrase structured data)
+      // is not deep reasoning — enabling adaptive thinking made the model
+      // burn through the whole max_tokens budget before emitting the text
+      // block, returning `stop_reason: max_tokens` with zero output.
+      // Deterministic budget, faster response, lower cost.
+      max_tokens: 4000,
       system: args.systemPrompt,
       messages: [{ role: "user", content: args.userMessage }],
     });
