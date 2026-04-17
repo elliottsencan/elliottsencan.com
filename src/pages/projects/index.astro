@@ -8,10 +8,15 @@ import Layout from "@layouts/Layout.astro";
 const allProjects = (await getCollection("projects"))
   .filter((project) => !project.data.draft)
   .sort((a, b) => {
-    if (a.data.order !== undefined && b.data.order !== undefined)
+    if (a.data.order !== undefined && b.data.order !== undefined) {
       return a.data.order - b.data.order;
-    if (a.data.order !== undefined) return -1;
-    if (b.data.order !== undefined) return 1;
+    }
+    if (a.data.order !== undefined) {
+      return -1;
+    }
+    if (b.data.order !== undefined) {
+      return 1;
+    }
     return b.data.date.valueOf() - a.data.date.valueOf();
   });
 

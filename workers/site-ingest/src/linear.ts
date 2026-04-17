@@ -84,8 +84,12 @@ async function toSummary(project: Project): Promise<ProjectSummary> {
   let completed = 0;
   for (const issue of issueNodes) {
     const updated = issue.updatedAt.getTime();
-    if (lastActivityMs === null || updated > lastActivityMs) lastActivityMs = updated;
-    if (issue.completedAt) completed += 1;
+    if (lastActivityMs === null || updated > lastActivityMs) {
+      lastActivityMs = updated;
+    }
+    if (issue.completedAt) {
+      completed += 1;
+    }
   }
   const stale =
     lastActivityMs === null || now - lastActivityMs > STALE_AFTER_DAYS * 24 * 60 * 60 * 1000;

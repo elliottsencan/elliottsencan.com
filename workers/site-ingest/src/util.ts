@@ -1,7 +1,10 @@
 /**
  * Small utilities: logging, crypto-safe string compare, slug/date helpers,
- * YAML sanitization. Deliberately dependency-free.
+ * YAML sanitization.
  */
+
+import { formatInTimeZone } from "date-fns-tz";
+import slugifyLib from "slugify";
 
 // ---------- logging ----------
 
@@ -14,7 +17,9 @@ type LogFields = Record<string, string | number | boolean | null | undefined>;
  */
 function format(area: string, op: string, message: string, fields?: LogFields): string {
   const base = `[${area}:${op}] ${message}`;
-  if (!fields) return base;
+  if (!fields) {
+    return base;
+  }
   const pairs = Object.entries(fields)
     .filter(([, v]) => v !== undefined)
     .map(([k, v]) => `${k}=${v ?? "null"}`)
@@ -41,7 +46,9 @@ export const log = {
  * circuits on the first mismatched byte and leaks length via timing.
  */
 export function timingSafeEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
+  if (a.length !== b.length) {
+    return false;
+  }
   let out = 0;
   for (let i = 0; i < a.length; i++) {
     out |= a.charCodeAt(i) ^ b.charCodeAt(i);
@@ -52,9 +59,13 @@ export function timingSafeEqual(a: string, b: string): boolean {
 /** Extracts and validates a `Authorization: Bearer <token>` header. */
 export function requireBearer(request: Request, expected: string): boolean {
   const header = request.headers.get("Authorization");
-  if (!header) return false;
+  if (!header) {
+    return false;
+  }
   const match = /^Bearer (.+)$/.exec(header);
-  if (!match || !match[1]) return false;
+  if (!match?.[1]) {
+    return false;
+  }
   return timingSafeEqual(match[1], expected);
 }
 
@@ -65,40 +76,46 @@ export function requireBearer(request: Request, expected: string): boolean {
  * truncated to 60 chars. Preserves word boundaries as far as length allows.
  */
 export function slugify(text: string, maxLength = 60): string {
-  const base = text
-    .toLowerCase()
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9\s-]/g, "")
-    .trim()
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
-  if (base.length <= maxLength) return base || "untitled";
+  const base = slugifyLib(text, { lower: true, strict: true, locale: "en" });
+  if (!base) {
+    return "untitled";
+  }
+  if (base.length <= maxLength) {
+    return base;
+  }
   return base.slice(0, maxLength).replace(/-[^-]*$/, "") || base.slice(0, maxLength);
 }
 
-/** YYYY-MM */
+/**
+ * Date formatters for content identifiers (branch names, PR titles,
+ * archive filenames, reading-log paths). All use Elliott's local timezone
+ * (San Diego / Pacific) so dates stamped on `/now` and `/reading` match
+ * his mental model of "today." DST is handled automatically by the IANA
+ * zone data; PST ↔ PDT switches without any manual calendar math.
+ *
+ * Machine-readable timestamps (`createdAt`, `added` ISO strings) stay in
+ * UTC — those come from `new Date().toISOString()` directly, not these
+ * helpers.
+ */
+export const SITE_TIMEZONE = "America/Los_Angeles";
+
+/** YYYY-MM (Pacific) */
 export function monthKey(date: Date): string {
-  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
+  return formatInTimeZone(date, SITE_TIMEZONE, "yyyy-MM");
 }
 
-/** YYYY-MM-DD */
+/** YYYY-MM-DD (Pacific) */
 export function dateKey(date: Date): string {
-  return date.toISOString().slice(0, 10);
+  return formatInTimeZone(date, SITE_TIMEZONE, "yyyy-MM-dd");
 }
 
 /**
- * YYYY-MM-DDTHHMMSS style filename suffix (UTC). Included in reading-log
+ * YYYY-MM-DDTHHMMSS filename suffix (Pacific). Included in reading-log
  * filenames so two shortcut pings with identical titles on the same day
  * don't collide on disk.
  */
 export function fileTimestamp(date: Date): string {
-  const pad = (n: number): string => String(n).padStart(2, "0");
-  return (
-    `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())}` +
-    `T${pad(date.getUTCHours())}${pad(date.getUTCMinutes())}${pad(date.getUTCSeconds())}`
-  );
+  return formatInTimeZone(date, SITE_TIMEZONE, "yyyy-MM-dd'T'HHmmss");
 }
 
 // ---------- YAML frontmatter ----------
@@ -120,4 +137,32 @@ export function yamlEscape(value: string, maxLength = 500): string {
     .replace(/"/g, '\\"')
     .trim();
   return cleaned.length > maxLength ? cleaned.slice(0, maxLength) : cleaned;
+}
+
+// ---------- response helpers ----------
+
+/**
+ * JSON response. Always `Cache-Control: no-store` — these endpoints are
+ * mutating (/input, /link, /trigger) or serve per-request state, so they
+ * must never be cached at Cloudflare's edge.
+ */
+export function jsonResponse(body: unknown, status = 200): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      "Content-Type": "application/json",
+      "Cache-Control": "no-store",
+    },
+  });
+}
+
+/** Plain-text response, same no-store contract as `jsonResponse`. */
+export function textResponse(message: string, status = 200): Response {
+  return new Response(message, {
+    status,
+    headers: {
+      "Content-Type": "text/plain; charset=utf-8",
+      "Cache-Control": "no-store",
+    },
+  });
 }

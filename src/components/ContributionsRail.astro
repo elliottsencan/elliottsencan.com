@@ -14,11 +14,19 @@ const { data } = Astro.props;
 const max = Math.max(1, ...data.weeks.map((w) => w.total));
 
 function opacityFor(weekTotal: number): number {
-  if (weekTotal === 0) return 0.15;
+  if (weekTotal === 0) {
+    return 0.15;
+  }
   const ratio = weekTotal / max;
-  if (ratio <= 0.25) return 0.55;
-  if (ratio <= 0.5) return 0.7;
-  if (ratio <= 0.75) return 0.85;
+  if (ratio <= 0.25) {
+    return 0.55;
+  }
+  if (ratio <= 0.5) {
+    return 0.7;
+  }
+  if (ratio <= 0.75) {
+    return 0.85;
+  }
   return 1;
 }
 
@@ -27,7 +35,9 @@ function opacityFor(weekTotal: number): number {
 // regardless of the visitor's locale/timezone and fits inside the 320px
 // footer cap alongside the total count.
 function formatMonthYear(iso: string | undefined): string {
-  if (!iso) return "";
+  if (!iso) {
+    return "";
+  }
   const d = new Date(`${iso}T00:00:00Z`);
   const month = d.toLocaleDateString("en-US", { month: "short", timeZone: "UTC" }).toUpperCase();
   const yy = d.getUTCFullYear().toString().slice(-2);

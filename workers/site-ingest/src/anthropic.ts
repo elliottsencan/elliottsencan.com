@@ -51,7 +51,9 @@ export async function draftNow(args: {
       messages: [{ role: "user", content: args.userMessage }],
     });
     for (const block of response.content) {
-      if (block.type === "text") return { ok: true, data: block.text };
+      if (block.type === "text") {
+        return { ok: true, data: block.text };
+      }
     }
     return { ok: false, error: "no text content in response" };
   } catch (err) {

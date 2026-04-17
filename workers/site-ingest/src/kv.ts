@@ -54,7 +54,9 @@ export async function getInputs(kv: KVNamespace): Promise<NowInput[]> {
   const values = await Promise.all(keys.map((k) => kv.get(k)));
   const parsed: NowInput[] = [];
   for (const [i, raw] of values.entries()) {
-    if (!raw) continue;
+    if (!raw) {
+      continue;
+    }
     try {
       const obj = JSON.parse(raw) as NowInput;
       if (typeof obj.type === "string" && typeof obj.content === "string") {
@@ -81,8 +83,11 @@ export async function clearInputs(kv: KVNamespace): Promise<number> {
   let succeeded = 0;
   let failed = 0;
   for (const result of results) {
-    if (result.status === "fulfilled") succeeded += 1;
-    else failed += 1;
+    if (result.status === "fulfilled") {
+      succeeded += 1;
+    } else {
+      failed += 1;
+    }
   }
   if (failed > 0) {
     log.error("kv", "clear", "some deletes failed — inputs may double-consume next run", {

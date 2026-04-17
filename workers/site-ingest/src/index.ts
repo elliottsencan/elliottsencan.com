@@ -19,7 +19,7 @@ import * as inputs from "./inputs.ts";
 import * as link from "./link.ts";
 import * as now from "./now.ts";
 import type { Env } from "./types.ts";
-import { log, requireBearer } from "./util.ts";
+import { log, requireBearer, textResponse } from "./util.ts";
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
@@ -28,30 +28,36 @@ export default {
     // Auth: Bearer check comes first so unauthenticated requests don't even
     // consume rate-limit budget. Constant-time compare via util.requireBearer.
     if (!requireBearer(request, env.API_TOKEN)) {
-      return plain("unauthorized", 401);
+      return textResponse("unauthorized", 401);
     }
 
     const ip = request.headers.get("CF-Connecting-IP") ?? "0.0.0.0";
 
     if (request.method === "POST" && url.pathname === "/input") {
       const limited = await env.INPUT_LIMITER.limit({ key: ip });
-      if (!limited.success) return plain("rate limited", 429);
+      if (!limited.success) {
+        return textResponse("rate limited", 429);
+      }
       return inputs.handle(request, env);
     }
 
     if (request.method === "POST" && url.pathname === "/link") {
       const limited = await env.LINK_LIMITER.limit({ key: ip });
-      if (!limited.success) return plain("rate limited", 429);
+      if (!limited.success) {
+        return textResponse("rate limited", 429);
+      }
       return link.handle(request, env, ctx);
     }
 
     if (request.method === "POST" && url.pathname === "/trigger") {
       const limited = await env.TRIGGER_LIMITER.limit({ key: ip });
-      if (!limited.success) return plain("rate limited", 429);
+      if (!limited.success) {
+        return textResponse("rate limited", 429);
+      }
       return now.handle(env, "trigger");
     }
 
-    return plain("not found", 404);
+    return textResponse("not found", 404);
   },
 
   async scheduled(event: ScheduledEvent, env: Env, _ctx: ExecutionContext): Promise<void> {
@@ -93,15 +99,5 @@ async function logScheduledOutcome(response: Response): Promise<void> {
   log.error("cron", "fire", "scheduled run failed", {
     status: response.status,
     error: typeof parsed?.error === "string" ? parsed.error : "<unknown>",
-  });
-}
-
-function plain(message: string, status: number): Response {
-  return new Response(message, {
-    status,
-    headers: {
-      "Content-Type": "text/plain; charset=utf-8",
-      "Cache-Control": "no-store",
-    },
   });
 }

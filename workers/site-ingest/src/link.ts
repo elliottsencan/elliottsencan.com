@@ -11,11 +11,12 @@
  * Auth + rate limiting already enforced upstream in index.ts.
  */
 
+import { z } from "zod";
 import { summarizeLink } from "./anthropic.ts";
 import { createGitHubClient, getBranchSha, getFile, putFile } from "./github.ts";
 import { LINK_SUMMARY_SYSTEM } from "./prompts.ts";
 import type { Env, LinkRequest, LinkSummary, Result } from "./types.ts";
-import { fileTimestamp, log, monthKey, slugify, yamlEscape } from "./util.ts";
+import { fileTimestamp, jsonResponse, log, monthKey, slugify, yamlEscape } from "./util.ts";
 
 const MAX_BODY_BYTES = 10_000;
 const MAX_EXCERPT_LENGTH = 2000;
@@ -29,19 +30,19 @@ export async function handle(
 ): Promise<Response> {
   const raw = await request.text();
   if (raw.length > MAX_BODY_BYTES) {
-    return json({ ok: false, error: "body too large" }, 413);
+    return jsonResponse({ ok: false, error: "body too large" }, 413);
   }
 
   let parsed: unknown;
   try {
     parsed = JSON.parse(raw);
   } catch {
-    return json({ ok: false, error: "invalid JSON" }, 400);
+    return jsonResponse({ ok: false, error: "invalid JSON" }, 400);
   }
 
   const validation = validate(parsed);
   if (!validation.ok) {
-    return json({ ok: false, error: validation.error }, 400);
+    return jsonResponse({ ok: false, error: validation.error }, 400);
   }
   const body = validation.data;
 
@@ -89,14 +90,14 @@ export async function handle(
     title: finalTitle,
   });
   if (!commitResult.ok) {
-    return json({ ok: false, error: commitResult.error }, 500);
+    return jsonResponse({ ok: false, error: commitResult.error }, 500);
   }
 
   log.info("link", "commit", "reading entry committed", {
     path,
     category: summary.category,
   });
-  return json(
+  return jsonResponse(
     {
       ok: true,
       path,
@@ -110,42 +111,47 @@ export async function handle(
 
 // ---------- validation ----------
 
+const MAX_TITLE_LENGTH = 200;
+
+// Trim + truncate a string field to `max` chars; empty-string / null inputs
+// fold to undefined so callers can drop the field entirely.
+const optionalTrimmedString = (max: number) =>
+  z.preprocess(
+    (v) => (v === "" || v === null ? undefined : v),
+    z
+      .string()
+      .transform((s) => s.trim().slice(0, max))
+      .optional(),
+  );
+
+const httpUrlSchema = z.string().refine(
+  (u) => {
+    try {
+      const p = new URL(u).protocol;
+      return p === "http:" || p === "https:";
+    } catch {
+      return false;
+    }
+  },
+  { message: "url must be a valid http or https URL" },
+);
+
+const LinkRequestSchema = z.object({
+  url: httpUrlSchema,
+  title: optionalTrimmedString(MAX_TITLE_LENGTH),
+  excerpt: optionalTrimmedString(MAX_EXCERPT_LENGTH),
+});
+
 // Exported for unit tests; in-file callers use it directly.
 export function validate(input: unknown): Result<LinkRequest> {
-  if (!input || typeof input !== "object") return { ok: false, error: "body must be an object" };
-  const obj = input as Record<string, unknown>;
-
-  if (typeof obj.url !== "string") return { ok: false, error: "url required (string)" };
-  let parsedUrl: URL;
-  try {
-    parsedUrl = new URL(obj.url);
-  } catch {
-    return { ok: false, error: "url is not a valid URL" };
+  const r = LinkRequestSchema.safeParse(input);
+  if (r.success) {
+    return { ok: true, data: r.data };
   }
-  if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
-    return { ok: false, error: "url must be http or https" };
-  }
-
-  let title: string | undefined;
-  if (obj.title !== undefined && obj.title !== null && obj.title !== "") {
-    if (typeof obj.title !== "string") return { ok: false, error: "title must be a string" };
-    title = obj.title.trim().slice(0, 200);
-  }
-
-  let excerpt: string | undefined;
-  if (obj.excerpt !== undefined && obj.excerpt !== null && obj.excerpt !== "") {
-    if (typeof obj.excerpt !== "string") return { ok: false, error: "excerpt must be a string" };
-    excerpt = obj.excerpt.trim().slice(0, MAX_EXCERPT_LENGTH);
-  }
-
-  return {
-    ok: true,
-    data: {
-      url: obj.url,
-      ...(title ? { title } : {}),
-      ...(excerpt ? { excerpt } : {}),
-    },
-  };
+  const issue = r.error.issues[0];
+  const path = issue?.path?.join(".") ?? "body";
+  const message = issue?.message ?? "invalid";
+  return { ok: false, error: `${path}: ${message}` };
 }
 
 // ---------- page title fetch ----------
@@ -159,7 +165,9 @@ async function fetchPageTitle(url: string): Promise<string | undefined> {
       signal: controller.signal,
       headers: { "User-Agent": "site-ingest-link-bot/0.1" },
     });
-    if (!res.ok || !res.body) return undefined;
+    if (!res.ok || !res.body) {
+      return undefined;
+    }
 
     // HTML <title> is near the top, so a partial read is sufficient.
     // Stream-decode until we have enough characters, then cancel.
@@ -168,13 +176,17 @@ async function fetchPageTitle(url: string): Promise<string | undefined> {
     let html = "";
     while (html.length < MAX_PAGE_FETCH_BYTES) {
       const { done, value } = await reader.read();
-      if (done) break;
+      if (done) {
+        break;
+      }
       html += decoder.decode(value, { stream: true });
     }
     reader.cancel().catch(() => {});
 
     const match = /<title[^>]*>([^<]+)<\/title>/i.exec(html);
-    if (!match || !match[1]) return undefined;
+    if (!match?.[1]) {
+      return undefined;
+    }
     return decodeHtmlEntities(match[1].trim()).slice(0, 200);
   } catch (err) {
     log.warn("link", "fetch-title", "page fetch failed", {
@@ -229,8 +241,12 @@ function buildEntryMarkdown(args: {
     `category: ${summary.category}`,
     `added: ${added.toISOString()}`,
   ];
-  if (summary.author) lines.push(`author: "${yamlEscape(summary.author, 80)}"`);
-  if (summary.source) lines.push(`source: "${yamlEscape(summary.source, 80)}"`);
+  if (summary.author) {
+    lines.push(`author: "${yamlEscape(summary.author, 80)}"`);
+  }
+  if (summary.source) {
+    lines.push(`source: "${yamlEscape(summary.source, 80)}"`);
+  }
   lines.push("---", "");
   return `${lines.join("\n")}\n`;
 }
@@ -253,7 +269,9 @@ async function commitEntry(args: {
   const gh = createGitHubClient(args.env.GITHUB_TOKEN, args.env.GITHUB_REPO);
   // Confirm main exists (sanity check; also catches invalid repo config early).
   const mainSha = await getBranchSha("main", gh);
-  if (!mainSha.ok) return { ok: false, error: `failed to resolve main: ${mainSha.error}` };
+  if (!mainSha.ok) {
+    return { ok: false, error: `failed to resolve main: ${mainSha.error}` };
+  }
 
   // Check whether the path already exists (extremely rare collision). If so,
   // pass the blob SHA so the PUT succeeds as an update. Usually this returns
@@ -269,18 +287,8 @@ async function commitEntry(args: {
     ...(existingSha ? { sha: existingSha } : {}),
     gh,
   });
-  if (!put.ok) return { ok: false, error: put.error };
+  if (!put.ok) {
+    return { ok: false, error: put.error };
+  }
   return { ok: true, commitSha: put.data.commitSha };
-}
-
-// ---------- response helper ----------
-
-function json(body: unknown, status: number): Response {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: {
-      "Content-Type": "application/json",
-      "Cache-Control": "no-store",
-    },
-  });
 }

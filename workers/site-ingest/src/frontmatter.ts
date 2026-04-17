@@ -11,31 +11,60 @@
  */
 
 import { NowFrontmatterSchema } from "@shared/schemas/content.ts";
+import matter from "gray-matter";
 import type { Result } from "./types.ts";
 
 /**
- * Extracts the `---\n…\n---` block at the top of a markdown document and
- * parses it as simple `key: value` YAML. Supports the subset the /now
- * prompt is told to emit: double-quoted strings and bare scalars (dates,
- * the literal token `Now`). Multi-line values and nested structures are
- * not supported — they'd also be invalid per the prompt.
+ * Parse the frontmatter block at the top of a markdown document into a
+ * flat `Record<string, string>`. Returns null when no frontmatter block is
+ * present or the YAML fails to parse. Non-string values (dates, numbers)
+ * are stringified so downstream zod schemas with `.coerce.*` can consume
+ * the same shape the old regex parser produced.
  */
 export function parseSimpleFrontmatter(markdown: string): Record<string, string> | null {
-  const match = /^---\n([\s\S]*?)\n---\n?/.exec(markdown);
-  if (!match || !match[1]) return null;
-  const block = match[1];
-  const result: Record<string, string> = {};
-  for (const line of block.split("\n")) {
-    const kv = /^([A-Za-z_][A-Za-z0-9_]*):\s*(.*)$/.exec(line);
-    if (!kv || !kv[1]) continue;
-    const key = kv[1];
-    let value = (kv[2] ?? "").trim();
-    if (value.length >= 2 && value.startsWith('"') && value.endsWith('"')) {
-      value = value.slice(1, -1).replace(/\\"/g, '"').replace(/\\\\/g, "\\");
-    }
-    result[key] = value;
+  let parsed: matter.GrayMatterFile<string>;
+  try {
+    parsed = matter(markdown);
+  } catch {
+    return null;
   }
-  return result;
+  // YAML permits scalar / array / null at the document root; gray-matter
+  // passes those through in `data` unchanged. Only a plain object maps to
+  // the key:value shape the rest of the worker expects.
+  //
+  // Note: we can't check `parsed.matter` because gray-matter defines that
+  // as non-enumerable, and its internal cache returns `Object.assign({}, …)`
+  // which drops non-enumerable props on repeat calls with the same input.
+  // An empty `data` object covers the "no frontmatter" case the same way.
+  if (!isPlainObject(parsed.data) || Object.keys(parsed.data).length === 0) {
+    return null;
+  }
+  return stringifyFields(parsed.data);
+}
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function stringifyFields(data: Record<string, unknown>): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const [k, v] of Object.entries(data)) {
+    if (v instanceof Date) {
+      // Preserve full ISO when the source had a time component; strip to
+      // yyyy-mm-dd when it didn't. js-yaml parses `2026-04-16` (midnight
+      // UTC) and `2026-04-16T09:30:00Z` identically as Date, so distinguish
+      // by the time-of-day. This matches the round-trip behaviour the old
+      // regex parser gave us.
+      out[k] =
+        v.getUTCHours() === 0 && v.getUTCMinutes() === 0 && v.getUTCSeconds() === 0
+          ? v.toISOString().slice(0, 10)
+          : v.toISOString();
+    } else if (v == null) {
+    } else {
+      out[k] = String(v);
+    }
+  }
+  return out;
 }
 
 /**

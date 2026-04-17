@@ -19,7 +19,11 @@
     "@anthropic-ai/sdk": "^0.90.0",
     "@linear/sdk": "^81.0.0",
     "@octokit/request-error": "^7.0.0",
+    "date-fns": "^4.1.0",
+    "date-fns-tz": "^3.2.0",
+    "gray-matter": "^4.0.3",
     "octokit": "^5.0.0",
+    "slugify": "^1.6.9",
     "zod": "^4.0.0"
   },
   "devDependencies": {

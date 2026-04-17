@@ -21,11 +21,32 @@ describe("parseSimpleFrontmatter", () => {
     expect(result?.title).toBe('say "hi" \\ here');
   });
 
-  it("ignores lines that aren't key: value", () => {
+  it("returns null on malformed YAML (stray bare scalar mixed with mapping)", () => {
+    // Under a real YAML parser this is a syntax error; the old regex
+    // parser silently skipped unrecognised lines.
     const result = parseSimpleFrontmatter(
       ["---", "title: Ok", "# a comment line", "stray text", "---", "body"].join("\n"),
     );
-    expect(result).toEqual({ title: "Ok" });
+    expect(result).toBeNull();
+  });
+
+  it("returns null when frontmatter is a bare scalar, not a mapping", () => {
+    // `---\nnot closed` is parsed by js-yaml as a scalar string, not an
+    // object. `parseSimpleFrontmatter` only accepts plain-object YAML.
+    expect(parseSimpleFrontmatter(["---", "just a string", "---"].join("\n"))).toBeNull();
+  });
+
+  it("coerces bare YAML dates to ISO yyyy-mm-dd strings", () => {
+    // js-yaml parses ISO-date-looking scalars into Date objects; ensure the
+    // wrapper stringifies them back so downstream code keeps seeing strings.
+    const result = parseSimpleFrontmatter(["---", "updated: 2026-04-16", "---"].join("\n"));
+    expect(result).toEqual({ updated: "2026-04-16" });
+  });
+
+  it("handles multi-line YAML string values", () => {
+    const input = ["---", "title: |", "  first line", "  second line", "---", "body"].join("\n");
+    const result = parseSimpleFrontmatter(input);
+    expect(result?.title).toBe("first line\nsecond line\n");
   });
 });
 

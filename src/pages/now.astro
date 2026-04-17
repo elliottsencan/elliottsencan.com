@@ -10,7 +10,9 @@ import Layout from "@layouts/Layout.astro";
 // weekly draft PR. A missing entry fails the build, which means the
 // content collection is mis-configured.
 const entry = await getEntry("now", "current");
-if (!entry) throw new Error("src/content/now/current.md missing");
+if (!entry) {
+  throw new Error("src/content/now/current.md missing");
+}
 
 const { Content } = await render(entry);
 

@@ -86,7 +86,9 @@ async function githubGraphQL<T>(
   login: string,
 ): Promise<GitHubResult<T>> {
   const token = getToken();
-  if (!token) return { ok: false };
+  if (!token) {
+    return { ok: false };
+  }
 
   try {
     const response = await fetch(GRAPHQL_ENDPOINT, {
@@ -136,7 +138,9 @@ async function githubRest<T>(
   login: string,
 ): Promise<GitHubResult<T>> {
   const token = getToken();
-  if (!token) return { ok: false };
+  if (!token) {
+    return { ok: false };
+  }
 
   try {
     const response = await fetch(`${REST_ROOT}${path}`, {
@@ -199,7 +203,9 @@ type ContributionsResponse = {
 let cachedContributions: Promise<ContributionsSummary | null> | null = null;
 
 export function getContributions(login: string): Promise<ContributionsSummary | null> {
-  if (cachedContributions) return cachedContributions;
+  if (cachedContributions) {
+    return cachedContributions;
+  }
   cachedContributions = fetchContributions(login);
   return cachedContributions;
 }
@@ -211,7 +217,9 @@ async function fetchContributions(login: string): Promise<ContributionsSummary |
     "contributions",
     login,
   );
-  if (!result.ok) return null;
+  if (!result.ok) {
+    return null;
+  }
 
   const calendar = result.data.user?.contributionsCollection?.contributionCalendar;
   if (!calendar) {
@@ -300,7 +308,9 @@ type ProfileBundle = {
 let cachedProfileBundle: Promise<ProfileBundle | null> | null = null;
 
 function getProfileBundle(login: string): Promise<ProfileBundle | null> {
-  if (cachedProfileBundle) return cachedProfileBundle;
+  if (cachedProfileBundle) {
+    return cachedProfileBundle;
+  }
   cachedProfileBundle = fetchProfileBundle(login);
   return cachedProfileBundle;
 }
@@ -312,7 +322,9 @@ async function fetchProfileBundle(login: string): Promise<ProfileBundle | null> 
     "profile",
     login,
   );
-  if (!result.ok) return null;
+  if (!result.ok) {
+    return null;
+  }
 
   const user = result.data.user;
   if (!user) {
@@ -388,7 +400,9 @@ type RawEvent = {
 let cachedActivity: Promise<ActivityEvent[] | null> | null = null;
 
 export function getRecentActivity(login: string, limit = 10): Promise<ActivityEvent[] | null> {
-  if (cachedActivity) return cachedActivity;
+  if (cachedActivity) {
+    return cachedActivity;
+  }
   cachedActivity = fetchRecentActivity(login, limit);
   return cachedActivity;
 }
@@ -399,16 +413,22 @@ async function fetchRecentActivity(login: string, limit: number): Promise<Activi
     "activity",
     login,
   );
-  if (!result.ok) return null;
+  if (!result.ok) {
+    return null;
+  }
 
   const normalized: ActivityEvent[] = [];
   for (const raw of result.data) {
     // Star spam dominates otherwise; filter it out so the feed reflects
     // work, not taste. Forks and follows pass through.
-    if (raw.type === "WatchEvent") continue;
+    if (raw.type === "WatchEvent") {
+      continue;
+    }
 
     const summary = summarize(raw);
-    if (!summary) continue;
+    if (!summary) {
+      continue;
+    }
 
     normalized.push({
       type: raw.type,
@@ -420,7 +440,9 @@ async function fetchRecentActivity(login: string, limit: number): Promise<Activi
       },
     });
 
-    if (normalized.length >= limit) break;
+    if (normalized.length >= limit) {
+      break;
+    }
   }
 
   return normalized;
@@ -438,15 +460,21 @@ function summarize(event: RawEvent): string | null {
   switch (event.type) {
     case "PushEvent": {
       const count = Array.isArray(p.commits) ? p.commits.length : 0;
-      if (count === 0) return "pushed";
+      if (count === 0) {
+        return "pushed";
+      }
       return `pushed ${count} ${count === 1 ? "commit" : "commits"}`;
     }
     case "PullRequestEvent": {
       if (p.action === "closed") {
         return p.pull_request?.merged ? "merged a pull request" : "closed a pull request";
       }
-      if (p.action === "opened") return "opened a pull request";
-      if (p.action === "reopened") return "reopened a pull request";
+      if (p.action === "opened") {
+        return "opened a pull request";
+      }
+      if (p.action === "reopened") {
+        return "reopened a pull request";
+      }
       return "updated a pull request";
     }
     case "PullRequestReviewEvent":
@@ -454,20 +482,36 @@ function summarize(event: RawEvent): string | null {
     case "PullRequestReviewCommentEvent":
       return "commented on a pull request";
     case "IssuesEvent":
-      if (p.action === "opened") return "opened an issue";
-      if (p.action === "closed") return "closed an issue";
-      if (p.action === "reopened") return "reopened an issue";
+      if (p.action === "opened") {
+        return "opened an issue";
+      }
+      if (p.action === "closed") {
+        return "closed an issue";
+      }
+      if (p.action === "reopened") {
+        return "reopened an issue";
+      }
       return "updated an issue";
     case "IssueCommentEvent":
       return "commented on an issue";
     case "CreateEvent":
-      if (p.ref_type === "repository") return "created repository";
-      if (p.ref_type === "branch") return `created branch ${p.ref ?? ""}`.trim();
-      if (p.ref_type === "tag") return `created tag ${p.ref ?? ""}`.trim();
+      if (p.ref_type === "repository") {
+        return "created repository";
+      }
+      if (p.ref_type === "branch") {
+        return `created branch ${p.ref ?? ""}`.trim();
+      }
+      if (p.ref_type === "tag") {
+        return `created tag ${p.ref ?? ""}`.trim();
+      }
       return "created";
     case "DeleteEvent":
-      if (p.ref_type === "branch") return `deleted branch ${p.ref ?? ""}`.trim();
-      if (p.ref_type === "tag") return `deleted tag ${p.ref ?? ""}`.trim();
+      if (p.ref_type === "branch") {
+        return `deleted branch ${p.ref ?? ""}`.trim();
+      }
+      if (p.ref_type === "tag") {
+        return `deleted tag ${p.ref ?? ""}`.trim();
+      }
       return "deleted";
     case "ForkEvent":
       return "forked";

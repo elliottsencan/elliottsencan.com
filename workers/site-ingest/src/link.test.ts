@@ -34,7 +34,9 @@ describe("link.validate", () => {
   it("preserves optional title when supplied", () => {
     const r = validate({ url: "https://example.com/", title: "Hello" });
     expect(r.ok).toBe(true);
-    if (r.ok) expect(r.data.title).toBe("Hello");
+    if (r.ok) {
+      expect(r.data.title).toBe("Hello");
+    }
   });
 
   it("trims and truncates long titles", () => {
@@ -50,7 +52,9 @@ describe("link.validate", () => {
   it("drops empty-string title instead of failing", () => {
     const r = validate({ url: "https://example.com/", title: "" });
     expect(r.ok).toBe(true);
-    if (r.ok) expect(r.data.title).toBeUndefined();
+    if (r.ok) {
+      expect(r.data.title).toBeUndefined();
+    }
   });
 
   it("rejects non-string title", () => {

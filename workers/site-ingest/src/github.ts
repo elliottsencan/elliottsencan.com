@@ -24,7 +24,9 @@ export interface GitHubClient {
 
 export function createGitHubClient(token: string, fullRepo: string): GitHubClient {
   const [owner, repo] = fullRepo.split("/");
-  if (!owner || !repo) throw new Error(`invalid repo "${fullRepo}" — expected owner/name`);
+  if (!owner || !repo) {
+    throw new Error(`invalid repo "${fullRepo}" — expected owner/name`);
+  }
   const octokit = new Octokit({ auth: token, userAgent: USER_AGENT });
   return { octokit, owner, repo };
 }
@@ -51,7 +53,9 @@ export async function getFile(
     }
     const binary = atob(data.content.replace(/\n/g, ""));
     const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
     const content = new TextDecoder("utf-8").decode(bytes);
     return { ok: true, data: { content, sha: data.sha } };
   } catch (err) {
@@ -85,7 +89,9 @@ export async function createBranch(
   gh: GitHubClient,
 ): Promise<Result<{ alreadyExists: boolean }>> {
   const existing = await getBranchSha(branch, gh);
-  if (existing.ok) return { ok: true, data: { alreadyExists: true } };
+  if (existing.ok) {
+    return { ok: true, data: { alreadyExists: true } };
+  }
   try {
     await gh.octokit.rest.git.createRef({
       owner: gh.owner,
@@ -113,7 +119,9 @@ export async function putFile(args: {
   // base64-encode UTF-8.
   const bytes = new TextEncoder().encode(content);
   let binary = "";
-  for (const byte of bytes) binary += String.fromCharCode(byte);
+  for (const byte of bytes) {
+    binary += String.fromCharCode(byte);
+  }
   const base64 = btoa(binary);
 
   try {
@@ -149,7 +157,9 @@ export async function findOpenPrByBranch(
       head: `${gh.owner}:${branch}`,
     });
     const first = data[0];
-    if (!first) return { ok: true, data: null };
+    if (!first) {
+      return { ok: true, data: null };
+    }
     return { ok: true, data: { number: first.number } };
   } catch (err) {
     return mapError(err, "find-pr", { branch });
