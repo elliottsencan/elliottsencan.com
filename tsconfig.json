@@ -4,7 +4,6 @@
   "exclude": ["dist", "public/pagefind", "workers"],
   "compilerOptions": {
     "strictNullChecks": true,
-    "baseUrl": ".",
     "paths": {
       "@*": ["./src/*"]
     }

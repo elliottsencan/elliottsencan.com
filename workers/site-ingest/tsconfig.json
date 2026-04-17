@@ -14,7 +14,6 @@
     "isolatedModules": true,
     "noEmit": true,
     "allowImportingTsExtensions": true,
-    "baseUrl": ".",
     "paths": {
       "@shared/*": ["../../src/lib/*"]
     }
