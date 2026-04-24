@@ -11,6 +11,7 @@
     "format": "biome format --write",
     "lint": "biome lint --write",
     "favicons": "node scripts/build-favicons.mjs",
+    "reading": "node scripts/reading.mjs",
     "astro": "astro"
   },
   "dependencies": {
