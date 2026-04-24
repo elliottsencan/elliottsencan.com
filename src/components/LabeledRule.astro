@@ -1,0 +1,44 @@
+---
+import { cn } from "@lib/utils";
+
+// Editorial label + dot-grid rule fused into one chapter-break element: the
+// label hangs flush-left and the dot row fills the remaining column width.
+// The label slot accepts plain text or breadcrumb-style content (e.g. a link
+// back plus a current segment). Inter-section dividers without a label still
+// use <EditorialRule />.
+//
+// `as` picks the semantic tag wrapping the label. Default h1 suits top-of-
+// page usage; pass "h2" for sub-section labels, "p" for metadata-style
+// labels (e.g. dateline variants that aren't the page title).
+//
+// The filler carries the same `.dot-rule` class and background recipe as
+// EditorialRule so the shared cursor-halo script in Layout.astro can reach
+// every dot line with one selector. `py-2` gives the filler a 16px
+// interactive band around the 1px dot line, aligned vertically with the
+// label via the parent flex `items-center`.
+
+type Props = {
+  as?: "h1" | "h2" | "p" | "div";
+  class?: string;
+};
+
+const { as: Tag = "h1", class: className } = Astro.props;
+---
+
+<div class="flex items-center gap-4">
+  <Tag
+    class:list={[
+      "shrink-0 font-mono text-xs uppercase tracking-wider text-black/55 dark:text-white/60",
+      className,
+    ]}
+    style="font-variant-numeric: tabular-nums;"
+  >
+    <slot />
+  </Tag>
+  <div
+    role="presentation"
+    aria-hidden="true"
+    class="dot-rule h-px flex-1 py-2"
+  >
+  </div>
+</div>

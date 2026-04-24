@@ -19,6 +19,15 @@ import pagefind from "astro-pagefind";
 export default defineConfig({
   site: "https://elliottsencan.com",
   integrations: [sitemap(), expressiveCode(), mdx(), pagefind()],
+  // /process, /uses, and /colophon used to live at the top level; they now
+  // live under /about as sub-pages of the about section. Redirect the legacy
+  // paths so external links and existing bookmarks keep working. Static
+  // Astro output renders these as meta-refresh HTML pages at the old paths.
+  redirects: {
+    "/process": "/about/process",
+    "/uses": "/about/uses",
+    "/colophon": "/about/colophon",
+  },
   vite: {
     plugins: [tailwindcss()],
   },

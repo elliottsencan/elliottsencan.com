@@ -1,7 +1,7 @@
 ---
 import { getCollection, getEntry } from "astro:content";
 import Container from "@components/Container.astro";
-import EditorialRule from "@components/EditorialRule.astro";
+import LabeledRule from "@components/LabeledRule.astro";
 import Link from "@components/Link.astro";
 import Masthead from "@components/Masthead.astro";
 import { HOME } from "@consts";
@@ -32,49 +32,52 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
   <Container>
     <div class="space-y-10">
       <Masthead />
-      <EditorialRule />
 
       {
         standfirst ? (
-          <>
-            <p
-              class="text-base leading-relaxed text-black/85 dark:text-white/85"
-              data-pagefind-meta={`standfirst:${standfirst}`}
-            >
-              {standfirst}
-            </p>
-            <EditorialRule />
-          </>
+          <p
+            class="font-sans text-base italic leading-relaxed text-black dark:text-white"
+            data-pagefind-meta={`standfirst:${standfirst}`}
+          >
+            {standfirst}
+          </p>
         ) : null
       }
 
       {
         posts.length > 0 ? (
-          <section data-pagefind-ignore>
-            <h2 class="sr-only">Writing</h2>
-            <ul class="not-prose flex flex-col gap-2 text-sm">
-              {posts.map((post) => (
-                <li class="flex items-baseline gap-4">
-                  <time
-                    datetime={post.data.date.toISOString()}
-                    class="shrink-0 font-mono text-xs uppercase tracking-wider text-black/50 dark:text-white/50"
-                    style="font-variant-numeric: tabular-nums;"
-                  >
-                    {dateFormatter.format(post.data.date)}
-                  </time>
-                  <span>
-                    <Link href={`/writing/${post.id}`}>{post.data.title}</Link>
-                    {post.data.description && (
-                      <span class="text-black/60 dark:text-white/60">
-                        {" — "}
-                        {post.data.description}
-                      </span>
-                    )}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </section>
+          <>
+            <LabeledRule as="h2">Writing</LabeledRule>
+            <section data-pagefind-ignore>
+              <ul class="not-prose flex flex-col gap-3 text-sm">
+                {posts.map((post) => (
+                  <li class="flex items-baseline gap-4">
+                    <time
+                      datetime={post.data.date.toISOString()}
+                      class="shrink-0 font-mono text-xs uppercase tracking-wider text-black/50 dark:text-white/60"
+                      style="font-variant-numeric: tabular-nums;"
+                    >
+                      {dateFormatter.format(post.data.date)}
+                    </time>
+                    <span>
+                      <Link
+                        href={`/writing/${post.id}`}
+                        class="font-heading font-medium text-black dark:text-white"
+                      >
+                        {post.data.title}
+                      </Link>
+                      {post.data.description && (
+                        <span class="text-black/60 dark:text-white/60">
+                          {" — "}
+                          {post.data.description}
+                        </span>
+                      )}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          </>
         ) : null
       }
     </div>

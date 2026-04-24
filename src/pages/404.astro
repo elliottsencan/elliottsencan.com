@@ -1,19 +1,22 @@
 ---
 import BackToPrevious from "@components/BackToPrevious.astro";
 import Container from "@components/Container.astro";
+import LabeledRule from "@components/LabeledRule.astro";
 import { SITE } from "@consts";
 import Layout from "@layouts/Layout.astro";
 ---
 
 <Layout title="404" description={SITE.DESCRIPTION}>
   <Container>
-    <div class="mt-16 grid place-items-center gap-3">
-      <h4 class="text-2xl font-semibold text-black dark:text-white">
-        404: Page not found
-      </h4>
-      <span>
+    <div class="space-y-10">
+      <LabeledRule>404 &middot; Not found</LabeledRule>
+      <p class="text-lg italic leading-relaxed text-black dark:text-white">
+        The URL you followed doesn't match anything published here. It may have
+        moved, or it may never have existed.
+      </p>
+      <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
         <BackToPrevious href="/">Go to home page</BackToPrevious>
-      </span>
+      </p>
     </div>
   </Container>
 </Layout>

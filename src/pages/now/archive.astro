@@ -2,6 +2,7 @@
 import { getCollection } from "astro:content";
 import Container from "@components/Container.astro";
 import EditorialRule from "@components/EditorialRule.astro";
+import LabeledRule from "@components/LabeledRule.astro";
 import Link from "@components/Link.astro";
 import Layout from "@layouts/Layout.astro";
 
@@ -30,17 +31,9 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
       data-pagefind-body
       data-pagefind-filter="type:About"
     >
-      <div>
-        <h1 class="sr-only">Now — archive</h1>
-        <p
-          class="font-mono text-xs uppercase tracking-wider text-black/55 dark:text-white/55"
-          style="font-variant-numeric: tabular-nums;"
-        >
-          Now &middot; Archive
-        </p>
-      </div>
-
-      <EditorialRule />
+      <LabeledRule>
+        <Link href="/now">Now</Link> / Archive
+      </LabeledRule>
 
       {
         entries.length > 0 ? (

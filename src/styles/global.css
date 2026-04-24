@@ -100,6 +100,17 @@
   ::file-selector-button {
     border-color: var(--color-gray-200, currentColor);
   }
+
+  /* Old-style figures in running copy so numerals sit on the x-height
+     (descenders on 3/4/5/7/9) and blend into text the way they do in
+     print. Meta elements that set `font-variant-numeric: tabular-nums`
+     inline override this via specificity; monospace text has its own
+     numerals and is unaffected. */
+  article,
+  .font-sans,
+  section.prose {
+    font-feature-settings: "onum" 1;
+  }
 }
 
 @layer utilities {
@@ -107,7 +118,14 @@
     overflow-y: auto;
     color-scheme: light;
     scroll-padding-top: 100px;
+    scroll-behavior: smooth;
     background-color: #f6f4ef;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
   }
 
   html.dark {
@@ -147,7 +165,7 @@
   }
 
   main {
-    @apply flex-1 py-20 md:py-32;
+    @apply flex-1 py-16 md:py-24;
   }
 
   footer {
@@ -176,8 +194,8 @@
 
 @layer utilities {
   article a {
-    @apply font-sans text-current underline underline-offset-[3px];
-    @apply decoration-black/30 dark:decoration-white/30;
+    @apply font-sans text-current underline underline-offset-4 decoration-1;
+    @apply decoration-black/25 dark:decoration-white/30;
     @apply transition-colors duration-300 ease-in-out;
   }
   article a:hover {
@@ -279,6 +297,93 @@ html.intro-played .rail-dot {
   .rail-logo,
   .rail-caption {
     animation: none !important;
+  }
+}
+
+/* Dotted-rule cursor halo.
+
+   Each editorial rule renders the dot pattern via two pseudo-elements
+   rather than an element-level background, so the halo overlay can
+   composite on top of the base dots without being multiplied down by a
+   parent opacity. `::before` is the baseline dot layer at rest opacity.
+   `::after` is a second copy at higher opacity, clipped by a
+   radial-gradient mask centered at `--pointer-x`, so it's only visible
+   within a ~70px halo of the cursor. Where the mask reveals ::after,
+   dots read as brighter; elsewhere only ::before shows.
+
+   Same interaction shape as the ContributionsRail hover — cosine-like
+   falloff via the mask's gradient stops — but opacity-only. No scaling,
+   no transforms. `--pointer-x` defaults to `-9999px` so the halo is
+   invisible off-rule; the shared script in Layout.astro pipes the
+   cursor's page-local x in on mousemove and unsets it on leave.
+   Prefers-reduced-motion users never see the overlay. */
+.dot-rule {
+  --dot-rule-rest: 0.6;
+  --dot-rule-overlay: 1;
+  --dot-rule-halo: 70px;
+  --pointer-x: -9999px;
+  position: relative;
+}
+
+html.dark .dot-rule {
+  --dot-rule-rest: 0.6;
+  --dot-rule-overlay: 1;
+}
+
+.dot-rule::before,
+.dot-rule::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(
+    circle,
+    currentColor 0.5px,
+    transparent 0.5px
+  );
+  background-size: 6px 1px;
+  background-repeat: repeat-x;
+  background-position: center;
+}
+
+.dot-rule::before {
+  opacity: var(--dot-rule-rest);
+}
+
+.dot-rule::after {
+  /* Default hidden; `:hover` below ramps to --dot-rule-overlay. The
+     transition here governs the EXIT fade (hover → no-hover); the :hover
+     rule's transition governs the ENTER fade. Exit is slightly longer
+     and eased in so the halo lingers as it dissolves; enter is shorter
+     and eased out so the halo settles in quickly under the cursor. */
+  opacity: 0;
+  transition: opacity 320ms cubic-bezier(0.4, 0, 0.6, 1);
+  -webkit-mask-image: radial-gradient(
+    circle var(--dot-rule-halo) at var(--pointer-x) 50%,
+    black 0%,
+    rgba(0, 0, 0, 0.85) 25%,
+    rgba(0, 0, 0, 0.5) 50%,
+    rgba(0, 0, 0, 0.15) 75%,
+    transparent 100%
+  );
+  mask-image: radial-gradient(
+    circle var(--dot-rule-halo) at var(--pointer-x) 50%,
+    black 0%,
+    rgba(0, 0, 0, 0.85) 25%,
+    rgba(0, 0, 0, 0.5) 50%,
+    rgba(0, 0, 0, 0.15) 75%,
+    transparent 100%
+  );
+}
+
+.dot-rule:hover::after {
+  opacity: var(--dot-rule-overlay);
+  transition: opacity 220ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dot-rule::after {
+    display: none;
   }
 }
 

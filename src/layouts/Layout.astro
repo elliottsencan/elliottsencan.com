@@ -36,5 +36,67 @@ const { title, description, ...headProps } = Astro.props;
     </main>
     <Footer />
     <Pagefind />
+    <script>
+      // Cursor-following halo for every `.dot-rule` on the page.
+      //
+      // Each rule carries a base dot layer (::before) and an overlay
+      // (::after) that's masked by a radial-gradient centered at
+      // `--pointer-x`. The overlay's visibility is driven by `:hover` in
+      // global.css, which also owns the enter/exit opacity transitions.
+      // This script's only job is to pipe the cursor's page-local x into
+      // the CSS variable so the mask tracks horizontal movement.
+      //
+      // We deliberately do NOT reset `--pointer-x` on mouseleave: the
+      // hover state dropping triggers the exit fade, and leaving
+      // `--pointer-x` at the last value lets the halo fade IN PLACE
+      // rather than snapping offscreen. The next mouseenter's first
+      // mousemove overwrites it within a frame.
+      //
+      // Uses astro:page-load so handlers re-bind after client-side nav
+      // (view transitions are site-wide). Reduced-motion users never see
+      // the overlay because global.css sets `display: none` on ::after.
+      function initDotRule(el: Element) {
+        const host = el as HTMLElement;
+        let frame = 0;
+        let latestX = 0;
+
+        function apply() {
+          frame = 0;
+          host.style.setProperty("--pointer-x", `${latestX}px`);
+        }
+
+        // Prime `--pointer-x` synchronously on enter so the first frame
+        // of the opacity fade-in already has the mask at the cursor,
+        // avoiding a 16ms lag where the halo could appear at a stale X.
+        host.addEventListener("mouseenter", (event) => {
+          const rect = host.getBoundingClientRect();
+          host.style.setProperty(
+            "--pointer-x",
+            `${event.clientX - rect.left}px`,
+          );
+        });
+
+        host.addEventListener("mousemove", (event) => {
+          const rect = host.getBoundingClientRect();
+          latestX = event.clientX - rect.left;
+          if (frame === 0) {
+            frame = requestAnimationFrame(apply);
+          }
+        });
+
+        host.addEventListener("mouseleave", () => {
+          if (frame !== 0) {
+            cancelAnimationFrame(frame);
+            frame = 0;
+          }
+        });
+      }
+
+      function setup() {
+        document.querySelectorAll(".dot-rule").forEach(initDotRule);
+      }
+
+      document.addEventListener("astro:page-load", setup);
+    </script>
   </body>
 </html>

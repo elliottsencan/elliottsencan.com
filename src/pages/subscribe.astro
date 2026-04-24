@@ -1,6 +1,6 @@
 ---
 import Container from "@components/Container.astro";
-import EditorialRule from "@components/EditorialRule.astro";
+import LabeledRule from "@components/LabeledRule.astro";
 import Link from "@components/Link.astro";
 import { SITE } from "@consts";
 import Layout from "@layouts/Layout.astro";
@@ -14,17 +14,7 @@ const feedURL = "https://elliottsencan.com/rss.xml";
 >
   <Container>
     <div class="space-y-10" data-pagefind-ignore>
-      <div>
-        <h1 class="sr-only">Subscribe</h1>
-        <p
-          class="font-mono text-xs uppercase tracking-wider text-black/55 dark:text-white/55"
-          style="font-variant-numeric: tabular-nums;"
-        >
-          Subscribe
-        </p>
-      </div>
-
-      <EditorialRule />
+      <LabeledRule>Subscribe</LabeledRule>
 
       <section class="space-y-4">
         <p class="text-lg leading-relaxed text-black/85 dark:text-white/85">

@@ -1,12 +1,14 @@
 ---
 import Container from "@components/Container.astro";
 import EditorialRule from "@components/EditorialRule.astro";
+import LabeledRule from "@components/LabeledRule.astro";
+import Link from "@components/Link.astro";
 import Layout from "@layouts/Layout.astro";
 import { Code } from "astro-expressive-code/components";
 
-// The /uses page, done the hacker-blog way: the configs ARE the answer. Each
-// section is a real file path + an excerpt of what's in it. The "why" lives
-// in inline comments, not in marketing prose.
+// The /about/uses page, done the hacker-blog way: the configs ARE the answer.
+// Each section is a real file path + an excerpt of what's in it. The "why"
+// lives in inline comments, not in marketing prose.
 //
 // Expressive Code handles the editor-frame chrome, filename titlebar, copy
 // button, and line numbers — all from the `title` prop plus global config in
@@ -117,17 +119,9 @@ const configs: ConfigBlock[] = [
       data-pagefind-body
       data-pagefind-filter="type:Uses"
     >
-      <div>
-        <h1 class="sr-only">Uses</h1>
-        <p
-          class="font-mono text-xs uppercase tracking-wider text-black/55 dark:text-white/55"
-          style="font-variant-numeric: tabular-nums;"
-        >
-          Uses
-        </p>
-      </div>
-
-      <EditorialRule />
+      <LabeledRule>
+        <Link href="/about">About</Link> / Uses
+      </LabeledRule>
 
       <section class="space-y-4 text-base leading-relaxed text-black/85 dark:text-white/85">
         <p>

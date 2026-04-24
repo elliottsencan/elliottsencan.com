@@ -1,6 +1,7 @@
 ---
 import Container from "@components/Container.astro";
 import EditorialRule from "@components/EditorialRule.astro";
+import LabeledRule from "@components/LabeledRule.astro";
 import Link from "@components/Link.astro";
 import { SITE } from "@consts";
 import Layout from "@layouts/Layout.astro";
@@ -43,24 +44,14 @@ const projectBlurbs = [
       data-pagefind-body
       data-pagefind-filter="type:About"
     >
-      <div>
-        <h1 class="sr-only">About</h1>
-        <p
-          class="font-mono text-xs uppercase tracking-wider text-black/55 dark:text-white/55"
-          style="font-variant-numeric: tabular-nums;"
-        >
-          About
-        </p>
-      </div>
+      <LabeledRule>About</LabeledRule>
 
-      <EditorialRule />
-
-      <section class="space-y-4 text-base leading-relaxed text-black/85 dark:text-white/85">
-        <p>
+      <section class="space-y-4">
+        <p class="font-sans text-lg italic leading-relaxed text-black dark:text-white">
           Elliott Sencan is an engineer in San Diego working on developer tools and
           complex systems. Currently at GrupBlox; previously staff at ServiceNow.
         </p>
-        <p>
+        <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
           This site is where I write about software engineering, architecture,
           and craft. If you want to see what I'm thinking about right now, the
           <Link href="/now">/now page</Link> is more current than this one.
@@ -73,10 +64,16 @@ const projectBlurbs = [
         <h2 class="font-mono text-xs uppercase tracking-wider text-black/60 dark:text-white/60">
           Career
         </h2>
-        <ul class="not-prose flex flex-col gap-4 text-sm">
+        <ul class="not-prose flex flex-col text-sm">
           {
-            career.map((role) => (
-              <li class="space-y-1">
+            career.map((role, i) => (
+              <li
+                class:list={[
+                  "space-y-1",
+                  i > 0 &&
+                    "mt-4 border-t border-black/10 pt-4 dark:border-white/10",
+                ]}
+              >
                 <div class="flex flex-wrap items-baseline justify-between gap-x-4">
                   <span class="font-medium text-black dark:text-white">
                     {role.role}
@@ -90,7 +87,7 @@ const projectBlurbs = [
                     )}
                   </span>
                   <span
-                    class="shrink-0 font-mono text-xs uppercase tracking-wider text-black/50 dark:text-white/50"
+                    class="shrink-0 font-mono text-xs uppercase tracking-wider text-black/50 dark:text-white/60"
                     style="font-variant-numeric: tabular-nums;"
                   >
                     {role.dates}
@@ -152,7 +149,7 @@ const projectBlurbs = [
               &middot;
             </span>
             <span>
-              <Link href="/colophon">colophon</Link>
+              <Link href="/about/colophon">colophon</Link>
               <span class="text-black/60 dark:text-white/60">
                 {" — "}typography, stack, and credits.
               </span>
@@ -166,7 +163,7 @@ const projectBlurbs = [
               &middot;
             </span>
             <span>
-              <Link href="/process">process</Link>
+              <Link href="/about/process">process</Link>
               <span class="text-black/60 dark:text-white/60">
                 {" — "}writing workflow and what AI assistance means on each post.
               </span>
@@ -180,7 +177,7 @@ const projectBlurbs = [
               &middot;
             </span>
             <span>
-              <Link href="/uses">uses</Link>
+              <Link href="/about/uses">uses</Link>
               <span class="text-black/60 dark:text-white/60">
                 {" — "}tools, hardware, and workflow I actually reach for.
               </span>

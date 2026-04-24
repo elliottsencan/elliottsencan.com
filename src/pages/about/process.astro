@@ -1,15 +1,17 @@
 ---
 import Container from "@components/Container.astro";
 import EditorialRule from "@components/EditorialRule.astro";
+import LabeledRule from "@components/LabeledRule.astro";
 import Link from "@components/Link.astro";
 import Layout from "@layouts/Layout.astro";
 
 // Each AI-assistance level is addressable by anchor so the badge on a writing
-// post can deep-link straight to its definition (e.g. /process/index.html#light).
-// The explicit `index.html` is for lychee's offline link-checker: lychee
-// normalizes away trailing slashes (/process/ → /process), can't resolve
-// directories to their index, and fails fragment lookup. Explicit file
-// path sidesteps the whole issue without changing browser behavior.
+// post can deep-link straight to its definition (e.g.
+// /about/process/index.html#light). The explicit `index.html` is for lychee's
+// offline link-checker: lychee normalizes away trailing slashes
+// (/about/process/ → /about/process), can't resolve directories to their
+// index, and fails fragment lookup. Explicit file path sidesteps the whole
+// issue without changing browser behavior.
 const levels = [
   {
     id: "none",
@@ -47,17 +49,9 @@ const levels = [
       data-pagefind-body
       data-pagefind-filter="type:Process"
     >
-      <div>
-        <h1 class="sr-only">Process</h1>
-        <p
-          class="font-mono text-xs uppercase tracking-wider text-black/55 dark:text-white/55"
-          style="font-variant-numeric: tabular-nums;"
-        >
-          Process
-        </p>
-      </div>
-
-      <EditorialRule />
+      <LabeledRule>
+        <Link href="/about">About</Link> / Process
+      </LabeledRule>
 
       <section class="space-y-4 text-base leading-relaxed text-black/85 dark:text-white/85">
         <p>
@@ -152,4 +146,3 @@ const levels = [
     </div>
   </Container>
 </Layout>
-

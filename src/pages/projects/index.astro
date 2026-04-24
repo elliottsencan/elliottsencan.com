@@ -2,6 +2,7 @@
 import { getCollection } from "astro:content";
 import ArrowCard from "@components/ArrowCard.astro";
 import Container from "@components/Container.astro";
+import LabeledRule from "@components/LabeledRule.astro";
 import { PROJECTS } from "@consts";
 import Layout from "@layouts/Layout.astro";
 
@@ -28,11 +29,13 @@ const otherProjects = allProjects.filter((p) => !p.data.isCaseStudy);
   <Container>
     <aside data-pagefind-ignore>
       <div class="space-y-10">
+        <LabeledRule>Projects</LabeledRule>
+
         {
           caseStudies.length > 0 && (
             <section class="space-y-6">
-              <h2 class="font-heading text-xl font-medium tracking-tight text-black dark:text-white">
-                Case Studies
+              <h2 class="font-mono text-xs uppercase tracking-wider text-black/60 dark:text-white/60">
+                Case studies
               </h2>
               <ul class="not-prose flex flex-col gap-4">
                 {caseStudies.map((project) => (
@@ -46,8 +49,8 @@ const otherProjects = allProjects.filter((p) => !p.data.isCaseStudy);
         }
 
         <section class="space-y-6">
-          <h2 class="font-heading text-xl font-medium tracking-tight text-black dark:text-white">
-            {caseStudies.length > 0 ? "Other Projects" : "Projects"}
+          <h2 class="font-mono text-xs uppercase tracking-wider text-black/60 dark:text-white/60">
+            {caseStudies.length > 0 ? "Other projects" : "All projects"}
           </h2>
           {
             otherProjects.length > 0 ? (
@@ -59,7 +62,9 @@ const otherProjects = allProjects.filter((p) => !p.data.isCaseStudy);
                 ))}
               </ul>
             ) : (
-              <p class="text-sm text-neutral-500">Coming soon.</p>
+              <p class="text-sm text-black/60 dark:text-white/60">
+                Coming soon.
+              </p>
             )
           }
         </section>

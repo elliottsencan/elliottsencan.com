@@ -1,5 +1,6 @@
 ---
 import { SITE } from "@consts";
+import LabeledRule from "@components/LabeledRule.astro";
 
 // Build-time stamp — regenerates on every deploy, signalling the site is alive.
 const buildDate = new Date();
@@ -17,19 +18,18 @@ const location = SITE.LOCATION.toUpperCase();
 <!--
   The site nav (Header.astro) already renders the site title. Repeating it here
   as a big visible h1 creates a redundancy that reads as template scaffolding.
-  Instead: keep an sr-only h1 for semantics, and show only the editorial
-  dateline — location + build date — in small caps. The standfirst below becomes
-  the primary visual anchor, which is the correct editorial move.
+  Instead: keep an sr-only h1 for semantics, and show the editorial dateline —
+  location + build date — as the left label of a label-on-rule row. The
+  dot-grid rule flows from the dateline to the right edge of the column,
+  anchoring the top of the page.
 
-  Intentionally <div>, not <header>. See memory/project_global_header_trap.md:
-  bare <header> elements inherit fixed-banner styling from global.css.
+  The sr-only h1 lives outside LabeledRule so LabeledRule's h1 slot is free
+  to carry the visible dateline text (as a <p>) without conflicting on the
+  page's heading semantics.
 -->
 <div>
   <h1 class="sr-only">{SITE.TITLE}</h1>
-  <p
-    class="font-mono text-xs uppercase tracking-wider text-black/55 dark:text-white/55"
-    style="font-variant-numeric: tabular-nums;"
-  >
-    {location} &middot; {editionDate}
-  </p>
+  <LabeledRule as="p">
+    Currently in {location} &middot; {editionDate}
+  </LabeledRule>
 </div>

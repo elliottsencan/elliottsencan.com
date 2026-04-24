@@ -1,7 +1,17 @@
 ---
 /**
- * Thin horizontal dot-grid rule. Pure CSS (radial gradient on background image).
- * Uses currentColor so it inherits text color in both light and dark mode.
+ * Thin horizontal dot-grid rule — the site's strongest visual signature.
+ *
+ * The dot pattern is painted by `::before` and `::after` pseudo-elements
+ * defined on `.dot-rule` in global.css (one baseline, one cursor-halo
+ * overlay). The element itself is a transparent host so the overlay
+ * composites cleanly without being multiplied down by a parent opacity.
+ *
+ * `py-2` gives a 16px interactive band around the 1px dot line so the
+ * cursor-tracking mousemove has a realistic hover zone. Margins dial back
+ * to `my-8` to match the original visual rhythm (total vertical footprint
+ * unchanged vs the old `my-10` + 1px rule).
+ *
  * Decorative — hidden from assistive tech.
  */
 ---
@@ -9,7 +19,6 @@
 <div
   role="presentation"
   aria-hidden="true"
-  class="my-10 h-px w-full opacity-30 dark:opacity-40"
-  style="background-image: radial-gradient(circle, currentColor 0.5px, transparent 0.5px); background-size: 6px 1px; background-repeat: repeat-x; background-position: center;"
+  class="dot-rule my-8 h-px w-full py-2"
 >
 </div>
