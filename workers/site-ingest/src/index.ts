@@ -22,6 +22,7 @@ import * as inputs from "./inputs.ts";
 import * as link from "./link.ts";
 import * as now from "./now.ts";
 import * as recompile from "./recompile.ts";
+import * as synthesize from "./synthesize.ts";
 import type { Env } from "./types.ts";
 import { log, requireBearer, textResponse } from "./util.ts";
 
@@ -59,6 +60,16 @@ export default {
         return textResponse("rate limited", 429);
       }
       return now.handle(env, "trigger");
+    }
+
+    if (request.method === "POST" && url.pathname === "/synthesize") {
+      // Wiki concept compilation. Long-running like /recompile (multiple
+      // Anthropic calls per invocation), so it shares the trigger limiter.
+      const limited = await env.TRIGGER_LIMITER.limit({ key: ip });
+      if (!limited.success) {
+        return textResponse("rate limited", 429);
+      }
+      return synthesize.handle(request, env);
     }
 
     if (request.method === "POST" && url.pathname === "/recompile") {
