@@ -386,9 +386,8 @@ export function buildRecompiledMarkdown(args: {
   }
   data.compiled_at = compiledAt.toISOString();
   data.compiled_with = summary.model;
-  // gray-matter's stringify emits valid YAML via js-yaml; trailing
-  // newline is preserved so the file ends cleanly.
-  return matter.stringify(summary.detail.trim(), data);
+  // Body intentionally empty: see buildEntryMarkdown comment in link.ts.
+  return matter.stringify("", data);
 }
 
 // ---------- internet archive ----------

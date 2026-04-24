@@ -155,17 +155,28 @@ export interface LinkSummary {
   category: ReadingCategory;
   author?: string;
   source?: string;
-  /** 3–5 lowercase kebab-case topic slugs for the metadata graph. */
+  /** 3–5 lowercase kebab-case topic slugs. Drives wiki-layer clustering. */
   topics: string[];
-  /**
-   * Longer markdown synthesis written into the entry body. The 240-char
-   * `summary` is the human dateline; `detail` is the agent-facing article.
-   */
-  detail: string;
   /**
    * Resolved model ID that produced this summary. Written to frontmatter
    * as `compiled_with` so `/recompile` can target older-model entries.
    */
+  model: string;
+}
+
+// ---------- wiki synthesis ----------
+
+/** Strict-JSON shape Anthropic returns when compiling a wiki concept article. */
+export interface WikiArticle {
+  /** Human-readable concept name. Title-case-ish, not a headline. */
+  title: string;
+  /** One-sentence gist of the concept itself (not "this article is..."). */
+  summary: string;
+  /** Synthesis prose, markdown, with inline citations to source slugs. */
+  body: string;
+  /** Other topic slugs related to this concept; subset of those provided. */
+  related_concepts?: string[];
+  /** Resolved model ID that produced this article. */
   model: string;
 }
 

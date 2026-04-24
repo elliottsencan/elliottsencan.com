@@ -57,6 +57,11 @@ export async function handle(
   // Resolve title if missing. Best-effort; page fetch failures don't block.
   const resolvedTitle = body.title ?? (await fetchPageTitle(body.url));
 
+  // Load existing topics so the prompt can prefer them over near-duplicates.
+  // Best-effort: a fetch failure here never blocks the ingest, the prompt
+  // just falls back to inventing topics from scratch like before.
+  const existingTopics = await loadExistingTopics(env);
+
   // Falls back to a stub summary if Anthropic is unavailable so a transient
   // outage doesn't lose the link entirely. The stub is committed to the
   // repo but the response signals `degraded: true` so the client knows the
@@ -69,13 +74,15 @@ export async function handle(
       title: resolvedTitle,
       url: body.url,
       excerpt: body.excerpt,
+      existingTopics,
     }),
   });
 
   const degraded = !summaryResult.ok;
   // On degraded path, title is empty so the fallback chain in the caller
-  // picks the page-fetched title (or hostname) instead. Topics and detail
-  // fall back to empty values the schema still accepts post-parse.
+  // picks the page-fetched title (or hostname) instead. Topics fall back
+  // to a single sentinel slug so the wiki layer can identify entries
+  // that need a manual pass.
   const summary: LinkSummary = summaryResult.ok
     ? summaryResult.data
     : {
@@ -83,7 +90,6 @@ export async function handle(
         summary: "Saved link.",
         category: "other",
         topics: ["unsorted"],
-        detail: "",
         model: "unknown",
       };
   if (!summaryResult.ok) {
@@ -178,6 +184,53 @@ export function validate(input: unknown): Result<LinkRequest> {
   return { ok: false, error: `${path}: ${message}` };
 }
 
+// ---------- existing topics ----------
+
+const READING_JSON_URL = "https://elliottsencan.com/reading.json";
+const TOPICS_FETCH_TIMEOUT_MS = 3000;
+const MAX_TOPICS_IN_PROMPT = 60;
+
+/**
+ * Load the union of topic slugs already in use across the reading log.
+ *
+ * Source is the public `reading.json` because (a) it's a single
+ * Cloudflare-edge-cached HTTP fetch — much cheaper than enumerating
+ * GitHub contents per ingest, and (b) the deploy-cycle lag is acceptable:
+ * topics evolve slowly, so missing the very latest entry's topics in
+ * the next ingest's prompt context is a non-issue.
+ *
+ * Best-effort: any failure returns an empty list, and the prompt falls
+ * back to inventing topics from scratch like before. Never blocks.
+ */
+async function loadExistingTopics(_env: Env): Promise<string[]> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), TOPICS_FETCH_TIMEOUT_MS);
+  try {
+    const res = await fetch(READING_JSON_URL, { signal: controller.signal });
+    if (!res.ok) {
+      log.warn("link", "topics", "reading.json fetch failed", { status: res.status });
+      return [];
+    }
+    const data = (await res.json()) as { entries?: Array<{ topics?: string[] }> };
+    const seen = new Set<string>();
+    for (const entry of data.entries ?? []) {
+      for (const t of entry.topics ?? []) {
+        if (typeof t === "string" && t.length > 0) {
+          seen.add(t);
+        }
+      }
+    }
+    return [...seen].sort().slice(0, MAX_TOPICS_IN_PROMPT);
+  } catch (err) {
+    log.warn("link", "topics", "reading.json fetch threw", {
+      msg: err instanceof Error ? err.message : "unknown",
+    });
+    return [];
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 // ---------- page title fetch ----------
 
 async function fetchPageTitle(url: string): Promise<string | undefined> {
@@ -228,12 +281,16 @@ function buildLinkUserMessage(args: {
   title?: string | undefined;
   url: string;
   excerpt?: string | undefined;
+  existingTopics: string[];
 }): string {
   const parts = [
     "Article data for summarization:",
     `Title: ${args.title ?? "(unknown)"}`,
     `URL: ${args.url}`,
   ];
+  if (args.existingTopics.length > 0) {
+    parts.push("", `Existing topics in use: ${args.existingTopics.join(", ")}`);
+  }
   if (args.excerpt) {
     parts.push("", "Excerpt:", args.excerpt);
   }
@@ -265,7 +322,10 @@ function buildEntryMarkdown(args: {
   }
   data.compiled_at = added.toISOString();
   data.compiled_with = summary.model;
-  return matter.stringify(summary.detail.trim(), data);
+  // Body intentionally empty: reading entries are source citations, not
+  // wiki articles. Cross-source synthesis lives in src/content/wiki/,
+  // produced by the /synthesize pipeline.
+  return matter.stringify("", data);
 }
 
 function buildEntryPath(args: { env: Env; added: Date; title: string }): string {

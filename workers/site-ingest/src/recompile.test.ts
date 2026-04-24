@@ -81,7 +81,6 @@ const baseSummary: LinkSummary = {
   summary: "A short summary.",
   category: "tech",
   topics: ["topic-a", "topic-b"],
-  detail: "Longer markdown synthesis.",
   model: "claude-sonnet-4-6",
 };
 
@@ -99,7 +98,7 @@ function parseEntry(md: string): { data: Record<string, unknown>; content: strin
 }
 
 describe("buildRecompiledMarkdown", () => {
-  it("emits frontmatter that round-trips with all required fields", () => {
+  it("emits frontmatter that round-trips with all required fields and an empty body", () => {
     const { data, content } = parseEntry(buildRecompiledMarkdown(baseArgs));
     expect(data).toMatchObject({
       title: "Hello World",
@@ -111,7 +110,9 @@ describe("buildRecompiledMarkdown", () => {
       compiled_with: "claude-sonnet-4-6",
       topics: ["topic-a", "topic-b"],
     });
-    expect(content.trim()).toBe("Longer markdown synthesis.");
+    // Reading entries are source citations, not wiki articles. Body is
+    // intentionally empty; cross-source synthesis lives in the wiki layer.
+    expect(content.trim()).toBe("");
   });
 
   it("omits author and source when absent", () => {
@@ -139,25 +140,5 @@ describe("buildRecompiledMarkdown", () => {
       }),
     );
     expect(data).not.toHaveProperty("topics");
-  });
-
-  it("emits an empty body when detail is empty", () => {
-    const { content } = parseEntry(
-      buildRecompiledMarkdown({
-        ...baseArgs,
-        summary: { ...baseSummary, detail: "" },
-      }),
-    );
-    expect(content.trim()).toBe("");
-  });
-
-  it("trims surrounding whitespace from the detail body", () => {
-    const { content } = parseEntry(
-      buildRecompiledMarkdown({
-        ...baseArgs,
-        summary: { ...baseSummary, detail: "\n\n  Body content.  \n\n" },
-      }),
-    );
-    expect(content.trim()).toBe("Body content.");
   });
 });

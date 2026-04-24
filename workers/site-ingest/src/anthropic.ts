@@ -16,7 +16,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { ReadingCategorySchema } from "@shared/schemas/content.ts";
 import { z } from "zod";
-import type { LinkSummary, Result } from "./types.ts";
+import type { LinkSummary, Result, WikiArticle } from "./types.ts";
 import { log } from "./util.ts";
 
 const DEFAULT_MODEL = "claude-sonnet-4-6";
@@ -27,12 +27,11 @@ const LinkSummarySchema = z.object({
   category: ReadingCategorySchema,
   author: z.string().optional(),
   source: z.string().optional(),
-  // 3–5 lowercase kebab-case topics for the metadata graph.
+  // 3–5 lowercase kebab-case topics. Drives concept clustering for the
+  // wiki layer — entries sharing a topic are candidates for a synthesis
+  // article. Source-level depth lives at the URL itself (and the IA
+  // snapshot for recompiles); cross-source synthesis lives in the wiki.
   topics: z.array(z.string()).min(1).max(5),
-  // Longer markdown synthesis written into the entry body. Functions as
-  // the "wiki article" layer in the Karpathy sense — the 240-char summary
-  // is the human dateline, `detail` is the agent-facing article.
-  detail: z.string(),
 });
 
 function client(apiKey: string): Anthropic {
@@ -88,10 +87,9 @@ export async function summarizeLink(args: {
   try {
     const response = await client(args.apiKey).messages.parse({
       model: resolveModel(args.model),
-      // Larger budget than the original 400: structured output now includes
-      // a `detail` body (longer markdown synthesis) plus 3–5 topic slugs.
-      // 1500 gives Sonnet room for a two-paragraph detail without clipping.
-      max_tokens: 1500,
+      // 600 fits the slimmer schema (no longer emitting a detail body)
+      // with a comfortable safety margin for long titles + 5 topics.
+      max_tokens: 600,
       system: args.systemPrompt,
       messages: [{ role: "user", content: args.userMessage }],
       output_config: { format: zodOutputFormat(LinkSummarySchema) },
@@ -108,6 +106,40 @@ export async function summarizeLink(args: {
     };
   } catch (err) {
     return mapError(err, "summarize-link");
+  }
+}
+
+const WikiArticleSchema = z.object({
+  title: z.string(),
+  summary: z.string(),
+  body: z.string(),
+  related_concepts: z.array(z.string()).optional(),
+});
+
+export async function compileWikiArticle(args: {
+  apiKey: string;
+  model?: string;
+  systemPrompt: string;
+  userMessage: string;
+}): Promise<Result<WikiArticle>> {
+  try {
+    const response = await client(args.apiKey).messages.parse({
+      model: resolveModel(args.model),
+      // Wiki articles are 400–1500 chars markdown; 2500 leaves headroom.
+      max_tokens: 2500,
+      system: args.systemPrompt,
+      messages: [{ role: "user", content: args.userMessage }],
+      output_config: { format: zodOutputFormat(WikiArticleSchema) },
+    });
+    if (!response.parsed_output) {
+      return { ok: false, error: "parsed_output missing" };
+    }
+    return {
+      ok: true,
+      data: { ...response.parsed_output, model: resolveModel(args.model) },
+    };
+  } catch (err) {
+    return mapError(err, "compile-wiki");
   }
 }
 
