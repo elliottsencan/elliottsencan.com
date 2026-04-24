@@ -8,27 +8,19 @@ aiAssistance: "heavy"
 aiNote: "Outlined and drafted in collaboration with Claude (Opus 4.7) during the build of the endpoints, worker pipelines, and content collections this post documents. Prose will be rewritten before publish."
 ---
 
-I started this round wanting to make my reading log queryable by agents, leaned on Karpathy's LLM Wiki pattern as a guide, and very nearly published a post claiming my reading log already was the wiki. It wasn't. The post is about why, and what I changed to make the claim closer to true.
+Every link I save from my phone runs through Anthropic and lands as a structured markdown citation in `src/content/reading`. To make that corpus queryable by agents, I built a concept-indexed wiki layer on top, following the shape of [Karpathy's LLM Wiki gist](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f). This is how the layers fit together.
 
-## What Karpathy's pattern actually is
+## Karpathy's pattern
 
-[Karpathy's LLM Wiki gist](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) is three folders.
+The gist is three folders.
 
 `raw/` holds source material. `wiki/` holds LLM-compiled encyclopedia-style articles, one per concept, synthesizing across multiple sources. `index.md` is a short map of every wiki article, sized to fit in a single context window. The agent loads `index.md`, picks articles, loads those. That is the whole retrieval step. No vector search, no embeddings, no chunk boundaries.
 
 The structural commitment that matters is the per-concept indexing of the wiki. Karpathy's wiki articles are not summaries of single sources. They synthesize across sources to describe a concept. That is why his pattern compounds when you re-run compilation: better models produce better cross-source articles, not just cleaner per-source notes.
 
-## What I had
+## The three layers
 
-The site's existing ingest pipeline runs on every link I save from my phone. Cloudflare Worker, Anthropic, GitHub commit. Each link produces one markdown file at `src/content/reading/{YYYY-MM}/{timestamp}-{slug}.md`, with a frontmatter that has been growing more structured: title, URL, summary, category, author, source, topics, model provenance.
-
-When I held this up next to Karpathy's pattern, the temptation was to call this the wiki. The compile step is genuinely there. URL goes in, LLM produces structured output, repository absorbs it. It looks like a wiki article in the same way a single page of a notebook looks like a wiki article: it has structure, it is human-readable, it cites its source.
-
-It is not a wiki. It is one source per article. Karpathy's wiki is one concept per article, drawing on many sources. Those are different data structures that happen to share a compile step. Calling the per-source corpus "the wiki" because it shares the LLM-as-compiler shape is a category mistake, and a careful reader who has read both Karpathy's gist and my post would push back, correctly.
-
-## The structural fix
-
-The honest move was to keep the per-source layer for what it is, build the missing concept layer, and put both behind a clean retrieval index. Three layers, named for what they do.
+Three layers, named for what they do.
 
 Reading entries are the citation layer. One file per URL I have saved, with structured frontmatter and no body. They are not wiki articles. They are the underlying source-of-truth that anything synthesizing across reading material has to draw on. The site exposes them at `/reading` for humans who want a chronological view, and at `/reading.json` with metadata-derived `related[]` edges and a `wiki_concepts[]` reverse index pointing at any concept article that cites the entry.
 
@@ -38,17 +30,13 @@ There are two indexes, both deliberately. `wiki.txt` is the wiki layer's own nav
 
 The compile model becomes legible: every reading entry is an artifact of `/link`, every wiki article is an artifact of `/synthesize`, and the two never run in the same call. They share infrastructure (GitHub commits, Anthropic structured output, Zod schemas) but produce different artifacts on different cadences for different audiences.
 
-## What changed in the ingest
+## How ingest works
 
-Adding the wiki layer required cleaning up a piece of the ingest pipeline I had over-extended in an earlier pass.
+`POST /link` takes a URL and an optional excerpt. The Worker fetches the page title if missing, calls Anthropic for a structured summary, and commits a markdown citation to the repo. The output is a clean source record: title, URL, summary, category, author, source, topics, compiled_at, compiled_with. The body is empty; single-source pseudo-synthesis stays out of the schema, and the wiki layer handles cross-source synthesis in its own collection.
 
-The `/link` schema had grown a `detail` field that emitted a longer markdown synthesis into the body of each entry. That field was prefiguring the wiki layer that did not yet exist, and I had been calling it the wiki article on the way in. Detail was doing single-source pseudo-synthesis in a schema field. The wiki layer does real multi-source synthesis in a separate collection. One is a worse version of the other, so the schema field goes.
+Topic stability is enforced at ingest because near-duplicate slugs fragment the wiki. Before each `/link` call the worker fetches the public `/reading.json`, extracts the union of topics already in use, and passes that list to the prompt with instructions to strongly prefer existing slugs. Topic sprawl becomes a self-correcting drift instead of an accelerating one.
 
-So the schema slimmed back to a clean source citation: title, URL, summary, category, author, source, topics, compiled_at, compiled_with. The body is empty. The wiki layer is where synthesis lives.
-
-The `/link` prompt also picked up an existing-topics context loader. Topic stability matters once a wiki layer exists, because near-duplicate topic slugs fragment the wiki. The worker now fetches the public `/reading.json` before each ingest, extracts the union of topics already in use, and passes that list to the prompt with instructions to strongly prefer those slugs. Topic sprawl becomes a self-correcting drift instead of an accelerating one.
-
-The `/recompile` endpoint, which already existed for re-running ingest against the current prompt and model, doubles as the migration tool for older entries. Once the new prompt ships, a single call updates every pre-existing entry to the new shape.
+`POST /recompile` re-runs the ingest pipeline against existing entries, fetching their content from the Internet Archive snapshot closest to the original `added` timestamp and writing the rebuilt entry as part of a PR. Same prompt, same Zod schema, just applied to older material.
 
 ## Compounding stays cheap
 
