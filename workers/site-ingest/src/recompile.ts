@@ -18,6 +18,8 @@
  * runs across multiple invocations with the `slugs` scope.
  */
 
+import matter from "gray-matter";
+import { convert as htmlToText } from "html-to-text";
 import { z } from "zod";
 import { summarizeLink } from "./anthropic.ts";
 import {
@@ -232,7 +234,11 @@ async function enumerateEntries(env: Env, gh: GitHubClient): Promise<Result<Pars
   return { ok: true, data: all };
 }
 
-function applyScope(entries: ParsedEntry[], scope: RecompileRequest["scope"]): ParsedEntry[] {
+// Exported for unit tests; in-file callers use it directly.
+export function applyScope(
+  entries: ParsedEntry[],
+  scope: RecompileRequest["scope"],
+): ParsedEntry[] {
   switch (scope.kind) {
     case "all":
       return entries;
@@ -268,56 +274,25 @@ function slugFromPath(path: string): string {
 // ---------- frontmatter parsing ----------
 
 /**
- * Minimal YAML frontmatter parser for the shape `/link` emits.
- * Does NOT handle multiline values, nested objects, or complex YAML — we
- * control the writer, so the surface is bounded.
+ * Parse YAML frontmatter via gray-matter. Returns null when the input
+ * has no parseable frontmatter so callers can skip orphans without
+ * special-casing each failure mode.
  */
 function parseFrontmatter(
   markdown: string,
 ): { frontmatter: Record<string, unknown>; body: string } | null {
-  if (!markdown.startsWith("---\n")) {
+  try {
+    const parsed = matter(markdown);
+    if (!parsed.data || Object.keys(parsed.data).length === 0) {
+      return null;
+    }
+    return { frontmatter: parsed.data, body: parsed.content };
+  } catch (err) {
+    log.warn("recompile", "frontmatter", "parse failed", {
+      msg: err instanceof Error ? err.message : "unknown",
+    });
     return null;
   }
-  const end = markdown.indexOf("\n---", 4);
-  if (end === -1) {
-    return null;
-  }
-
-  const block = markdown.slice(4, end);
-  const body = markdown.slice(end + 4).replace(/^\n+/, "");
-
-  const frontmatter: Record<string, unknown> = {};
-  for (const rawLine of block.split("\n")) {
-    const line = rawLine.trim();
-    if (!line) {
-      continue;
-    }
-    const colon = line.indexOf(":");
-    if (colon === -1) {
-      continue;
-    }
-    const key = line.slice(0, colon).trim();
-    const value = line.slice(colon + 1).trim();
-    frontmatter[key] = parseScalar(value);
-  }
-  return { frontmatter, body };
-}
-
-function parseScalar(value: string): unknown {
-  if (value.startsWith("[") && value.endsWith("]")) {
-    const inner = value.slice(1, -1).trim();
-    if (!inner) {
-      return [];
-    }
-    return inner.split(",").map((v) => parseScalar(v.trim()));
-  }
-  if (
-    (value.startsWith('"') && value.endsWith('"')) ||
-    (value.startsWith("'") && value.endsWith("'"))
-  ) {
-    return value.slice(1, -1).replace(/\\"/g, '"').replace(/\\'/g, "'");
-  }
-  return value;
 }
 
 // ---------- per-entry recompile ----------
@@ -383,7 +358,8 @@ function buildRecompileUserMessage(args: {
   return parts.join("\n");
 }
 
-function buildRecompiledMarkdown(args: {
+// Exported for unit tests; in-file callers use it directly.
+export function buildRecompiledMarkdown(args: {
   title: string;
   url: string;
   summary: LinkSummary;
@@ -469,7 +445,19 @@ async function fetchInternetArchive(
     }
     reader.cancel().catch(() => {});
 
-    const excerpt = htmlToText(html).slice(0, IA_EXCERPT_LENGTH);
+    // html-to-text handles entities, scripts, styles, comments, and
+    // collapses whitespace properly — boundaries the previous regex
+    // stripper got wrong on snapshots with inline JSON or HTML in
+    // <script> bodies.
+    const excerpt = htmlToText(html, {
+      wordwrap: false,
+      selectors: [
+        { selector: "a", options: { ignoreHref: true } },
+        { selector: "img", format: "skip" },
+        { selector: "nav", format: "skip" },
+        { selector: "footer", format: "skip" },
+      ],
+    }).slice(0, IA_EXCERPT_LENGTH);
     return { ok: true, data: { excerpt, snapshotUrl: snapshot.url } };
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
@@ -477,15 +465,6 @@ async function fetchInternetArchive(
   } finally {
     clearTimeout(timeout);
   }
-}
-
-function htmlToText(html: string): string {
-  return html
-    .replace(/<script[\s\S]*?<\/script>/gi, "")
-    .replace(/<style[\s\S]*?<\/style>/gi, "")
-    .replace(/<[^>]+>/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
 }
 
 // ---------- pr body ----------
