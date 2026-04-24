@@ -37,6 +37,13 @@ export const ReadingFrontmatterSchema = z.object({
   added: z.coerce.date(),
   author: z.string().optional(),
   source: z.string().optional(),
+  // 3–5 lowercase kebab-case topic slugs assigned at ingest. Optional so
+  // entries written before the field existed still validate.
+  topics: z.array(z.string()).optional(),
+  // Provenance so `/recompile` can target entries compiled with older
+  // models or earlier prompts. Both optional for the same reason.
+  compiled_at: z.coerce.date().optional(),
+  compiled_with: z.string().optional(),
 });
 
 export type ReadingCategory = z.infer<typeof ReadingCategorySchema>;

@@ -113,6 +113,18 @@ Given an article title, URL, and optional excerpt or page text, produce ONE JSON
   - other: genuinely none of the above — rare
 - author: author name if identifiable, else omit the field entirely.
 - source: publication or site name if identifiable (e.g. "Stripe Press", "NYT"), else omit the field entirely.
+- topics: an array of 3 to 5 lowercase kebab-case topic slugs that describe the substance of the piece. Topics power a metadata graph across the reading log, so they must be reusable across entries. Rules:
+  - kebab-case, lowercase, noun-phrase, no punctuation (e.g. "llm-inference", "fluid-typography", "festival-operations").
+  - Prefer broad topics that will recur over hyper-specific ones ("type-system-design" over "zod-v4-upgrade").
+  - Do not include the category (tech/design/music/essay/news/other) as a topic — categories and topics are different axes.
+  - Do not include generic filler ("article", "essay", "blog-post", "read", "interesting").
+  - Order from most to least central to the piece.
+- detail: a longer markdown synthesis of the piece, 400–1200 characters. Functions as the "wiki article" layer: the 240-char summary is the dateline, \`detail\` is what an agent reads when it wants the substance. Rules:
+  - Plain markdown paragraphs. No headings, no bullet lists.
+  - Lead with the actual argument, method, or finding. Prefer concrete claims over descriptions of the piece.
+  - If the piece has a method or mechanism worth naming, name it. If it has a specific result, state the result.
+  - Avoid the same filler openers banned for \`summary\` ("X is a Y that...", "explores", "dives into", "aims to", mission-statement framings).
+  - Do not fabricate details not supported by the title, URL, or excerpt. If context is thin, write a shorter detail rather than padding.
 
 Return ONLY the JSON object. No preamble, no explanation, no code fence.
 

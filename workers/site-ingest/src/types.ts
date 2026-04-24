@@ -155,6 +155,18 @@ export interface LinkSummary {
   category: ReadingCategory;
   author?: string;
   source?: string;
+  /** 3–5 lowercase kebab-case topic slugs for the metadata graph. */
+  topics: string[];
+  /**
+   * Longer markdown synthesis written into the entry body. The 240-char
+   * `summary` is the human dateline; `detail` is the agent-facing article.
+   */
+  detail: string;
+  /**
+   * Resolved model ID that produced this summary. Written to frontmatter
+   * as `compiled_with` so `/recompile` can target older-model entries.
+   */
+  model: string;
 }
 
 // ---------- discriminated results ----------

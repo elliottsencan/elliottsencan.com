@@ -27,6 +27,12 @@ const LinkSummarySchema = z.object({
   category: ReadingCategorySchema,
   author: z.string().optional(),
   source: z.string().optional(),
+  // 3–5 lowercase kebab-case topics for the metadata graph.
+  topics: z.array(z.string()).min(1).max(5),
+  // Longer markdown synthesis written into the entry body. Functions as
+  // the "wiki article" layer in the Karpathy sense — the 240-char summary
+  // is the human dateline, `detail` is the agent-facing article.
+  detail: z.string(),
 });
 
 function client(apiKey: string): Anthropic {
@@ -82,7 +88,10 @@ export async function summarizeLink(args: {
   try {
     const response = await client(args.apiKey).messages.parse({
       model: resolveModel(args.model),
-      max_tokens: 400,
+      // Larger budget than the original 400: structured output now includes
+      // a `detail` body (longer markdown synthesis) plus 3–5 topic slugs.
+      // 1500 gives Sonnet room for a two-paragraph detail without clipping.
+      max_tokens: 1500,
       system: args.systemPrompt,
       messages: [{ role: "user", content: args.userMessage }],
       output_config: { format: zodOutputFormat(LinkSummarySchema) },
@@ -90,7 +99,13 @@ export async function summarizeLink(args: {
     if (!response.parsed_output) {
       return { ok: false, error: "parsed_output missing" };
     }
-    return { ok: true, data: response.parsed_output };
+    return {
+      ok: true,
+      // Thread the resolved model back to the caller so the committed entry
+      // frontmatter records which model produced it (enables targeted
+      // recompiles against older-model entries later).
+      data: { ...response.parsed_output, model: resolveModel(args.model) },
+    };
   } catch (err) {
     return mapError(err, "summarize-link");
   }

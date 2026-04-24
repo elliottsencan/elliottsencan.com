@@ -72,10 +72,18 @@ export async function handle(
 
   const degraded = !summaryResult.ok;
   // On degraded path, title is empty so the fallback chain in the caller
-  // picks the page-fetched title (or hostname) instead.
+  // picks the page-fetched title (or hostname) instead. Topics and detail
+  // fall back to empty values the schema still accepts post-parse.
   const summary: LinkSummary = summaryResult.ok
     ? summaryResult.data
-    : { title: "", summary: "Saved link.", category: "other" };
+    : {
+        title: "",
+        summary: "Saved link.",
+        category: "other",
+        topics: ["unsorted"],
+        detail: "",
+        model: "unknown",
+      };
   if (!summaryResult.ok) {
     log.warn("link", "summarize", "using stub summary after failure", {
       error: summaryResult.error,
@@ -89,8 +97,7 @@ export async function handle(
   // short archive-friendly form. Non-empty check guards against a
   // degenerate empty string that would otherwise produce a blank title.
   const cleanedTitle = summary.title?.trim();
-  const finalTitle =
-    cleanedTitle || resolvedTitle || new URL(body.url).hostname;
+  const finalTitle = cleanedTitle || resolvedTitle || new URL(body.url).hostname;
   const markdown = buildEntryMarkdown({
     title: finalTitle,
     url: body.url,
@@ -224,9 +231,7 @@ function decodeHtmlEntities(s: string): string {
       .replace(/&apos;/g, "'")
       .replace(/&nbsp;/g, " ")
       // Hex numeric entities — &#x27; (apostrophe), &#x2014; (em dash), etc.
-      .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) =>
-        String.fromCodePoint(Number.parseInt(hex, 16)),
-      )
+      .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => String.fromCodePoint(Number.parseInt(hex, 16)))
       // Decimal numeric entities — &#39; (apostrophe), &#8212; (em dash), etc.
       .replace(/&#(\d+);/g, (_, num) => String.fromCodePoint(Number.parseInt(num, 10)))
   );
@@ -271,7 +276,17 @@ function buildEntryMarkdown(args: {
   if (summary.source) {
     lines.push(`source: "${yamlEscape(summary.source, 80)}"`);
   }
+  if (summary.topics.length > 0) {
+    const topicsYaml = summary.topics.map((t) => `"${yamlEscape(t, 60)}"`).join(", ");
+    lines.push(`topics: [${topicsYaml}]`);
+  }
+  lines.push(`compiled_at: ${added.toISOString()}`);
+  lines.push(`compiled_with: ${summary.model}`);
   lines.push("---", "");
+  const body = summary.detail.trim();
+  if (body) {
+    return `${lines.join("\n")}\n${body}\n`;
+  }
   return `${lines.join("\n")}\n`;
 }
 
