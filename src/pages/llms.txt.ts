@@ -17,7 +17,11 @@ function dateLine(date: Date): string {
 }
 
 export async function GET() {
-  const [blog, reading] = await Promise.all([getCollection("blog"), getCollection("reading")]);
+  const [blog, reading, wiki] = await Promise.all([
+    getCollection("blog"),
+    getCollection("reading"),
+    getCollection("wiki"),
+  ]);
 
   const writing = blog
     .filter((post) => !post.data.draft)
@@ -26,6 +30,8 @@ export async function GET() {
   const recentReading = reading
     .sort((a, b) => b.data.added.valueOf() - a.data.added.valueOf())
     .slice(0, 10);
+
+  const concepts = wiki.sort((a, b) => a.id.localeCompare(b.id));
 
   const lines: string[] = [];
 
@@ -36,16 +42,34 @@ export async function GET() {
   lines.push("This file is a machine-readable index of the site. Each entry links to a");
   lines.push("canonical URL; agents should follow the links that are relevant.");
   lines.push("");
+  lines.push(
+    "Knowledge layers, in order of synthesis: Wiki concepts (cross-source synthesis articles), Reading log (per-source citations), Writing (longform posts).",
+  );
+  lines.push("");
 
   lines.push("## Data");
   lines.push("");
   lines.push(
-    `- [reading.json](${SITE_URL}/reading.json): Full structured dump of the reading log as JSON — every entry with summary, category, author, source, and metadata-graph \`related[]\` edges.`,
+    `- [wiki.json](${SITE_URL}/wiki.json): Concept-indexed synthesis layer. One article per concept, drawn from clusters of reading-entry citations. The recommended starting point for topical questions.`,
   );
   lines.push(
-    `- [llms-full.txt](${SITE_URL}/llms-full.txt): The full corpus (writing + reading) concatenated as plain markdown for single-fetch ingestion.`,
+    `- [reading.json](${SITE_URL}/reading.json): Per-source citation index — every URL I've saved with summary, category, topics, and metadata graph. Underlies the wiki.`,
+  );
+  lines.push(
+    `- [llms-full.txt](${SITE_URL}/llms-full.txt): The full corpus (writing + wiki + reading) concatenated as plain markdown for single-fetch ingestion.`,
   );
   lines.push("");
+
+  if (concepts.length > 0) {
+    lines.push("## Wiki (concepts)");
+    lines.push("");
+    for (const concept of concepts) {
+      lines.push(
+        `- [${concept.data.title}](${SITE_URL}/wiki/${concept.id}/): ${concept.data.summary}`,
+      );
+    }
+    lines.push("");
+  }
 
   lines.push("## Writing");
   lines.push("");
@@ -63,7 +87,7 @@ export async function GET() {
   );
   lines.push("");
 
-  lines.push("## Reading (recent)");
+  lines.push("## Reading log (recent citations)");
   lines.push("");
   for (const entry of recentReading) {
     lines.push(
@@ -71,7 +95,7 @@ export async function GET() {
     );
   }
   lines.push("");
-  lines.push(`For the full reading log, fetch [reading.json](${SITE_URL}/reading.json).`);
+  lines.push(`For the full citation index, fetch [reading.json](${SITE_URL}/reading.json).`);
   lines.push("");
 
   return new Response(lines.join("\n"), {

@@ -7,10 +7,12 @@ import Link from "@components/Link.astro";
 import Layout from "@layouts/Layout.astro";
 import { monthKey } from "@lib/utils";
 
-// Reading log. Every entry is public — the site-ingest worker commits a
-// markdown file to src/content/reading/{YYYY-MM}/ each time the mobile
-// shortcut pings /link with a URL. Anthropic drafts the summary + category;
-// nothing is hand-edited post-commit unless I decide to.
+// Reading log — the per-source citation index. Every entry is public; the
+// site-ingest worker commits a markdown file to src/content/reading/{YYYY-MM}/
+// each time the mobile shortcut pings /link with a URL. Anthropic drafts the
+// summary, category, and topics; nothing is hand-edited post-commit unless I
+// decide to. Cross-source synthesis (one article per concept, drawing on
+// multiple sources from this index) lives at /wiki.
 const entries = (await getCollection("reading")).sort(
   (a, b) => b.data.added.valueOf() - a.data.added.valueOf(),
 );
@@ -53,6 +55,13 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
       data-pagefind-filter="type:Reading"
     >
       <LabeledRule>Reading</LabeledRule>
+
+      <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
+        Per-source citation index. Each entry is one URL with a short
+        AI-compiled summary and topic tags. Cross-source synthesis lives at the{" "}
+        <Link href="/wiki">wiki</Link>, where any concept with two or more
+        contributing sources gets a compiled article.
+      </p>
 
       {
         buckets.length > 0 ? (

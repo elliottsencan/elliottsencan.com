@@ -1,0 +1,57 @@
+---
+import { getCollection } from "astro:content";
+import Container from "@components/Container.astro";
+import LabeledRule from "@components/LabeledRule.astro";
+import Link from "@components/Link.astro";
+import Layout from "@layouts/Layout.astro";
+
+// Wiki: concept-indexed synthesis articles compiled from clusters of
+// reading-log citations. One article per concept that has 2+ contributing
+// sources. The /reading page is the underlying citation index.
+const concepts = (await getCollection("wiki")).sort((a, b) => a.id.localeCompare(b.id));
+---
+
+<Layout
+  title="Wiki"
+  description="Concept-indexed synthesis articles compiled from my reading log."
+>
+  <Container>
+    <div
+      class="space-y-10"
+      data-pagefind-body
+      data-pagefind-filter="type:Wiki"
+    >
+      <LabeledRule>Wiki</LabeledRule>
+
+      <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
+        Concept-indexed synthesis articles. Each article compiles across
+        multiple sources from the <Link href="/reading">reading log</Link>;
+        one article per concept that has at least two contributing sources.
+        Articles are AI-compiled and reviewed before merge.
+      </p>
+
+      {
+        concepts.length > 0 ? (
+          <ul class="not-prose flex flex-col gap-8 text-sm">
+            {concepts.map((concept) => (
+              <li class="space-y-1">
+                <Link href={`/wiki/${concept.id}/`}>{concept.data.title}</Link>
+                <p class="text-sm leading-relaxed text-black/75 dark:text-white/75">
+                  {concept.data.summary}
+                </p>
+                <div class="font-mono text-[10px] uppercase tracking-widest text-black/50 dark:text-white/50">
+                  {concept.data.sources.length} source{concept.data.sources.length === 1 ? "" : "s"}
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
+            Nothing here yet. Wiki articles materialise when at least two
+            reading-log entries share a topic.
+          </p>
+        )
+      }
+    </div>
+  </Container>
+</Layout>

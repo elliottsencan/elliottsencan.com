@@ -4,10 +4,14 @@ import { monthKey } from "@lib/utils";
 /**
  * Agent-queryable snapshot of the reading collection.
  *
- * Each `/link` ingest compiles one URL into a structured summary article;
- * this endpoint exposes the whole set as JSON. `related[]` is computed at
- * build time from shared metadata (author, source, category+month) — no LLM
- * inference, just cheap graph edges over existing frontmatter.
+ * Reading entries are per-source citations produced by the /link ingest
+ * pipeline. They are NOT wiki articles; cross-source synthesis lives at
+ * /wiki.json (one article per concept, drawn from clusters of these
+ * citations).
+ *
+ * `related[]` is a cheap metadata-derived graph (shared author / source /
+ * topic / category+month). `wiki_concepts[]` is the reverse index from
+ * the wiki layer — every concept article that cites this entry.
  */
 
 type Related = {
@@ -25,9 +29,16 @@ function pushTo<K, V>(map: Map<K, V[]>, key: K, value: V): void {
 }
 
 export async function GET() {
-  const entries = (await getCollection("reading")).sort(
-    (a, b) => b.data.added.valueOf() - a.data.added.valueOf(),
-  );
+  const [entries, wiki] = await Promise.all([getCollection("reading"), getCollection("wiki")]);
+  entries.sort((a, b) => b.data.added.valueOf() - a.data.added.valueOf());
+
+  // Reverse index: which wiki concepts cite each reading entry.
+  const wikiByEntry = new Map<string, string[]>();
+  for (const concept of wiki) {
+    for (const source of concept.data.sources) {
+      pushTo(wikiByEntry, source, concept.id);
+    }
+  }
 
   const byAuthor = new Map<string, string[]>();
   const bySource = new Map<string, string[]>();
@@ -92,7 +103,7 @@ export async function GET() {
         topics: entry.data.topics ?? [],
         compiled_at: entry.data.compiled_at?.toISOString(),
         compiled_with: entry.data.compiled_with,
-        detail: entry.body?.trim() || undefined,
+        wiki_concepts: wikiByEntry.get(entry.id) ?? [],
         related: related.slice(0, 8),
       };
     }),
