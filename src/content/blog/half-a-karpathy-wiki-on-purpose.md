@@ -8,11 +8,11 @@ aiAssistance: "heavy"
 aiNote: "Outlined and drafted in collaboration with Claude (Opus 4.7) during the build of the endpoints, worker pipelines, and content collections this post documents. Prose will be rewritten before publish."
 ---
 
-There is a satisfying moment in a build when you can name what you have versus what you are pretending to have. I started this round wanting to make my reading log queryable by agents, leaned on Karpathy's LLM Wiki pattern as a guide, and very nearly published a post claiming my reading log already was the wiki. It wasn't. The post is about why, and what I changed to make the claim closer to true.
+I started this round wanting to make my reading log queryable by agents, leaned on Karpathy's LLM Wiki pattern as a guide, and very nearly published a post claiming my reading log already was the wiki. It wasn't. The post is about why, and what I changed to make the claim closer to true.
 
 ## What Karpathy's pattern actually is
 
-Karpathy's LLM Wiki pattern, sketched in a gist from April 2026, is three folders.
+[Karpathy's LLM Wiki gist](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) is three folders.
 
 `raw/` holds source material. `wiki/` holds LLM-compiled encyclopedia-style articles, one per concept, synthesizing across multiple sources. `index.md` is a short map of every wiki article, sized to fit in a single context window. The agent loads `index.md`, picks articles, loads those. That is the whole retrieval step. No vector search, no embeddings, no chunk boundaries.
 
@@ -42,7 +42,7 @@ The compile model becomes legible: every reading entry is an artifact of `/link`
 
 Adding the wiki layer required cleaning up a piece of the ingest pipeline I had over-extended in an earlier pass.
 
-The `/link` schema had grown a `detail` field that emitted a longer markdown synthesis into the body of each entry. That field was prefiguring the wiki layer that did not yet exist, and I had been calling it the wiki article on the way in. With the actual wiki layer now compiled separately, the detail body became the wrong layer for cross-source synthesis. It was duplicating with the eventual wiki articles on the only-this-source dimension, which was the dimension the wiki layer best handles by drawing on multiple sources at once.
+The `/link` schema had grown a `detail` field that emitted a longer markdown synthesis into the body of each entry. That field was prefiguring the wiki layer that did not yet exist, and I had been calling it the wiki article on the way in. Detail was doing single-source pseudo-synthesis in a schema field. The wiki layer does real multi-source synthesis in a separate collection. One is a worse version of the other, so the schema field goes.
 
 So the schema slimmed back to a clean source citation: title, URL, summary, category, author, source, topics, compiled_at, compiled_with. The body is empty. The wiki layer is where synthesis lives.
 
@@ -60,18 +60,14 @@ Cost is low. A full corpus rebuild at current scale is maybe a dollar. The synth
 
 At the end of the build, the corpus has four reading entries. Two of them happen to share `responsive-design` and `css-primitives` as topics, so the first `/synthesize` run compiles two wiki concept articles. The remaining topics have one source each, and there is nothing to synthesize from. The wiki is genuinely small.
 
-That is the right answer. The wiki is honest at every scale: an empty `/wiki` page when nothing yet clusters, two articles when something does, hundreds eventually if the corpus grows. Anyone who reads both my system and Karpathy's gist now sees the same shape with the same commitments.
-
 ## What I left alone
 
 A few things were tempting to add and I did not.
 
-Vector search and RAG remain off. At forty kilobytes of summary text, the entire corpus fits inside any modern context window with three orders of magnitude to spare. Adding embeddings would solve a problem I do not have.
+Vector search and RAG remain off. At forty kilobytes of summary text, the entire corpus fits inside any modern context window dozens of times over. Adding embeddings would solve a problem I do not have.
 
 Cross-concept articles, like Karpathy's "see also" backlinks at the article level, are deferred. Each wiki article emits a `related_concepts[]` field when the model finds natural cross-links from a fixed list of active topics, but I am not pre-computing a backlink graph or running a separate concept-relations pass. That can wait until the wiki has enough articles for relations to be interesting.
 
 The `/synthesize` cron is off. The endpoint is manual-only. I want to read the first few generated articles before letting the worker schedule itself.
 
-## What this is
-
-A small site running a bigger pattern, kept honest by naming the layers for what they are. The wiki sits alongside the reading log, not on top of it. The compile step from Karpathy's pattern was always running, but the wiki itself I had to build. Now that both exist, the post that names them can be true.
+The wiki is honest at every scale: empty when nothing clusters, two articles when something does, hundreds eventually if the corpus grows.
