@@ -5,6 +5,7 @@ import {
   NowArchiveFrontmatterSchema,
   NowFrontmatterSchema,
   ReadingFrontmatterSchema,
+  WikiFrontmatterSchema,
 } from "./lib/schemas/content.ts";
 
 const blog = defineCollection({
@@ -64,4 +65,9 @@ const reading = defineCollection({
   schema: ReadingFrontmatterSchema,
 });
 
-export const collections = { blog, projects, now, nowArchive, reading };
+const wiki = defineCollection({
+  loader: glob({ pattern: "**/*.md", base: "./src/content/wiki" }),
+  schema: WikiFrontmatterSchema,
+});
+
+export const collections = { blog, projects, now, nowArchive, reading, wiki };

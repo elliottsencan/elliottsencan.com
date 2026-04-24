@@ -46,7 +46,31 @@ export const ReadingFrontmatterSchema = z.object({
   compiled_with: z.string().optional(),
 });
 
+/**
+ * Wiki concept articles. Compiled by the /synthesize worker pipeline,
+ * which clusters reading entries by their topics[] field and writes
+ * one article per topic that has 2+ contributing entries.
+ *
+ * Distinct from reading entries: a reading entry is a per-source
+ * citation; a wiki article is per-concept synthesis across multiple
+ * sources.
+ */
+export const WikiFrontmatterSchema = z.object({
+  title: z.string(),
+  summary: z.string().max(240),
+  // Reading entry slugs that contributed to this synthesis. Drives the
+  // graph-of-sources view and powers the reverse `wiki_concepts[]`
+  // computed on each reading entry in /reading.json.
+  sources: z.array(z.string()).min(1),
+  // Other wiki concept slugs related to this one. Populated by the
+  // synthesis prompt when there's natural cross-concept linkage.
+  related_concepts: z.array(z.string()).optional(),
+  compiled_at: z.coerce.date(),
+  compiled_with: z.string(),
+});
+
 export type ReadingCategory = z.infer<typeof ReadingCategorySchema>;
 export type NowFrontmatter = z.infer<typeof NowFrontmatterSchema>;
 export type NowArchiveFrontmatter = z.infer<typeof NowArchiveFrontmatterSchema>;
 export type ReadingFrontmatter = z.infer<typeof ReadingFrontmatterSchema>;
+export type WikiFrontmatter = z.infer<typeof WikiFrontmatterSchema>;
