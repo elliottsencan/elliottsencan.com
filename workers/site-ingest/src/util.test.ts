@@ -8,7 +8,6 @@ import {
   slugify,
   textResponse,
   timingSafeEqual,
-  yamlEscape,
 } from "./util.ts";
 
 describe("timingSafeEqual", () => {
@@ -97,33 +96,6 @@ describe("slugify", () => {
     const slug = slugify("one two three four five six seven eight", 20);
     expect(slug.length).toBeLessThanOrEqual(20);
     expect(slug.startsWith("one-two-three-four")).toBe(true);
-  });
-});
-
-describe("yamlEscape", () => {
-  it("passes plain strings through unchanged", () => {
-    expect(yamlEscape("hello world")).toBe("hello world");
-  });
-
-  it("escapes double quotes", () => {
-    expect(yamlEscape('say "hi"')).toBe('say \\"hi\\"');
-  });
-
-  it("escapes backslashes before quotes", () => {
-    expect(yamlEscape("a\\b")).toBe("a\\\\b");
-  });
-
-  it("strips control characters", () => {
-    expect(yamlEscape("a\x00b\x07c")).toBe("abc");
-  });
-
-  it("replaces newlines with spaces (prevents frontmatter injection)", () => {
-    expect(yamlEscape("test\narchived: true")).toBe("test archived: true");
-    expect(yamlEscape("a\r\nb")).toBe("a b");
-  });
-
-  it("truncates to the supplied max length", () => {
-    expect(yamlEscape("x".repeat(20), 5)).toBe("xxxxx");
   });
 });
 

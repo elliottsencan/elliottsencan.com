@@ -20,27 +20,20 @@
  *   --source <url>                      override data source URL
  */
 
+import { parseArgs } from "node:util";
+
 const DEFAULT_SOURCE = "https://elliottsencan.com/reading.json";
 
-function parseArgs(argv) {
-  const args = { _: [], flags: {} };
-  for (let i = 0; i < argv.length; i++) {
-    const a = argv[i];
-    if (a.startsWith("--")) {
-      const key = a.slice(2);
-      const next = argv[i + 1];
-      if (next === undefined || next.startsWith("--")) {
-        args.flags[key] = true;
-      } else {
-        args.flags[key] = next;
-        i++;
-      }
-    } else {
-      args._.push(a);
-    }
-  }
-  return args;
-}
+const PARSE_OPTIONS = {
+  options: {
+    category: { type: "string" },
+    json: { type: "boolean" },
+    limit: { type: "string" },
+    source: { type: "string" },
+  },
+  allowPositionals: true,
+  strict: false,
+};
 
 async function loadData(source) {
   const res = await fetch(source);
@@ -70,8 +63,11 @@ function matches(entry, query) {
 }
 
 async function main() {
-  const { _: positional, flags } = parseArgs(process.argv.slice(2));
-  const [cmd, ...rest] = positional;
+  const { values: flags, positionals } = parseArgs({
+    args: process.argv.slice(2),
+    ...PARSE_OPTIONS,
+  });
+  const [cmd, ...rest] = positionals;
   const source = flags.source ?? process.env.READING_SOURCE ?? DEFAULT_SOURCE;
 
   if (!cmd || cmd === "--help" || cmd === "-h" || cmd === "help") {

@@ -18,6 +18,7 @@
  * runs across multiple invocations with the `slugs` scope.
  */
 
+import { format as formatDate } from "date-fns";
 import matter from "gray-matter";
 import { convert as htmlToText } from "html-to-text";
 import { z } from "zod";
@@ -35,7 +36,7 @@ import {
 } from "./github.ts";
 import { LINK_SUMMARY_SYSTEM } from "./prompts.ts";
 import type { Env, LinkSummary, Result } from "./types.ts";
-import { jsonResponse, log, yamlEscape } from "./util.ts";
+import { jsonResponse, log } from "./util.ts";
 
 const MAX_ENTRIES_PER_RUN = 25;
 const IA_FETCH_TIMEOUT_MS = 10_000;
@@ -367,28 +368,27 @@ export function buildRecompiledMarkdown(args: {
   compiledAt: Date;
 }): string {
   const { title, url, summary, added, compiledAt } = args;
-  const lines = [
-    "---",
-    `title: "${yamlEscape(title, 200)}"`,
-    `url: ${url}`,
-    `summary: "${yamlEscape(summary.summary, 240)}"`,
-    `category: ${summary.category}`,
-    `added: ${added.toISOString()}`,
-  ];
+  const data: Record<string, unknown> = {
+    title,
+    url,
+    summary: summary.summary,
+    category: summary.category,
+    added: added.toISOString(),
+  };
   if (summary.author) {
-    lines.push(`author: "${yamlEscape(summary.author, 80)}"`);
+    data.author = summary.author;
   }
   if (summary.source) {
-    lines.push(`source: "${yamlEscape(summary.source, 80)}"`);
+    data.source = summary.source;
   }
   if (summary.topics.length > 0) {
-    lines.push(`topics: [${summary.topics.map((t) => `"${yamlEscape(t, 60)}"`).join(", ")}]`);
+    data.topics = summary.topics;
   }
-  lines.push(`compiled_at: ${compiledAt.toISOString()}`);
-  lines.push(`compiled_with: ${summary.model}`);
-  lines.push("---", "");
-  const body = summary.detail.trim();
-  return body ? `${lines.join("\n")}\n${body}\n` : `${lines.join("\n")}\n`;
+  data.compiled_at = compiledAt.toISOString();
+  data.compiled_with = summary.model;
+  // gray-matter's stringify emits valid YAML via js-yaml; trailing
+  // newline is preserved so the file ends cleanly.
+  return matter.stringify(summary.detail.trim(), data);
 }
 
 // ---------- internet archive ----------
@@ -403,7 +403,8 @@ async function fetchInternetArchive(
   url: string,
   addedIso: string,
 ): Promise<Result<{ excerpt: string; snapshotUrl: string }>> {
-  const ts = addedIso.replace(/[-:.TZ]/g, "").slice(0, 14);
+  // Wayback Availability API expects compact yyyyMMddHHmmss format.
+  const ts = formatDate(new Date(addedIso), "yyyyMMddHHmmss");
   const availUrl = `https://archive.org/wayback/available?url=${encodeURIComponent(url)}&timestamp=${ts}`;
 
   const controller = new AbortController();

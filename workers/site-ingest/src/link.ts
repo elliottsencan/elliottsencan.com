@@ -11,12 +11,13 @@
  * Auth + rate limiting already enforced upstream in index.ts.
  */
 
+import matter from "gray-matter";
 import { z } from "zod";
 import { summarizeLink } from "./anthropic.ts";
 import { createGitHubClient, getBranchSha, getFile, putFile } from "./github.ts";
 import { LINK_SUMMARY_SYSTEM } from "./prompts.ts";
 import type { Env, LinkRequest, LinkSummary, Result } from "./types.ts";
-import { fileTimestamp, jsonResponse, log, monthKey, slugify, yamlEscape } from "./util.ts";
+import { fileTimestamp, jsonResponse, log, monthKey, slugify } from "./util.ts";
 
 // iOS Safari share sheet can pass whole article text as `excerpt` when the
 // user hasn't selected anything. 10 KB bounces legit shares; 100 KB still
@@ -262,32 +263,25 @@ function buildEntryMarkdown(args: {
   added: Date;
 }): string {
   const { title, url, summary, added } = args;
-  const lines = [
-    "---",
-    `title: "${yamlEscape(title, 200)}"`,
-    `url: ${url}`,
-    `summary: "${yamlEscape(summary.summary, 240)}"`,
-    `category: ${summary.category}`,
-    `added: ${added.toISOString()}`,
-  ];
+  const data: Record<string, unknown> = {
+    title,
+    url,
+    summary: summary.summary,
+    category: summary.category,
+    added: added.toISOString(),
+  };
   if (summary.author) {
-    lines.push(`author: "${yamlEscape(summary.author, 80)}"`);
+    data.author = summary.author;
   }
   if (summary.source) {
-    lines.push(`source: "${yamlEscape(summary.source, 80)}"`);
+    data.source = summary.source;
   }
   if (summary.topics.length > 0) {
-    const topicsYaml = summary.topics.map((t) => `"${yamlEscape(t, 60)}"`).join(", ");
-    lines.push(`topics: [${topicsYaml}]`);
+    data.topics = summary.topics;
   }
-  lines.push(`compiled_at: ${added.toISOString()}`);
-  lines.push(`compiled_with: ${summary.model}`);
-  lines.push("---", "");
-  const body = summary.detail.trim();
-  if (body) {
-    return `${lines.join("\n")}\n${body}\n`;
-  }
-  return `${lines.join("\n")}\n`;
+  data.compiled_at = added.toISOString();
+  data.compiled_with = summary.model;
+  return matter.stringify(summary.detail.trim(), data);
 }
 
 function buildEntryPath(args: { env: Env; added: Date; title: string }): string {

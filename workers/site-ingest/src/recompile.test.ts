@@ -2,14 +2,16 @@
  * Tests for the pure-function pieces of recompile.ts.
  *
  * Skips tests that would only re-test third-party libraries:
- *   - parseFrontmatter wraps gray-matter (already battle-tested upstream).
+ *   - parseFrontmatter wraps gray-matter's matter() (already battle-tested).
  *   - htmlToText is now html-to-text (ditto).
  *
  * Coverage focuses on the in-house surfaces: scope filtering and the
- * markdown writer that has to round-trip back through the reading
- * collection's Zod schema.
+ * markdown writer. The writer's output is asserted by round-tripping
+ * back through gray-matter, so we test what we actually care about
+ * (the data shape) rather than the exact YAML serialization style.
  */
 
+import matter from "gray-matter";
 import { describe, expect, it } from "vitest";
 import { applyScope, buildRecompiledMarkdown } from "./recompile.ts";
 import type { LinkSummary } from "./types.ts";
@@ -91,59 +93,71 @@ const baseArgs = {
   compiledAt: new Date("2026-04-24T00:00:00.000Z"),
 };
 
+function parseEntry(md: string): { data: Record<string, unknown>; content: string } {
+  const parsed = matter(md);
+  return { data: parsed.data, content: parsed.content };
+}
+
 describe("buildRecompiledMarkdown", () => {
-  it("emits all required frontmatter fields plus the detail body", () => {
-    const md = buildRecompiledMarkdown(baseArgs);
-    expect(md).toContain('title: "Hello World"');
-    expect(md).toContain("url: https://example.com/post");
-    expect(md).toContain('summary: "A short summary."');
-    expect(md).toContain("category: tech");
-    expect(md).toContain("added: 2026-04-01T00:00:00.000Z");
-    expect(md).toContain("compiled_at: 2026-04-24T00:00:00.000Z");
-    expect(md).toContain("compiled_with: claude-sonnet-4-6");
-    expect(md).toContain('topics: ["topic-a", "topic-b"]');
-    expect(md).toMatch(/---\n\nLonger markdown synthesis\.\n$/);
+  it("emits frontmatter that round-trips with all required fields", () => {
+    const { data, content } = parseEntry(buildRecompiledMarkdown(baseArgs));
+    expect(data).toMatchObject({
+      title: "Hello World",
+      url: "https://example.com/post",
+      summary: "A short summary.",
+      category: "tech",
+      added: "2026-04-01T00:00:00.000Z",
+      compiled_at: "2026-04-24T00:00:00.000Z",
+      compiled_with: "claude-sonnet-4-6",
+      topics: ["topic-a", "topic-b"],
+    });
+    expect(content.trim()).toBe("Longer markdown synthesis.");
   });
 
   it("omits author and source when absent", () => {
-    const md = buildRecompiledMarkdown(baseArgs);
-    expect(md).not.toContain("author:");
-    expect(md).not.toContain("source:");
+    const { data } = parseEntry(buildRecompiledMarkdown(baseArgs));
+    expect(data).not.toHaveProperty("author");
+    expect(data).not.toHaveProperty("source");
   });
 
   it("includes author and source when present", () => {
-    const md = buildRecompiledMarkdown({
-      ...baseArgs,
-      summary: { ...baseSummary, author: "A. Writer", source: "Example Press" },
-    });
-    expect(md).toContain('author: "A. Writer"');
-    expect(md).toContain('source: "Example Press"');
+    const { data } = parseEntry(
+      buildRecompiledMarkdown({
+        ...baseArgs,
+        summary: { ...baseSummary, author: "A. Writer", source: "Example Press" },
+      }),
+    );
+    expect(data.author).toBe("A. Writer");
+    expect(data.source).toBe("Example Press");
   });
 
-  it("omits the topics line when the array is empty", () => {
-    const md = buildRecompiledMarkdown({
-      ...baseArgs,
-      summary: { ...baseSummary, topics: [] },
-    });
-    expect(md).not.toContain("topics:");
+  it("omits topics when the array is empty", () => {
+    const { data } = parseEntry(
+      buildRecompiledMarkdown({
+        ...baseArgs,
+        summary: { ...baseSummary, topics: [] },
+      }),
+    );
+    expect(data).not.toHaveProperty("topics");
   });
 
-  it("emits no body when detail is empty", () => {
-    const md = buildRecompiledMarkdown({
-      ...baseArgs,
-      summary: { ...baseSummary, detail: "" },
-    });
-    // The closing `---` is followed by a trailing blank line, but nothing
-    // after that — no body content.
-    expect(md.endsWith("---\n\n")).toBe(true);
+  it("emits an empty body when detail is empty", () => {
+    const { content } = parseEntry(
+      buildRecompiledMarkdown({
+        ...baseArgs,
+        summary: { ...baseSummary, detail: "" },
+      }),
+    );
+    expect(content.trim()).toBe("");
   });
 
   it("trims surrounding whitespace from the detail body", () => {
-    const md = buildRecompiledMarkdown({
-      ...baseArgs,
-      summary: { ...baseSummary, detail: "\n\n  Body content.  \n\n" },
-    });
-    expect(md).toContain("\n\nBody content.\n");
-    expect(md).not.toContain("  Body content.  ");
+    const { content } = parseEntry(
+      buildRecompiledMarkdown({
+        ...baseArgs,
+        summary: { ...baseSummary, detail: "\n\n  Body content.  \n\n" },
+      }),
+    );
+    expect(content.trim()).toBe("Body content.");
   });
 });

@@ -118,27 +118,6 @@ export function fileTimestamp(date: Date): string {
   return formatInTimeZone(date, SITE_TIMEZONE, "yyyy-MM-dd'T'HHmmss");
 }
 
-// ---------- YAML frontmatter ----------
-
-/**
- * Escape a string for use as a YAML double-quoted scalar. Strips control
- * chars, escapes `\` and `"`, replaces newlines with spaces. Caller must
- * wrap the result in double quotes when emitting frontmatter.
- *
- * Prevents injection of unintended keys via titles like
- * `"test\narchived: true"` that would otherwise break the YAML parse.
- */
-export function yamlEscape(value: string, maxLength = 500): string {
-  const cleaned = value
-    // biome-ignore lint/suspicious/noControlCharactersInRegex: intentional — strip control chars before YAML emit
-    .replace(/[\x00-\x08\x0B-\x1F\x7F]/g, "")
-    .replace(/[\r\n]+/g, " ")
-    .replace(/\\/g, "\\\\")
-    .replace(/"/g, '\\"')
-    .trim();
-  return cleaned.length > maxLength ? cleaned.slice(0, maxLength) : cleaned;
-}
-
 // ---------- response helpers ----------
 
 /**
