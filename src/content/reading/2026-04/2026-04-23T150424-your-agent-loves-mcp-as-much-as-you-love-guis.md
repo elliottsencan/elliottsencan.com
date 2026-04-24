@@ -6,5 +6,8 @@ category: tech
 added: 2026-04-23T22:04:24.354Z
 author: "Ajeesh Mohan"
 source: "Mad About Code"
+topics: ["mcp", "agent-tooling", "developer-experience"]
+compiled_at: 2026-04-23T22:04:24.354Z
+compiled_with: claude-sonnet-4-6
 ---
 

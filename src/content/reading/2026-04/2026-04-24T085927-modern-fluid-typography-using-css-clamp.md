@@ -5,5 +5,8 @@ summary: "Demonstrates how to use the CSS clamp() function to create fluid typog
 category: design
 added: 2026-04-24T15:59:27.985Z
 source: "Smashing Magazine"
+topics: ["responsive-design", "fluid-typography", "css-primitives"]
+compiled_at: 2026-04-24T15:59:27.985Z
+compiled_with: claude-sonnet-4-6
 ---
 
