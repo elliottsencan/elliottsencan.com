@@ -21,6 +21,7 @@ import * as consume from "./consume.ts";
 import * as inputs from "./inputs.ts";
 import * as link from "./link.ts";
 import * as now from "./now.ts";
+import * as recompile from "./recompile.ts";
 import type { Env } from "./types.ts";
 import { log, requireBearer, textResponse } from "./util.ts";
 
@@ -58,6 +59,16 @@ export default {
         return textResponse("rate limited", 429);
       }
       return now.handle(env, "trigger");
+    }
+
+    if (request.method === "POST" && url.pathname === "/recompile") {
+      // Runs longer than other endpoints (enumerates + rewrites many entries);
+      // share the trigger limiter to cap accidental repeat invocations.
+      const limited = await env.TRIGGER_LIMITER.limit({ key: ip });
+      if (!limited.success) {
+        return textResponse("rate limited", 429);
+      }
+      return recompile.handle(request, env);
     }
 
     if (request.method === "POST" && url.pathname === "/consume") {
