@@ -50,7 +50,10 @@ export async function GET() {
   lines.push("## Data");
   lines.push("");
   lines.push(
-    `- [wiki.json](${SITE_URL}/wiki.json): Concept-indexed synthesis layer. One article per concept, drawn from clusters of reading-entry citations. The recommended starting point for topical questions.`,
+    `- [wiki.txt](${SITE_URL}/wiki.txt): Wiki-layer index. Every concept article with its summary. Recommended starting point for topical questions; designed to scale with the wiki without bloating this file.`,
+  );
+  lines.push(
+    `- [wiki.json](${SITE_URL}/wiki.json): Same wiki layer as a structured JSON dump including article bodies.`,
   );
   lines.push(
     `- [reading.json](${SITE_URL}/reading.json): Per-source citation index — every URL I've saved with summary, category, topics, and metadata graph. Underlies the wiki.`,
@@ -61,13 +64,18 @@ export async function GET() {
   lines.push("");
 
   if (concepts.length > 0) {
-    lines.push("## Wiki (concepts)");
+    const recentConcepts = [...concepts]
+      .sort((a, b) => b.data.compiled_at.valueOf() - a.data.compiled_at.valueOf())
+      .slice(0, 5);
+    lines.push(`## Wiki (${concepts.length} concepts; ${recentConcepts.length} most recent)`);
     lines.push("");
-    for (const concept of concepts) {
+    for (const concept of recentConcepts) {
       lines.push(
         `- [${concept.data.title}](${SITE_URL}/wiki/${concept.id}/): ${concept.data.summary}`,
       );
     }
+    lines.push("");
+    lines.push(`Full wiki index: [wiki.txt](${SITE_URL}/wiki.txt).`);
     lines.push("");
   }
 
