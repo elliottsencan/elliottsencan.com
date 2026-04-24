@@ -5,6 +5,7 @@ import EditorialRule from "@components/EditorialRule.astro";
 import LabeledRule from "@components/LabeledRule.astro";
 import Link from "@components/Link.astro";
 import Layout from "@layouts/Layout.astro";
+import { monthKey } from "@lib/utils";
 
 // Reading log. Every entry is public — the site-ingest worker commits a
 // markdown file to src/content/reading/{YYYY-MM}/ each time the mobile
@@ -15,10 +16,6 @@ const entries = (await getCollection("reading")).sort(
 );
 
 type Entry = CollectionEntry<"reading">;
-
-function monthKey(date: Date): string {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-}
 
 function monthLabel(date: Date): string {
   return `${date.toLocaleString("en-US", { month: "long" }).toUpperCase()} ${date.getFullYear()}`;

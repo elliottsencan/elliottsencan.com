@@ -1,4 +1,5 @@
 import { getCollection } from "astro:content";
+import { monthKey } from "@lib/utils";
 
 /**
  * Agent-queryable snapshot of the reading collection.
@@ -13,10 +14,6 @@ type Related = {
   slug: string;
   reason: "author" | "source" | "topic" | "category-month";
 };
-
-function monthKey(date: Date): string {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-}
 
 function pushTo<K, V>(map: Map<K, V[]>, key: K, value: V): void {
   const existing = map.get(key);

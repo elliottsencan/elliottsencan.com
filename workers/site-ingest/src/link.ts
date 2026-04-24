@@ -12,6 +12,7 @@
  */
 
 import matter from "gray-matter";
+import { decode as decodeHtmlEntities } from "html-entities";
 import { z } from "zod";
 import { summarizeLink } from "./anthropic.ts";
 import { createGitHubClient, getBranchSha, getFile, putFile } from "./github.ts";
@@ -219,23 +220,6 @@ async function fetchPageTitle(url: string): Promise<string | undefined> {
   } finally {
     clearTimeout(timeout);
   }
-}
-
-function decodeHtmlEntities(s: string): string {
-  return (
-    s
-      // Named entities — common set sufficient for page titles.
-      .replace(/&amp;/g, "&")
-      .replace(/&lt;/g, "<")
-      .replace(/&gt;/g, ">")
-      .replace(/&quot;/g, '"')
-      .replace(/&apos;/g, "'")
-      .replace(/&nbsp;/g, " ")
-      // Hex numeric entities — &#x27; (apostrophe), &#x2014; (em dash), etc.
-      .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => String.fromCodePoint(Number.parseInt(hex, 16)))
-      // Decimal numeric entities — &#39; (apostrophe), &#8212; (em dash), etc.
-      .replace(/&#(\d+);/g, (_, num) => String.fromCodePoint(Number.parseInt(num, 10)))
-  );
 }
 
 // ---------- markdown composition ----------
