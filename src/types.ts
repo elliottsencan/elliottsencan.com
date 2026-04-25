@@ -7,11 +7,6 @@ export type Site = {
   GITHUB_LOGIN: string;
   NUM_POSTS_ON_HOMEPAGE: number;
   NUM_PROJECTS_ON_HOMEPAGE: number;
-  /**
-   * Beehiiv publication ID for the inline subscribe embed. Empty string
-   * means email signup is hidden and /subscribe falls back to RSS-only.
-   */
-  BEEHIIV_PUB_ID: string;
 };
 
 export type Metadata = {

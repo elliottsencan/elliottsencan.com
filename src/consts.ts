@@ -15,11 +15,6 @@ export const SITE: Site = {
   GITHUB_LOGIN: "elliottsencan",
   NUM_POSTS_ON_HOMEPAGE: 3,
   NUM_PROJECTS_ON_HOMEPAGE: 3,
-  // Set this to the Beehiiv publication ID once the publication is created
-  // (Beehiiv dashboard → Settings → Publication → ID, looks like
-  // "pub_xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"). Leaving it empty hides the
-  // email signup on /subscribe and the page falls back to RSS-only.
-  BEEHIIV_PUB_ID: "",
 };
 
 export const HOME: Metadata = {

@@ -153,32 +153,23 @@
 
   /* Approximate masthead height; downstream sticky offsets (e.g. the TOC
      right rail) key their `top` value off this so they don't pin under
-     the fixed header. The footer-height var serves the same role for the
-     fixed footer below — content padding-bottom keys off it so the last
-     line of an article never sits under the footer. */
+     the fixed header. */
   :root {
     --masthead-height: 5rem;
-    --footer-height: 4rem;
   }
 
   @media (min-width: 768px) {
     :root {
       --masthead-height: 5.5rem;
-      --footer-height: 4.25rem;
     }
   }
 
   main {
-    @apply flex-1 pt-24 md:pt-32;
-    /* Reserves space for the fixed footer plus visual breathing room so the
-       last paragraph of long-form prose doesn't sit flush against it. */
-    padding-bottom: calc(var(--footer-height) + 4rem);
+    @apply flex-1 pt-24 pb-16 md:pt-32 md:pb-24;
   }
 
   footer {
-    @apply fixed bottom-0 left-0 right-0 z-40 py-4 text-sm;
-    @apply bg-[#f6f4ef]/75 dark:bg-[#18161a]/75;
-    @apply backdrop-blur-xs;
+    @apply py-6 text-sm;
   }
 
   article {
