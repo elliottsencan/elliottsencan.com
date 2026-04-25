@@ -1,0 +1,113 @@
+---
+/**
+ * Compact GitHub-style contribution heatmap. Mobile complement to the desktop
+ * ContributionsRail (Dock-style single-row dots): a 7-row × N-week grid at a
+ * small pixel pitch, sized to share a footer line on narrow viewports.
+ *
+ * Pure CSS grid with `grid-flow-col` so cells fill column-by-column (week 1
+ * Sun→Sat, week 2 Sun→Sat, …). No animations — calmer editorial feel and
+ * matches the auto-memory rule on no entrance animations for new components.
+ *
+ * Width is intrinsic: 52*cellSize + 51*gap pixels. Wrapping container should
+ * use `w-fit`/`w-auto` rather than letting the grid stretch.
+ */
+import type { ContributionsSummary } from "@lib/github";
+
+type Props = {
+  data: ContributionsSummary;
+  /** Number of weeks to render. Defaults to all weeks in the summary (52). */
+  weeks?: number;
+  /** Square cell side in pixels. */
+  cellSize?: number;
+  /** Gap between cells in pixels. */
+  gap?: number;
+};
+
+const { data, weeks: weekCount, cellSize = 2, gap = 1 } = Astro.props;
+
+const allWeeks = data.weeks;
+const visibleWeeks =
+  typeof weekCount === "number" && weekCount > 0 && weekCount < allWeeks.length
+    ? allWeeks.slice(-weekCount)
+    : allWeeks;
+
+// Max day count across the visible window — drives the opacity ramp so the
+// brightest cell on screen lines up with the busiest day in view.
+let maxDay = 1;
+for (const w of visibleWeeks) {
+  for (const d of w.days) {
+    if (d.count > maxDay) {
+      maxDay = d.count;
+    }
+  }
+}
+
+// 5-stop opacity ramp keyed off the visible-window max. Zero days keep a
+// faint cell so the grid reads as a continuous artifact rather than a gappy
+// one. Wider ramp than the rail's because day counts span a smaller range
+// and the bottom step needs to read as 'present but quiet', not absent.
+function opacityForDay(count: number): number {
+  if (count === 0) {
+    return 0.15;
+  }
+  const ratio = count / Math.max(1, maxDay);
+  if (ratio <= 0.25) {
+    return 0.45;
+  }
+  if (ratio <= 0.5) {
+    return 0.6;
+  }
+  if (ratio <= 0.75) {
+    return 0.8;
+  }
+  return 1;
+}
+
+function formatMonthYear(iso: string | undefined): string {
+  if (!iso) {
+    return "";
+  }
+  const d = new Date(`${iso}T00:00:00Z`);
+  const month = d.toLocaleDateString("en-US", { month: "short", timeZone: "UTC" }).toUpperCase();
+  const yy = d.getUTCFullYear().toString().slice(-2);
+  return `${month} '${yy}`;
+}
+
+function addDays(iso: string, days: number): string {
+  const d = new Date(`${iso}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+const firstWeek = visibleWeeks.at(0);
+const lastWeek = visibleWeeks.at(-1);
+const startLabel = formatMonthYear(firstWeek?.startDate);
+const endLabel = formatMonthYear(lastWeek ? addDays(lastWeek.startDate, 6) : undefined);
+const formattedTotal = new Intl.NumberFormat("en-US").format(data.total);
+
+const gridStyle = [
+  `grid-template-rows: repeat(7, ${cellSize}px)`,
+  `grid-auto-columns: ${cellSize}px`,
+  `gap: ${gap}px`,
+].join("; ");
+---
+
+<div
+  class="contributions-grid grid grid-flow-col text-emerald-500 dark:text-emerald-400"
+  style={gridStyle}
+  role="img"
+  aria-label={`GitHub contributions: ${formattedTotal} from ${startLabel} to ${endLabel}`}
+>
+  {
+    visibleWeeks.flatMap((week) =>
+      week.days.map((day) => (
+        <span
+          class="block bg-current"
+          style={`opacity: ${opacityForDay(day.count)};`}
+          data-date={day.date}
+          data-count={day.count}
+        />
+      )),
+    )
+  }
+</div>

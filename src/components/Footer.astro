@@ -1,14 +1,15 @@
 ---
 import BackToTop from "@components/BackToTop.astro";
 import Container from "@components/Container.astro";
+import ContributionsGrid from "@components/ContributionsGrid.astro";
 import ContributionsRail from "@components/ContributionsRail.astro";
 import Link from "@components/Link.astro";
 import { SITE, SOCIALS } from "@consts";
 import { getContributions } from "@lib/github";
 
-// Build-time fetch. Returns null on missing token / fetch failure — the rail
-// is simply omitted in that case, so the footer collapses cleanly and the
-// build never fails because of this.
+// Build-time fetch. Returns null on missing token / fetch failure — the
+// contribution viz is simply omitted in that case, so the footer collapses
+// cleanly and the build never fails because of this.
 const contributions = await getContributions(SITE.GITHUB_LOGIN);
 
 const githubProfileUrl = `https://github.com/${SITE.GITHUB_LOGIN}`;
@@ -62,9 +63,18 @@ const githubProfileUrl = `https://github.com/${SITE.GITHUB_LOGIN}`;
             target="_blank"
             rel="noopener"
             aria-label="GitHub profile — one year of contributions"
-            class="mx-auto block w-full max-w-xs md:mx-0 md:w-auto md:max-w-xs md:flex-1"
+            class="mx-auto block w-fit md:mx-0 md:w-auto md:max-w-xs md:flex-1"
           >
-            <ContributionsRail data={contributions} />
+            {/* Mobile: compact 7×52 grid at fixed intrinsic width
+                (52*cellSize + 51*gap = 155px at the defaults). Desktop: the
+                signature dot rail. Each side ships its own static markup;
+                the responsive swap is pure CSS, no client JS. */}
+            <div class="md:hidden">
+              <ContributionsGrid data={contributions} cellSize={2} gap={1} />
+            </div>
+            <div class="hidden md:block">
+              <ContributionsRail data={contributions} />
+            </div>
           </a>
         )
       }
