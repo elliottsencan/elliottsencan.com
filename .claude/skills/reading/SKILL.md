@@ -1,15 +1,17 @@
 ---
 name: reading
-description: Query Elliott's reading log — articles, essays, and books he has saved via the site-ingest pipeline. Use when the user asks what Elliott has read on a topic, wants recent reading, cross-references between entries, or is exploring themes across the reading collection. Each entry is an AI-compiled summary of a source URL, with structured frontmatter and a metadata graph.
+description: Query Elliott's reading log — articles, essays, and books he has saved via the site-ingest pipeline. Use when the user asks what Elliott has read on a topic, wants recent reading, cross-references between entries, or is exploring themes across the reading collection. Each entry is an AI-compiled summary of a source URL, with structured frontmatter and a metadata graph. For per-concept synthesis across multiple sources (the wiki layer), use the `wiki` skill instead.
 ---
 
 # Reading log queries
 
-This site has a reading log at `https://elliottsencan.com/reading`. Every entry is committed via an ingest pipeline that compiles a URL into a structured summary (title, summary, category, author, source, added date). The canonical machine-readable surface is:
+This site has a reading log at `https://elliottsencan.com/reading`. Every entry is committed via an ingest pipeline that compiles a URL into a structured summary (title, summary, category, author, source, added date, topics). The canonical machine-readable surfaces are:
 
-- `https://elliottsencan.com/reading.json` — structured JSON with `related[]` graph edges
+- `https://elliottsencan.com/reading.json` — structured JSON with `related[]` graph edges and a `wiki_concepts[]` reverse index (which wiki concepts cite each entry)
+- `https://elliottsencan.com/reading/<slug>/` — per-entry page with topics, related, and "cited by" cross-references
+- `https://elliottsencan.com/wiki.txt` and `https://elliottsencan.com/wiki.json` — sister synthesis layer; one article per concept with two or more contributing reading entries
 - `https://elliottsencan.com/llms.txt` — site index for agents
-- `https://elliottsencan.com/llms-full.txt` — full corpus concatenated
+- `https://elliottsencan.com/llms-full.txt` — full corpus concatenated (wiki-first, then reading)
 
 ## Preferred tool
 

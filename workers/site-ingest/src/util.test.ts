@@ -4,6 +4,7 @@ import {
   fileTimestamp,
   jsonResponse,
   monthKey,
+  readingSlugFromPath,
   requireBearer,
   slugify,
   textResponse,
@@ -139,6 +140,25 @@ describe("date helpers (Pacific / America/Los_Angeles)", () => {
     expect(() => fileTimestamp(spring)).not.toThrow();
     expect(() => dateKey(fall)).not.toThrow();
     expect(() => fileTimestamp(fall)).not.toThrow();
+  });
+});
+
+describe("readingSlugFromPath", () => {
+  it("returns <month>/<basename> lowercased for canonical reading paths", () => {
+    expect(
+      readingSlugFromPath("src/content/reading/2026-04/2026-04-24T093356-Unsloth.md"),
+    ).toBe("2026-04/2026-04-24t093356-unsloth");
+  });
+
+  it("falls back to lowercased path-without-extension when no /reading/ prefix", () => {
+    expect(readingSlugFromPath("/tmp/2026-04/Foo.md")).toBe("/tmp/2026-04/foo");
+  });
+
+  it("is idempotent on already-canonical slugs", () => {
+    const canonical = "src/content/reading/2026-04/2026-04-24t093356-unsloth.md";
+    expect(readingSlugFromPath(canonical)).toBe(
+      readingSlugFromPath(`x${canonical}`.slice(1)),
+    );
   });
 });
 

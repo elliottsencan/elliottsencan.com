@@ -118,6 +118,19 @@ export function fileTimestamp(date: Date): string {
   return formatInTimeZone(date, SITE_TIMEZONE, "yyyy-MM-dd'T'HHmmss");
 }
 
+/**
+ * Reading slug in Astro's content-collection id format:
+ * `<month>/<filename-without-ext>`, lowercased. Used to bridge the worker's
+ * disk-path view with the public slug surfaces (`/reading.json`,
+ * `/reading/<slug>/`, wiki frontmatter `sources[]`). Single source of
+ * truth — synthesize and lint both read it.
+ */
+export function readingSlugFromPath(path: string): string {
+  const idx = path.indexOf("/reading/");
+  const tail = idx >= 0 ? path.slice(idx + "/reading/".length) : path;
+  return tail.replace(/\.md$/, "").toLowerCase();
+}
+
 // ---------- response helpers ----------
 
 /**

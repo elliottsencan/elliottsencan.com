@@ -135,6 +135,8 @@ export async function handle(request: Request, env: Env): Promise<Response> {
     return jsonResponse({ ok: false, error: `branch: ${branchResult.error}` }, 500);
   }
 
+  const committed: string[] = [];
+  const failedWrites: Array<{ path: string; error: string }> = [];
   for (const update of updates) {
     const put = await putFile({
       path: update.path,
@@ -144,22 +146,63 @@ export async function handle(request: Request, env: Env): Promise<Response> {
       sha: update.previousSha,
       gh,
     });
-    if (!put.ok) {
-      log.warn("recompile", "commit", "put failed", {
+    if (put.ok) {
+      committed.push(update.path);
+    } else {
+      failedWrites.push({ path: update.path, error: put.error });
+      log.error("recompile", "commit", "put failed", {
         path: update.path,
         error: put.error,
       });
+      // Reflect the write failure in the results so the PR body and JSON
+      // response stay consistent.
+      const r = results.find((x) => x.path === update.path);
+      if (r) {
+        r.status = "skipped";
+        r.reason = `commit: ${put.error}`;
+      }
     }
   }
 
+  if (committed.length === 0) {
+    return jsonResponse(
+      {
+        ok: false,
+        error: "no writes committed",
+        branch,
+        matched: filtered.length,
+        committed: 0,
+        failed: failedWrites.length,
+        failed_writes: failedWrites,
+        results,
+      },
+      500,
+    );
+  }
+
   const existingPr = await findOpenPrByBranch(branch, gh);
+  if (!existingPr.ok) {
+    return jsonResponse(
+      {
+        ok: false,
+        error: `pr lookup: ${existingPr.error}`,
+        branch,
+        committed: committed.length,
+        failed: failedWrites.length,
+        failed_writes: failedWrites,
+        results,
+      },
+      500,
+    );
+  }
+
   let prNumber: number | null = null;
   let prUrl: string | null = null;
-  if (existingPr.ok && existingPr.data) {
+  if (existingPr.data) {
     prNumber = existingPr.data.number;
   } else {
     const pr = await openPullRequest({
-      title: `Recompile reading entries (${updates.length})`,
+      title: `Recompile reading entries (${committed.length})`,
       body: buildPrBody(results, req.scope),
       head: branch,
       base: "main",
@@ -169,7 +212,19 @@ export async function handle(request: Request, env: Env): Promise<Response> {
       prNumber = pr.data.number;
       prUrl = pr.data.html_url;
     } else {
-      log.error("recompile", "pr", "open failed", { error: pr.error });
+      log.error("recompile", "pr", "open failed", { error: pr.error, branch });
+      return jsonResponse(
+        {
+          ok: false,
+          error: `pr open: ${pr.error}`,
+          branch,
+          committed: committed.length,
+          failed: failedWrites.length,
+          failed_writes: failedWrites,
+          results,
+        },
+        500,
+      );
     }
   }
 
@@ -177,8 +232,9 @@ export async function handle(request: Request, env: Env): Promise<Response> {
     ok: true,
     dry_run: false,
     matched: filtered.length,
-    processed: updates.length,
-    skipped: filtered.length - updates.length,
+    committed: committed.length,
+    failed: failedWrites.length,
+    skipped: filtered.length - committed.length - failedWrites.length,
     branch,
     pr: prNumber ? { number: prNumber, url: prUrl } : null,
     results,

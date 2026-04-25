@@ -3,14 +3,18 @@
  * automation.
  *
  * Endpoints (all POST, all require `Authorization: Bearer ${API_TOKEN}`):
- *   POST /input    — queue a phone-shortcut input in KV (consumed by weekly
- *                    /now draft).
- *   POST /link     — synchronous: fetch → Anthropic summarize → commit a
- *                    reading entry to the repo.
- *   POST /trigger  — ad-hoc run of the /now draft pipeline. Same logic as
- *                    the cron; used for seeding and manual refresh.
- *   POST /consume  — clear the KV inputs snapshotted for a merged /now PR.
- *                    Called by the now-consume.yml workflow on merge.
+ *   POST /input      — queue a phone-shortcut input in KV (consumed by
+ *                      weekly /now draft).
+ *   POST /link       — synchronous: fetch → Anthropic summarize → commit
+ *                      a reading entry to the repo.
+ *   POST /trigger    — ad-hoc run of the /now draft pipeline. Same logic
+ *                      as the cron; used for seeding and manual refresh.
+ *   POST /consume    — clear the KV inputs snapshotted for a merged /now
+ *                      PR. Called by the now-consume.yml workflow on merge.
+ *   POST /synthesize — compile wiki concept articles from reading clusters.
+ *   POST /recompile  — rebuild reading entries via Wayback Machine.
+ *   POST /lint       — read-only health check on reading + wiki collections.
+ *   POST /contribute — file a manually-authored wiki article via PR.
  *
  * Cron trigger: runs the /now draft weekly.
  *
@@ -18,8 +22,10 @@
  */
 
 import * as consume from "./consume.ts";
+import * as contribute from "./contribute.ts";
 import * as inputs from "./inputs.ts";
 import * as link from "./link.ts";
+import * as lint from "./lint.ts";
 import * as now from "./now.ts";
 import * as recompile from "./recompile.ts";
 import * as synthesize from "./synthesize.ts";
@@ -90,6 +96,26 @@ export default {
         return textResponse("rate limited", 429);
       }
       return consume.handle(request, env);
+    }
+
+    if (request.method === "POST" && url.pathname === "/lint") {
+      // Read-only structural check. Reuse the trigger limiter to gate
+      // accidental repeat invocations from automation loops.
+      const limited = await env.TRIGGER_LIMITER.limit({ key: ip });
+      if (!limited.success) {
+        return textResponse("rate limited", 429);
+      }
+      return lint.handle(request, env);
+    }
+
+    if (request.method === "POST" && url.pathname === "/contribute") {
+      // File a manually-authored wiki article. Same write surface as
+      // /synthesize so it shares the trigger limiter.
+      const limited = await env.TRIGGER_LIMITER.limit({ key: ip });
+      if (!limited.success) {
+        return textResponse("rate limited", 429);
+      }
+      return contribute.handle(request, env);
     }
 
     return textResponse("not found", 404);

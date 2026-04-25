@@ -32,12 +32,23 @@ export async function GET() {
   const [entries, wiki] = await Promise.all([getCollection("reading"), getCollection("wiki")]);
   entries.sort((a, b) => b.data.added.valueOf() - a.data.added.valueOf());
 
-  // Reverse index: which wiki concepts cite each reading entry.
+  const readingIds = new Set(entries.map((e) => e.id));
   const wikiByEntry = new Map<string, string[]>();
+  const orphanCitations: Array<{ concept: string; missing: string }> = [];
   for (const concept of wiki) {
     for (const source of concept.data.sources) {
+      if (!readingIds.has(source)) {
+        orphanCitations.push({ concept: concept.id, missing: source });
+        continue;
+      }
       pushTo(wikiByEntry, source, concept.id);
     }
+  }
+  if (orphanCitations.length > 0) {
+    console.warn(
+      `[reading.json] ${orphanCitations.length} broken wiki citation(s):`,
+      orphanCitations.map((o) => `${o.concept} -> ${o.missing}`).join("; "),
+    );
   }
 
   const byAuthor = new Map<string, string[]>();

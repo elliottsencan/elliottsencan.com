@@ -17,6 +17,7 @@
 
 import matter from "gray-matter";
 import { z } from "zod";
+import { MIN_WIKI_SOURCES } from "@shared/schemas/content.ts";
 import { compileWikiArticle } from "./anthropic.ts";
 import {
   createBranch,
@@ -31,9 +32,8 @@ import {
 } from "./github.ts";
 import { WIKI_SYNTHESIS_SYSTEM } from "./prompts.ts";
 import type { Env, Result, WikiArticle } from "./types.ts";
-import { jsonResponse, log } from "./util.ts";
+import { jsonResponse, log, readingSlugFromPath } from "./util.ts";
 
-const MIN_SOURCES_PER_CONCEPT = 2;
 const MAX_CONCEPTS_PER_RUN = 20;
 const WIKI_DIR = "src/content/wiki";
 
@@ -106,8 +106,7 @@ export async function handle(request: Request, env: Env): Promise<Response> {
     return jsonResponse({ ok: false, error: existingResult.error }, 500);
   }
 
-  // Cluster reading entries by topic.
-  const byTopic = clusterByTopic(sourcesResult.data, MIN_SOURCES_PER_CONCEPT);
+  const byTopic = clusterByTopic(sourcesResult.data, MIN_WIKI_SOURCES);
   const allActiveTopics = [...byTopic.keys()].sort();
 
   // Filter to topics requested + at-threshold + actually changed (unless forced).
@@ -193,6 +192,8 @@ export async function handle(request: Request, env: Env): Promise<Response> {
   if (!branchResult.ok) {
     return jsonResponse({ ok: false, error: `branch: ${branchResult.error}` }, 500);
   }
+  const committed: Array<{ path: string; topic: string }> = [];
+  const failedWrites: Array<{ path: string; topic: string; error: string }> = [];
   for (const write of writes) {
     const put = await putFile({
       path: write.path,
@@ -202,19 +203,54 @@ export async function handle(request: Request, env: Env): Promise<Response> {
       ...(write.previousSha ? { sha: write.previousSha } : {}),
       gh,
     });
-    if (!put.ok) {
-      log.warn("synthesize", "commit", "put failed", { path: write.path, error: put.error });
+    if (put.ok) {
+      committed.push({ path: write.path, topic: write.topic });
+    } else {
+      failedWrites.push({ path: write.path, topic: write.topic, error: put.error });
+      log.error("synthesize", "commit", "put failed", { path: write.path, error: put.error });
     }
   }
+
+  if (committed.length === 0) {
+    return jsonResponse(
+      {
+        ok: false,
+        error: "no writes committed",
+        branch,
+        active_topics: allActiveTopics,
+        committed: 0,
+        failed: failedWrites.length,
+        skipped: skipped.length,
+        failed_writes: failedWrites,
+      },
+      500,
+    );
+  }
+
   const existingPr = await findOpenPrByBranch(branch, gh);
+  if (!existingPr.ok) {
+    return jsonResponse(
+      {
+        ok: false,
+        error: `pr lookup: ${existingPr.error}`,
+        branch,
+        committed: committed.length,
+        failed: failedWrites.length,
+        committed_paths: committed,
+        failed_writes: failedWrites,
+      },
+      500,
+    );
+  }
+
   let prNumber: number | null = null;
   let prUrl: string | null = null;
-  if (existingPr.ok && existingPr.data) {
+  if (existingPr.data) {
     prNumber = existingPr.data.number;
   } else {
     const pr = await openPullRequest({
-      title: `Wiki synthesis (${writes.length} concept${writes.length === 1 ? "" : "s"})`,
-      body: buildPrBody(writes, skipped),
+      title: `Wiki synthesis (${committed.length} concept${committed.length === 1 ? "" : "s"})`,
+      body: buildPrBody(committed, failedWrites, skipped),
       head: branch,
       base: "main",
       gh,
@@ -223,7 +259,19 @@ export async function handle(request: Request, env: Env): Promise<Response> {
       prNumber = pr.data.number;
       prUrl = pr.data.html_url;
     } else {
-      log.error("synthesize", "pr", "open failed", { error: pr.error });
+      log.error("synthesize", "pr", "open failed", { error: pr.error, branch });
+      return jsonResponse(
+        {
+          ok: false,
+          error: `pr open: ${pr.error}`,
+          branch,
+          committed: committed.length,
+          failed: failedWrites.length,
+          committed_paths: committed,
+          failed_writes: failedWrites,
+        },
+        500,
+      );
     }
   }
 
@@ -231,8 +279,10 @@ export async function handle(request: Request, env: Env): Promise<Response> {
     ok: true,
     dry_run: false,
     active_topics: allActiveTopics,
-    compiled: writes.length,
+    compiled: committed.length,
+    failed: failedWrites.length,
     skipped: skipped.length,
+    failed_writes: failedWrites,
     branch,
     pr: prNumber ? { number: prNumber, url: prUrl } : null,
   });
@@ -272,7 +322,7 @@ async function enumerateReading(env: Env, gh: GitHubClient): Promise<Result<Read
         continue;
       }
       all.push({
-        slug: slugFromReadingPath(file.path),
+        slug: readingSlugFromPath(file.path),
         path: file.path,
         title: typeof data.title === "string" ? data.title : "",
         url: data.url,
@@ -323,7 +373,8 @@ async function enumerateWiki(gh: GitHubClient): Promise<Result<ExistingWiki[]>> 
 
 // ---------- clustering ----------
 
-function clusterByTopic(
+// Exported for unit tests.
+export function clusterByTopic(
   sources: ReadingSource[],
   minSources: number,
 ): Map<string, ReadingSource[]> {
@@ -382,7 +433,8 @@ function buildUserMessage(args: {
 
 // ---------- markdown writer ----------
 
-function buildArticleMarkdown(args: {
+// Exported for unit tests.
+export function buildArticleMarkdown(args: {
   article: WikiArticle;
   sources: string[];
   compiledAt: Date;
@@ -403,25 +455,33 @@ function buildArticleMarkdown(args: {
 // ---------- pr body ----------
 
 function buildPrBody(
-  writes: Array<{ path: string; topic: string }>,
+  committed: Array<{ path: string; topic: string }>,
+  failed: Array<{ path: string; topic: string; error: string }>,
   skipped: Array<{ topic: string; reason: string }>,
 ): string {
   const lines = [
     `Automated wiki synthesis run.`,
     "",
-    `- Compiled: ${writes.length}`,
+    `- Committed: ${committed.length}`,
+    `- Failed: ${failed.length}`,
     `- Skipped: ${skipped.length}`,
   ];
-  if (writes.length > 0) {
-    lines.push("", "### Compiled");
-    for (const w of writes) {
-      lines.push(`- \`${w.topic}\` → \`${w.path}\``);
+  if (committed.length > 0) {
+    lines.push("", "### Committed");
+    for (const w of committed) {
+      lines.push(`- \`${w.topic}\` -> \`${w.path}\``);
+    }
+  }
+  if (failed.length > 0) {
+    lines.push("", "### Failed");
+    for (const f of failed) {
+      lines.push(`- \`${f.topic}\` -> \`${f.path}\` (${f.error})`);
     }
   }
   if (skipped.length > 0) {
     lines.push("", "### Skipped");
     for (const s of skipped) {
-      lines.push(`- \`${s.topic}\` — ${s.reason}`);
+      lines.push(`- \`${s.topic}\` (${s.reason})`);
     }
   }
   return lines.join("\n");
@@ -429,21 +489,13 @@ function buildPrBody(
 
 // ---------- helpers ----------
 
-function slugFromReadingPath(path: string): string {
-  // Reading slugs are "<month>/<filename-without-ext>" to match Astro's
-  // content collection id format. Example:
-  //   src/content/reading/2026-04/2026-04-24t093356-unsloth.md
-  // → 2026-04/2026-04-24t093356-unsloth
-  const idx = path.indexOf("/reading/");
-  const tail = idx >= 0 ? path.slice(idx + "/reading/".length) : path;
-  return tail.replace(/\.md$/, "").toLowerCase();
-}
-
 function isString(v: unknown): v is string {
   return typeof v === "string";
 }
 
-function setEquals(a: string[], b: string[]): boolean {
+// Exported for unit tests. Compares two arrays as unordered multisets:
+// returns true iff they have the same length and the same element counts.
+export function setEquals(a: string[], b: string[]): boolean {
   if (a.length !== b.length) {
     return false;
   }

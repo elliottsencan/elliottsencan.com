@@ -19,9 +19,19 @@ const { Content } = await render(concept);
 
 const reading = await getCollection("reading");
 const sourceMap = new Map(reading.map((entry) => [entry.id, entry]));
-const sources = concept.data.sources
-  .map((slug) => ({ slug, entry: sourceMap.get(slug) }))
-  .filter((s): s is { slug: string; entry: NonNullable<typeof s.entry> } => Boolean(s.entry));
+const resolvedSources = concept.data.sources.map((slug) => ({
+  slug,
+  entry: sourceMap.get(slug),
+}));
+const sources = resolvedSources.filter(
+  (s): s is { slug: string; entry: NonNullable<typeof s.entry> } => Boolean(s.entry),
+);
+const missingSources = resolvedSources.filter((s) => !s.entry).map((s) => s.slug);
+if (missingSources.length > 0) {
+  console.warn(
+    `[wiki:${concept.id}] ${missingSources.length} missing source slug(s): ${missingSources.join(", ")}`,
+  );
+}
 
 const dateFormatter = new Intl.DateTimeFormat("en-US", {
   day: "2-digit",
@@ -44,7 +54,7 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
         <Link href="/wiki/">Wiki</Link> / {concept.id}
       </LabeledRule>
 
-      <header class="space-y-3">
+      <div class="space-y-3">
         <h1 class="text-2xl font-semibold text-black dark:text-white">
           {concept.data.title}
         </h1>
@@ -53,9 +63,13 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
         </p>
         <p class="font-mono text-xs uppercase tracking-wider text-black/50 dark:text-white/60">
           Compiled {dateFormatter.format(concept.data.compiled_at)} from{" "}
-          {sources.length} source{sources.length === 1 ? "" : "s"}.
+          {sources.length} source{sources.length === 1 ? "" : "s"}{
+            missingSources.length > 0
+              ? ` (${missingSources.length} no longer in the index)`
+              : ""
+          }.
         </p>
-      </header>
+      </div>
 
       <div class="prose dark:prose-invert max-w-none">
         <Content />
