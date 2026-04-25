@@ -146,30 +146,39 @@
   }
 
   header {
-    @apply fixed left-0 right-0 top-0 z-50 py-4 md:py-6;
+    @apply fixed left-0 right-0 top-0 z-50 py-6 md:py-7;
     @apply bg-[#f6f4ef]/75 dark:bg-[#18161a]/75;
     @apply backdrop-blur-xs;
   }
 
   /* Approximate masthead height; downstream sticky offsets (e.g. the TOC
      right rail) key their `top` value off this so they don't pin under
-     the fixed header. */
+     the fixed header. The footer-height var serves the same role for the
+     fixed footer below — content padding-bottom keys off it so the last
+     line of an article never sits under the footer. */
   :root {
-    --masthead-height: 3.5rem;
+    --masthead-height: 5rem;
+    --footer-height: 4rem;
   }
 
   @media (min-width: 768px) {
     :root {
-      --masthead-height: 4.5rem;
+      --masthead-height: 5.5rem;
+      --footer-height: 4.25rem;
     }
   }
 
   main {
-    @apply flex-1 py-16 md:py-24;
+    @apply flex-1 pt-24 md:pt-32;
+    /* Reserves space for the fixed footer plus visual breathing room so the
+       last paragraph of long-form prose doesn't sit flush against it. */
+    padding-bottom: calc(var(--footer-height) + 4rem);
   }
 
   footer {
-    @apply py-6 text-sm;
+    @apply fixed bottom-0 left-0 right-0 z-40 py-4 text-sm;
+    @apply bg-[#f6f4ef]/75 dark:bg-[#18161a]/75;
+    @apply backdrop-blur-xs;
   }
 
   article {
@@ -336,11 +345,7 @@ html.dark .dot-rule {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background-image: radial-gradient(
-    circle,
-    currentColor 0.5px,
-    transparent 0.5px
-  );
+  background-image: radial-gradient(circle, currentColor 0.5px, transparent 0.5px);
   background-size: 6px 1px;
   background-repeat: repeat-x;
   background-position: center;

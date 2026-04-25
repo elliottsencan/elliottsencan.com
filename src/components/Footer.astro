@@ -1,66 +1,61 @@
 ---
-import BackToTop from "@components/BackToTop.astro";
 import Container from "@components/Container.astro";
+import ContributionsGrid from "@components/ContributionsGrid.astro";
 import ContributionsRail from "@components/ContributionsRail.astro";
 import Link from "@components/Link.astro";
-import { SITE, SOCIALS } from "@consts";
+import { SITE } from "@consts";
 import { getContributions } from "@lib/github";
 
-// Build-time fetch. Returns null on missing token / fetch failure — the rail
-// is simply omitted in that case, so the footer collapses cleanly and the
-// build never fails because of this.
+// Build-time fetch. Returns null on missing token / fetch failure — the
+// contribution viz is simply omitted in that case, so the footer collapses
+// cleanly and the build never fails because of this.
 const contributions = await getContributions(SITE.GITHUB_LOGIN);
 ---
 
 <footer>
   <Container>
-    <div class="relative">
-      <div class="absolute -top-12 right-0">
-        <BackToTop />
-      </div>
-    </div>
-    <div class="flex flex-col-reverse gap-3 md:flex-row items-center md:justify-between md:gap-x-4">
-      <ul class="not-prose flex flex-wrap items-baseline gap-x-2 gap-y-1 text-xs">
+    {/* Single editorial line. Left cluster names the site & two off-ramps;
+        right cluster is the contribution viz (compact grid on mobile, the
+        signature rail on md+). flex-wrap is a safety net for very narrow
+        viewports — at 375px the grid stays beside the text, but at <360px
+        it wraps below rather than overflowing. */}
+    <div
+      class="flex flex-wrap items-center justify-between gap-x-4 gap-y-3"
+    >
+      <ul
+        class="not-prose flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm"
+      >
         <li><span>&copy; {new Date().getFullYear()}</span></li>
-        {
-          SOCIALS.map((social) => (
-            <li class="flex items-baseline gap-3">
-              <span aria-hidden="true" class="text-black/40 dark:text-white/40">
-                &middot;
-              </span>
-              <Link
-                href={social.HREF}
-                external
-                aria-label={`${SITE.TITLE} on ${social.NAME}`}
-              >
-                {social.NAME}
-              </Link>
-            </li>
-          ))
-        }
-        <li class="flex items-baseline gap-3">
+        <li class="flex items-baseline gap-2">
           <span aria-hidden="true" class="text-black/40 dark:text-white/40">
             &middot;
           </span>
-          <Link href={`mailto:${SITE.EMAIL}`} aria-label={`Email ${SITE.TITLE}`}>
-            Email
-          </Link>
+          <Link href="/contact" aria-label="Contact">Contact</Link>
         </li>
-        <li class="flex items-baseline gap-3">
+        <li class="flex items-baseline gap-2">
           <span aria-hidden="true" class="text-black/40 dark:text-white/40">
             &middot;
           </span>
-          <Link href="/rss.xml" aria-label="RSS Feed">RSS</Link>
+          <Link href="/subscribe" aria-label="Subscribe">Subscribe</Link>
         </li>
       </ul>
+
       {
         contributions && (
           <a
             href="/github"
             aria-label="GitHub — one year of contributions, pinned repos, and recent activity"
-            class="mx-auto block w-full max-w-xs md:mx-0 md:w-auto md:max-w-xs md:flex-1"
+            class="block"
           >
-            <ContributionsRail data={contributions} />
+            {/* Mobile: compact 7×52 grid. Desktop: signature dot rail. The
+                pair is rendered/destroyed by Tailwind responsive utilities,
+                not toggled by JS, so each side ships its own static markup. */}
+            <div class="md:hidden">
+              <ContributionsGrid data={contributions} cellSize={2} gap={1} />
+            </div>
+            <div class="hidden md:block w-72 max-w-xs">
+              <ContributionsRail data={contributions} />
+            </div>
           </a>
         )
       }

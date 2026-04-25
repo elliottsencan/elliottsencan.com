@@ -1,23 +1,27 @@
 ---
 import Container from "@components/Container.astro";
+import ContributionsGrid from "@components/ContributionsGrid.astro";
 import EditorialRule from "@components/EditorialRule.astro";
 import Link from "@components/Link.astro";
 import { SITE } from "@consts";
 import Layout from "@layouts/Layout.astro";
-import { getPinnedRepos, getProfile, getRecentActivity } from "@lib/github";
+import { getAnnotatedPinned, getContributions, getProfile, getRecentActivity } from "@lib/github";
 
 // Every block fetches independently so a failure in one doesn't blank the
-// rest. All three helpers return null on any error (missing token, network,
-// rate limit) and never throw; see src/lib/github.ts. The contributions rail
-// deliberately isn't rendered here — it already lives in the footer on every
-// page, so duplicating it on /github would be chrome-on-chrome.
-const [profile, pinned, activity] = await Promise.all([
+// rest. All four helpers return null on any error (missing token, network,
+// rate limit) and never throw; see src/lib/github.ts. The contributions
+// grid is the page's hero — repeated from the footer rail at full size, so
+// the page becomes the canonical view of the data and the footer stays a
+// teaser.
+const [contributions, profile, pinned, activity] = await Promise.all([
+  getContributions(SITE.GITHUB_LOGIN),
   getProfile(SITE.GITHUB_LOGIN),
-  getPinnedRepos(SITE.GITHUB_LOGIN),
-  getRecentActivity(SITE.GITHUB_LOGIN),
+  getAnnotatedPinned(SITE.GITHUB_LOGIN),
+  getRecentActivity(SITE.GITHUB_LOGIN, 5),
 ]);
 
 const anyData =
+  Boolean(contributions) ||
   Boolean(profile) ||
   (pinned !== null && pinned.length > 0) ||
   (activity !== null && activity.length > 0);
@@ -32,11 +36,37 @@ const eventDateFormatter = new Intl.DateTimeFormat("en-US", {
 });
 
 const formatCount = (n: number): string => new Intl.NumberFormat("en-US").format(n);
+
+// Heatmap window label, e.g. "APR '25 → APR '26".
+function formatMonthYear(iso: string | undefined): string {
+  if (!iso) {
+    return "";
+  }
+  const d = new Date(`${iso}T00:00:00Z`);
+  const month = d.toLocaleDateString("en-US", { month: "short", timeZone: "UTC" }).toUpperCase();
+  const yy = d.getUTCFullYear().toString().slice(-2);
+  return `${month} '${yy}`;
+}
+
+function addDays(iso: string, days: number): string {
+  const d = new Date(`${iso}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+let heatmapCaption = "";
+if (contributions) {
+  const first = contributions.weeks.at(0)?.startDate;
+  const last = contributions.weeks.at(-1)?.startDate;
+  const startLabel = formatMonthYear(first);
+  const endLabel = formatMonthYear(last ? addDays(last, 6) : undefined);
+  heatmapCaption = `${formatCount(contributions.total)} contributions · ${startLabel} → ${endLabel}`;
+}
 ---
 
 <Layout
   title="GitHub"
-  description={`GitHub presence for ${SITE.TITLE} — pinned repositories and recent public activity.`}
+  description={`GitHub presence for ${SITE.TITLE} — selected projects with annotations, contribution heatmap, and recent activity.`}
 >
   <Container>
     <div class="space-y-10" data-pagefind-ignore>
@@ -61,6 +91,28 @@ const formatCount = (n: number): string => new Intl.NumberFormat("en-US").format
                 github.com/{SITE.GITHUB_LOGIN}
               </Link>{" "}
               for the source of truth.
+            </p>
+          </section>
+        )
+      }
+
+      {
+        contributions && (
+          <section class="space-y-4">
+            {/* Full-size heatmap. Larger cells than the footer grid so the
+                day-level texture is legible at desktop width. The component
+                is responsive only via the cell pixel size — the column
+                count is fixed at 52 weeks. Horizontal overflow on narrow
+                viewports falls into a scrollable strip rather than
+                squeezing the cells unreadably small. */}
+            <div class="overflow-x-auto">
+              <ContributionsGrid data={contributions} cellSize={10} gap={2} />
+            </div>
+            <p
+              class="font-mono text-xs uppercase tracking-wider text-black/55 dark:text-white/55"
+              style="font-variant-numeric: tabular-nums;"
+            >
+              {heatmapCaption}
             </p>
           </section>
         )
@@ -128,33 +180,23 @@ const formatCount = (n: number): string => new Intl.NumberFormat("en-US").format
           <section class="space-y-4">
             <div class="flex items-baseline justify-between">
               <h2 class="font-mono text-xs uppercase tracking-wider text-black/60 dark:text-white/60">
-                Pinned
+                Selected projects
               </h2>
               <Link href={`${githubProfileUrl}?tab=repositories`} external>
                 <span class="text-sm">All repositories &rarr;</span>
               </Link>
             </div>
-            <ul class="not-prose flex flex-col gap-3 text-sm">
+            <ul class="not-prose flex flex-col gap-4 text-sm">
               {pinned.map((repo) => (
-                <li class="flex items-baseline gap-4">
-                  <span
-                    aria-hidden="true"
-                    class="shrink-0 font-mono text-xs text-black/50 dark:text-white/50"
-                  >
-                    &middot;
-                  </span>
-                  <span>
+                <li class="space-y-1">
+                  <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                     <Link href={repo.url} external>
-                      {repo.name}
-                    </Link>
-                    {repo.description && (
-                      <span class="text-black/60 dark:text-white/60">
-                        {" — "}
-                        {repo.description}
+                      <span class="font-medium text-black dark:text-white">
+                        {repo.name}
                       </span>
-                    )}
+                    </Link>
                     <span
-                      class="ml-2 whitespace-nowrap font-mono text-xs uppercase tracking-wider text-black/50 dark:text-white/50"
+                      class="whitespace-nowrap font-mono text-xs uppercase tracking-wider text-black/50 dark:text-white/50"
                       style="font-variant-numeric: tabular-nums;"
                     >
                       {repo.primaryLanguage && (
@@ -165,7 +207,10 @@ const formatCount = (n: number): string => new Intl.NumberFormat("en-US").format
                       )}
                       {formatCount(repo.stargazerCount)} &#9733;
                     </span>
-                  </span>
+                  </div>
+                  <p class="text-black/70 dark:text-white/70">
+                    {repo.annotation ?? repo.description ?? ""}
+                  </p>
                 </li>
               ))}
             </ul>
@@ -178,7 +223,7 @@ const formatCount = (n: number): string => new Intl.NumberFormat("en-US").format
           <section class="space-y-4">
             <div class="flex items-baseline justify-between">
               <h2 class="font-mono text-xs uppercase tracking-wider text-black/60 dark:text-white/60">
-                Activity
+                Recent activity
               </h2>
               <Link href={githubProfileUrl} external>
                 <span class="text-sm">Full timeline &rarr;</span>

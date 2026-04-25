@@ -1,0 +1,90 @@
+---
+import Container from "@components/Container.astro";
+import EditorialRule from "@components/EditorialRule.astro";
+import LabeledRule from "@components/LabeledRule.astro";
+import Link from "@components/Link.astro";
+import { SITE, SOCIALS } from "@consts";
+import Layout from "@layouts/Layout.astro";
+
+// Channels are listed in priority order — email first because that's the
+// channel I actually read. The list pulls from SOCIALS so adding a new
+// public profile only requires editing src/consts.ts.
+const channels: Array<{
+  label: string;
+  href: string;
+  external: boolean;
+  hint: string;
+}> = [
+  {
+    label: SITE.EMAIL,
+    href: `mailto:${SITE.EMAIL}`,
+    external: false,
+    hint: "best for anything substantive",
+  },
+  ...SOCIALS.map((social) => ({
+    label: social.NAME,
+    href: social.HREF,
+    external: true,
+    hint: "",
+  })),
+  {
+    label: `github.com/${SITE.GITHUB_LOGIN}`,
+    href: `https://github.com/${SITE.GITHUB_LOGIN}`,
+    external: true,
+    hint: "",
+  },
+];
+---
+
+<Layout
+  title="Contact"
+  description={`Ways to reach ${SITE.TITLE} — email, social, location.`}
+>
+  <Container>
+    <div class="space-y-10" data-pagefind-ignore>
+      <LabeledRule>Contact</LabeledRule>
+
+      <section class="space-y-4">
+        <p class="text-lg leading-relaxed text-black/85 dark:text-white/85">
+          The fastest way to reach me is email. I read everything; I reply to
+          most things. Based in {SITE.LOCATION} (Pacific time).
+        </p>
+      </section>
+
+      <EditorialRule />
+
+      <section class="space-y-4">
+        <h2
+          class="font-mono text-xs uppercase tracking-wider text-black/60 dark:text-white/60"
+        >
+          Channels
+        </h2>
+        <ul class="not-prose flex flex-col gap-2 text-sm">
+          {
+            channels.map((channel) => (
+              <li class="flex items-baseline gap-4">
+                <span
+                  aria-hidden="true"
+                  class="shrink-0 font-mono text-xs text-black/50 dark:text-white/50"
+                >
+                  &middot;
+                </span>
+                <span>
+                  <Link href={channel.href} external={channel.external}>
+                    {channel.label}
+                  </Link>
+                  {channel.hint && (
+                    <span class="text-black/60 dark:text-white/60">
+                      {" — "}
+                      {channel.hint}
+                    </span>
+                  )}
+                </span>
+              </li>
+            ))
+          }
+        </ul>
+      </section>
+    </div>
+  </Container>
+</Layout>

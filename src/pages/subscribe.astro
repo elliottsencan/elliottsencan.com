@@ -1,26 +1,58 @@
 ---
 import Container from "@components/Container.astro";
+import EditorialRule from "@components/EditorialRule.astro";
 import LabeledRule from "@components/LabeledRule.astro";
 import Link from "@components/Link.astro";
 import { SITE } from "@consts";
 import Layout from "@layouts/Layout.astro";
 
 const feedURL = "https://elliottsencan.com/rss.xml";
+
+// Beehiiv embed is only rendered when a publication ID is configured.
+// Empty string falls back to RSS-only — matches the graceful-degradation
+// pattern used in @lib/github (consumers skip rendering on null/empty).
+const beehiivEmbedURL = SITE.BEEHIIV_PUB_ID
+  ? `https://embeds.beehiiv.com/${SITE.BEEHIIV_PUB_ID}?slim=true`
+  : null;
 ---
 
 <Layout
   title="Subscribe"
-  description={`Follow ${SITE.TITLE} via RSS — an open protocol, no middleman sorts it.`}
+  description={`Follow ${SITE.TITLE} via email or RSS — pick whichever your reading flow already supports.`}
 >
   <Container>
     <div class="space-y-10" data-pagefind-ignore>
       <LabeledRule>Subscribe</LabeledRule>
 
+      {
+        beehiivEmbedURL && (
+          <section class="space-y-4">
+            <p class="text-lg leading-relaxed text-black/85 dark:text-white/85">
+              New writing in your inbox. No tracking pixels, no upsells —
+              one email per post, unsubscribe at the bottom of every send.
+            </p>
+            <div class="overflow-hidden rounded-sm border border-black/15 dark:border-white/20">
+              <iframe
+                src={beehiivEmbedURL}
+                title="Email signup"
+                class="block w-full"
+                style="height: 220px; border: 0; background-color: transparent; overflow: hidden;"
+                loading="lazy"
+              />
+            </div>
+          </section>
+        )
+      }
+
+      {beehiivEmbedURL && <EditorialRule />}
+
       <section class="space-y-4">
         <p class="text-lg leading-relaxed text-black/85 dark:text-white/85">
-          New writing lands in the feed below. Add it to any RSS reader; your
-          reader polls on its own schedule, nothing sorts or ranks, nothing
-          shows up in your inbox.
+          {beehiivEmbedURL
+            ? "Prefer RSS? "
+            : "New writing lands in the feed below. "}
+          Add the URL to any RSS reader; your reader polls on its own
+          schedule, nothing sorts or ranks.
         </p>
       </section>
 
@@ -72,8 +104,8 @@ const feedURL = "https://elliottsencan.com/rss.xml";
 
       <section>
         <p class="text-sm text-black/65 dark:text-white/65">
-          If RSS isn't your thing, the <Link href="/">writing index</Link> is
-          also updated by hand and stays in reverse-chronological order.
+          If neither suits, the <Link href="/">writing index</Link> is also
+          updated by hand and stays in reverse-chronological order.
         </p>
       </section>
     </div>
