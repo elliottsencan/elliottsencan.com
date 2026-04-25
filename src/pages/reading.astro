@@ -21,7 +21,7 @@ function monthKey(date: Date): string {
 }
 
 function monthLabel(date: Date): string {
-  return `${date.toLocaleString("en-US", { month: "long" }).toUpperCase()} ${date.getFullYear()}`;
+  return `${date.toLocaleString("en-US", { month: "long" })} ${date.getFullYear()}`;
 }
 
 // Group into ordered buckets by month, preserving reverse-chron order so
@@ -40,8 +40,8 @@ for (const entry of entries) {
 }
 
 const dateFormatter = new Intl.DateTimeFormat("en-US", {
-  day: "2-digit",
-  month: "short",
+  day: "numeric",
+  month: "long",
 });
 ---
 
@@ -62,35 +62,36 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
           buckets.map((bucket, bucketIndex) => (
             <section class="space-y-6">
               <h2
-                class="font-mono text-xs uppercase tracking-wider text-black/50 dark:text-white/60"
-                style="font-variant-numeric: tabular-nums;"
+                class="font-heading text-sm font-medium text-black/65 dark:text-white/65"
               >
                 {bucket.label}
               </h2>
-              <ul class="not-prose flex flex-col gap-8 text-sm">
+              <ul class="not-prose flex flex-col gap-8">
                 {bucket.entries.map((entry) => (
-                  <li class="space-y-1">
-                    <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                      <time
-                        datetime={entry.data.added.toISOString()}
-                        class="shrink-0 font-mono text-xs uppercase tracking-wider text-black/50 dark:text-white/60"
-                        style="font-variant-numeric: tabular-nums;"
-                      >
+                  <li class="space-y-1.5">
+                    <Link
+                      href={entry.data.url}
+                      external
+                      class="font-heading text-base font-medium text-black dark:text-white"
+                    >
+                      {entry.data.title}
+                    </Link>
+                    <div class="flex flex-wrap items-baseline gap-x-2 text-xs text-black/55 dark:text-white/60">
+                      <time datetime={entry.data.added.toISOString()}>
                         {dateFormatter.format(entry.data.added)}
                       </time>
-                      <Link href={entry.data.url} external>
-                        {entry.data.title}
-                      </Link>
                       {(entry.data.author || entry.data.source) && (
-                        <span class="text-black/55 dark:text-white/60">
-                          {[entry.data.author, entry.data.source]
-                            .filter(Boolean)
-                            .join(", ")}
-                        </span>
+                        <>
+                          <span aria-hidden="true">&middot;</span>
+                          <span>
+                            {[entry.data.author, entry.data.source]
+                              .filter(Boolean)
+                              .join(", ")}
+                          </span>
+                        </>
                       )}
-                      <span class="font-mono text-[10px] uppercase tracking-widest text-black/50 dark:text-white/50">
-                        &middot;&nbsp;{entry.data.category}
-                      </span>
+                      <span aria-hidden="true">&middot;</span>
+                      <span>{entry.data.category}</span>
                     </div>
                     <p class="text-sm leading-relaxed text-black/75 dark:text-white/75">
                       {entry.data.summary}

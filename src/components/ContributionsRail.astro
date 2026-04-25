@@ -39,7 +39,7 @@ function formatMonthYear(iso: string | undefined): string {
     return "";
   }
   const d = new Date(`${iso}T00:00:00Z`);
-  const month = d.toLocaleDateString("en-US", { month: "short", timeZone: "UTC" }).toUpperCase();
+  const month = d.toLocaleDateString("en-US", { month: "short", timeZone: "UTC" });
   const yy = d.getUTCFullYear().toString().slice(-2);
   return `${month} '${yy}`;
 }
@@ -78,10 +78,7 @@ const formattedTotal = new Intl.NumberFormat("en-US").format(data.total);
       lets the inner column shrink below its intrinsic width inside a flex
       row, so the rail can fill the remaining space without overflow. */}
   <div class="flex min-w-0 flex-1 flex-col">
-    <div
-      class="md:hidden rail-caption flex items-baseline justify-between font-mono text-[0.625rem] uppercase tracking-[0.08em] text-black/55 transition-opacity duration-150 ease-out dark:text-white/55"
-      style="font-variant-numeric: tabular-nums;"
-    >
+    <div class="md:hidden rail-caption flex items-baseline justify-between text-[0.625rem] text-black/55 transition-opacity duration-150 ease-out dark:text-white/55">
       <span>{startLabel}</span>
       <span class="text-black/70 dark:text-white/70">{formattedTotal}</span>
       <span>{endLabel}</span>
@@ -100,8 +97,8 @@ const formattedTotal = new Intl.NumberFormat("en-US").format(data.total);
         ))
       }
       <div
-        class="rail-tooltip pointer-events-none absolute -translate-x-1/2 whitespace-nowrap font-mono text-xs uppercase tracking-wider text-black/70 opacity-0 dark:text-white/70"
-        style="font-variant-numeric: tabular-nums; bottom: 150%; left: 0; margin-bottom: 0.25rem; transition: opacity 150ms ease-out, left 220ms cubic-bezier(0.2, 0.8, 0.2, 1);"
+        class="rail-tooltip pointer-events-none absolute -translate-x-1/2 whitespace-nowrap text-xs text-black/70 opacity-0 dark:text-white/70"
+        style="bottom: 150%; left: 0; margin-bottom: 0.25rem; transition: opacity 150ms ease-out, left 220ms cubic-bezier(0.2, 0.8, 0.2, 1);"
         role="status"
         aria-live="polite"
       >
@@ -236,12 +233,8 @@ const formattedTotal = new Intl.NumberFormat("en-US").format(data.total);
     const end = new Date(start.getTime());
     end.setUTCDate(end.getUTCDate() + 6);
 
-    const startMonth = start
-      .toLocaleDateString("en-US", { month: "short", timeZone: "UTC" })
-      .toUpperCase();
-    const endMonth = end
-      .toLocaleDateString("en-US", { month: "short", timeZone: "UTC" })
-      .toUpperCase();
+    const startMonth = start.toLocaleDateString("en-US", { month: "short", timeZone: "UTC" });
+    const endMonth = end.toLocaleDateString("en-US", { month: "short", timeZone: "UTC" });
     const startDay = start.getUTCDate();
     const endDay = end.getUTCDate();
 

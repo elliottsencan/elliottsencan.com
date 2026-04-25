@@ -16,7 +16,7 @@ const hasBadges = tags.length > 0 || !!ai;
     {tags.map((tag) => (
       <a
         href={`/tags/${tag}`}
-        class="inline-flex items-center rounded-sm bg-black/85 px-2 py-0.5 font-mono text-[11px] uppercase tracking-wider text-white/95 transition-colors duration-300 ease-in-out hover:bg-black hover:text-white focus-visible:bg-black focus-visible:text-white dark:bg-white/85 dark:text-black/85 dark:hover:bg-white dark:hover:text-black dark:focus-visible:bg-white dark:focus-visible:text-black"
+        class="inline-flex items-center rounded-sm bg-black/85 px-2 py-0.5 text-xs text-white/95 transition-colors duration-300 ease-in-out hover:bg-black hover:text-white focus-visible:bg-black focus-visible:text-white dark:bg-white/85 dark:text-black/85 dark:hover:bg-white dark:hover:text-black dark:focus-visible:bg-white dark:focus-visible:text-black"
       >
         {tag}
       </a>
@@ -26,7 +26,7 @@ const hasBadges = tags.length > 0 || !!ai;
       <a
         href={`/about/process#${ai}`}
         title={post.data.aiNote}
-        class="inline-flex items-center gap-1 rounded-sm bg-black/5 px-2 py-0.5 font-mono text-[11px] uppercase tracking-wider text-black/65 transition-colors duration-300 ease-in-out hover:bg-black/10 hover:text-black focus-visible:bg-black/10 focus-visible:text-black dark:bg-white/5 dark:text-white/65 dark:hover:bg-white/10 dark:hover:text-white dark:focus-visible:bg-white/10 dark:focus-visible:text-white"
+        class="inline-flex items-center gap-1 rounded-sm bg-black/5 px-2 py-0.5 text-xs text-black/65 transition-colors duration-300 ease-in-out hover:bg-black/10 hover:text-black focus-visible:bg-black/10 focus-visible:text-black dark:bg-white/5 dark:text-white/65 dark:hover:bg-white/10 dark:hover:text-white dark:focus-visible:bg-white/10 dark:focus-visible:text-white"
       >
         <span aria-hidden="true" class="text-black/40 dark:text-white/40">&#x2731;</span>
         AI &middot; {ai}

@@ -268,6 +268,52 @@ html.scrolled-deep #back-to-top {
   @apply pointer-events-auto opacity-100;
 }
 
+/* Scroll affordance.
+
+   A canvas-colored gradient band sits above the fixed footer, fading
+   bottom-of-viewport content into the chrome and signalling "more below"
+   to first-time visitors who'd otherwise read the sticky footer as the
+   end of the page. In browsers with scroll-driven animation support, the
+   band also fades out as scroll approaches the bottom of the document so
+   it doesn't sit visibly above the final paragraph. Elsewhere it stays
+   put — still useful, just not state-aware. body::after avoids any layout
+   markup and pointer-events:none keeps it out of interaction. */
+body::after {
+  content: "";
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: calc(var(--footer-height) + 4rem);
+  z-index: 39;
+  pointer-events: none;
+  /* Solid canvas behind the footer chrome so the fade runs into it
+     seamlessly; the 4rem above the footer carries the visible transition
+     from transparent content into canvas. */
+  background: linear-gradient(to top, #f6f4ef, #f6f4ef var(--footer-height), transparent);
+}
+
+html.dark body::after {
+  background: linear-gradient(to top, #18161a, #18161a var(--footer-height), transparent);
+}
+
+@supports (animation-timeline: scroll()) {
+  body::after {
+    animation: scroll-fade-hint linear both;
+    animation-timeline: scroll(root block);
+  }
+}
+
+@keyframes scroll-fade-hint {
+  0%,
+  85% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
 /* Intro animations: once-per-session gate. Flag is set by inline script in
    Head.astro; when present, skip the signature draw, the rail dot reveal,
    and any related opacity animations so the UI jumps straight to its rest
@@ -400,16 +446,15 @@ article section.footnotes {
 }
 
 article section.footnotes::before {
-  content: "NOTES";
-  @apply mb-4 block font-mono text-xs uppercase tracking-wider text-black/55;
-  @apply dark:text-white/55;
-  font-variant-numeric: tabular-nums;
+  content: "Notes";
+  @apply mb-4 block font-heading text-sm font-medium text-black/65;
+  @apply dark:text-white/65;
 }
 
 /* Back-reference arrow next to each footnote body. Prose adds default link
    styling; override to keep the glyph small and unobtrusive. */
 article a.data-footnote-backref {
-  @apply ml-1 inline-block font-mono text-xs text-black/40 no-underline;
+  @apply ml-1 inline-block text-xs text-black/40 no-underline;
   @apply dark:text-white/40;
 }
 
@@ -446,7 +491,8 @@ article a.data-footnote-backref:hover {
   background: rgb(255 255 255 / 0.04);
 }
 
-/* Filename tab → uppercase mono caption above the code body. */
+/* Filename tab — small editorial caption above the code body, matching the
+   site's section-label voice. */
 .expressive-code figcaption.header {
   background: transparent;
   border: 0;
@@ -454,19 +500,19 @@ article a.data-footnote-backref:hover {
 }
 .expressive-code figcaption.header .title,
 .expressive-code figcaption.header::before {
-  font-family: var(--font-mono);
-  font-size: 0.6875rem;
-  font-weight: 400;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: rgb(0 0 0 / 0.55);
+  font-family: var(--font-heading);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: rgb(0 0 0 / 0.65);
   background: transparent;
   border: 0;
   padding: 0;
 }
 .dark .expressive-code figcaption.header .title,
 .dark .expressive-code figcaption.header::before {
-  color: rgb(255 255 255 / 0.55);
+  color: rgb(255 255 255 / 0.65);
 }
 
 /* No copy button — canvas stays uncluttered. */
