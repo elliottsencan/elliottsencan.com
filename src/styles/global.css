@@ -151,25 +151,32 @@
     @apply backdrop-blur-xs;
   }
 
-  /* Approximate masthead height; downstream sticky offsets (e.g. the TOC
-     right rail) key their `top` value off this so they don't pin under
-     the fixed header. */
+  /* Approximate masthead/footer heights; downstream consumers (TOC right
+     rail sticky offset, main's reserved padding) key their values off
+     these so nothing pins under the fixed chrome. */
   :root {
     --masthead-height: 5rem;
+    --footer-height: 3.5rem;
   }
 
   @media (min-width: 768px) {
     :root {
       --masthead-height: 5.5rem;
+      --footer-height: 3.75rem;
     }
   }
 
   main {
-    @apply flex-1 pt-24 pb-16 md:pt-32 md:pb-24;
+    @apply flex-1 pt-24 md:pt-32;
+    /* Reserves space for the fixed footer plus visual breathing room so the
+       last paragraph of long-form prose doesn't sit flush against it. */
+    padding-bottom: calc(var(--footer-height) + 4rem);
   }
 
   footer {
-    @apply py-6 text-sm;
+    @apply fixed bottom-0 left-0 right-0 z-40 py-3 text-sm;
+    @apply bg-[#f6f4ef]/75 dark:bg-[#18161a]/75;
+    @apply backdrop-blur-xs;
   }
 
   article {
