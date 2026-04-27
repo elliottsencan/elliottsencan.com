@@ -42,6 +42,7 @@ for (const entry of entries) {
 const dateFormatter = new Intl.DateTimeFormat("en-US", {
   day: "numeric",
   month: "long",
+  year: "numeric",
 });
 ---
 
@@ -66,36 +67,39 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
               >
                 {bucket.label}
               </h2>
-              <ul class="not-prose flex flex-col gap-8">
+              <ul class="not-prose flex flex-col gap-6 text-sm">
                 {bucket.entries.map((entry) => (
-                  <li class="space-y-1.5">
-                    <Link
-                      href={entry.data.url}
-                      external
-                      class="font-heading text-base font-medium text-black dark:text-white"
+                  <li class="flex items-baseline gap-4">
+                    <time
+                      datetime={entry.data.added.toISOString()}
+                      class="shrink-0 font-sans text-xs text-black/50 dark:text-white/60"
                     >
-                      {entry.data.title}
-                    </Link>
-                    <div class="flex flex-wrap items-baseline gap-x-2 text-xs text-black/55 dark:text-white/60">
-                      <time datetime={entry.data.added.toISOString()}>
-                        {dateFormatter.format(entry.data.added)}
-                      </time>
+                      {dateFormatter.format(entry.data.added)}
+                    </time>
+                    <div class="flex-1 space-y-1.5">
+                      <Link
+                        href={entry.data.url}
+                        external
+                        class="font-heading font-medium text-black dark:text-white"
+                      >
+                        {entry.data.title}
+                      </Link>
                       {(entry.data.author || entry.data.source) && (
-                        <>
-                          <span aria-hidden="true">&middot;</span>
-                          <span>
-                            {[entry.data.author, entry.data.source]
-                              .filter(Boolean)
-                              .join(", ")}
-                          </span>
-                        </>
+                        <p class="text-xs text-black/55 dark:text-white/60">
+                          {[entry.data.author, entry.data.source]
+                            .filter(Boolean)
+                            .join(", ")}
+                        </p>
                       )}
-                      <span aria-hidden="true">&middot;</span>
-                      <span>{entry.data.category}</span>
+                      <p class="leading-relaxed text-black/75 dark:text-white/75">
+                        {entry.data.summary}
+                      </p>
+                      <div class="pt-1">
+                        <span class="inline-flex items-center rounded-sm bg-black/5 px-2 py-0.5 text-xs capitalize text-black/65 dark:bg-white/5 dark:text-white/65">
+                          {entry.data.category}
+                        </span>
+                      </div>
                     </div>
-                    <p class="text-sm leading-relaxed text-black/75 dark:text-white/75">
-                      {entry.data.summary}
-                    </p>
                   </li>
                 ))}
               </ul>

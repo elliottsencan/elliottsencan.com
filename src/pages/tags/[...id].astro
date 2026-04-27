@@ -1,8 +1,8 @@
 ---
 import { getCollection } from "astro:content";
-import ArrowCard from "@components/ArrowCard.astro";
 import BackToPrevious from "@components/BackToPrevious.astro";
 import Container from "@components/Container.astro";
+import Link from "@components/Link.astro";
 import Layout from "@layouts/Layout.astro";
 
 export async function getStaticPaths() {
@@ -27,6 +27,12 @@ const { posts } = Astro.props;
 const sortedPosts = posts.sort(
   (a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime(),
 );
+
+const dateFormatter = new Intl.DateTimeFormat("en-US", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+});
 ---
 
 <Layout title={`Tag: ${id}`} description={`Posts with the tag: ${id}`}>
@@ -36,8 +42,33 @@ const sortedPosts = posts.sort(
       <h1 class="font-semibold text-black dark:text-white">
         Posts tagged with "{id}"
       </h1>
-      <ul class="flex flex-col gap-4">
-        {sortedPosts.map((post) => <ArrowCard entry={post} />)}
+      <ul class="not-prose flex flex-col gap-3 text-sm">
+        {
+          sortedPosts.map((post) => (
+            <li class="flex items-baseline gap-4">
+              <time
+                datetime={post.data.date.toISOString()}
+                class="shrink-0 font-sans text-xs text-black/50 dark:text-white/60"
+              >
+                {dateFormatter.format(post.data.date)}
+              </time>
+              <span>
+                <Link
+                  href={`/writing/${post.id}`}
+                  class="font-heading font-medium text-black dark:text-white"
+                >
+                  {post.data.title}
+                </Link>
+                {post.data.description && (
+                  <span class="text-black/60 dark:text-white/60">
+                    {" — "}
+                    {post.data.description}
+                  </span>
+                )}
+              </span>
+            </li>
+          ))
+        }
       </ul>
     </div>
   </Container>
