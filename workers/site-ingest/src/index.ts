@@ -15,6 +15,8 @@
  *   POST /recompile  — rebuild reading entries via Wayback Machine.
  *   POST /lint       — read-only health check on reading + wiki collections.
  *   POST /contribute — file a manually-authored wiki article via PR.
+ *   POST /crosslink  — propose anchor-phrase link insertions across wiki
+ *                      and writing corpora as a reviewable PR.
  *
  * Cron trigger: runs the /now draft weekly.
  *
@@ -23,6 +25,7 @@
 
 import * as consume from "./consume.ts";
 import * as contribute from "./contribute.ts";
+import * as crosslink from "./crosslink.ts";
 import * as inputs from "./inputs.ts";
 import * as link from "./link.ts";
 import * as lint from "./lint.ts";
@@ -116,6 +119,17 @@ export default {
         return textResponse("rate limited", 429);
       }
       return contribute.handle(request, env);
+    }
+
+    if (request.method === "POST" && url.pathname === "/crosslink") {
+      // Cross-link suggestion run against existing content. Long-running
+      // (one Anthropic call per piece, capped at MAX_CROSSLINK_CALLS_PER_RUN);
+      // shares the trigger limiter with /synthesize and /recompile.
+      const limited = await env.TRIGGER_LIMITER.limit({ key: ip });
+      if (!limited.success) {
+        return textResponse("rate limited", 429);
+      }
+      return crosslink.handle(request, env, ctx);
     }
 
     return textResponse("not found", 404);
