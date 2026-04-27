@@ -161,7 +161,7 @@ async function enumerateReading(env: Env, gh: GitHubClient): Promise<Result<Read
   }
   const all: ReadingMeta[] = [];
   for (const month of months.data) {
-    if (month.type !== "dir") continue;
+    if (month.type !== "dir") { continue; }
     const files = await listDir(month.path, "main", gh);
     if (!files.ok) {
       log.warn("lint", "enum-reading", "month list failed", {
@@ -171,7 +171,7 @@ async function enumerateReading(env: Env, gh: GitHubClient): Promise<Result<Read
       continue;
     }
     for (const file of files.data) {
-      if (file.type !== "file" || !file.name.endsWith(".md")) continue;
+      if (file.type !== "file" || !file.name.endsWith(".md")) { continue; }
       const loaded = await getFile(file.path, "main", gh);
       if (!loaded.ok) {
         log.warn("lint", "enum-reading", "file load failed", {
@@ -212,7 +212,7 @@ async function enumerateWiki(gh: GitHubClient): Promise<Result<WikiMeta[]>> {
   }
   const all: WikiMeta[] = [];
   for (const file of dir.data) {
-    if (file.type !== "file" || !file.name.endsWith(".md")) continue;
+    if (file.type !== "file" || !file.name.endsWith(".md")) { continue; }
     const loaded = await getFile(file.path, "main", gh);
     if (!loaded.ok) {
       log.warn("lint", "enum-wiki", "file load failed", {

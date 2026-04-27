@@ -28,7 +28,7 @@ type RelatedReason = "topic" | "author" | "source" | "category-month";
 const related: Array<{ entry: CollectionEntry<"reading">; reason: RelatedReason }> = [];
 const seen = new Set<string>();
 for (const e of allEntries) {
-  if (seen.has(e.id)) continue;
+  if (seen.has(e.id)) { continue; }
   let reason: RelatedReason | null = null;
   if ((e.data.topics ?? []).some((t) => myTopics.has(t.toLowerCase()))) {
     reason = "topic";
