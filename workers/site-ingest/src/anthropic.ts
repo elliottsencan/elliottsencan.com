@@ -87,15 +87,18 @@ export async function summarizeLink(args: {
   try {
     const response = await client(args.apiKey).messages.parse({
       model: resolveModel(args.model),
-      // 600 fits the slimmer schema (no longer emitting a detail body)
-      // with a comfortable safety margin for long titles + 5 topics.
+      // 600: title + summary + 5 topics, no body.
       max_tokens: 600,
       system: args.systemPrompt,
       messages: [{ role: "user", content: args.userMessage }],
       output_config: { format: zodOutputFormat(LinkSummarySchema) },
     });
     if (!response.parsed_output) {
-      return { ok: false, error: "parsed_output missing" };
+      log.warn("anthropic", "summarize-link", "parsed_output missing", {
+        stopReason: response.stop_reason,
+        blocks: response.content.map((b) => b.type).join(","),
+      });
+      return { ok: false, error: `parsed_output missing (stop_reason: ${response.stop_reason})` };
     }
     return {
       ok: true,
@@ -110,9 +113,11 @@ export async function summarizeLink(args: {
 }
 
 const WikiArticleSchema = z.object({
-  title: z.string(),
-  summary: z.string(),
-  body: z.string(),
+  title: z.string().min(1),
+  // Mirrors WikiFrontmatterSchema in @shared/schemas/content.ts so model
+  // overruns fail at the worker tier instead of at next astro build.
+  summary: z.string().min(1).max(240),
+  body: z.string().min(1),
   related_concepts: z.array(z.string()).optional(),
 });
 
@@ -132,7 +137,11 @@ export async function compileWikiArticle(args: {
       output_config: { format: zodOutputFormat(WikiArticleSchema) },
     });
     if (!response.parsed_output) {
-      return { ok: false, error: "parsed_output missing" };
+      log.warn("anthropic", "compile-wiki", "parsed_output missing", {
+        stopReason: response.stop_reason,
+        blocks: response.content.map((b) => b.type).join(","),
+      });
+      return { ok: false, error: `parsed_output missing (stop_reason: ${response.stop_reason})` };
     }
     return {
       ok: true,
@@ -143,7 +152,7 @@ export async function compileWikiArticle(args: {
   }
 }
 
-const CrosslinkProposalSchema = z.object({
+export const CrosslinkProposalSchema = z.object({
   source_slug: z.string(),
   source_passage: z.string(),
   anchor_phrase: z.string(),
@@ -176,7 +185,11 @@ export async function proposeCrosslinks(args: {
       output_config: { format: zodOutputFormat(CrosslinkBatchSchema) },
     });
     if (!response.parsed_output) {
-      return { ok: false, error: "parsed_output missing" };
+      log.warn("anthropic", "propose-crosslinks", "parsed_output missing", {
+        stopReason: response.stop_reason,
+        blocks: response.content.map((b) => b.type).join(","),
+      });
+      return { ok: false, error: `parsed_output missing (stop_reason: ${response.stop_reason})` };
     }
     return {
       ok: true,
@@ -189,7 +202,16 @@ export async function proposeCrosslinks(args: {
 
 function mapError(err: unknown, op: string): { ok: false; error: string } {
   if (err instanceof Anthropic.APIError) {
-    log.warn("anthropic", op, "api error", { status: err.status });
+    // SDK already retried 429/5xx twice before reaching here, so by this
+    // point the failure is real — log.error, not warn. Include request-id
+    // when present so production incidents are debuggable from logs.
+    const headers = (err as { headers?: Record<string, string | undefined> }).headers ?? {};
+    const requestId = headers["request-id"] ?? headers["x-request-id"];
+    log.error("anthropic", op, "api error", {
+      status: err.status,
+      message: err.message,
+      ...(requestId ? { requestId } : {}),
+    });
     return { ok: false, error: `anthropic ${err.status}: ${err.message}` };
   }
   const msg = err instanceof Error ? err.message : String(err);

@@ -158,3 +158,14 @@ export function textResponse(message: string, status = 200): Response {
     },
   });
 }
+
+// ---------- error helpers ----------
+
+/**
+ * Whether a Result.error string came from a 404 / "not found" GitHub
+ * response. Distinguishing this from 5xx prevents the substrate from
+ * silently treating a transient outage as "file doesn't exist yet."
+ */
+export function isNotFoundError(error: string): boolean {
+  return error.includes("404") || error.toLowerCase().includes("not found");
+}

@@ -22,7 +22,7 @@ const fakeDeps = (files: Record<string, string>): EnumerateDeps => ({
   }),
   getFile: vi.fn().mockImplementation(async (path: string) => {
     const content = files[path];
-    if (content == null) return { ok: false, error: "not-found" };
+    if (content == null) { return { ok: false, error: "not-found" }; }
     return { ok: true, data: { content, sha: "x" } };
   }),
 });
@@ -45,9 +45,9 @@ describe("enumerateWikiWithBodies", () => {
     });
     const out = await enumerateWikiWithBodies(deps);
     expect(out.length).toBe(1);
-    expect(out[0]!.slug).toBe("llm-inference");
-    expect(out[0]!.body).toBe("Body text here.");
-    expect(out[0]!.frontmatter.title).toBe("LLM inference");
+    expect(out[0]?.slug).toBe("llm-inference");
+    expect(out[0]?.body).toBe("Body text here.");
+    expect(out[0]?.frontmatter.title).toBe("LLM inference");
   });
 
   it("skips .mdx files (insertion-incompatible in v1)", async () => {
@@ -92,10 +92,10 @@ describe("enumerateBlogWithBodies", () => {
     });
     const out = await enumerateBlogWithBodies(deps);
     expect(out.length).toBe(1);
-    expect(out[0]!.slug).toBe("post-one");
-    expect(out[0]!.frontmatter.series).toBe("agentic-systems");
-    expect(out[0]!.frontmatter.tags).toEqual(["systems", "agents"]);
-    expect(out[0]!.body).toBe("Body of the post.");
+    expect(out[0]?.slug).toBe("post-one");
+    expect(out[0]?.frontmatter.series).toBe("agentic-systems");
+    expect(out[0]?.frontmatter.tags).toEqual(["systems", "agents"]);
+    expect(out[0]?.body).toBe("Body of the post.");
   });
 
   it("skips .mdx files in the blog corpus", async () => {

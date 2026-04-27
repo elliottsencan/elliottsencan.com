@@ -98,11 +98,11 @@ type SynthesizeSummary = {
  * Strategy factory: closes over the validated request so `plan()` can
  * read `topics`, `force`, and `dry_run` without re-parsing the body.
  */
-export function makeSynthesizeStrategy(req: SynthesizeRequest): Strategy {
+export function makeSynthesizeStrategy(req: SynthesizeRequest): Strategy<SynthesizeSummary> {
   return {
     name: "synthesize",
     branchPrefix: "synthesis",
-    plan: async ({ env }): Promise<PlanResult> => {
+    plan: async ({ env }): Promise<PlanResult<SynthesizeSummary>> => {
       const gh = createGitHubClient(env.GITHUB_TOKEN, env.GITHUB_REPO);
       const planned = await planSynthesis(env, gh, req);
       return planned;
@@ -119,7 +119,7 @@ async function planSynthesis(
   env: Env,
   gh: GitHubClient,
   req: SynthesizeRequest,
-): Promise<PlanResult> {
+): Promise<PlanResult<SynthesizeSummary>> {
   const [sourcesResult, existingResult] = await Promise.all([
     enumerateReading(env, gh),
     enumerateWiki(gh),
@@ -158,6 +158,7 @@ async function planSynthesis(
 
   const added: Mutation["added"] = [];
   const changed: Mutation["changed"] = [];
+  const failed: SynthesizeSummary["failed"] = [];
   const skipped: SynthesizeSummary["skipped"] = [];
   for (const target of capped) {
     const article = await compileWikiArticle({
@@ -171,7 +172,11 @@ async function planSynthesis(
       }),
     });
     if (!article.ok) {
-      skipped.push({ topic: target.topic, reason: `anthropic: ${article.error}` });
+      failed.push({
+        path: `${WIKI_DIR}/${target.topic}.md`,
+        topic: target.topic,
+        error: article.error,
+      });
       continue;
     }
     const markdown = buildArticleMarkdown({
@@ -186,11 +191,14 @@ async function planSynthesis(
       added.push({ path, content: markdown });
     }
   }
+  // Topics with up-to-date sources never enter `capped` (filtered above);
+  // none currently land in skipped[]. Keeping the field for forward-compat
+  // when other reasons (e.g. token-cap) get split out.
 
   const summary: SynthesizeSummary = {
     active_topics: allActiveTopics,
     compiled: added.length + changed.length,
-    failed: [],
+    failed,
     skipped,
   };
 
@@ -198,19 +206,21 @@ async function planSynthesis(
     ok: true,
     data: {
       mutation: { added, changed },
-      summary: summary as unknown as Record<string, unknown>,
+      summary,
     },
   };
 }
 
-function buildPrBody(plan: PlanOutput, crosslink?: CrosslinkResult): string {
-  const summary = (plan.summary ?? {}) as Partial<SynthesizeSummary>;
+function buildPrBody(
+  plan: PlanOutput<SynthesizeSummary>,
+  crosslink?: CrosslinkResult,
+): string {
+  const summary = plan.summary ?? { active_topics: [], compiled: 0, failed: [], skipped: [] };
   const writes = [
     ...plan.mutation.added.map((f) => f.path),
     ...plan.mutation.changed.map((f) => f.path),
   ];
-  const skipped = summary.skipped ?? [];
-  const failed = summary.failed ?? [];
+  const { skipped, failed } = summary;
   const lines: string[] = [
     "Automated wiki synthesis run.",
     "",
@@ -224,6 +234,12 @@ function buildPrBody(plan: PlanOutput, crosslink?: CrosslinkResult): string {
     lines.push("", "### Compiled");
     for (const p of writes) {
       lines.push(`- \`${p}\``);
+    }
+  }
+  if (failed.length > 0) {
+    lines.push("", "### Failed");
+    for (const f of failed) {
+      lines.push(`- \`${f.topic}\` — ${f.error}`);
     }
   }
   if (skipped.length > 0) {
@@ -270,18 +286,20 @@ export async function handle(request: Request, env: Env, ctx: ExecutionContext):
     if (!planned.ok) {
       return jsonResponse({ ok: false, error: planned.error }, planned.status ?? 500);
     }
-    const summary = (planned.data.summary ?? {}) as Partial<SynthesizeSummary>;
+    const summary = planned.data.summary;
     return jsonResponse({
       ok: true,
       dry_run: true,
-      active_topics: summary.active_topics ?? [],
-      compiled: summary.compiled ?? 0,
-      skipped: summary.skipped?.length ?? 0,
+      active_topics: summary?.active_topics ?? [],
+      compiled: summary?.compiled ?? 0,
+      failed: summary?.failed.length ?? 0,
+      skipped: summary?.skipped.length ?? 0,
       writes: [
         ...planned.data.mutation.added.map((f) => ({ path: f.path })),
         ...planned.data.mutation.changed.map((f) => ({ path: f.path })),
       ],
-      skip_reasons: summary.skipped ?? [],
+      failures: summary?.failed ?? [],
+      skip_reasons: summary?.skipped ?? [],
     });
   }
 
@@ -296,13 +314,15 @@ export async function handle(request: Request, env: Env, ctx: ExecutionContext):
   if (!result.ok) {
     return jsonResponse({ ok: false, error: result.error }, result.status);
   }
-  const summary = (result.summary ?? {}) as Partial<SynthesizeSummary>;
+  const summary = result.summary;
   return jsonResponse({
     ok: true,
     dry_run: false,
-    active_topics: summary.active_topics ?? [],
-    compiled: summary.compiled ?? 0,
-    skipped: summary.skipped?.length ?? 0,
+    active_topics: summary?.active_topics ?? [],
+    compiled: summary?.compiled ?? 0,
+    failed: summary?.failed.length ?? 0,
+    skipped: summary?.skipped.length ?? 0,
+    failures: summary?.failed ?? [],
     branch: result.branch,
     pr: result.pr_number ? { number: result.pr_number, url: result.pr_url } : null,
     crosslink: result.crosslink
@@ -315,17 +335,8 @@ export async function handle(request: Request, env: Env, ctx: ExecutionContext):
   });
 }
 
-// ---------- pipeline deps adapter ----------
-
-/**
- * Build the substrate's `deps` object from the worker `Env`. The adapter
- * curries `gh` into github.ts's helper signatures and wires the cross-link
- * runner so `commitTarget: "pr"` + `crosslink: "inline"` strategies pick
- * up cross-link insertions automatically.
- *
- * Exported because /contribute, /recompile, and /link will adopt the same
- * adapter once they're migrated.
- */
+// Adapts worker Env into substrate deps; curries `gh` into github.ts helpers
+// and wires the crosslink runner.
 export function makePipelineDeps(env: Env): {
   github: GithubDeps;
   runCrosslink: ReturnType<typeof makeCrosslinkRunner>;

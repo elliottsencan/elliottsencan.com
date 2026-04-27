@@ -72,11 +72,11 @@ type RecompileSummary = {
 
 // ---------- strategy ----------
 
-export function makeRecompileStrategy(req: RecompileRequest): Strategy {
+export function makeRecompileStrategy(req: RecompileRequest): Strategy<RecompileSummary> {
   return {
     name: "recompile",
     branchPrefix: "recompile",
-    plan: async ({ env }): Promise<PlanResult> => {
+    plan: async ({ env }): Promise<PlanResult<RecompileSummary>> => {
       const gh = createGitHubClient(env.GITHUB_TOKEN, env.GITHUB_REPO);
       const entries = await enumerateEntries(env, gh);
       if (!entries.ok) {
@@ -109,10 +109,7 @@ export function makeRecompileStrategy(req: RecompileRequest): Strategy {
       };
       return {
         ok: true,
-        data: {
-          mutation: { added: [], changed },
-          summary: summary as unknown as Record<string, unknown>,
-        },
+        data: { mutation: { added: [], changed }, summary },
       };
     },
     prTitle: ({ mutation }) =>
@@ -121,8 +118,12 @@ export function makeRecompileStrategy(req: RecompileRequest): Strategy {
   };
 }
 
-function buildPrBody(plan: PlanOutput, crosslink?: CrosslinkResult): string {
-  const summary = plan.summary as unknown as RecompileSummary;
+function buildPrBody(
+  plan: PlanOutput<RecompileSummary>,
+  crosslink?: CrosslinkResult,
+): string {
+  if (!plan.summary) { return "Automated recompile run."; }
+  const summary = plan.summary;
   const updated = summary.results.filter((r) => r.status === "updated");
   const skipped = summary.results.filter((r) => r.status === "skipped");
   const lines: string[] = [
@@ -179,7 +180,10 @@ export async function handle(request: Request, env: Env, ctx: ExecutionContext):
     if (!planned.ok) {
       return jsonResponse({ ok: false, error: planned.error }, planned.status ?? 500);
     }
-    const summary = planned.data.summary as unknown as RecompileSummary;
+    const summary = planned.data.summary;
+    if (!summary) {
+      return jsonResponse({ ok: false, error: "no summary returned" }, 500);
+    }
     const updated = summary.results.filter((r) => r.status === "updated");
     return jsonResponse({
       ok: true,
@@ -202,7 +206,7 @@ export async function handle(request: Request, env: Env, ctx: ExecutionContext):
   if (!result.ok) {
     return jsonResponse({ ok: false, error: result.error }, result.status);
   }
-  const summary = result.summary as unknown as RecompileSummary | undefined;
+  const summary = result.summary;
   const updated = summary?.results.filter((r) => r.status === "updated") ?? [];
   const skipped = summary?.results.filter((r) => r.status === "skipped") ?? [];
   return jsonResponse({
@@ -296,7 +300,7 @@ export function applyScope(
     case "compiled_before_model": {
       return entries.filter((e) => {
         const model = e.frontmatter.compiled_with;
-        // No recorded model = pre-field era = eligible for recompile.
+        // Missing compiled_with => eligible for recompile.
         if (typeof model !== "string") {
           return true;
         }
@@ -417,7 +421,7 @@ export function buildRecompiledMarkdown(args: {
   }
   data.compiled_at = compiledAt.toISOString();
   data.compiled_with = summary.model;
-  // Body intentionally empty: see buildEntryMarkdown comment in link.ts.
+  // Reading entries are source citations, not articles — body stays empty.
   return matter.stringify("", data);
 }
 

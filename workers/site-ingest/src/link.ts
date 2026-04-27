@@ -36,23 +36,18 @@ const PAGE_FETCH_TIMEOUT_MS = 5000;
 type LinkSummaryRow = {
   path: string;
   category: string;
-  degraded: boolean;
 };
 
 // ---------- strategy ----------
 
-export function makeLinkStrategy(req: LinkRequest): Strategy {
+export function makeLinkStrategy(req: LinkRequest): Strategy<LinkSummaryRow> {
   return {
     name: "link",
     branchPrefix: "link",
-    plan: async ({ env }): Promise<PlanResult> => {
+    plan: async ({ env }): Promise<PlanResult<LinkSummaryRow>> => {
       const resolvedTitle = req.title ?? (await fetchPageTitle(req.url));
       const existingTopics = await loadExistingTopics();
 
-      // Falls back to a stub summary if Anthropic is unavailable so a
-      // transient outage doesn't lose the link entirely. The stub commits
-      // but the response signals `degraded: true` so the client knows the
-      // entry needs a manual pass.
       const summaryResult = await summarizeLink({
         apiKey: env.ANTHROPIC_API_KEY,
         model: env.ANTHROPIC_MODEL,
@@ -64,22 +59,10 @@ export function makeLinkStrategy(req: LinkRequest): Strategy {
           existingTopics,
         }),
       });
-
-      const degraded = !summaryResult.ok;
-      const summary: LinkSummary = summaryResult.ok
-        ? summaryResult.data
-        : {
-            title: "",
-            summary: "Saved link.",
-            category: "other",
-            topics: ["unsorted"],
-            model: "unknown",
-          };
       if (!summaryResult.ok) {
-        log.warn("link", "summarize", "using stub summary after failure", {
-          error: summaryResult.error,
-        });
+        return { ok: false, status: 502, error: `summarize: ${summaryResult.error}` };
       }
+      const summary = summaryResult.data;
 
       const added = new Date();
       const cleanedTitle = summary.title?.trim();
@@ -94,13 +77,12 @@ export function makeLinkStrategy(req: LinkRequest): Strategy {
       const summaryRow: LinkSummaryRow = {
         path,
         category: summary.category,
-        degraded,
       };
       return {
         ok: true,
         data: {
           mutation: { added: [{ path, content: markdown }], changed: [] },
-          summary: summaryRow as unknown as Record<string, unknown>,
+          summary: summaryRow,
         },
       };
     },
@@ -110,6 +92,13 @@ export function makeLinkStrategy(req: LinkRequest): Strategy {
     // (which it does separately, with its own title/body).
     prTitle: () => "",
     prBody: () => "",
+    commitMessage: (input) => {
+      const fm = matter(input.kind === "added" ? input.content : input.after).data as {
+        title?: string;
+      };
+      const title = (fm.title ?? "").slice(0, 60) || "entry";
+      return `reading: ${title}`;
+    },
   };
 }
 
@@ -149,7 +138,7 @@ export async function handle(
   if (!result.ok) {
     return jsonResponse({ ok: false, error: result.error }, result.status);
   }
-  const summary = result.summary as unknown as LinkSummaryRow | undefined;
+  const summary = result.summary;
   log.info("link", "commit", "reading entry committed", {
     path: summary?.path,
     category: summary?.category,
@@ -160,7 +149,6 @@ export async function handle(
       path: summary?.path,
       category: summary?.category,
       commit: result.commit_sha,
-      ...(summary?.degraded ? { degraded: true } : {}),
     },
     200,
   );
@@ -221,6 +209,10 @@ const MAX_TOPICS_IN_PROMPT = 60;
  * edge-cached HTTP fetch — much cheaper than enumerating GitHub contents
  * per ingest. Best-effort: any failure returns an empty list.
  */
+const ReadingIndexSchema = z.object({
+  entries: z.array(z.object({ topics: z.array(z.string()).optional() })),
+});
+
 async function loadExistingTopics(): Promise<string[]> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), TOPICS_FETCH_TIMEOUT_MS);
@@ -230,13 +222,19 @@ async function loadExistingTopics(): Promise<string[]> {
       log.warn("link", "topics", "reading.json fetch failed", { status: res.status });
       return [];
     }
-    const data = (await res.json()) as { entries?: Array<{ topics?: string[] }> };
+    const raw = await res.json();
+    const parsed = ReadingIndexSchema.safeParse(raw);
+    if (!parsed.success) {
+      log.error("link", "topics", "reading.json shape changed", {
+        issues: parsed.error.issues.length,
+        first: parsed.error.issues[0]?.path.join(".") ?? "(root)",
+      });
+      return [];
+    }
     const seen = new Set<string>();
-    for (const entry of data.entries ?? []) {
+    for (const entry of parsed.data.entries) {
       for (const t of entry.topics ?? []) {
-        if (typeof t === "string" && t.length > 0) {
-          seen.add(t);
-        }
+        if (t.length > 0) { seen.add(t); }
       }
     }
     return [...seen].sort().slice(0, MAX_TOPICS_IN_PROMPT);

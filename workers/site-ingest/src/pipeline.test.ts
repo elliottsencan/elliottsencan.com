@@ -170,7 +170,7 @@ describe("runPipeline (abort propagation)", () => {
       { github },
     );
     expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.status).toBe(409);
+    if (!result.ok) { expect(result.status).toBe(409); }
   });
 
   it("returns 500 when plan() reports failure without status", async () => {
@@ -186,7 +186,7 @@ describe("runPipeline (abort propagation)", () => {
       { github },
     );
     expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.status).toBe(500);
+    if (!result.ok) { expect(result.status).toBe(500); }
   });
 
   it("invokes injected runCrosslink on inline crosslink and commits changedFiles to the same branch", async () => {
@@ -196,7 +196,12 @@ describe("runPipeline (abort propagation)", () => {
       backward: 0,
       applied: [{ path: "src/content/wiki/x.md", anchor: "y", target: "/wiki/y" }],
       changedFiles: [
-        { path: "src/content/wiki/x.md", before: "y", after: "[y](/wiki/y)" },
+        {
+          path: "src/content/wiki/x.md",
+          before: "y",
+          after: "[y](/wiki/y)",
+          frontmatter: { title: "x", summary: "y", sources: ["a", "b"] },
+        },
       ],
     });
     const result = await runPipeline(
@@ -209,7 +214,7 @@ describe("runPipeline (abort propagation)", () => {
     expect(runCrosslink).toHaveBeenCalledTimes(1);
     expect(github.putFile).toHaveBeenCalledTimes(2); // 1 added + 1 from crosslink phase
     expect(result.ok).toBe(true);
-    if (result.ok) expect(result.crosslink?.applied.length).toBe(1);
+    if (result.ok) { expect(result.crosslink?.applied.length).toBe(1); }
   });
 
   it("fires runCrosslink via ctx.waitUntil for followup (commitTarget=main)", async () => {
@@ -254,6 +259,101 @@ describe("runPipeline (abort propagation)", () => {
     );
     expect(result.ok).toBe(true);
     expect(github.createBranch).not.toHaveBeenCalled();
-    if (result.ok) expect(result.summary).toEqual({ skipped: 3 });
+    if (result.ok) { expect(result.summary).toEqual({ skipped: 3 }); }
+  });
+});
+
+describe("runCrosslinkFollowup (honesty)", () => {
+  it("does not open a PR when every file commit fails", async () => {
+    const github = okGithubDeps();
+    // Make every putFile call fail except the strategy's own create.
+    let putCallCount = 0;
+    github.putFile = vi.fn().mockImplementation(async () => {
+      putCallCount++;
+      if (putCallCount === 1) {
+        // strategy commit succeeds
+        return { ok: true, data: { blobSha: "blob", commitSha: "main456" } };
+      }
+      return { ok: false, error: "github 502" };
+    });
+    const ctx = { waitUntil: vi.fn() } as unknown as ExecutionContext;
+    const runCrosslink = vi.fn().mockResolvedValue({
+      forward: 0,
+      backward: 1,
+      applied: [{ path: "src/content/wiki/x.md", anchor: "y", target: "/wiki/y" }],
+      changedFiles: [
+        {
+          path: "src/content/wiki/x.md",
+          before: "x",
+          after: "[y](/wiki/y)",
+          frontmatter: { title: "x", summary: "y", sources: ["a", "b"] },
+        },
+      ],
+      skipped: { validationFailures: {}, missingSlug: 0, applyNoop: 0, apiFailures: 0 },
+    });
+    const strategy = fakeStrategy({
+      plan: async () => ({
+        ok: true,
+        data: { mutation: { added: [{ path: "r.md", content: "R" }], changed: [] } },
+      }),
+    });
+    await runPipeline(
+      strategy,
+      { commitTarget: "main", crosslink: "followup" },
+      fakeEnv(),
+      ctx,
+      { github, runCrosslink },
+    );
+    // Manually invoke the captured waitUntil function to trigger the followup.
+    const waitFn = (ctx.waitUntil as ReturnType<typeof vi.fn>).mock.calls[0]?.[0];
+    if (waitFn) { await waitFn; }
+    // The followup should NOT have called openPullRequest because no files
+    // committed successfully (all post-strategy putFile calls failed).
+    expect(github.openPullRequest).not.toHaveBeenCalled();
+  });
+});
+
+describe("runPipeline (frontmatter preservation on crosslink)", () => {
+  it("commits crosslink edits with frontmatter recombined (regression: was committing body only)", async () => {
+    const github = okGithubDeps();
+    // The crosslink runner produces body-only `after`. The substrate must
+    // re-stringify with the carried frontmatter before putFile.
+    const runCrosslink = vi.fn().mockResolvedValue({
+      forward: 1,
+      backward: 0,
+      applied: [{ path: "src/content/wiki/x.md", anchor: "y", target: "/wiki/y" }],
+      changedFiles: [
+        {
+          path: "src/content/wiki/x.md",
+          before: "Karpathy described an LLM Wiki pattern.",
+          after: "Karpathy described an [LLM Wiki pattern](/wiki/y).",
+          frontmatter: {
+            title: "Karpathy",
+            summary: "Single source for the wiki concept.",
+            sources: ["a", "b"],
+            compiled_at: "2026-04-01T00:00:00Z",
+            compiled_with: "claude-test",
+          },
+        },
+      ],
+      skipped: { validationFailures: {}, missingSlug: 0, applyNoop: 0, apiFailures: 0 },
+    });
+    const result = await runPipeline(
+      fakeStrategy(),
+      { commitTarget: "pr", crosslink: "inline" },
+      fakeEnv(),
+      fakeCtx(),
+      { github, runCrosslink },
+    );
+    expect(result.ok).toBe(true);
+    const calls = (github.putFile as ReturnType<typeof vi.fn>).mock.calls;
+    const crosslinkCall = calls.find((c) => c[0].path === "src/content/wiki/x.md");
+    expect(crosslinkCall).toBeDefined();
+    const committedContent = crosslinkCall?.[0].content as string;
+    // Frontmatter recombined (the bug: this used to be body-only):
+    expect(committedContent.startsWith("---\n")).toBe(true);
+    expect(committedContent).toContain("title: Karpathy");
+    expect(committedContent).toContain("compiled_with: claude-test");
+    expect(committedContent).toContain("[LLM Wiki pattern](/wiki/y)");
   });
 });

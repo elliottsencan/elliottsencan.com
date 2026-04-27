@@ -28,10 +28,7 @@ export const NowArchiveFrontmatterSchema = z.object({
 
 export const ReadingFrontmatterSchema = z.object({
   title: z.string(),
-  // `z.string().url()` rather than `z.url()` for compatibility: the worker
-  // resolves plain `zod` (v3), which has no top-level `url`. Astro's
-  // `astro/zod` (v4-flavoured) accepts both forms.
-  url: z.string().url(),
+  url: z.url(),
   summary: z.string(),
   category: ReadingCategorySchema,
   added: z.coerce.date(),

@@ -52,11 +52,11 @@ type ContributeSummary = {
 
 // ---------- strategy ----------
 
-export function makeContributeStrategy(req: ContributeRequest): Strategy {
+export function makeContributeStrategy(req: ContributeRequest): Strategy<ContributeSummary> {
   return {
     name: "contribute",
     branchPrefix: `contribute/${req.topic}`,
-    plan: async ({ env }): Promise<PlanResult> => {
+    plan: async ({ env }): Promise<PlanResult<ContributeSummary>> => {
       const gh = createGitHubClient(env.GITHUB_TOKEN, env.GITHUB_REPO);
       const path = `${WIKI_DIR}/${req.topic}.md`;
       const existing = await getFile(path, "main", gh);
@@ -88,10 +88,7 @@ export function makeContributeStrategy(req: ContributeRequest): Strategy {
         : { added: [{ path, content: markdown }], changed: [] };
       return {
         ok: true,
-        data: {
-          mutation,
-          summary: summary as unknown as Record<string, unknown>,
-        },
+        data: { mutation, summary },
       };
     },
     prTitle: () => `Wiki contribution: ${req.topic}`,
@@ -99,8 +96,12 @@ export function makeContributeStrategy(req: ContributeRequest): Strategy {
   };
 }
 
-function buildPrBody(plan: PlanOutput, crosslink?: CrosslinkResult): string {
-  const summary = plan.summary as unknown as ContributeSummary;
+function buildPrBody(
+  plan: PlanOutput<ContributeSummary>,
+  crosslink?: CrosslinkResult,
+): string {
+  if (!plan.summary) { return "Manually-authored wiki article filed via /contribute."; }
+  const summary = plan.summary;
   const lines: string[] = [
     "Manually-authored wiki article filed via /contribute.",
     "",
@@ -215,7 +216,7 @@ export function buildArticleMarkdown(args: {
 }
 
 export function humanize(topic: string): string {
-  if (topic.length === 0) return topic;
+  if (topic.length === 0) { return topic; }
   const spaced = topic.replace(/-/g, " ");
-  return spaced[0]!.toUpperCase() + spaced.slice(1);
+  return spaced[0]?.toUpperCase() + spaced.slice(1);
 }

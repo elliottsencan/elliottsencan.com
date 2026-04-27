@@ -66,7 +66,7 @@ describe("validateProposal", () => {
   it("rejects when anchor is not a substring of source_passage", () => {
     const r = validateProposal({ ...baseProposal, anchor_phrase: "missing" });
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.reason).toBe("anchor-not-found");
+    if (!r.ok) { expect(r.reason).toBe("anchor-not-found"); }
   });
 
   it("rejects when anchor occurs more than once", () => {
@@ -76,7 +76,7 @@ describe("validateProposal", () => {
       anchor_phrase: "AI",
     });
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.reason).toBe("anchor-not-unique");
+    if (!r.ok) { expect(r.reason).toBe("anchor-not-unique"); }
   });
 
   it("rejects when anchor sits inside an existing markdown link", () => {
@@ -86,7 +86,7 @@ describe("validateProposal", () => {
       anchor_phrase: "the docs",
     });
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.reason).toBe("already-link");
+    if (!r.ok) { expect(r.reason).toBe("already-link"); }
   });
 
   it("rejects when anchor sits inside inline code", () => {
@@ -96,7 +96,7 @@ describe("validateProposal", () => {
       anchor_phrase: "npm install",
     });
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.reason).toBe("inline-code");
+    if (!r.ok) { expect(r.reason).toBe("inline-code"); }
   });
 
   it("rejects when anchor is image alt text", () => {
@@ -106,7 +106,7 @@ describe("validateProposal", () => {
       anchor_phrase: "the chart",
     });
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.reason).toBe("image-alt");
+    if (!r.ok) { expect(r.reason).toBe("image-alt"); }
   });
 
   it("rejects when anchor is inside a fenced code block", () => {
@@ -116,7 +116,7 @@ describe("validateProposal", () => {
       anchor_phrase: "use the docs api",
     });
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.reason).toBe("code-fence");
+    if (!r.ok) { expect(r.reason).toBe("code-fence"); }
   });
 
   it("rejects when source already links to target elsewhere in the passage", () => {
@@ -127,30 +127,47 @@ describe("validateProposal", () => {
       target_url: "/wiki/x",
     });
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.reason).toBe("already-linked-target");
+    if (!r.ok) { expect(r.reason).toBe("already-linked-target"); }
   });
 });
 
 describe("applyInsertion", () => {
+  // ValidProposal can only be obtained through validateProposal, so the
+  // tests round-trip through validation to mirror real usage.
+  const insert = (body: string, anchor: string, target: string): string => {
+    const v = validateProposal({
+      source_slug: "s",
+      source_passage: body,
+      anchor_phrase: anchor,
+      target_corpus: "wiki",
+      target_slug: "x",
+      target_url: target,
+      rationale: "",
+      confidence: "high",
+    });
+    if (!v.ok) { return body; }
+    return applyInsertion(body, v.proposal);
+  };
+
   it("replaces the unique anchor with a markdown link", () => {
-    const out = applyInsertion(
+    const out = insert(
       "The Karpathy wiki pattern is interesting.",
       "Karpathy wiki pattern",
       "/wiki/karpathy-wiki",
     );
-    expect(out).toBe("The [Karpathy wiki pattern](/wiki/karpathy-wiki) is interesting.");
+    expect(out).toContain("[Karpathy wiki pattern](/wiki/karpathy-wiki)");
   });
   it("is a no-op when re-run on already-linked text", () => {
-    const once = applyInsertion("Read the docs.", "docs", "/wiki/docs");
-    const twice = applyInsertion(once, "docs", "/wiki/docs");
+    const once = insert("Read the docs.", "docs", "/wiki/docs");
+    const twice = insert(once, "docs", "/wiki/docs");
     expect(twice).toBe(once);
   });
   it("is a no-op when anchor does not exist", () => {
-    const out = applyInsertion("Read the docs.", "missing", "/wiki/docs");
+    const out = insert("Read the docs.", "missing", "/wiki/docs");
     expect(out).toBe("Read the docs.");
   });
   it("is a no-op when anchor occurs more than once", () => {
-    const out = applyInsertion("AI is AI.", "AI", "/wiki/ai");
+    const out = insert("AI is AI.", "AI", "/wiki/ai");
     expect(out).toBe("AI is AI.");
   });
 });
@@ -207,7 +224,13 @@ import type { CrosslinkPhaseInput, CrosslinkProposal as CP } from "./crosslink-p
 const wikiEntry = (slug: string, body: string, sources: string[] = ["a", "b"]) => ({
   slug,
   path: `src/content/wiki/${slug}.md`,
-  frontmatter: { title: slug, summary: "s", sources },
+  frontmatter: {
+    title: slug,
+    summary: "s",
+    sources,
+    compiled_at: new Date("2026-04-01"),
+    compiled_with: "m",
+  },
   body,
 });
 
@@ -241,8 +264,8 @@ describe("runCrosslinkPhase", () => {
     const phase = await runCrosslinkPhase(input);
     expect(phase.applied.length).toBe(1);
     expect(phase.changedFiles.length).toBe(1);
-    expect(phase.changedFiles[0]!.path).toBe("src/content/wiki/karpathy.md");
-    expect(phase.changedFiles[0]!.after).toContain("[LLM Wiki pattern](/reading/x)");
+    expect(phase.changedFiles[0]?.path).toBe("src/content/wiki/karpathy.md");
+    expect(phase.changedFiles[0]?.after).toContain("[LLM Wiki pattern](/reading/x)");
   });
 
   it("drops invalid proposals silently (anchor not unique)", async () => {
@@ -314,8 +337,8 @@ describe("runCrosslinkPhase", () => {
     };
     const phase = await runCrosslinkPhase(input);
     expect(phase.changedFiles.length).toBe(1);
-    expect(phase.changedFiles[0]!.after).toContain("[cats](/wiki/x)");
-    expect(phase.changedFiles[0]!.after).toContain("[dogs](/wiki/y)");
+    expect(phase.changedFiles[0]?.after).toContain("[cats](/wiki/x)");
+    expect(phase.changedFiles[0]?.after).toContain("[dogs](/wiki/y)");
     expect(phase.applied.length).toBe(2);
   });
 
@@ -362,6 +385,85 @@ describe("runCrosslinkPhase", () => {
     const phase = await runCrosslinkPhase(input);
     expect(phase.applied.length).toBe(0);
     expect(phase.changedFiles.length).toBe(0);
+  });
+
+  it("inserts the anchor at the passage's location even when the anchor occurs elsewhere in the body (regression: body-wide vs passage uniqueness)", async () => {
+    // Body has "agents" three times; only the source_passage's location
+    // should receive the link insertion. Substring-based applyInsertion
+    // would have bailed (3 occurrences); AST-based locator finds the unique
+    // one inside the source_passage's paragraph.
+    const body = [
+      "Karpathy's agents prediction was prescient.",
+      "",
+      "The current generation of agents is reshaping how we ship software.",
+      "",
+      "Many agents still struggle with state.",
+    ].join("\n");
+    const input: CrosslinkPhaseInput = {
+      newPieces: { added: [{ corpus: "wiki", slug: "agents", url: "/wiki/agents" }], changed: [] },
+      corpusSnapshot: { wiki: [wikiEntry("karp", body)], blog: [] },
+      proposeProposals: async () => ({
+        forward: [],
+        backward: [
+          {
+            source_slug: "karp",
+            source_passage: "The current generation of agents is reshaping how we ship software.",
+            anchor_phrase: "agents",
+            target_corpus: "wiki",
+            target_slug: "agents",
+            target_url: "/wiki/agents",
+            rationale: "",
+            confidence: "high",
+          } satisfies CP,
+        ],
+      }),
+    };
+    const phase = await runCrosslinkPhase(input);
+    expect(phase.applied.length).toBe(1);
+    expect(phase.changedFiles[0]?.after).toContain("[agents](/wiki/agents)");
+    // The anchor in the first paragraph stays as plain text:
+    expect(phase.changedFiles[0]?.after).toMatch(/Karpathy's agents prediction/);
+    // The anchor in the third paragraph stays as plain text:
+    expect(phase.changedFiles[0]?.after).toMatch(/Many agents still struggle/);
+  });
+
+  it("populates skip-reason counters for hallucinated and out-of-snapshot proposals", async () => {
+    const input: CrosslinkPhaseInput = {
+      newPieces: { added: [{ corpus: "wiki", slug: "x", url: "/wiki/x" }], changed: [] },
+      corpusSnapshot: { wiki: [wikiEntry("a", "Real body.")], blog: [] },
+      proposeProposals: async () => ({
+        forward: [],
+        backward: [
+          // Anchor not in passage:
+          {
+            source_slug: "a",
+            source_passage: "Real body.",
+            anchor_phrase: "missing",
+            target_corpus: "wiki",
+            target_slug: "x",
+            target_url: "/wiki/x",
+            rationale: "",
+            confidence: "high",
+          },
+          // Source slug not in snapshot:
+          {
+            source_slug: "ghost",
+            source_passage: "Real body.",
+            anchor_phrase: "Real",
+            target_corpus: "wiki",
+            target_slug: "x",
+            target_url: "/wiki/x",
+            rationale: "",
+            confidence: "high",
+          },
+        ],
+        apiFailures: 2,
+      }),
+    };
+    const phase = await runCrosslinkPhase(input);
+    expect(phase.skipped.validationFailures["anchor-not-found"]).toBe(1);
+    expect(phase.skipped.missingSlug).toBe(1);
+    expect(phase.skipped.apiFailures).toBe(2);
   });
 });
 

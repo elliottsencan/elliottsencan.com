@@ -15,9 +15,10 @@
  * changed file, body lists applied edits.
  */
 
+import matter from "gray-matter";
 import { z } from "zod";
 import {
-  CORPORA,
+  type CORPORA,
   MAX_CROSSLINK_CALLS_PER_RUN,
 } from "./crosslink-config.ts";
 import {
@@ -48,7 +49,7 @@ import {
 import { proposeCrosslinks } from "./anthropic.ts";
 import { CROSSLINK_SUGGEST_SYSTEM } from "./prompts.ts";
 import type { Env } from "./types.ts";
-import { jsonResponse, log } from "./util.ts";
+import { isNotFoundError, jsonResponse, log } from "./util.ts";
 
 const MAX_SCOPE_PIECES = 25;
 
@@ -87,11 +88,11 @@ export function resolveScope(
   if (scope.kind === "slug") {
     if (scope.corpus === "wiki") {
       const w = snapshot.wiki.find((e) => e.slug === scope.slug);
-      if (!w) return { pieces: [], capped: false };
+      if (!w) { return { pieces: [], capped: false }; }
       return { pieces: [{ corpus: "wiki", slug: w.slug, url: `/wiki/${w.slug}` }], capped: false };
     }
     const b = snapshot.blog.find((e) => e.slug === scope.slug);
-    if (!b) return { pieces: [], capped: false };
+    if (!b) { return { pieces: [], capped: false }; }
     return { pieces: [{ corpus: "blog", slug: b.slug, url: `/writing/${b.slug}` }], capped: false };
   }
   // since + all both enumerate everything; "since" filters by date when
@@ -103,15 +104,14 @@ export function resolveScope(
   const filtered =
     scope.kind === "since"
       ? all.filter((p) => {
-          const fm =
-            p.corpus === "wiki"
-              ? snapshot.wiki.find((e) => e.slug === p.slug)?.frontmatter
-              : snapshot.blog.find((e) => e.slug === p.slug)?.frontmatter;
-          const dateRaw =
-            (fm?.compiled_at as unknown) ?? (fm?.date as unknown) ?? (fm?.updated as unknown);
-          if (!dateRaw) return false;
-          const date = new Date(dateRaw as string);
-          return Number.isFinite(date.getTime()) && date >= scope.since;
+          let date: Date | undefined;
+          if (p.corpus === "wiki") {
+            date = snapshot.wiki.find((e) => e.slug === p.slug)?.frontmatter.compiled_at;
+          } else {
+            const fm = snapshot.blog.find((e) => e.slug === p.slug)?.frontmatter;
+            date = fm?.updated ?? fm?.date;
+          }
+          return date != null && Number.isFinite(date.getTime()) && date >= scope.since;
         })
       : all;
   const capped = filtered.length > MAX_SCOPE_PIECES;
@@ -183,7 +183,7 @@ async function runScopedPhase(
   const forwardSources: Array<{ piece: Piece; body: string; candidates: Piece[] }> = [];
   for (const piece of pieces) {
     const row = rowsBySlug.get(`${piece.corpus}/${piece.slug}`);
-    if (!row || !row.body) continue;
+    if (!row?.body) { continue; }
     const pool = rows
       .filter((r) => !(r.piece.corpus === piece.corpus && r.piece.slug === piece.slug))
       .map((r) => ({ slug: `${r.piece.corpus}/${r.piece.slug}`, tags: r.tags, series: r.series }));
@@ -213,27 +213,44 @@ async function runScopedPhase(
     proposeProposals: async () => {
       const forward: CrosslinkProposal[] = [];
       const backward: CrosslinkProposal[] = [];
+      let apiFailures = 0;
       for (const src of forwardSources) {
-        if (callsLeft-- <= 0) break;
+        if (callsLeft-- <= 0) { break; }
         const r = await proposeCrosslinks({
           apiKey: env.ANTHROPIC_API_KEY,
           model: env.ANTHROPIC_MODEL || undefined,
           systemPrompt: CROSSLINK_SUGGEST_SYSTEM,
           userMessage: buildForwardPrompt(src),
         });
-        if (r.ok) forward.push(...r.data.proposals);
+        if (r.ok) {
+          forward.push(...r.data.proposals);
+        } else {
+          apiFailures++;
+          log.warn("crosslink", "scoped", "forward call failed", {
+            piece: `${src.piece.corpus}/${src.piece.slug}`,
+            error: r.error,
+          });
+        }
       }
       for (const tgt of backwardTargets) {
-        if (callsLeft-- <= 0) break;
+        if (callsLeft-- <= 0) { break; }
         const r = await proposeCrosslinks({
           apiKey: env.ANTHROPIC_API_KEY,
           model: env.ANTHROPIC_MODEL || undefined,
           systemPrompt: CROSSLINK_SUGGEST_SYSTEM,
           userMessage: buildBackwardPrompt(tgt, rowsBySlug),
         });
-        if (r.ok) backward.push(...r.data.proposals);
+        if (r.ok) {
+          backward.push(...r.data.proposals);
+        } else {
+          apiFailures++;
+          log.warn("crosslink", "scoped", "backward call failed", {
+            piece: `${tgt.piece.corpus}/${tgt.piece.slug}`,
+            error: r.error,
+          });
+        }
       }
-      return { forward, backward };
+      return { forward, backward, apiFailures };
     },
   });
 }
@@ -274,7 +291,7 @@ export async function handle(request: Request, env: Env, _ctx: ExecutionContext)
     return jsonResponse({ error: "invalid JSON" }, 400);
   }
   const validated = validate(body);
-  if (!validated.ok) return jsonResponse({ error: validated.error }, 400);
+  if (!validated.ok) { return jsonResponse({ error: validated.error }, 400); }
 
   const gh = createGitHubClient(env.GITHUB_TOKEN, env.GITHUB_REPO);
   const ghDeps: EnumerateDeps = {
@@ -335,17 +352,24 @@ async function openCrosslinkPr(
 ): Promise<Response> {
   const branch = `crosslink/${new Date().toISOString().slice(0, 10)}-${Date.now().toString(36)}`;
   const head = await getBranchSha("main", gh);
-  if (!head.ok) return jsonResponse({ ok: false, error: `branch sha: ${head.error}` }, 502);
+  if (!head.ok) { return jsonResponse({ ok: false, error: `branch sha: ${head.error}` }, 502); }
   const created = await createBranch(branch, head.data, gh);
-  if (!created.ok) return jsonResponse({ ok: false, error: `branch: ${created.error}` }, 502);
+  if (!created.ok) { return jsonResponse({ ok: false, error: `branch: ${created.error}` }, 502); }
 
   const committed: string[] = [];
   for (const f of phase.changedFiles) {
     const sha = await getFile(f.path, "main", gh);
+    if (!sha.ok && !isNotFoundError(sha.error)) {
+      log.error("crosslink", "commit", "getFile non-404 failure", {
+        path: f.path,
+        error: sha.error,
+      });
+      continue;
+    }
     const put = await putFile({
       path: f.path,
       branch,
-      content: f.after,
+      content: matter.stringify(f.after, f.frontmatter),
       message: `crosslink: ${f.path}`,
       ...(sha.ok ? { sha: sha.data.sha } : {}),
       gh,

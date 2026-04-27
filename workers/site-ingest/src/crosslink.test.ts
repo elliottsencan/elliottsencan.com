@@ -9,7 +9,7 @@ const wikiEntry = (slug: string, body = ""): WikiEntry => ({
     title: slug,
     summary: "s",
     sources: ["a", "b"],
-    compiled_at: new Date("2026-04-01").toISOString(),
+    compiled_at: new Date("2026-04-01"),
     compiled_with: "m",
   },
   body,
@@ -18,7 +18,7 @@ const wikiEntry = (slug: string, body = ""): WikiEntry => ({
 const blogEntry = (slug: string, date: string, body = ""): BlogEntry => ({
   slug,
   path: `src/content/blog/${slug}.md`,
-  frontmatter: { title: slug, description: "d", date },
+  frontmatter: { title: slug, description: "d", date: new Date(date) },
   body,
 });
 
@@ -45,7 +45,7 @@ describe("validate", () => {
   });
   it("defaults dry_run to false", () => {
     const r = validate({ scope: { kind: "all" } });
-    if (r.ok) expect(r.data.dry_run).toBe(false);
+    if (r.ok) { expect(r.data.dry_run).toBe(false); }
   });
 });
 
