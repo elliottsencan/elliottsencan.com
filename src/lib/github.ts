@@ -16,11 +16,20 @@
  * null is returned so blocks degrade independently.
  */
 
+export type DayContribution = {
+  /** ISO date (YYYY-MM-DD) per GitHub's calendar. */
+  date: string;
+  /** Contribution count for the day. */
+  count: number;
+};
+
 export type WeekContribution = {
   /** Total contributions during this ISO week. */
   total: number;
   /** ISO date (YYYY-MM-DD) of the first day of this week, per GitHub's calendar (Sunday). */
   startDate: string;
+  /** Per-day breakdown, oldest first. Length 7 except possibly at the calendar boundary. */
+  days: DayContribution[];
 };
 
 export type ContributionsSummary = {
@@ -227,10 +236,17 @@ async function fetchContributions(login: string): Promise<ContributionsSummary |
     return null;
   }
 
-  const weeks: WeekContribution[] = calendar.weeks.map((week) => ({
-    total: week.contributionDays.reduce((sum, day) => sum + day.contributionCount, 0),
-    startDate: week.contributionDays[0]?.date ?? "",
-  }));
+  const weeks: WeekContribution[] = calendar.weeks.map((week) => {
+    const days: DayContribution[] = week.contributionDays.map((d) => ({
+      date: d.date,
+      count: d.contributionCount,
+    }));
+    return {
+      total: days.reduce((sum, d) => sum + d.count, 0),
+      startDate: days[0]?.date ?? "",
+      days,
+    };
+  });
 
   // The API typically returns 53 weeks; keep the last 52 so the rail is always the same length.
   const trimmed = weeks.slice(-52);

@@ -1,8 +1,8 @@
 ---
 import { getCollection } from "astro:content";
-import ArrowCard from "@components/ArrowCard.astro";
 import Container from "@components/Container.astro";
 import LabeledRule from "@components/LabeledRule.astro";
+import Link from "@components/Link.astro";
 import { PROJECTS } from "@consts";
 import Layout from "@layouts/Layout.astro";
 
@@ -23,6 +23,12 @@ const allProjects = (await getCollection("projects"))
 
 const caseStudies = allProjects.filter((p) => p.data.isCaseStudy);
 const otherProjects = allProjects.filter((p) => !p.data.isCaseStudy);
+
+const dateFormatter = new Intl.DateTimeFormat("en-US", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+});
 ---
 
 <Layout title={PROJECTS.TITLE} description={PROJECTS.DESCRIPTION}>
@@ -34,13 +40,32 @@ const otherProjects = allProjects.filter((p) => !p.data.isCaseStudy);
         {
           caseStudies.length > 0 && (
             <section class="space-y-6">
-              <h2 class="font-mono text-xs uppercase tracking-wider text-black/60 dark:text-white/60">
+              <h2 class="font-heading text-sm font-medium text-black/65 dark:text-white/65">
                 Case studies
               </h2>
-              <ul class="not-prose flex flex-col gap-4">
+              <ul class="not-prose flex flex-col gap-3 text-sm">
                 {caseStudies.map((project) => (
-                  <li>
-                    <ArrowCard entry={project} />
+                  <li class="flex items-baseline gap-4">
+                    <time
+                      datetime={project.data.date.toISOString()}
+                      class="shrink-0 font-sans text-xs text-black/50 dark:text-white/60"
+                    >
+                      {dateFormatter.format(project.data.date)}
+                    </time>
+                    <span>
+                      <Link
+                        href={`/projects/${project.id}`}
+                        class="font-heading font-medium text-black dark:text-white"
+                      >
+                        {project.data.title}
+                      </Link>
+                      {project.data.description && (
+                        <span class="text-black/60 dark:text-white/60">
+                          {" — "}
+                          {project.data.description}
+                        </span>
+                      )}
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -49,15 +74,34 @@ const otherProjects = allProjects.filter((p) => !p.data.isCaseStudy);
         }
 
         <section class="space-y-6">
-          <h2 class="font-mono text-xs uppercase tracking-wider text-black/60 dark:text-white/60">
+          <h2 class="font-heading text-sm font-medium text-black/65 dark:text-white/65">
             {caseStudies.length > 0 ? "Other projects" : "All projects"}
           </h2>
           {
             otherProjects.length > 0 ? (
-              <ul class="not-prose flex flex-col gap-4">
+              <ul class="not-prose flex flex-col gap-3 text-sm">
                 {otherProjects.map((project) => (
-                  <li>
-                    <ArrowCard entry={project} />
+                  <li class="flex items-baseline gap-4">
+                    <time
+                      datetime={project.data.date.toISOString()}
+                      class="shrink-0 font-sans text-xs text-black/50 dark:text-white/60"
+                    >
+                      {dateFormatter.format(project.data.date)}
+                    </time>
+                    <span>
+                      <Link
+                        href={`/projects/${project.id}`}
+                        class="font-heading font-medium text-black dark:text-white"
+                      >
+                        {project.data.title}
+                      </Link>
+                      {project.data.description && (
+                        <span class="text-black/60 dark:text-white/60">
+                          {" — "}
+                          {project.data.description}
+                        </span>
+                      )}
+                    </span>
                   </li>
                 ))}
               </ul>

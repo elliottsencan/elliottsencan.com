@@ -22,27 +22,16 @@ const nowEntry = await getEntry("now", "current");
 const standfirst = nowEntry?.data.standfirst;
 
 const dateFormatter = new Intl.DateTimeFormat("en-US", {
-  day: "2-digit",
-  month: "short",
-  year: "2-digit",
+  day: "numeric",
+  month: "long",
+  year: "numeric",
 });
 ---
 
 <Layout title={HOME.TITLE} description={HOME.DESCRIPTION}>
   <Container>
     <div class="space-y-10">
-      <Masthead />
-
-      {
-        standfirst ? (
-          <p
-            class="font-sans text-base italic leading-relaxed text-black dark:text-white"
-            data-pagefind-meta={`standfirst:${standfirst}`}
-          >
-            {standfirst}
-          </p>
-        ) : null
-      }
+      <Masthead standfirst={standfirst} />
 
       {
         posts.length > 0 ? (
@@ -54,8 +43,7 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
                   <li class="flex items-baseline gap-4">
                     <time
                       datetime={post.data.date.toISOString()}
-                      class="shrink-0 font-mono text-xs uppercase tracking-wider text-black/50 dark:text-white/60"
-                      style="font-variant-numeric: tabular-nums;"
+                      class="shrink-0 font-sans text-xs text-black/50 dark:text-white/60"
                     >
                       {dateFormatter.format(post.data.date)}
                     </time>

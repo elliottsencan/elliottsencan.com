@@ -30,9 +30,7 @@ function buildToc(headings: Heading[]) {
 <details
   class="group toc not-prose mt-6 border-t border-black/10 dark:border-white/15"
 >
-  <summary
-    class="flex cursor-pointer items-center justify-between gap-4 py-3 font-mono text-xs uppercase tracking-wider text-black/55 transition-colors duration-300 hover:text-black dark:text-white/55 dark:hover:text-white"
-  >
+  <summary class="flex cursor-pointer items-center justify-between gap-4 py-3 font-heading text-sm font-medium text-black/65 transition-colors duration-300 hover:text-black dark:text-white/65 dark:hover:text-white">
     <span>Contents &middot; {headings.filter((h: Heading) => h.depth === 2).length}</span>
     <span
       aria-hidden="true"
