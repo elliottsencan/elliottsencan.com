@@ -78,7 +78,7 @@ export default {
       if (!limited.success) {
         return textResponse("rate limited", 429);
       }
-      return synthesize.handle(request, env);
+      return synthesize.handle(request, env, ctx);
     }
 
     if (request.method === "POST" && url.pathname === "/recompile") {

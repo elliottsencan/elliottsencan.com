@@ -13,12 +13,17 @@
  * 2-entry threshold and a small corpus this is rare. Idempotent: a
  * topic's article is skipped if its source set hasn't changed since
  * `compiled_at`.
+ *
+ * Plumbed through `runPipeline` (pipeline.ts): the strategy below owns
+ * planning (enumerate + cluster + per-topic compile), and the substrate
+ * owns branch + commit + PR + the inline cross-link phase.
  */
 
 import matter from "gray-matter";
 import { z } from "zod";
 import { MIN_WIKI_SOURCES } from "@shared/schemas/content.ts";
 import { compileWikiArticle } from "./anthropic.ts";
+import { makeCrosslinkRunner } from "./crosslink-phase.ts";
 import {
   createBranch,
   createGitHubClient,
@@ -30,6 +35,15 @@ import {
   openPullRequest,
   putFile,
 } from "./github.ts";
+import {
+  type CrosslinkResult,
+  type GithubDeps,
+  type Mutation,
+  type PlanOutput,
+  type PlanResult,
+  runPipeline,
+  type Strategy,
+} from "./pipeline.ts";
 import { WIKI_SYNTHESIS_SYSTEM } from "./prompts.ts";
 import type { Env, Result, WikiArticle } from "./types.ts";
 import { jsonResponse, log, readingSlugFromPath } from "./util.ts";
@@ -47,6 +61,8 @@ const SynthesizeRequestSchema = z.object({
   /** Defaults to true; flip to false to actually open a PR. */
   dry_run: z.boolean().optional().default(true),
 });
+
+export type SynthesizeRequest = z.infer<typeof SynthesizeRequestSchema>;
 
 interface ReadingSource {
   slug: string;
@@ -69,47 +85,55 @@ interface ExistingWiki {
   compiled_with: string;
 }
 
-// ---------- handler ----------
+type SynthesizeSummary = {
+  active_topics: string[];
+  compiled: number;
+  failed: Array<{ path: string; topic: string; error: string }>;
+  skipped: Array<{ topic: string; reason: string }>;
+};
 
-export async function handle(request: Request, env: Env): Promise<Response> {
-  let parsed: unknown;
-  try {
-    parsed = await request.json();
-  } catch {
-    return jsonResponse({ ok: false, error: "invalid JSON" }, 400);
-  }
-  const validation = SynthesizeRequestSchema.safeParse(parsed ?? {});
-  if (!validation.success) {
-    const issue = validation.error.issues[0];
-    return jsonResponse(
-      { ok: false, error: `${issue?.path?.join(".") ?? "body"}: ${issue?.message ?? "invalid"}` },
-      400,
-    );
-  }
-  const req = validation.data;
+// ---------- strategy ----------
 
-  const gh = createGitHubClient(env.GITHUB_TOKEN, env.GITHUB_REPO);
-  const mainSha = await getBranchSha("main", gh);
-  if (!mainSha.ok) {
-    return jsonResponse({ ok: false, error: `main: ${mainSha.error}` }, 500);
-  }
+/**
+ * Strategy factory: closes over the validated request so `plan()` can
+ * read `topics`, `force`, and `dry_run` without re-parsing the body.
+ */
+export function makeSynthesizeStrategy(req: SynthesizeRequest): Strategy {
+  return {
+    name: "synthesize",
+    branchPrefix: "synthesis",
+    plan: async ({ env }): Promise<PlanResult> => {
+      const gh = createGitHubClient(env.GITHUB_TOKEN, env.GITHUB_REPO);
+      const planned = await planSynthesis(env, gh, req);
+      return planned;
+    },
+    prTitle: ({ mutation }) => {
+      const n = mutation.added.length + mutation.changed.length;
+      return `Wiki synthesis (${n} concept${n === 1 ? "" : "s"})`;
+    },
+    prBody: (plan, crosslink) => buildPrBody(plan, crosslink),
+  };
+}
 
-  // Enumerate reading entries and existing wiki articles in parallel.
+async function planSynthesis(
+  env: Env,
+  gh: GitHubClient,
+  req: SynthesizeRequest,
+): Promise<PlanResult> {
   const [sourcesResult, existingResult] = await Promise.all([
     enumerateReading(env, gh),
     enumerateWiki(gh),
   ]);
   if (!sourcesResult.ok) {
-    return jsonResponse({ ok: false, error: sourcesResult.error }, 500);
+    return { ok: false, error: sourcesResult.error, status: 500 };
   }
   if (!existingResult.ok) {
-    return jsonResponse({ ok: false, error: existingResult.error }, 500);
+    return { ok: false, error: existingResult.error, status: 500 };
   }
 
   const byTopic = clusterByTopic(sourcesResult.data, MIN_WIKI_SOURCES);
   const allActiveTopics = [...byTopic.keys()].sort();
 
-  // Filter to topics requested + at-threshold + actually changed (unless forced).
   const existingByTopic = new Map(existingResult.data.map((e) => [e.topic, e]));
   const requestedTopics = req.topics ? new Set(req.topics) : null;
   const targets: Array<{ topic: string; sources: ReadingSource[]; existing?: ExistingWiki }> = [];
@@ -132,19 +156,9 @@ export async function handle(request: Request, env: Env): Promise<Response> {
     cap: MAX_CONCEPTS_PER_RUN,
   });
 
-  if (capped.length === 0) {
-    return jsonResponse({
-      ok: true,
-      active_topics: allActiveTopics,
-      compiled: 0,
-      skipped: 0,
-      pr: null,
-    });
-  }
-
-  // Per-concept compile.
-  const writes: Array<{ path: string; content: string; previousSha?: string; topic: string }> = [];
-  const skipped: Array<{ topic: string; reason: string }> = [];
+  const added: Mutation["added"] = [];
+  const changed: Mutation["changed"] = [];
+  const skipped: SynthesizeSummary["skipped"] = [];
   for (const target of capped) {
     const article = await compileWikiArticle({
       apiKey: env.ANTHROPIC_API_KEY,
@@ -166,126 +180,170 @@ export async function handle(request: Request, env: Env): Promise<Response> {
       compiledAt: new Date(),
     });
     const path = `${WIKI_DIR}/${target.topic}.md`;
-    writes.push({
-      path,
-      content: markdown,
-      ...(target.existing ? { previousSha: target.existing.sha } : {}),
-      topic: target.topic,
-    });
+    if (target.existing) {
+      changed.push({ path, before: "", after: markdown });
+    } else {
+      added.push({ path, content: markdown });
+    }
   }
 
+  const summary: SynthesizeSummary = {
+    active_topics: allActiveTopics,
+    compiled: added.length + changed.length,
+    failed: [],
+    skipped,
+  };
+
+  return {
+    ok: true,
+    data: {
+      mutation: { added, changed },
+      summary: summary as unknown as Record<string, unknown>,
+    },
+  };
+}
+
+function buildPrBody(plan: PlanOutput, crosslink?: CrosslinkResult): string {
+  const summary = (plan.summary ?? {}) as Partial<SynthesizeSummary>;
+  const writes = [
+    ...plan.mutation.added.map((f) => f.path),
+    ...plan.mutation.changed.map((f) => f.path),
+  ];
+  const skipped = summary.skipped ?? [];
+  const failed = summary.failed ?? [];
+  const lines: string[] = [
+    "Automated wiki synthesis run.",
+    "",
+    `- Compiled: ${writes.length}`,
+    `- Skipped: ${skipped.length}`,
+  ];
+  if (failed.length > 0) {
+    lines.push(`- Failed: ${failed.length}`);
+  }
+  if (writes.length > 0) {
+    lines.push("", "### Compiled");
+    for (const p of writes) {
+      lines.push(`- \`${p}\``);
+    }
+  }
+  if (skipped.length > 0) {
+    lines.push("", "### Skipped");
+    for (const s of skipped) {
+      lines.push(`- \`${s.topic}\` (${s.reason})`);
+    }
+  }
+  if (crosslink && crosslink.applied.length > 0) {
+    lines.push("", "### Cross-link suggestions");
+    lines.push(
+      `Applied ${crosslink.applied.length} insertion${crosslink.applied.length === 1 ? "" : "s"} ` +
+        `(${crosslink.forward} forward + ${crosslink.backward} backward proposals).`,
+    );
+    for (const a of crosslink.applied) {
+      lines.push(`- \`${a.path}\` — \`${a.anchor}\` → ${a.target}`);
+    }
+  }
+  return lines.join("\n");
+}
+
+// ---------- handler ----------
+
+export async function handle(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+  let parsed: unknown;
+  try {
+    parsed = await request.json();
+  } catch {
+    return jsonResponse({ ok: false, error: "invalid JSON" }, 400);
+  }
+  const validation = SynthesizeRequestSchema.safeParse(parsed ?? {});
+  if (!validation.success) {
+    const issue = validation.error.issues[0];
+    return jsonResponse(
+      { ok: false, error: `${issue?.path?.join(".") ?? "body"}: ${issue?.message ?? "invalid"}` },
+      400,
+    );
+  }
+  const req = validation.data;
+  const strategy = makeSynthesizeStrategy(req);
+
   if (req.dry_run) {
+    const planned = await strategy.plan({ env }, env);
+    if (!planned.ok) {
+      return jsonResponse({ ok: false, error: planned.error }, planned.status ?? 500);
+    }
+    const summary = (planned.data.summary ?? {}) as Partial<SynthesizeSummary>;
     return jsonResponse({
       ok: true,
       dry_run: true,
-      active_topics: allActiveTopics,
-      compiled: writes.length,
-      skipped: skipped.length,
-      writes: writes.map((w) => ({ path: w.path, topic: w.topic })),
-      skip_reasons: skipped,
+      active_topics: summary.active_topics ?? [],
+      compiled: summary.compiled ?? 0,
+      skipped: summary.skipped?.length ?? 0,
+      writes: [
+        ...planned.data.mutation.added.map((f) => ({ path: f.path })),
+        ...planned.data.mutation.changed.map((f) => ({ path: f.path })),
+      ],
+      skip_reasons: summary.skipped ?? [],
     });
   }
 
-  // Branch + commit + PR.
-  const branch = `synthesis/${new Date().toISOString().slice(0, 10)}-${Date.now().toString(36)}`;
-  const branchResult = await createBranch(branch, mainSha.data, gh);
-  if (!branchResult.ok) {
-    return jsonResponse({ ok: false, error: `branch: ${branchResult.error}` }, 500);
+  const deps = makePipelineDeps(env);
+  const result = await runPipeline(
+    strategy,
+    { commitTarget: "pr", crosslink: "inline" },
+    env,
+    ctx,
+    deps,
+  );
+  if (!result.ok) {
+    return jsonResponse({ ok: false, error: result.error }, result.status);
   }
-  const committed: Array<{ path: string; topic: string }> = [];
-  const failedWrites: Array<{ path: string; topic: string; error: string }> = [];
-  for (const write of writes) {
-    const put = await putFile({
-      path: write.path,
-      branch,
-      content: write.content,
-      message: `wiki: ${write.topic}`,
-      ...(write.previousSha ? { sha: write.previousSha } : {}),
-      gh,
-    });
-    if (put.ok) {
-      committed.push({ path: write.path, topic: write.topic });
-    } else {
-      failedWrites.push({ path: write.path, topic: write.topic, error: put.error });
-      log.error("synthesize", "commit", "put failed", { path: write.path, error: put.error });
-    }
-  }
-
-  if (committed.length === 0) {
-    return jsonResponse(
-      {
-        ok: false,
-        error: "no writes committed",
-        branch,
-        active_topics: allActiveTopics,
-        committed: 0,
-        failed: failedWrites.length,
-        skipped: skipped.length,
-        failed_writes: failedWrites,
-      },
-      500,
-    );
-  }
-
-  const existingPr = await findOpenPrByBranch(branch, gh);
-  if (!existingPr.ok) {
-    return jsonResponse(
-      {
-        ok: false,
-        error: `pr lookup: ${existingPr.error}`,
-        branch,
-        committed: committed.length,
-        failed: failedWrites.length,
-        committed_paths: committed,
-        failed_writes: failedWrites,
-      },
-      500,
-    );
-  }
-
-  let prNumber: number | null = null;
-  let prUrl: string | null = null;
-  if (existingPr.data) {
-    prNumber = existingPr.data.number;
-  } else {
-    const pr = await openPullRequest({
-      title: `Wiki synthesis (${committed.length} concept${committed.length === 1 ? "" : "s"})`,
-      body: buildPrBody(committed, failedWrites, skipped),
-      head: branch,
-      base: "main",
-      gh,
-    });
-    if (pr.ok) {
-      prNumber = pr.data.number;
-      prUrl = pr.data.html_url;
-    } else {
-      log.error("synthesize", "pr", "open failed", { error: pr.error, branch });
-      return jsonResponse(
-        {
-          ok: false,
-          error: `pr open: ${pr.error}`,
-          branch,
-          committed: committed.length,
-          failed: failedWrites.length,
-          committed_paths: committed,
-          failed_writes: failedWrites,
-        },
-        500,
-      );
-    }
-  }
-
+  const summary = (result.summary ?? {}) as Partial<SynthesizeSummary>;
   return jsonResponse({
     ok: true,
     dry_run: false,
-    active_topics: allActiveTopics,
-    compiled: committed.length,
-    failed: failedWrites.length,
-    skipped: skipped.length,
-    failed_writes: failedWrites,
-    branch,
-    pr: prNumber ? { number: prNumber, url: prUrl } : null,
+    active_topics: summary.active_topics ?? [],
+    compiled: summary.compiled ?? 0,
+    skipped: summary.skipped?.length ?? 0,
+    branch: result.branch,
+    pr: result.pr_number ? { number: result.pr_number, url: result.pr_url } : null,
+    crosslink: result.crosslink
+      ? {
+          forward: result.crosslink.forward,
+          backward: result.crosslink.backward,
+          applied: result.crosslink.applied.length,
+        }
+      : null,
   });
+}
+
+// ---------- pipeline deps adapter ----------
+
+/**
+ * Build the substrate's `deps` object from the worker `Env`. The adapter
+ * curries `gh` into github.ts's helper signatures and wires the cross-link
+ * runner so `commitTarget: "pr"` + `crosslink: "inline"` strategies pick
+ * up cross-link insertions automatically.
+ *
+ * Exported because /contribute, /recompile, and /link will adopt the same
+ * adapter once they're migrated.
+ */
+export function makePipelineDeps(env: Env): {
+  github: GithubDeps;
+  runCrosslink: ReturnType<typeof makeCrosslinkRunner>;
+} {
+  const gh = createGitHubClient(env.GITHUB_TOKEN, env.GITHUB_REPO);
+  const github: GithubDeps = {
+    getBranchSha: (branch) => getBranchSha(branch, gh),
+    createBranch: (branch, fromSha) => createBranch(branch, fromSha, gh),
+    getFile: (path, ref) => getFile(path, ref, gh),
+    putFile: (args) => putFile({ ...args, gh }),
+    findOpenPrByBranch: (branch) => findOpenPrByBranch(branch, gh),
+    openPullRequest: (args) => openPullRequest({ ...args, gh }),
+  };
+  const runCrosslink = makeCrosslinkRunner(env, {
+    listDir: (path, ref) => listDir(path, ref ?? "main", gh),
+    getFile: (path, ref) => getFile(path, ref ?? "main", gh),
+  });
+  return { github, runCrosslink };
 }
 
 // ---------- enumeration ----------
@@ -452,49 +510,13 @@ export function buildArticleMarkdown(args: {
   return matter.stringify(args.article.body.trim(), data);
 }
 
-// ---------- pr body ----------
-
-function buildPrBody(
-  committed: Array<{ path: string; topic: string }>,
-  failed: Array<{ path: string; topic: string; error: string }>,
-  skipped: Array<{ topic: string; reason: string }>,
-): string {
-  const lines = [
-    `Automated wiki synthesis run.`,
-    "",
-    `- Committed: ${committed.length}`,
-    `- Failed: ${failed.length}`,
-    `- Skipped: ${skipped.length}`,
-  ];
-  if (committed.length > 0) {
-    lines.push("", "### Committed");
-    for (const w of committed) {
-      lines.push(`- \`${w.topic}\` -> \`${w.path}\``);
-    }
-  }
-  if (failed.length > 0) {
-    lines.push("", "### Failed");
-    for (const f of failed) {
-      lines.push(`- \`${f.topic}\` -> \`${f.path}\` (${f.error})`);
-    }
-  }
-  if (skipped.length > 0) {
-    lines.push("", "### Skipped");
-    for (const s of skipped) {
-      lines.push(`- \`${s.topic}\` (${s.reason})`);
-    }
-  }
-  return lines.join("\n");
-}
-
 // ---------- helpers ----------
 
 function isString(v: unknown): v is string {
   return typeof v === "string";
 }
 
-// Exported for unit tests. Compares two arrays as unordered multisets:
-// returns true iff they have the same length and the same element counts.
+// Exported for unit tests.
 export function setEquals(a: string[], b: string[]): boolean {
   if (a.length !== b.length) {
     return false;
@@ -508,3 +530,4 @@ export function setEquals(a: string[], b: string[]): boolean {
   }
   return true;
 }
+
