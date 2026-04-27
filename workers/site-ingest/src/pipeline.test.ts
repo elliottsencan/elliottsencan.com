@@ -15,6 +15,9 @@ const fakeCtx = () => ({ waitUntil: vi.fn() }) as unknown as ExecutionContext;
 const okGithubDeps = (): GithubDeps => ({
   getBranchSha: vi.fn().mockResolvedValue({ ok: true, data: "abc123" }),
   createBranch: vi.fn().mockResolvedValue({ ok: true, data: { alreadyExists: false } }),
+  // Default to "file does not exist" — `added` paths take this path. Tests
+  // for `changed` mutations override to return a valid sha.
+  getFile: vi.fn().mockResolvedValue({ ok: false, error: "404 not found" }),
   putFile: vi
     .fn()
     .mockResolvedValue({ ok: true, data: { blobSha: "blob", commitSha: "def456" } }),
@@ -98,6 +101,35 @@ describe("runPipeline (PR target)", () => {
       { github },
     );
     expect(github.putFile).toHaveBeenCalledTimes(2);
+  });
+
+  it("looks up sha from main and threads it to putFile for changed files", async () => {
+    const github = okGithubDeps();
+    github.getFile = vi
+      .fn()
+      .mockResolvedValue({ ok: true, data: { content: "old", sha: "main-sha" } });
+    const strategy = fakeStrategy({
+      plan: async () => ({
+        ok: true,
+        data: {
+          mutation: {
+            added: [],
+            changed: [{ path: "b.md", before: "old", after: "new" }],
+          },
+        },
+      }),
+    });
+    await runPipeline(
+      strategy,
+      { commitTarget: "pr", crosslink: "skip" },
+      fakeEnv(),
+      fakeCtx(),
+      { github },
+    );
+    expect(github.getFile).toHaveBeenCalledWith("b.md", "main");
+    expect(github.putFile).toHaveBeenCalledWith(
+      expect.objectContaining({ path: "b.md", sha: "main-sha" }),
+    );
   });
 });
 

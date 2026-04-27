@@ -68,6 +68,13 @@ export type GithubDeps = {
     branch: string,
     fromSha: string,
   ) => Promise<Result<{ alreadyExists: boolean }>>;
+  /**
+   * Fetch a file's content + sha from a ref. The substrate uses this to
+   * resolve the sha for changed files before update commits. Returns
+   * `{ ok: false }` for new files (which is how the substrate distinguishes
+   * "no sha needed" from "sha required but unavailable").
+   */
+  getFile: (path: string, ref: string) => Promise<Result<{ content: string; sha: string }>>;
   putFile: (args: {
     path: string;
     branch: string;
@@ -139,11 +146,14 @@ async function commitToPR(
   if (options.crosslink === "inline" && deps.runCrosslink) {
     crosslink = await deps.runCrosslink({ mutation, env });
     for (const f of crosslink.changedFiles) {
+      const existing = await deps.github.getFile(f.path, "main");
+      const sha = existing.ok ? existing.data.sha : undefined;
       const r = await deps.github.putFile({
         path: f.path,
         branch,
         content: f.after,
         message: `crosslink: ${f.path}`,
+        ...(sha ? { sha } : {}),
       });
       if (!r.ok) return { ok: false, status: 502, error: r.error };
     }
@@ -218,11 +228,18 @@ async function commitMutation(
     if (!r.ok) return { ok: false, status: 502, error: r.error };
   }
   for (const f of mutation.changed) {
+    // Update commits to an existing path require the file's sha. Look it up
+    // on main rather than threading it through the strategy contract — keeps
+    // Mutation simple and keeps strategies from having to know the layout
+    // of the existing file system.
+    const existing = await github.getFile(f.path, "main");
+    const sha = existing.ok ? existing.data.sha : undefined;
     const r = await github.putFile({
       path: f.path,
       branch,
       content: f.after,
       message: `${strategyName}: update ${f.path}`,
+      ...(sha ? { sha } : {}),
     });
     if (!r.ok) return { ok: false, status: 502, error: r.error };
   }
