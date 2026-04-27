@@ -24,25 +24,21 @@ type Props = {
 const { filePath } = Astro.props;
 const revisions = filePath ? getRevisions(filePath) : [];
 
-const dateFormatter = new Intl.DateTimeFormat("en-GB", {
-  day: "2-digit",
-  month: "short",
-  year: "2-digit",
+const dateFormatter = new Intl.DateTimeFormat("en-US", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
   timeZone: "UTC",
 });
 
 const commitBaseURL = filePath ? `https://github.com/${REPO.OWNER}/${REPO.NAME}/commit` : null;
-const latestFormatted =
-  revisions.length > 0 ? dateFormatter.format(revisions[0].date).toUpperCase() : null;
+const latestFormatted = revisions.length > 0 ? dateFormatter.format(revisions[0].date) : null;
 ---
 
 {
   revisions.length > 0 && (
     <details class="group not-prose mt-16 border-t border-black/10 dark:border-white/15">
-      <summary
-        class="flex cursor-pointer items-center justify-between gap-4 py-3 font-mono text-xs uppercase tracking-wider text-black/55 transition-colors duration-300 hover:text-black dark:text-white/55 dark:hover:text-white"
-        style="font-variant-numeric: tabular-nums;"
-      >
+      <summary class="flex cursor-pointer items-center justify-between gap-4 py-3 font-heading text-sm font-medium text-black/65 transition-colors duration-300 hover:text-black dark:text-white/65 dark:hover:text-white">
         <span>
           Revisions &middot; {revisions.length}
           {latestFormatted && (
@@ -58,15 +54,12 @@ const latestFormatted =
       </summary>
       <ol class="space-y-2 pb-4 text-sm">
         {revisions.map((revision) => (
-          <li
-            class="grid grid-cols-[auto_auto_1fr] items-baseline gap-x-4 text-black/75 dark:text-white/75"
-            style="font-variant-numeric: tabular-nums;"
-          >
+          <li class="grid grid-cols-[auto_auto_1fr] items-baseline gap-x-4 text-black/75 dark:text-white/75">
             <time
               datetime={revision.date.toISOString()}
-              class="font-mono text-xs uppercase tracking-wider text-black/55 dark:text-white/55"
+              class="font-sans text-xs text-black/55 dark:text-white/55"
             >
-              {dateFormatter.format(revision.date).toUpperCase()}
+              {dateFormatter.format(revision.date)}
             </time>
             <a
               href={commitBaseURL ? `${commitBaseURL}/${revision.sha}` : undefined}

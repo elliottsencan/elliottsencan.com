@@ -15,9 +15,9 @@ const entries = (await getCollection("nowArchive")).sort(
 );
 
 const dateFormatter = new Intl.DateTimeFormat("en-US", {
-  day: "2-digit",
-  month: "short",
-  year: "2-digit",
+  day: "numeric",
+  month: "long",
+  year: "numeric",
 });
 ---
 
@@ -44,8 +44,7 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
                 <li class="flex items-baseline gap-4">
                   <time
                     datetime={entry.data.archivedDate.toISOString()}
-                    class="shrink-0 font-mono text-xs uppercase tracking-wider text-black/50 dark:text-white/50"
-                    style="font-variant-numeric: tabular-nums;"
+                    class="shrink-0 font-sans text-xs text-black/55 dark:text-white/55"
                   >
                     {dateFormatter.format(entry.data.archivedDate)}
                   </time>
@@ -68,9 +67,7 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
 
       <EditorialRule />
 
-      <p
-        class="font-mono text-xs uppercase tracking-wider text-black/55 dark:text-white/55"
-      >
+      <p class="text-xs text-black/55 dark:text-white/55">
         <Link href="/now">back to now</Link>
         &nbsp;&middot;&nbsp;
         <Link href="/now/how-this-works">how this page works</Link>

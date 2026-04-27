@@ -19,9 +19,7 @@ const entry = Astro.props;
 const { Content } = await render(entry);
 
 const archivedDate = entry.data.archivedDate;
-const formatted = `${archivedDate
-  .toLocaleString("en-US", { month: "short" })
-  .toUpperCase()} ${archivedDate.getFullYear()}`;
+const formatted = `${archivedDate.toLocaleString("en-US", { month: "long" })} ${archivedDate.getFullYear()}`;
 const archivedISO = archivedDate.toISOString().slice(0, 10);
 ---
 
@@ -35,10 +33,7 @@ const archivedISO = archivedDate.toISOString().slice(0, 10);
     >
       <div>
         <h1 class="sr-only">{entry.data.title}</h1>
-        <p
-          class="font-mono text-xs uppercase tracking-wider text-black/55 dark:text-white/55"
-          style="font-variant-numeric: tabular-nums;"
-        >
+        <p class="font-heading text-xs font-medium tracking-wider text-black/55 dark:text-white/55">
           Now &middot; Archived {formatted}
         </p>
       </div>
@@ -53,9 +48,7 @@ const archivedISO = archivedDate.toISOString().slice(0, 10);
 
       <EditorialRule />
 
-      <p
-        class="font-mono text-xs uppercase tracking-wider text-black/55 dark:text-white/55"
-      >
+      <p class="text-xs text-black/55 dark:text-white/55">
         <Link href="/now">current now</Link>
         &nbsp;&middot;&nbsp;
         <Link href="/now/archive">all archived</Link>

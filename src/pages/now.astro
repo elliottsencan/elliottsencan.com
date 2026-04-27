@@ -18,7 +18,7 @@ if (!entry) {
 const { Content } = await render(entry);
 
 const updated = entry.data.updated;
-const lastUpdated = `${updated.toLocaleString("en-US", { month: "short" }).toUpperCase()} ${updated.getFullYear()}`;
+const lastUpdated = `${updated.toLocaleString("en-US", { month: "long" })} ${updated.getFullYear()}`;
 const lastUpdatedISO = updated.toISOString().slice(0, 10);
 ---
 
@@ -39,17 +39,15 @@ const lastUpdatedISO = updated.toISOString().slice(0, 10);
 
       <section
         class="prose prose-neutral dark:prose-invert max-w-none text-base leading-relaxed text-black/85 dark:text-white/85
-          prose-h2:mt-12 prose-h2:mb-4 prose-h2:font-mono prose-h2:text-xs prose-h2:font-normal prose-h2:uppercase prose-h2:tracking-wider prose-h2:text-black/55 dark:prose-h2:text-white/60
-          prose-h3:mt-8 prose-h3:mb-2 prose-h3:font-mono prose-h3:text-xs prose-h3:font-normal prose-h3:uppercase prose-h3:tracking-wider prose-h3:text-black/60 dark:prose-h3:text-white/60"
+          prose-h2:mt-12 prose-h2:mb-4 prose-h2:font-heading prose-h2:text-sm prose-h2:font-medium prose-h2:text-black/65 dark:prose-h2:text-white/65
+          prose-h3:mt-8 prose-h3:mb-2 prose-h3:font-heading prose-h3:text-sm prose-h3:font-medium prose-h3:text-black/60 dark:prose-h3:text-white/60"
       >
         <Content />
       </section>
 
       <EditorialRule />
 
-      <p
-        class="font-mono text-xs uppercase tracking-wider text-black/55 dark:text-white/55"
-      >
+      <p class="text-xs text-black/55 dark:text-white/55">
         <Link href="/now/how-this-works">how this page works</Link>
         &nbsp;&middot;&nbsp;
         <Link href="/now/archive">archive</Link>

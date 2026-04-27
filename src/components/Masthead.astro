@@ -1,35 +1,47 @@
 ---
-import { SITE } from "@consts";
 import LabeledRule from "@components/LabeledRule.astro";
+import { SITE } from "@consts";
+
+type Props = {
+  standfirst?: string;
+};
+
+const { standfirst } = Astro.props;
 
 // Build-time stamp — regenerates on every deploy, signalling the site is alive.
 const buildDate = new Date();
 const editionDate = new Intl.DateTimeFormat("en-US", {
-  day: "2-digit",
-  month: "short",
+  day: "numeric",
+  month: "long",
   year: "numeric",
-})
-  .format(buildDate)
-  .toUpperCase();
+}).format(buildDate);
 
-const location = SITE.LOCATION.toUpperCase();
+const location = SITE.LOCATION;
 ---
 
 <!--
-  The site nav (Header.astro) already renders the site title. Repeating it here
-  as a big visible h1 creates a redundancy that reads as template scaffolding.
-  Instead: keep an sr-only h1 for semantics, and show the editorial dateline —
-  location + build date — as the left label of a label-on-rule row. The
-  dot-grid rule flows from the dateline to the right edge of the column,
-  anchoring the top of the page.
+  Newspaper-style masthead: the LabeledRule is the dateline (location + build
+  date) and the optional italic paragraph beneath it is the lede. Coupling the
+  two here — instead of leaving them as siblings on the page — makes the rule
+  read as the eyebrow on the lede rather than as standalone chrome.
 
-  The sr-only h1 lives outside LabeledRule so LabeledRule's h1 slot is free
-  to carry the visible dateline text (as a <p>) without conflicting on the
-  page's heading semantics.
+  The site nav (Header.astro) already renders the site title, so a visible h1
+  here would be redundant scaffolding; the sr-only h1 carries the page-level
+  heading semantics so LabeledRule's slot is free for the dateline <p>.
 -->
 <div>
   <h1 class="sr-only">{SITE.TITLE}</h1>
   <LabeledRule as="p">
     Currently in {location} &middot; {editionDate}
   </LabeledRule>
+  {
+    standfirst ? (
+      <p
+        class="mt-2 font-sans text-base italic leading-relaxed text-black dark:text-white"
+        data-pagefind-meta={`standfirst:${standfirst}`}
+      >
+        {standfirst}
+      </p>
+    ) : null
+  }
 </div>
