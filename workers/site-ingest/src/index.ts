@@ -118,7 +118,7 @@ export default {
       if (!limited.success) {
         return textResponse("rate limited", 429);
       }
-      return contribute.handle(request, env);
+      return contribute.handle(request, env, ctx);
     }
 
     if (request.method === "POST" && url.pathname === "/crosslink") {

@@ -5,30 +5,33 @@
  * sources via Anthropic. /contribute takes an already-authored body
  * (typically the result of an agent's analysis filed back to the wiki)
  * and commits it directly with no model call.
+ *
+ * Plumbed through `runPipeline` (pipeline.ts): strategy.plan() handles
+ * the existence check (409 if the article exists and !force), markdown
+ * compilation, and returns the Mutation. Substrate owns branch + commit
+ * + PR + the inline cross-link phase.
  */
 
 import matter from "gray-matter";
 import { z } from "zod";
 import { MIN_WIKI_SOURCES } from "@shared/schemas/content.ts";
+import { createGitHubClient, getFile } from "./github.ts";
 import {
-  createBranch,
-  createGitHubClient,
-  findOpenPrByBranch,
-  getBranchSha,
-  getFile,
-  openPullRequest,
-  putFile,
-} from "./github.ts";
+  type CrosslinkResult,
+  type PlanOutput,
+  type PlanResult,
+  runPipeline,
+  type Strategy,
+} from "./pipeline.ts";
+import { makePipelineDeps } from "./synthesize.ts";
 import type { Env } from "./types.ts";
-import { jsonResponse, log } from "./util.ts";
+import { jsonResponse } from "./util.ts";
 
 const WIKI_DIR = "src/content/wiki";
 const TOPIC_SLUG_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
 const ContributeRequestSchema = z.object({
-  topic: z
-    .string()
-    .regex(TOPIC_SLUG_RE, "topic must be lowercase kebab-case"),
+  topic: z.string().regex(TOPIC_SLUG_RE, "topic must be lowercase kebab-case"),
   title: z.string().min(1).optional(),
   summary: z.string().min(1).max(240),
   body: z.string().min(1),
@@ -38,7 +41,90 @@ const ContributeRequestSchema = z.object({
   dry_run: z.boolean().optional().default(true),
 });
 
-export async function handle(request: Request, env: Env): Promise<Response> {
+export type ContributeRequest = z.infer<typeof ContributeRequestSchema>;
+
+type ContributeSummary = {
+  topic: string;
+  path: string;
+  exists: boolean;
+  sources: string[];
+};
+
+// ---------- strategy ----------
+
+export function makeContributeStrategy(req: ContributeRequest): Strategy {
+  return {
+    name: "contribute",
+    branchPrefix: `contribute/${req.topic}`,
+    plan: async ({ env }): Promise<PlanResult> => {
+      const gh = createGitHubClient(env.GITHUB_TOKEN, env.GITHUB_REPO);
+      const path = `${WIKI_DIR}/${req.topic}.md`;
+      const existing = await getFile(path, "main", gh);
+      const exists = existing.ok;
+      if (exists && !req.force) {
+        return {
+          ok: false,
+          error: `wiki article already exists at ${path}; pass force: true to overwrite`,
+          status: 409,
+        };
+      }
+      const markdown = buildArticleMarkdown({
+        title: req.title ?? humanize(req.topic),
+        summary: req.summary,
+        body: req.body,
+        sources: [...req.sources].sort(),
+        ...(req.related_concepts ? { related_concepts: req.related_concepts } : {}),
+        compiled_with: env.ANTHROPIC_MODEL || "manual:contribute",
+        compiled_at: new Date(),
+      });
+      const summary: ContributeSummary = {
+        topic: req.topic,
+        path,
+        exists,
+        sources: [...req.sources].sort(),
+      };
+      const mutation = exists
+        ? { added: [], changed: [{ path, before: "", after: markdown }] }
+        : { added: [{ path, content: markdown }], changed: [] };
+      return {
+        ok: true,
+        data: {
+          mutation,
+          summary: summary as unknown as Record<string, unknown>,
+        },
+      };
+    },
+    prTitle: () => `Wiki contribution: ${req.topic}`,
+    prBody: (plan, crosslink) => buildPrBody(plan, crosslink),
+  };
+}
+
+function buildPrBody(plan: PlanOutput, crosslink?: CrosslinkResult): string {
+  const summary = plan.summary as unknown as ContributeSummary;
+  const lines: string[] = [
+    "Manually-authored wiki article filed via /contribute.",
+    "",
+    `- Topic: \`${summary.topic}\``,
+    `- Path: \`${summary.path}\``,
+    `- ${summary.exists ? "Overwrites existing article" : "New article"}`,
+    `- Sources: ${summary.sources.length}`,
+  ];
+  if (crosslink && crosslink.applied.length > 0) {
+    lines.push("", "### Cross-link suggestions");
+    lines.push(
+      `Applied ${crosslink.applied.length} insertion${crosslink.applied.length === 1 ? "" : "s"} ` +
+        `(${crosslink.forward} forward + ${crosslink.backward} backward proposals).`,
+    );
+    for (const a of crosslink.applied) {
+      lines.push(`- \`${a.path}\` — \`${a.anchor}\` → ${a.target}`);
+    }
+  }
+  return lines.join("\n");
+}
+
+// ---------- handler ----------
+
+export async function handle(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   let parsed: unknown;
   try {
     parsed = await request.json();
@@ -57,120 +143,54 @@ export async function handle(request: Request, env: Env): Promise<Response> {
     );
   }
   const req = validation.data;
-
-  const gh = createGitHubClient(env.GITHUB_TOKEN, env.GITHUB_REPO);
-  const path = `${WIKI_DIR}/${req.topic}.md`;
-
-  const existing = await getFile(path, "main", gh);
-  const exists = existing.ok;
-  if (exists && !req.force) {
-    return jsonResponse(
-      {
-        ok: false,
-        error: `wiki article already exists at ${path}; pass force: true to overwrite`,
-        path,
-      },
-      409,
-    );
-  }
-
-  const markdown = buildArticleMarkdown({
-    title: req.title ?? humanize(req.topic),
-    summary: req.summary,
-    body: req.body,
-    sources: [...req.sources].sort(),
-    ...(req.related_concepts ? { related_concepts: req.related_concepts } : {}),
-    compiled_with: env.ANTHROPIC_MODEL || "manual:contribute",
-    compiled_at: new Date(),
-  });
+  const strategy = makeContributeStrategy(req);
 
   if (req.dry_run) {
+    const planned = await strategy.plan({ env }, env);
+    if (!planned.ok) {
+      return jsonResponse({ ok: false, error: planned.error }, planned.status ?? 500);
+    }
+    const summary = planned.data.summary as unknown as ContributeSummary;
+    const sample =
+      planned.data.mutation.added[0]?.content ?? planned.data.mutation.changed[0]?.after ?? "";
     return jsonResponse({
       ok: true,
       dry_run: true,
-      path,
-      exists,
-      bytes: markdown.length,
+      path: summary.path,
+      exists: summary.exists,
+      bytes: sample.length,
     });
   }
 
-  const mainSha = await getBranchSha("main", gh);
-  if (!mainSha.ok) {
-    return jsonResponse({ ok: false, error: `main: ${mainSha.error}` }, 500);
+  const deps = makePipelineDeps(env);
+  const result = await runPipeline(
+    strategy,
+    { commitTarget: "pr", crosslink: "inline" },
+    env,
+    ctx,
+    deps,
+  );
+  if (!result.ok) {
+    return jsonResponse({ ok: false, error: result.error }, result.status);
   }
-
-  const branch = `contribute/${req.topic}-${Date.now().toString(36)}`;
-  const branchResult = await createBranch(branch, mainSha.data, gh);
-  if (!branchResult.ok) {
-    return jsonResponse({ ok: false, error: `branch: ${branchResult.error}` }, 500);
-  }
-
-  const put = await putFile({
-    path,
-    branch,
-    content: markdown,
-    message: `wiki: contribute ${req.topic}`,
-    ...(exists ? { sha: existing.data.sha } : {}),
-    gh,
-  });
-  if (!put.ok) {
-    log.error("contribute", "commit", "put failed", { path, error: put.error });
-    return jsonResponse(
-      { ok: false, error: `commit: ${put.error}`, branch },
-      500,
-    );
-  }
-
-  const existingPr = await findOpenPrByBranch(branch, gh);
-  if (!existingPr.ok) {
-    return jsonResponse(
-      {
-        ok: false,
-        error: `pr lookup: ${existingPr.error}`,
-        branch,
-        committed_path: path,
-      },
-      500,
-    );
-  }
-
-  let prNumber: number | null = null;
-  let prUrl: string | null = null;
-  if (existingPr.data) {
-    prNumber = existingPr.data.number;
-  } else {
-    const pr = await openPullRequest({
-      title: `Wiki contribution: ${req.topic}`,
-      body: buildPrBody({ topic: req.topic, path, exists, sources: req.sources }),
-      head: branch,
-      base: "main",
-      gh,
-    });
-    if (pr.ok) {
-      prNumber = pr.data.number;
-      prUrl = pr.data.html_url;
-    } else {
-      log.error("contribute", "pr", "open failed", { error: pr.error, branch });
-      return jsonResponse(
-        {
-          ok: false,
-          error: `pr open: ${pr.error}`,
-          branch,
-          committed_path: path,
-        },
-        500,
-      );
-    }
-  }
-
+  const summary = result.summary as unknown as ContributeSummary | undefined;
   return jsonResponse({
     ok: true,
     dry_run: false,
-    path,
-    branch,
-    pr: prNumber ? { number: prNumber, url: prUrl } : null,
+    path: summary?.path,
+    branch: result.branch,
+    pr: result.pr_number ? { number: result.pr_number, url: result.pr_url } : null,
+    crosslink: result.crosslink
+      ? {
+          forward: result.crosslink.forward,
+          backward: result.crosslink.backward,
+          applied: result.crosslink.applied.length,
+        }
+      : null,
   });
 }
+
+// ---------- pure helpers ----------
 
 export function buildArticleMarkdown(args: {
   title: string;
@@ -198,20 +218,4 @@ export function humanize(topic: string): string {
   if (topic.length === 0) return topic;
   const spaced = topic.replace(/-/g, " ");
   return spaced[0]!.toUpperCase() + spaced.slice(1);
-}
-
-function buildPrBody(args: {
-  topic: string;
-  path: string;
-  exists: boolean;
-  sources: string[];
-}): string {
-  return [
-    `Manually-authored wiki article filed via /contribute.`,
-    "",
-    `- Topic: \`${args.topic}\``,
-    `- Path: \`${args.path}\``,
-    `- ${args.exists ? "Overwrites existing article" : "New article"}`,
-    `- Sources: ${args.sources.length}`,
-  ].join("\n");
 }
