@@ -200,3 +200,168 @@ describe("dedupeBatch", () => {
     expect(dedupeBatch(ps).length).toBe(2);
   });
 });
+
+import { runCrosslinkPhase } from "./crosslink-phase.ts";
+import type { CrosslinkPhaseInput, CrosslinkProposal as CP } from "./crosslink-phase.ts";
+
+const wikiEntry = (slug: string, body: string, sources: string[] = ["a", "b"]) => ({
+  slug,
+  path: `src/content/wiki/${slug}.md`,
+  frontmatter: { title: slug, summary: "s", sources },
+  body,
+});
+
+describe("runCrosslinkPhase", () => {
+  it("applies a valid backward proposal as a changed file", async () => {
+    const input: CrosslinkPhaseInput = {
+      newPieces: {
+        added: [{ corpus: "reading", slug: "x", url: "/reading/x" }],
+        changed: [],
+      },
+      corpusSnapshot: {
+        wiki: [wikiEntry("karpathy", "Karpathy described an LLM Wiki pattern. Read more.")],
+        blog: [],
+      },
+      proposeProposals: async () => ({
+        forward: [],
+        backward: [
+          {
+            source_slug: "karpathy",
+            source_passage: "Karpathy described an LLM Wiki pattern. Read more.",
+            anchor_phrase: "LLM Wiki pattern",
+            target_corpus: "reading",
+            target_slug: "x",
+            target_url: "/reading/x",
+            rationale: "",
+            confidence: "high",
+          },
+        ],
+      }),
+    };
+    const phase = await runCrosslinkPhase(input);
+    expect(phase.applied.length).toBe(1);
+    expect(phase.changedFiles.length).toBe(1);
+    expect(phase.changedFiles[0]!.path).toBe("src/content/wiki/karpathy.md");
+    expect(phase.changedFiles[0]!.after).toContain("[LLM Wiki pattern](/reading/x)");
+  });
+
+  it("drops invalid proposals silently (anchor not unique)", async () => {
+    const input: CrosslinkPhaseInput = {
+      newPieces: { added: [{ corpus: "wiki", slug: "x", url: "/wiki/x" }], changed: [] },
+      corpusSnapshot: {
+        wiki: [wikiEntry("a", "AI is AI is great.")],
+        blog: [],
+      },
+      proposeProposals: async () => ({
+        forward: [],
+        backward: [
+          {
+            source_slug: "a",
+            source_passage: "AI is AI is great.",
+            anchor_phrase: "AI",
+            target_corpus: "wiki",
+            target_slug: "x",
+            target_url: "/wiki/x",
+            rationale: "",
+            confidence: "high",
+          } satisfies CP,
+        ],
+      }),
+    };
+    const phase = await runCrosslinkPhase(input);
+    expect(phase.applied.length).toBe(0);
+    expect(phase.changedFiles.length).toBe(0);
+  });
+
+  it("accumulates multiple proposals against the same source file into one changedFile", async () => {
+    const input: CrosslinkPhaseInput = {
+      newPieces: {
+        added: [
+          { corpus: "wiki", slug: "x", url: "/wiki/x" },
+          { corpus: "wiki", slug: "y", url: "/wiki/y" },
+        ],
+        changed: [],
+      },
+      corpusSnapshot: {
+        wiki: [wikiEntry("a", "Talk of cats and dogs and birds in passing.")],
+        blog: [],
+      },
+      proposeProposals: async () => ({
+        forward: [],
+        backward: [
+          {
+            source_slug: "a",
+            source_passage: "Talk of cats and dogs and birds in passing.",
+            anchor_phrase: "cats",
+            target_corpus: "wiki",
+            target_slug: "x",
+            target_url: "/wiki/x",
+            rationale: "",
+            confidence: "high",
+          },
+          {
+            source_slug: "a",
+            source_passage: "Talk of cats and dogs and birds in passing.",
+            anchor_phrase: "dogs",
+            target_corpus: "wiki",
+            target_slug: "y",
+            target_url: "/wiki/y",
+            rationale: "",
+            confidence: "high",
+          },
+        ],
+      }),
+    };
+    const phase = await runCrosslinkPhase(input);
+    expect(phase.changedFiles.length).toBe(1);
+    expect(phase.changedFiles[0]!.after).toContain("[cats](/wiki/x)");
+    expect(phase.changedFiles[0]!.after).toContain("[dogs](/wiki/y)");
+    expect(phase.applied.length).toBe(2);
+  });
+
+  it("dedupes identical (source, target, anchor) proposals across passes", async () => {
+    const proposal: CP = {
+      source_slug: "a",
+      source_passage: "Hello world here.",
+      anchor_phrase: "world",
+      target_corpus: "wiki",
+      target_slug: "x",
+      target_url: "/wiki/x",
+      rationale: "",
+      confidence: "high",
+    };
+    const input: CrosslinkPhaseInput = {
+      newPieces: { added: [{ corpus: "wiki", slug: "x", url: "/wiki/x" }], changed: [] },
+      corpusSnapshot: { wiki: [wikiEntry("a", "Hello world here.")], blog: [] },
+      proposeProposals: async () => ({ forward: [proposal], backward: [proposal] }),
+    };
+    const phase = await runCrosslinkPhase(input);
+    expect(phase.applied.length).toBe(1);
+  });
+
+  it("ignores proposals whose source slug is not in the snapshot", async () => {
+    const input: CrosslinkPhaseInput = {
+      newPieces: { added: [{ corpus: "wiki", slug: "x", url: "/wiki/x" }], changed: [] },
+      corpusSnapshot: { wiki: [], blog: [] },
+      proposeProposals: async () => ({
+        forward: [],
+        backward: [
+          {
+            source_slug: "ghost",
+            source_passage: "Hello.",
+            anchor_phrase: "Hello",
+            target_corpus: "wiki",
+            target_slug: "x",
+            target_url: "/wiki/x",
+            rationale: "",
+            confidence: "high",
+          },
+        ],
+      }),
+    };
+    const phase = await runCrosslinkPhase(input);
+    expect(phase.applied.length).toBe(0);
+    expect(phase.changedFiles.length).toBe(0);
+  });
+});
+

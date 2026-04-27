@@ -157,6 +157,54 @@ describe("runPipeline (abort propagation)", () => {
     if (!result.ok) expect(result.status).toBe(500);
   });
 
+  it("invokes injected runCrosslink on inline crosslink and commits changedFiles to the same branch", async () => {
+    const github = okGithubDeps();
+    const runCrosslink = vi.fn().mockResolvedValue({
+      forward: 1,
+      backward: 0,
+      applied: [{ path: "src/content/wiki/x.md", anchor: "y", target: "/wiki/y" }],
+      changedFiles: [
+        { path: "src/content/wiki/x.md", before: "y", after: "[y](/wiki/y)" },
+      ],
+    });
+    const result = await runPipeline(
+      fakeStrategy(),
+      { commitTarget: "pr", crosslink: "inline" },
+      fakeEnv(),
+      fakeCtx(),
+      { github, runCrosslink },
+    );
+    expect(runCrosslink).toHaveBeenCalledTimes(1);
+    expect(github.putFile).toHaveBeenCalledTimes(2); // 1 added + 1 from crosslink phase
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.crosslink?.applied.length).toBe(1);
+  });
+
+  it("fires runCrosslink via ctx.waitUntil for followup (commitTarget=main)", async () => {
+    const ctx = { waitUntil: vi.fn() } as unknown as ExecutionContext;
+    const github = okGithubDeps();
+    const runCrosslink = vi.fn().mockResolvedValue({
+      forward: 0,
+      backward: 0,
+      applied: [],
+      changedFiles: [],
+    });
+    const strategy = fakeStrategy({
+      plan: async () => ({
+        ok: true,
+        data: { mutation: { added: [{ path: "r.md", content: "R" }], changed: [] } },
+      }),
+    });
+    await runPipeline(
+      strategy,
+      { commitTarget: "main", crosslink: "followup" },
+      fakeEnv(),
+      ctx,
+      { github, runCrosslink },
+    );
+    expect(ctx.waitUntil).toHaveBeenCalled();
+  });
+
   it("returns ok:true with no PR when mutation is empty", async () => {
     const github = okGithubDeps();
     const strategy = fakeStrategy({
