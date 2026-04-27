@@ -2,6 +2,7 @@ import { defineCollection } from "astro:content";
 import { glob } from "astro/loaders";
 import { z } from "astro/zod";
 import {
+  BlogFrontmatterSchema,
   NowArchiveFrontmatterSchema,
   NowFrontmatterSchema,
   ReadingFrontmatterSchema,
@@ -10,18 +11,7 @@ import {
 
 const blog = defineCollection({
   loader: glob({ pattern: "**/*.{md,mdx}", base: "./src/content/blog" }),
-  schema: z.object({
-    title: z.string(),
-    description: z.string(),
-    date: z.coerce.date(),
-    draft: z.boolean().optional(),
-    tags: z.array(z.string()).optional(),
-    image: z.string().optional(),
-    canonical: z.url().optional(),
-    updated: z.coerce.date().optional(),
-    aiAssistance: z.enum(["none", "light", "heavy", "full"]).optional(),
-    aiNote: z.string().optional(),
-  }),
+  schema: BlogFrontmatterSchema,
 });
 
 const projects = defineCollection({

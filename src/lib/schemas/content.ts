@@ -62,8 +62,23 @@ export const WikiFrontmatterSchema = z.object({
   compiled_with: z.string(),
 });
 
+export const BlogFrontmatterSchema = z.object({
+  title: z.string(),
+  description: z.string(),
+  date: z.coerce.date(),
+  draft: z.boolean().optional(),
+  tags: z.array(z.string()).optional(),
+  image: z.string().optional(),
+  canonical: z.url().optional(),
+  updated: z.coerce.date().optional(),
+  aiAssistance: z.enum(["none", "light", "heavy", "full"]).optional(),
+  aiNote: z.string().optional(),
+  series: z.string().optional(),
+});
+
 export type ReadingCategory = z.infer<typeof ReadingCategorySchema>;
 export type NowFrontmatter = z.infer<typeof NowFrontmatterSchema>;
 export type NowArchiveFrontmatter = z.infer<typeof NowArchiveFrontmatterSchema>;
 export type ReadingFrontmatter = z.infer<typeof ReadingFrontmatterSchema>;
 export type WikiFrontmatter = z.infer<typeof WikiFrontmatterSchema>;
+export type BlogFrontmatter = z.infer<typeof BlogFrontmatterSchema>;
