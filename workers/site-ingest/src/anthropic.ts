@@ -143,6 +143,50 @@ export async function compileWikiArticle(args: {
   }
 }
 
+const CrosslinkProposalSchema = z.object({
+  source_slug: z.string(),
+  source_passage: z.string(),
+  anchor_phrase: z.string(),
+  target_corpus: z.enum(["wiki", "blog", "reading"]),
+  target_slug: z.string(),
+  target_url: z.string(),
+  rationale: z.string(),
+  confidence: z.enum(["high", "medium", "low"]),
+});
+
+const CrosslinkBatchSchema = z.object({
+  proposals: z.array(CrosslinkProposalSchema),
+});
+
+export type CrosslinkBatch = z.infer<typeof CrosslinkBatchSchema>;
+
+export async function proposeCrosslinks(args: {
+  apiKey: string;
+  model?: string;
+  systemPrompt: string;
+  userMessage: string;
+}): Promise<Result<CrosslinkBatch & { model: string }>> {
+  try {
+    const response = await client(args.apiKey).messages.parse({
+      model: resolveModel(args.model),
+      // Up to ~25 proposals × ~150 tokens each, plus the batch wrapper.
+      max_tokens: 3000,
+      system: args.systemPrompt,
+      messages: [{ role: "user", content: args.userMessage }],
+      output_config: { format: zodOutputFormat(CrosslinkBatchSchema) },
+    });
+    if (!response.parsed_output) {
+      return { ok: false, error: "parsed_output missing" };
+    }
+    return {
+      ok: true,
+      data: { ...response.parsed_output, model: resolveModel(args.model) },
+    };
+  } catch (err) {
+    return mapError(err, "propose-crosslinks");
+  }
+}
+
 function mapError(err: unknown, op: string): { ok: false; error: string } {
   if (err instanceof Anthropic.APIError) {
     log.warn("anthropic", op, "api error", { status: err.status });
