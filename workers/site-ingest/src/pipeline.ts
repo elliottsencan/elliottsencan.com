@@ -16,6 +16,7 @@
  */
 
 import type { Env, Result } from "./types.ts";
+import { log } from "./util.ts";
 
 export type Mutation = {
   added: Array<{ path: string; content: string }>;
@@ -57,6 +58,8 @@ export type RunResult =
       pr_number?: number;
       pr_url?: string;
       branch?: string;
+      /** Last commit SHA from the mutation phase. Useful for /link's share-sheet response. */
+      commit_sha?: string;
       summary?: Record<string, unknown>;
       crosslink?: CrosslinkResult;
     }
@@ -139,8 +142,8 @@ async function commitToPR(
   const created = await deps.github.createBranch(branch, head.data);
   if (!created.ok) return { ok: false, status: 502, error: created.error };
 
-  const commitFailure = await commitMutation(strategy.name, branch, mutation, deps.github);
-  if (commitFailure) return commitFailure;
+  const commitOutcome = await commitMutation(strategy.name, branch, mutation, deps.github);
+  if (commitOutcome.failure) return commitOutcome.failure;
 
   let crosslink: CrosslinkResult | undefined;
   if (options.crosslink === "inline" && deps.runCrosslink) {
@@ -179,7 +182,15 @@ async function commitToPR(
     pr_number = opened.data.number;
     pr_url = opened.data.html_url;
   }
-  return { ok: true, pr_number, pr_url, branch, summary, crosslink };
+  return {
+    ok: true,
+    pr_number,
+    pr_url,
+    branch,
+    commit_sha: commitOutcome.lastCommitSha,
+    summary,
+    crosslink,
+  };
 }
 
 async function commitToMain(
@@ -191,25 +202,108 @@ async function commitToMain(
   ctx: ExecutionContext,
   deps: RunDeps,
 ): Promise<RunResult> {
-  const failure = await commitMutation(strategy.name, "main", mutation, deps.github);
-  if (failure) return failure;
+  const commitOutcome = await commitMutation(strategy.name, "main", mutation, deps.github);
+  if (commitOutcome.failure) return commitOutcome.failure;
 
   if (options.crosslink === "followup" && deps.runCrosslink) {
     const runCrosslink = deps.runCrosslink;
+    const github = deps.github;
+    const strategyName = strategy.name;
     ctx.waitUntil(
-      runCrosslink({ mutation, env }).then(
-        () => undefined,
-        (err: unknown) => {
-          // Best-effort: failure of the follow-up PR is logged but never
-          // propagated back to the synchronous /link response.
-          console.error(
-            `[pipeline:${strategy.name}] crosslink followup failed: ${err instanceof Error ? err.message : String(err)}`,
-          );
-        },
-      ),
+      runCrosslinkFollowup({ runCrosslink, github, mutation, env, strategyName }),
     );
   }
-  return { ok: true, summary };
+  return { ok: true, summary, commit_sha: commitOutcome.lastCommitSha };
+}
+
+/**
+ * Best-effort follow-up: runs the cross-link phase against the just-committed
+ * mutation, and if the phase produced any insertions, opens a separate PR
+ * carrying them. Failures are logged and swallowed — the synchronous /link
+ * response was already returned to the share-sheet caller.
+ */
+async function runCrosslinkFollowup(args: {
+  runCrosslink: CrosslinkRunner;
+  github: GithubDeps;
+  mutation: Mutation;
+  env: Env;
+  strategyName: string;
+}): Promise<void> {
+  try {
+    const result = await args.runCrosslink({ mutation: args.mutation, env: args.env });
+    if (result.changedFiles.length === 0) {
+      log.info("pipeline", "crosslink-followup", "no edits proposed", {
+        strategy: args.strategyName,
+      });
+      return;
+    }
+    const branch = `crosslink/from-${args.strategyName}-${Date.now().toString(36)}`;
+    const head = await args.github.getBranchSha("main");
+    if (!head.ok) {
+      log.error("pipeline", "crosslink-followup", "branch sha failed", { error: head.error });
+      return;
+    }
+    const created = await args.github.createBranch(branch, head.data);
+    if (!created.ok) {
+      log.error("pipeline", "crosslink-followup", "branch create failed", {
+        error: created.error,
+      });
+      return;
+    }
+    for (const f of result.changedFiles) {
+      const existing = await args.github.getFile(f.path, "main");
+      const sha = existing.ok ? existing.data.sha : undefined;
+      const put = await args.github.putFile({
+        path: f.path,
+        branch,
+        content: f.after,
+        message: `crosslink: ${f.path}`,
+        ...(sha ? { sha } : {}),
+      });
+      if (!put.ok) {
+        log.error("pipeline", "crosslink-followup", "put failed", {
+          path: f.path,
+          error: put.error,
+        });
+      }
+    }
+    const opened = await args.github.openPullRequest({
+      title: `Cross-link suggestions (from ${args.strategyName}, ${result.changedFiles.length} file${result.changedFiles.length === 1 ? "" : "s"})`,
+      body: buildFollowupPrBody(result, args.strategyName),
+      head: branch,
+      base: "main",
+    });
+    if (!opened.ok) {
+      log.error("pipeline", "crosslink-followup", "pr open failed", { error: opened.error });
+      return;
+    }
+    log.info("pipeline", "crosslink-followup", "pr opened", {
+      strategy: args.strategyName,
+      pr: opened.data.number,
+      url: opened.data.html_url,
+    });
+  } catch (err) {
+    log.error("pipeline", "crosslink-followup", "threw", {
+      msg: err instanceof Error ? err.message : String(err),
+      strategy: args.strategyName,
+    });
+  }
+}
+
+function buildFollowupPrBody(result: CrosslinkResult, strategyName: string): string {
+  const lines: string[] = [
+    `Follow-up cross-link suggestions for the recent ${strategyName} commit.`,
+    "",
+    `- Forward proposals: ${result.forward}`,
+    `- Backward proposals: ${result.backward}`,
+    `- Applied edits: ${result.applied.length}`,
+    "",
+    "## Insertions",
+  ];
+  for (const a of result.applied) {
+    lines.push(`- \`${a.path}\` — \`${a.anchor}\` → ${a.target}`);
+  }
+  return lines.join("\n");
 }
 
 async function commitMutation(
@@ -217,7 +311,8 @@ async function commitMutation(
   branch: string,
   mutation: Mutation,
   github: GithubDeps,
-): Promise<RunResult | null> {
+): Promise<{ failure: RunResult | null; lastCommitSha: string | undefined }> {
+  let lastCommitSha: string | undefined;
   for (const f of mutation.added) {
     const r = await github.putFile({
       path: f.path,
@@ -225,7 +320,8 @@ async function commitMutation(
       content: f.content,
       message: `${strategyName}: ${f.path}`,
     });
-    if (!r.ok) return { ok: false, status: 502, error: r.error };
+    if (!r.ok) return { failure: { ok: false, status: 502, error: r.error }, lastCommitSha };
+    lastCommitSha = r.data.commitSha;
   }
   for (const f of mutation.changed) {
     // Update commits to an existing path require the file's sha. Look it up
@@ -241,9 +337,10 @@ async function commitMutation(
       message: `${strategyName}: update ${f.path}`,
       ...(sha ? { sha } : {}),
     });
-    if (!r.ok) return { ok: false, status: 502, error: r.error };
+    if (!r.ok) return { failure: { ok: false, status: 502, error: r.error }, lastCommitSha };
+    lastCommitSha = r.data.commitSha;
   }
-  return null;
+  return { failure: null, lastCommitSha };
 }
 
 function buildBranchName(prefix: string): string {

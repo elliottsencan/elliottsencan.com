@@ -6,7 +6,10 @@
  *   2. If title missing, fetch the URL and extract <title> via regex.
  *      Fallback: hostname. We never fail the request over this step.
  *   3. Call Anthropic to produce a strict-JSON summary + category.
- *   4. Compose a markdown entry and commit it directly to main.
+ *   4. Compose a markdown entry and commit it directly to main via the
+ *      runPipeline substrate. The cross-link follow-up PR (proposing links
+ *      from existing wiki/blog content into the new reading entry) fires
+ *      after the synchronous response returns, via ctx.waitUntil.
  *
  * Auth + rate limiting already enforced upstream in index.ts.
  */
@@ -15,26 +18,107 @@ import matter from "gray-matter";
 import { decode as decodeHtmlEntities } from "html-entities";
 import { z } from "zod";
 import { summarizeLink } from "./anthropic.ts";
-import { createGitHubClient, getBranchSha, getFile, putFile } from "./github.ts";
+import { type PlanResult, runPipeline, type Strategy } from "./pipeline.ts";
 import { LINK_SUMMARY_SYSTEM } from "./prompts.ts";
+import { makePipelineDeps } from "./synthesize.ts";
 import type { Env, LinkRequest, LinkSummary, Result } from "./types.ts";
 import { fileTimestamp, jsonResponse, log, monthKey, slugify } from "./util.ts";
 
 // iOS Safari share sheet can pass whole article text as `excerpt` when the
-// user hasn't selected anything. 10 KB bounces legit shares; 100 KB still
-// caps adversarial payloads and excerpt is truncated to MAX_EXCERPT_LENGTH
-// post-parse, so the stored value stays bounded regardless. 16 KB excerpt
-// gives Anthropic enough context for longform tech articles (~$0.015/call
-// at Sonnet 4.6 prices) while keeping prompt budget reasonable.
+// user hasn't selected anything. 100 KB caps adversarial payloads and
+// excerpt is truncated to MAX_EXCERPT_LENGTH post-parse, so the stored
+// value stays bounded regardless.
 const MAX_BODY_BYTES = 100_000;
 const MAX_EXCERPT_LENGTH = 16_000;
 const MAX_PAGE_FETCH_BYTES = 200_000;
 const PAGE_FETCH_TIMEOUT_MS = 5000;
 
+type LinkSummaryRow = {
+  path: string;
+  category: string;
+  degraded: boolean;
+};
+
+// ---------- strategy ----------
+
+export function makeLinkStrategy(req: LinkRequest): Strategy {
+  return {
+    name: "link",
+    branchPrefix: "link",
+    plan: async ({ env }): Promise<PlanResult> => {
+      const resolvedTitle = req.title ?? (await fetchPageTitle(req.url));
+      const existingTopics = await loadExistingTopics();
+
+      // Falls back to a stub summary if Anthropic is unavailable so a
+      // transient outage doesn't lose the link entirely. The stub commits
+      // but the response signals `degraded: true` so the client knows the
+      // entry needs a manual pass.
+      const summaryResult = await summarizeLink({
+        apiKey: env.ANTHROPIC_API_KEY,
+        model: env.ANTHROPIC_MODEL,
+        systemPrompt: LINK_SUMMARY_SYSTEM,
+        userMessage: buildLinkUserMessage({
+          title: resolvedTitle,
+          url: req.url,
+          excerpt: req.excerpt,
+          existingTopics,
+        }),
+      });
+
+      const degraded = !summaryResult.ok;
+      const summary: LinkSummary = summaryResult.ok
+        ? summaryResult.data
+        : {
+            title: "",
+            summary: "Saved link.",
+            category: "other",
+            topics: ["unsorted"],
+            model: "unknown",
+          };
+      if (!summaryResult.ok) {
+        log.warn("link", "summarize", "using stub summary after failure", {
+          error: summaryResult.error,
+        });
+      }
+
+      const added = new Date();
+      const cleanedTitle = summary.title?.trim();
+      const finalTitle = cleanedTitle || resolvedTitle || new URL(req.url).hostname;
+      const markdown = buildEntryMarkdown({
+        title: finalTitle,
+        url: req.url,
+        summary,
+        added,
+      });
+      const path = buildEntryPath({ env, added, title: finalTitle });
+      const summaryRow: LinkSummaryRow = {
+        path,
+        category: summary.category,
+        degraded,
+      };
+      return {
+        ok: true,
+        data: {
+          mutation: { added: [{ path, content: markdown }], changed: [] },
+          summary: summaryRow as unknown as Record<string, unknown>,
+        },
+      };
+    },
+    // /link is committed directly to main, so the substrate never opens
+    // a PR for the strategy itself. These are still required by the
+    // Strategy contract; they only run if the followup wiring opens a PR
+    // (which it does separately, with its own title/body).
+    prTitle: () => "",
+    prBody: () => "",
+  };
+}
+
+// ---------- handler ----------
+
 export async function handle(
   request: Request,
   env: Env,
-  _ctx: ExecutionContext,
+  ctx: ExecutionContext,
 ): Promise<Response> {
   const raw = await request.text();
   if (raw.length > MAX_BODY_BYTES) {
@@ -52,88 +136,31 @@ export async function handle(
   if (!validation.ok) {
     return jsonResponse({ ok: false, error: validation.error }, 400);
   }
-  const body = validation.data;
+  const strategy = makeLinkStrategy(validation.data);
 
-  // Resolve title if missing. Best-effort; page fetch failures don't block.
-  const resolvedTitle = body.title ?? (await fetchPageTitle(body.url));
-
-  // Load existing topics so the prompt can prefer them over near-duplicates.
-  // Best-effort: a fetch failure here never blocks the ingest, the prompt
-  // just falls back to inventing topics from scratch like before.
-  const existingTopics = await loadExistingTopics(env);
-
-  // Falls back to a stub summary if Anthropic is unavailable so a transient
-  // outage doesn't lose the link entirely. The stub is committed to the
-  // repo but the response signals `degraded: true` so the client knows the
-  // entry needs a manual pass.
-  const summaryResult = await summarizeLink({
-    apiKey: env.ANTHROPIC_API_KEY,
-    model: env.ANTHROPIC_MODEL,
-    systemPrompt: LINK_SUMMARY_SYSTEM,
-    userMessage: buildLinkUserMessage({
-      title: resolvedTitle,
-      url: body.url,
-      excerpt: body.excerpt,
-      existingTopics,
-    }),
-  });
-
-  const degraded = !summaryResult.ok;
-  // On degraded path, title is empty so the fallback chain in the caller
-  // picks the page-fetched title (or hostname) instead. Topics fall back
-  // to a single sentinel slug so the wiki layer can identify entries
-  // that need a manual pass.
-  const summary: LinkSummary = summaryResult.ok
-    ? summaryResult.data
-    : {
-        title: "",
-        summary: "Saved link.",
-        category: "other",
-        topics: ["unsorted"],
-        model: "unknown",
-      };
-  if (!summaryResult.ok) {
-    log.warn("link", "summarize", "using stub summary after failure", {
-      error: summaryResult.error,
-    });
-  }
-
-  const added = new Date();
-  // Title priority: AI-cleaned > page-fetched > hostname. The AI-cleaned
-  // title strips GitHub's "GitHub - org/repo: description" boilerplate,
-  // publisher suffixes like " - NYT", and hostname-only fallbacks into a
-  // short archive-friendly form. Non-empty check guards against a
-  // degenerate empty string that would otherwise produce a blank title.
-  const cleanedTitle = summary.title?.trim();
-  const finalTitle = cleanedTitle || resolvedTitle || new URL(body.url).hostname;
-  const markdown = buildEntryMarkdown({
-    title: finalTitle,
-    url: body.url,
-    summary,
-    added,
-  });
-  const path = buildEntryPath({ env, added, title: finalTitle });
-  const commitResult = await commitEntry({
+  const deps = makePipelineDeps(env);
+  const result = await runPipeline(
+    strategy,
+    { commitTarget: "main", crosslink: "followup" },
     env,
-    path,
-    markdown,
-    title: finalTitle,
-  });
-  if (!commitResult.ok) {
-    return jsonResponse({ ok: false, error: commitResult.error }, 500);
+    ctx,
+    deps,
+  );
+  if (!result.ok) {
+    return jsonResponse({ ok: false, error: result.error }, result.status);
   }
-
+  const summary = result.summary as unknown as LinkSummaryRow | undefined;
   log.info("link", "commit", "reading entry committed", {
-    path,
-    category: summary.category,
+    path: summary?.path,
+    category: summary?.category,
   });
   return jsonResponse(
     {
       ok: true,
-      path,
-      category: summary.category,
-      commit: commitResult.commitSha,
-      ...(degraded ? { degraded: true } : {}),
+      path: summary?.path,
+      category: summary?.category,
+      commit: result.commit_sha,
+      ...(summary?.degraded ? { degraded: true } : {}),
     },
     200,
   );
@@ -143,8 +170,6 @@ export async function handle(
 
 const MAX_TITLE_LENGTH = 200;
 
-// Trim + truncate a string field to `max` chars; empty-string / null inputs
-// fold to undefined so callers can drop the field entirely.
 const optionalTrimmedString = (max: number) =>
   z.preprocess(
     (v) => (v === "" || v === null ? undefined : v),
@@ -192,17 +217,11 @@ const MAX_TOPICS_IN_PROMPT = 60;
 
 /**
  * Load the union of topic slugs already in use across the reading log.
- *
- * Source is the public `reading.json` because (a) it's a single
- * Cloudflare-edge-cached HTTP fetch — much cheaper than enumerating
- * GitHub contents per ingest, and (b) the deploy-cycle lag is acceptable:
- * topics evolve slowly, so missing the very latest entry's topics in
- * the next ingest's prompt context is a non-issue.
- *
- * Best-effort: any failure returns an empty list, and the prompt falls
- * back to inventing topics from scratch like before. Never blocks.
+ * Source is the public `reading.json` because it's a single Cloudflare-
+ * edge-cached HTTP fetch — much cheaper than enumerating GitHub contents
+ * per ingest. Best-effort: any failure returns an empty list.
  */
-async function loadExistingTopics(_env: Env): Promise<string[]> {
+async function loadExistingTopics(): Promise<string[]> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), TOPICS_FETCH_TIMEOUT_MS);
   try {
@@ -246,8 +265,6 @@ async function fetchPageTitle(url: string): Promise<string | undefined> {
       return undefined;
     }
 
-    // HTML <title> is near the top, so a partial read is sufficient.
-    // Stream-decode until we have enough characters, then cancel.
     const reader = res.body.getReader();
     const decoder = new TextDecoder("utf-8");
     let html = "";
@@ -335,37 +352,3 @@ function buildEntryPath(args: { env: Env; added: Date; title: string }): string 
   return `${args.env.READING_DIR}/${month}/${timestamp}-${slug}.md`;
 }
 
-// ---------- commit ----------
-
-async function commitEntry(args: {
-  env: Env;
-  path: string;
-  markdown: string;
-  title: string;
-}): Promise<{ ok: true; commitSha: string } | { ok: false; error: string }> {
-  const gh = createGitHubClient(args.env.GITHUB_TOKEN, args.env.GITHUB_REPO);
-  // Confirm main exists (sanity check; also catches invalid repo config early).
-  const mainSha = await getBranchSha("main", gh);
-  if (!mainSha.ok) {
-    return { ok: false, error: `failed to resolve main: ${mainSha.error}` };
-  }
-
-  // Check whether the path already exists (extremely rare collision). If so,
-  // pass the blob SHA so the PUT succeeds as an update. Usually this returns
-  // not-found and we create the file fresh.
-  const existing = await getFile(args.path, "main", gh);
-  const existingSha = existing.ok ? existing.data.sha : undefined;
-
-  const put = await putFile({
-    path: args.path,
-    branch: "main",
-    content: args.markdown,
-    message: `reading: ${args.title.slice(0, 60)}`,
-    ...(existingSha ? { sha: existingSha } : {}),
-    gh,
-  });
-  if (!put.ok) {
-    return { ok: false, error: put.error };
-  }
-  return { ok: true, commitSha: put.data.commitSha };
-}
