@@ -11,7 +11,8 @@
  *        b. Call Anthropic with the same prompt used by /link.
  *        c. Rebuild the entry markdown with updated fields + `compiled_at`
  *           and `compiled_with` set to the recompile run.
- *   5. Commit all updates to a branch and open a PR against main.
+ *   5. Hand the per-entry mutations to runPipeline; substrate owns branch
+ *      + commit + PR + the inline cross-link phase.
  *
  * Cost: one Anthropic call per entry; IA fetches are free. Capped per run
  * to keep Worker CPU budget under control — operators can split larger
@@ -23,18 +24,16 @@ import matter from "gray-matter";
 import { convert as htmlToText } from "html-to-text";
 import { z } from "zod";
 import { summarizeLink } from "./anthropic.ts";
+import { createGitHubClient, type GitHubClient, getFile, listDir } from "./github.ts";
 import {
-  createBranch,
-  createGitHubClient,
-  findOpenPrByBranch,
-  type GitHubClient,
-  getBranchSha,
-  getFile,
-  listDir,
-  openPullRequest,
-  putFile,
-} from "./github.ts";
+  type CrosslinkResult,
+  type PlanOutput,
+  type PlanResult,
+  runPipeline,
+  type Strategy,
+} from "./pipeline.ts";
 import { LINK_SUMMARY_SYSTEM } from "./prompts.ts";
+import { makePipelineDeps } from "./synthesize.ts";
 import type { Env, LinkSummary, Result } from "./types.ts";
 import { jsonResponse, log } from "./util.ts";
 
@@ -61,9 +60,102 @@ const RecompileRequestSchema = z.object({
   dry_run: z.boolean().optional().default(true),
 });
 
-type RecompileRequest = z.infer<typeof RecompileRequestSchema>;
+export type RecompileRequest = z.infer<typeof RecompileRequestSchema>;
 
-export async function handle(request: Request, env: Env): Promise<Response> {
+type RecompileResultRow = { path: string; status: "updated" | "skipped"; reason?: string };
+
+type RecompileSummary = {
+  matched: number;
+  results: RecompileResultRow[];
+  scope: RecompileRequest["scope"];
+};
+
+// ---------- strategy ----------
+
+export function makeRecompileStrategy(req: RecompileRequest): Strategy {
+  return {
+    name: "recompile",
+    branchPrefix: "recompile",
+    plan: async ({ env }): Promise<PlanResult> => {
+      const gh = createGitHubClient(env.GITHUB_TOKEN, env.GITHUB_REPO);
+      const entries = await enumerateEntries(env, gh);
+      if (!entries.ok) {
+        return { ok: false, error: entries.error, status: 500 };
+      }
+      const filtered = applyScope(entries.data, req.scope).slice(0, MAX_ENTRIES_PER_RUN);
+
+      log.info("recompile", "plan", "entries selected", {
+        total: entries.data.length,
+        matched: filtered.length,
+        cap: MAX_ENTRIES_PER_RUN,
+      });
+
+      const results: RecompileResultRow[] = [];
+      const changed: Array<{ path: string; before: string; after: string }> = [];
+      for (const entry of filtered) {
+        const outcome = await recompileOne(entry, env);
+        if (outcome.ok) {
+          changed.push({ path: entry.path, before: entry.body, after: outcome.data.content });
+          results.push({ path: entry.path, status: "updated" });
+        } else {
+          results.push({ path: entry.path, status: "skipped", reason: outcome.error });
+        }
+      }
+
+      const summary: RecompileSummary = {
+        matched: filtered.length,
+        results,
+        scope: req.scope,
+      };
+      return {
+        ok: true,
+        data: {
+          mutation: { added: [], changed },
+          summary: summary as unknown as Record<string, unknown>,
+        },
+      };
+    },
+    prTitle: ({ mutation }) =>
+      `Recompile reading entries (${mutation.changed.length})`,
+    prBody: (plan, crosslink) => buildPrBody(plan, crosslink),
+  };
+}
+
+function buildPrBody(plan: PlanOutput, crosslink?: CrosslinkResult): string {
+  const summary = plan.summary as unknown as RecompileSummary;
+  const updated = summary.results.filter((r) => r.status === "updated");
+  const skipped = summary.results.filter((r) => r.status === "skipped");
+  const lines: string[] = [
+    `Automated recompile run. Scope: \`${JSON.stringify(summary.scope)}\`.`,
+    "",
+    `- Updated: ${updated.length}`,
+    `- Skipped: ${skipped.length}`,
+    "",
+    "### Updated",
+    ...updated.map((r) => `- \`${r.path}\``),
+  ];
+  if (skipped.length > 0) {
+    lines.push("", "### Skipped");
+    for (const r of skipped) {
+      lines.push(`- \`${r.path}\` — ${r.reason ?? "unknown"}`);
+    }
+  }
+  if (crosslink && crosslink.applied.length > 0) {
+    lines.push("", "### Cross-link suggestions");
+    lines.push(
+      `Applied ${crosslink.applied.length} insertion${crosslink.applied.length === 1 ? "" : "s"} ` +
+        `(${crosslink.forward} forward + ${crosslink.backward} backward proposals).`,
+    );
+    for (const a of crosslink.applied) {
+      lines.push(`- \`${a.path}\` — \`${a.anchor}\` → ${a.target}`);
+    }
+  }
+  return lines.join("\n");
+}
+
+// ---------- handler ----------
+
+export async function handle(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   let parsed: unknown;
   try {
     parsed = await request.json();
@@ -80,164 +172,55 @@ export async function handle(request: Request, env: Env): Promise<Response> {
     );
   }
   const req = validation.data;
-
-  const gh = createGitHubClient(env.GITHUB_TOKEN, env.GITHUB_REPO);
-  const mainSha = await getBranchSha("main", gh);
-  if (!mainSha.ok) {
-    return jsonResponse({ ok: false, error: `main: ${mainSha.error}` }, 500);
-  }
-
-  // Enumerate + filter.
-  const entries = await enumerateEntries(env, gh);
-  if (!entries.ok) {
-    return jsonResponse({ ok: false, error: entries.error }, 500);
-  }
-  const filtered = applyScope(entries.data, req.scope).slice(0, MAX_ENTRIES_PER_RUN);
-
-  log.info("recompile", "plan", "entries selected", {
-    total: entries.data.length,
-    matched: filtered.length,
-    cap: MAX_ENTRIES_PER_RUN,
-  });
-
-  if (filtered.length === 0) {
-    return jsonResponse({ ok: true, matched: 0, processed: 0, skipped: 0, pr: null });
-  }
-
-  // Per-entry recompile.
-  const results: Array<{ path: string; status: "updated" | "skipped"; reason?: string }> = [];
-  const updates: Array<{ path: string; content: string; previousSha: string }> = [];
-  for (const entry of filtered) {
-    const outcome = await recompileOne(entry, env);
-    if (outcome.ok) {
-      updates.push(outcome.data);
-      results.push({ path: entry.path, status: "updated" });
-    } else {
-      results.push({ path: entry.path, status: "skipped", reason: outcome.error });
-    }
-  }
+  const strategy = makeRecompileStrategy(req);
 
   if (req.dry_run) {
+    const planned = await strategy.plan({ env }, env);
+    if (!planned.ok) {
+      return jsonResponse({ ok: false, error: planned.error }, planned.status ?? 500);
+    }
+    const summary = planned.data.summary as unknown as RecompileSummary;
+    const updated = summary.results.filter((r) => r.status === "updated");
     return jsonResponse({
       ok: true,
       dry_run: true,
-      matched: filtered.length,
-      processed: updates.length,
-      skipped: filtered.length - updates.length,
-      results,
+      matched: summary.matched,
+      processed: updated.length,
+      skipped: summary.matched - updated.length,
+      results: summary.results,
     });
   }
 
-  // Commit + PR.
-  const branch = `recompile/${new Date().toISOString().slice(0, 10)}-${Date.now().toString(36)}`;
-  const branchResult = await createBranch(branch, mainSha.data, gh);
-  if (!branchResult.ok) {
-    return jsonResponse({ ok: false, error: `branch: ${branchResult.error}` }, 500);
+  const deps = makePipelineDeps(env);
+  const result = await runPipeline(
+    strategy,
+    { commitTarget: "pr", crosslink: "inline" },
+    env,
+    ctx,
+    deps,
+  );
+  if (!result.ok) {
+    return jsonResponse({ ok: false, error: result.error }, result.status);
   }
-
-  const committed: string[] = [];
-  const failedWrites: Array<{ path: string; error: string }> = [];
-  for (const update of updates) {
-    const put = await putFile({
-      path: update.path,
-      branch,
-      content: update.content,
-      message: `recompile: ${update.path.split("/").pop() ?? update.path}`,
-      sha: update.previousSha,
-      gh,
-    });
-    if (put.ok) {
-      committed.push(update.path);
-    } else {
-      failedWrites.push({ path: update.path, error: put.error });
-      log.error("recompile", "commit", "put failed", {
-        path: update.path,
-        error: put.error,
-      });
-      // Reflect the write failure in the results so the PR body and JSON
-      // response stay consistent.
-      const r = results.find((x) => x.path === update.path);
-      if (r) {
-        r.status = "skipped";
-        r.reason = `commit: ${put.error}`;
-      }
-    }
-  }
-
-  if (committed.length === 0) {
-    return jsonResponse(
-      {
-        ok: false,
-        error: "no writes committed",
-        branch,
-        matched: filtered.length,
-        committed: 0,
-        failed: failedWrites.length,
-        failed_writes: failedWrites,
-        results,
-      },
-      500,
-    );
-  }
-
-  const existingPr = await findOpenPrByBranch(branch, gh);
-  if (!existingPr.ok) {
-    return jsonResponse(
-      {
-        ok: false,
-        error: `pr lookup: ${existingPr.error}`,
-        branch,
-        committed: committed.length,
-        failed: failedWrites.length,
-        failed_writes: failedWrites,
-        results,
-      },
-      500,
-    );
-  }
-
-  let prNumber: number | null = null;
-  let prUrl: string | null = null;
-  if (existingPr.data) {
-    prNumber = existingPr.data.number;
-  } else {
-    const pr = await openPullRequest({
-      title: `Recompile reading entries (${committed.length})`,
-      body: buildPrBody(results, req.scope),
-      head: branch,
-      base: "main",
-      gh,
-    });
-    if (pr.ok) {
-      prNumber = pr.data.number;
-      prUrl = pr.data.html_url;
-    } else {
-      log.error("recompile", "pr", "open failed", { error: pr.error, branch });
-      return jsonResponse(
-        {
-          ok: false,
-          error: `pr open: ${pr.error}`,
-          branch,
-          committed: committed.length,
-          failed: failedWrites.length,
-          failed_writes: failedWrites,
-          results,
-        },
-        500,
-      );
-    }
-  }
-
+  const summary = result.summary as unknown as RecompileSummary | undefined;
+  const updated = summary?.results.filter((r) => r.status === "updated") ?? [];
+  const skipped = summary?.results.filter((r) => r.status === "skipped") ?? [];
   return jsonResponse({
     ok: true,
     dry_run: false,
-    matched: filtered.length,
-    committed: committed.length,
-    failed: failedWrites.length,
-    skipped: filtered.length - committed.length - failedWrites.length,
-    branch,
-    pr: prNumber ? { number: prNumber, url: prUrl } : null,
-    results,
+    matched: summary?.matched ?? 0,
+    committed: updated.length,
+    skipped: skipped.length,
+    branch: result.branch,
+    pr: result.pr_number ? { number: result.pr_number, url: result.pr_url } : null,
+    results: summary?.results ?? [],
+    crosslink: result.crosslink
+      ? {
+          forward: result.crosslink.forward,
+          backward: result.crosslink.backward,
+          applied: result.crosslink.applied.length,
+        }
+      : null,
   });
 }
 
@@ -330,11 +313,6 @@ function slugFromPath(path: string): string {
 
 // ---------- frontmatter parsing ----------
 
-/**
- * Parse YAML frontmatter via gray-matter. Returns null when the input
- * has no parseable frontmatter so callers can skip orphans without
- * special-casing each failure mode.
- */
 function parseFrontmatter(
   markdown: string,
 ): { frontmatter: Record<string, unknown>; body: string } | null {
@@ -357,7 +335,7 @@ function parseFrontmatter(
 async function recompileOne(
   entry: ParsedEntry,
   env: Env,
-): Promise<Result<{ path: string; content: string; previousSha: string }>> {
+): Promise<Result<{ path: string; content: string }>> {
   const url = typeof entry.frontmatter.url === "string" ? entry.frontmatter.url : null;
   const added = typeof entry.frontmatter.added === "string" ? entry.frontmatter.added : null;
   const existingTitle =
@@ -393,10 +371,7 @@ async function recompileOne(
     compiledAt: new Date(),
   });
 
-  return {
-    ok: true,
-    data: { path: entry.path, content: rebuilt, previousSha: entry.sha },
-  };
+  return { ok: true, data: { path: entry.path, content: rebuilt } };
 }
 
 function buildRecompileUserMessage(args: {
@@ -448,12 +423,6 @@ export function buildRecompiledMarkdown(args: {
 
 // ---------- internet archive ----------
 
-/**
- * Fetch the archived snapshot closest to `addedIso`. Uses the Wayback
- * Availability API to resolve the snapshot URL, then fetches plain text.
- * Returns an excerpt capped at IA_EXCERPT_LENGTH so the Anthropic prompt
- * stays within budget.
- */
 async function fetchInternetArchive(
   url: string,
   addedIso: string,
@@ -501,10 +470,6 @@ async function fetchInternetArchive(
     }
     reader.cancel().catch(() => {});
 
-    // html-to-text handles entities, scripts, styles, comments, and
-    // collapses whitespace properly — boundaries the previous regex
-    // stripper got wrong on snapshots with inline JSON or HTML in
-    // <script> bodies.
     const excerpt = htmlToText(html, {
       wordwrap: false,
       selectors: [
@@ -521,30 +486,4 @@ async function fetchInternetArchive(
   } finally {
     clearTimeout(timeout);
   }
-}
-
-// ---------- pr body ----------
-
-function buildPrBody(
-  results: Array<{ path: string; status: "updated" | "skipped"; reason?: string }>,
-  scope: RecompileRequest["scope"],
-): string {
-  const updated = results.filter((r) => r.status === "updated");
-  const skipped = results.filter((r) => r.status === "skipped");
-  const lines = [
-    `Automated recompile run. Scope: \`${JSON.stringify(scope)}\`.`,
-    "",
-    `- Updated: ${updated.length}`,
-    `- Skipped: ${skipped.length}`,
-    "",
-    "### Updated",
-    ...updated.map((r) => `- \`${r.path}\``),
-  ];
-  if (skipped.length > 0) {
-    lines.push("", "### Skipped");
-    for (const r of skipped) {
-      lines.push(`- \`${r.path}\` — ${r.reason ?? "unknown"}`);
-    }
-  }
-  return lines.join("\n");
 }

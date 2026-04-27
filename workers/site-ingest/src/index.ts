@@ -88,7 +88,7 @@ export default {
       if (!limited.success) {
         return textResponse("rate limited", 429);
       }
-      return recompile.handle(request, env);
+      return recompile.handle(request, env, ctx);
     }
 
     if (request.method === "POST" && url.pathname === "/consume") {
