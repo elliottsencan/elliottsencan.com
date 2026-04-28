@@ -1,6 +1,10 @@
 /**
  * Shared pipeline substrate for the four mutating endpoints.
  *
+ * All four mutating endpoints (`/link`, `/synthesize`, `/contribute`,
+ * `/recompile`) share branch/commit/PR/crosslink logic via this substrate
+ * so each strategy only owns its planning step.
+ *
  * Endpoints flow through `runPipeline(strategy, options, env, ctx, deps)`.
  * Each strategy contributes a planning function that returns a `Mutation`
  * (added/changed files) plus optional summary metadata. The substrate owns
@@ -81,16 +85,8 @@ export type RunResult<S = unknown> =
 
 export type GithubDeps = {
   getBranchSha: (branch: string) => Promise<Result<string>>;
-  createBranch: (
-    branch: string,
-    fromSha: string,
-  ) => Promise<Result<{ alreadyExists: boolean }>>;
-  /**
-   * Fetch a file's content + sha from a ref. The substrate uses this to
-   * resolve the sha for changed files before update commits. Returns
-   * `{ ok: false }` for new files (which is how the substrate distinguishes
-   * "no sha needed" from "sha required but unavailable").
-   */
+  createBranch: (branch: string, fromSha: string) => Promise<Result<{ alreadyExists: boolean }>>;
+  /** Returns `{ ok: false }` with a 404 error for new files; substrate uses that to distinguish "no sha needed" from "sha required but unavailable". */
   getFile: (path: string, ref: string) => Promise<Result<{ content: string; sha: string }>>;
   putFile: (args: {
     path: string;
@@ -108,10 +104,7 @@ export type GithubDeps = {
   }) => Promise<Result<{ number: number; html_url: string }>>;
 };
 
-export type CrosslinkRunner = (input: {
-  mutation: Mutation;
-  env: Env;
-}) => Promise<CrosslinkResult>;
+export type CrosslinkRunner = (input: { mutation: Mutation; env: Env }) => Promise<CrosslinkResult>;
 
 export type RunDeps = {
   github: GithubDeps;
@@ -152,12 +145,18 @@ async function commitToPR<S>(
 ): Promise<RunResult<S>> {
   const branch = buildBranchName(strategy.branchPrefix);
   const head = await deps.github.getBranchSha("main");
-  if (!head.ok) { return { ok: false, status: 502, error: head.error }; }
+  if (!head.ok) {
+    return { ok: false, status: 502, error: head.error };
+  }
   const created = await deps.github.createBranch(branch, head.data);
-  if (!created.ok) { return { ok: false, status: 502, error: created.error }; }
+  if (!created.ok) {
+    return { ok: false, status: 502, error: created.error };
+  }
 
   const commitOutcome = await commitMutation(strategy, branch, "main", mutation, deps.github);
-  if (commitOutcome.failure) { return commitOutcome.failure; }
+  if (commitOutcome.failure) {
+    return commitOutcome.failure;
+  }
 
   let crosslink: CrosslinkResult | undefined;
   if (options.crosslink === "inline" && deps.runCrosslink) {
@@ -175,12 +174,16 @@ async function commitToPR<S>(
         message: `crosslink: ${f.path}`,
         ...(sha ? { sha } : {}),
       });
-      if (!r.ok) { return { ok: false, status: 502, error: r.error }; }
+      if (!r.ok) {
+        return { ok: false, status: 502, error: r.error };
+      }
     }
   }
 
   const existing = await deps.github.findOpenPrByBranch(branch);
-  if (!existing.ok) { return { ok: false, status: 502, error: existing.error }; }
+  if (!existing.ok) {
+    return { ok: false, status: 502, error: existing.error };
+  }
 
   const planOut: PlanOutput<S> = { mutation, summary };
   let pr_number: number;
@@ -195,7 +198,9 @@ async function commitToPR<S>(
       head: branch,
       base: "main",
     });
-    if (!opened.ok) { return { ok: false, status: 502, error: opened.error }; }
+    if (!opened.ok) {
+      return { ok: false, status: 502, error: opened.error };
+    }
     pr_number = opened.data.number;
     pr_url = opened.data.html_url;
   }
@@ -220,15 +225,15 @@ async function commitToMain<S>(
   deps: RunDeps,
 ): Promise<RunResult<S>> {
   const commitOutcome = await commitMutation(strategy, "main", "main", mutation, deps.github);
-  if (commitOutcome.failure) { return commitOutcome.failure; }
+  if (commitOutcome.failure) {
+    return commitOutcome.failure;
+  }
 
   if (options.crosslink === "followup" && deps.runCrosslink) {
     const runCrosslink = deps.runCrosslink;
     const github = deps.github;
     const strategyName = strategy.name;
-    ctx.waitUntil(
-      runCrosslinkFollowup({ runCrosslink, github, mutation, env, strategyName }),
-    );
+    ctx.waitUntil(runCrosslinkFollowup({ runCrosslink, github, mutation, env, strategyName }));
   }
   return { ok: true, summary, commit_sha: commitOutcome.lastCommitSha };
 }
@@ -238,6 +243,9 @@ async function commitToMain<S>(
  * mutation, and if the phase produced any insertions, opens a separate PR
  * carrying them. Failures are logged and swallowed — the synchronous /link
  * response was already returned to the share-sheet caller.
+ *
+ * Runs after the synchronous response returns (via `ctx.waitUntil`), so
+ * failures cannot block the share-sheet caller.
  */
 async function runCrosslinkFollowup(args: {
   runCrosslink: CrosslinkRunner;
@@ -303,11 +311,13 @@ async function runCrosslinkFollowup(args: {
     }
     const committedPaths = new Set(committed.map((f) => f.path));
     const appliedCommitted = result.applied.filter((a) => committedPaths.has(a.path));
+    const dropped = result.changedFiles.length - committed.length;
     const opened = await args.github.openPullRequest({
       title: `Cross-link suggestions (from ${args.strategyName}, ${committed.length} file${committed.length === 1 ? "" : "s"})`,
       body: buildFollowupPrBody(
         { ...result, changedFiles: committed, applied: appliedCommitted },
         args.strategyName,
+        dropped,
       ),
       head: branch,
       base: "main",
@@ -329,16 +339,22 @@ async function runCrosslinkFollowup(args: {
   }
 }
 
-function buildFollowupPrBody(result: CrosslinkResult, strategyName: string): string {
+function buildFollowupPrBody(
+  result: CrosslinkResult,
+  strategyName: string,
+  dropped: number,
+): string {
   const lines: string[] = [
     `Follow-up cross-link suggestions for the recent ${strategyName} commit.`,
     "",
     `- Forward proposals: ${result.forward}`,
     `- Backward proposals: ${result.backward}`,
     `- Applied edits: ${result.applied.length}`,
-    "",
-    "## Insertions",
   ];
+  if (dropped > 0) {
+    lines.push(`- Dropped (commit failed): ${dropped} — see worker logs for per-file errors`);
+  }
+  lines.push("", "## Insertions");
   for (const a of result.applied) {
     lines.push(`- \`${a.path}\` — \`${a.anchor}\` → ${a.target}`);
   }
@@ -372,11 +388,14 @@ async function commitMutation<S>(
       path: f.path,
       branch,
       content: f.content,
-      message: strategy.commitMessage?.({ kind: "added", path: f.path, content: f.content })
-        ?? `${strategy.name}: ${f.path}`,
+      message:
+        strategy.commitMessage?.({ kind: "added", path: f.path, content: f.content }) ??
+        `${strategy.name}: ${f.path}`,
       ...(sha ? { sha } : {}),
     });
-    if (!r.ok) { return { failure: { ok: false, status: 502, error: r.error }, lastCommitSha }; }
+    if (!r.ok) {
+      return { failure: { ok: false, status: 502, error: r.error }, lastCommitSha };
+    }
     lastCommitSha = r.data.commitSha;
   }
   for (const f of mutation.changed) {
@@ -408,7 +427,9 @@ async function commitMutation<S>(
         }) ?? `${strategy.name}: update ${f.path}`,
       ...(sha ? { sha } : {}),
     });
-    if (!r.ok) { return { failure: { ok: false, status: 502, error: r.error }, lastCommitSha }; }
+    if (!r.ok) {
+      return { failure: { ok: false, status: 502, error: r.error }, lastCommitSha };
+    }
     lastCommitSha = r.data.commitSha;
   }
   return { failure: null, lastCommitSha };

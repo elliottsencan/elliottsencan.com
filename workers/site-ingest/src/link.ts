@@ -33,9 +33,13 @@ const MAX_EXCERPT_LENGTH = 16_000;
 const MAX_PAGE_FETCH_BYTES = 200_000;
 const PAGE_FETCH_TIMEOUT_MS = 5000;
 
+type TitleSource = "model" | "fetched" | "hostname";
+
 type LinkSummaryRow = {
   path: string;
   category: string;
+  topics_context_loaded: boolean;
+  title_source: TitleSource;
 };
 
 // ---------- strategy ----------
@@ -46,7 +50,7 @@ export function makeLinkStrategy(req: LinkRequest): Strategy<LinkSummaryRow> {
     branchPrefix: "link",
     plan: async ({ env }): Promise<PlanResult<LinkSummaryRow>> => {
       const resolvedTitle = req.title ?? (await fetchPageTitle(req.url));
-      const existingTopics = await loadExistingTopics();
+      const topicsContext = await loadExistingTopics();
 
       const summaryResult = await summarizeLink({
         apiKey: env.ANTHROPIC_API_KEY,
@@ -56,7 +60,7 @@ export function makeLinkStrategy(req: LinkRequest): Strategy<LinkSummaryRow> {
           title: resolvedTitle,
           url: req.url,
           excerpt: req.excerpt,
-          existingTopics,
+          existingTopics: topicsContext.topics,
         }),
       });
       if (!summaryResult.ok) {
@@ -66,9 +70,21 @@ export function makeLinkStrategy(req: LinkRequest): Strategy<LinkSummaryRow> {
 
       const added = new Date();
       const cleanedTitle = summary.title?.trim();
-      const finalTitle = cleanedTitle || resolvedTitle || new URL(req.url).hostname;
+      let finalTitle: string;
+      let titleSource: TitleSource;
+      if (cleanedTitle) {
+        finalTitle = cleanedTitle;
+        titleSource = "model";
+      } else if (resolvedTitle) {
+        finalTitle = resolvedTitle;
+        titleSource = "fetched";
+      } else {
+        finalTitle = new URL(req.url).hostname;
+        titleSource = "hostname";
+      }
       const markdown = buildEntryMarkdown({
         title: finalTitle,
+        titleSource,
         url: req.url,
         summary,
         added,
@@ -77,6 +93,8 @@ export function makeLinkStrategy(req: LinkRequest): Strategy<LinkSummaryRow> {
       const summaryRow: LinkSummaryRow = {
         path,
         category: summary.category,
+        topics_context_loaded: topicsContext.loaded,
+        title_source: titleSource,
       };
       return {
         ok: true,
@@ -104,11 +122,7 @@ export function makeLinkStrategy(req: LinkRequest): Strategy<LinkSummaryRow> {
 
 // ---------- handler ----------
 
-export async function handle(
-  request: Request,
-  env: Env,
-  ctx: ExecutionContext,
-): Promise<Response> {
+export async function handle(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const raw = await request.text();
   if (raw.length > MAX_BODY_BYTES) {
     return jsonResponse({ ok: false, error: "body too large" }, 413);
@@ -142,12 +156,16 @@ export async function handle(
   log.info("link", "commit", "reading entry committed", {
     path: summary?.path,
     category: summary?.category,
+    topics_context_loaded: summary?.topics_context_loaded,
+    title_source: summary?.title_source,
   });
   return jsonResponse(
     {
       ok: true,
       path: summary?.path,
       category: summary?.category,
+      topics_context_loaded: summary?.topics_context_loaded ?? false,
+      title_source: summary?.title_source,
       commit: result.commit_sha,
     },
     200,
@@ -213,14 +231,16 @@ const ReadingIndexSchema = z.object({
   entries: z.array(z.object({ topics: z.array(z.string()).optional() })),
 });
 
-async function loadExistingTopics(): Promise<string[]> {
+type TopicsContext = { topics: string[]; loaded: boolean };
+
+async function loadExistingTopics(): Promise<TopicsContext> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), TOPICS_FETCH_TIMEOUT_MS);
   try {
     const res = await fetch(READING_JSON_URL, { signal: controller.signal });
     if (!res.ok) {
       log.warn("link", "topics", "reading.json fetch failed", { status: res.status });
-      return [];
+      return { topics: [], loaded: false };
     }
     const raw = await res.json();
     const parsed = ReadingIndexSchema.safeParse(raw);
@@ -229,20 +249,25 @@ async function loadExistingTopics(): Promise<string[]> {
         issues: parsed.error.issues.length,
         first: parsed.error.issues[0]?.path.join(".") ?? "(root)",
       });
-      return [];
+      return { topics: [], loaded: false };
     }
     const seen = new Set<string>();
     for (const entry of parsed.data.entries) {
       for (const t of entry.topics ?? []) {
-        if (t.length > 0) { seen.add(t); }
+        if (t.length > 0) {
+          seen.add(t);
+        }
       }
     }
-    return [...seen].sort().slice(0, MAX_TOPICS_IN_PROMPT);
+    return {
+      topics: [...seen].sort().slice(0, MAX_TOPICS_IN_PROMPT),
+      loaded: true,
+    };
   } catch (err) {
     log.warn("link", "topics", "reading.json fetch threw", {
       msg: err instanceof Error ? err.message : "unknown",
     });
-    return [];
+    return { topics: [], loaded: false };
   } finally {
     clearTimeout(timeout);
   }
@@ -273,7 +298,11 @@ async function fetchPageTitle(url: string): Promise<string | undefined> {
       }
       html += decoder.decode(value, { stream: true });
     }
-    reader.cancel().catch(() => {});
+    reader.cancel().catch((err: unknown) => {
+      log.info("link", "fetch-cancel", "reader cancel rejected", {
+        msg: err instanceof Error ? err.message : "unknown",
+      });
+    });
 
     const match = /<title[^>]*>([^<]+)<\/title>/i.exec(html);
     if (!match?.[1]) {
@@ -314,11 +343,12 @@ function buildLinkUserMessage(args: {
 
 function buildEntryMarkdown(args: {
   title: string;
+  titleSource: TitleSource;
   url: string;
   summary: LinkSummary;
   added: Date;
 }): string {
-  const { title, url, summary, added } = args;
+  const { title, titleSource, url, summary, added } = args;
   const data: Record<string, unknown> = {
     title,
     url,
@@ -337,6 +367,7 @@ function buildEntryMarkdown(args: {
   }
   data.compiled_at = added.toISOString();
   data.compiled_with = summary.model;
+  data.title_source = titleSource;
   // Body intentionally empty: reading entries are source citations, not
   // wiki articles. Cross-source synthesis lives in src/content/wiki/,
   // produced by the /synthesize pipeline.
@@ -349,4 +380,3 @@ function buildEntryPath(args: { env: Env; added: Date; title: string }): string 
   const slug = slugify(args.title);
   return `${args.env.READING_DIR}/${month}/${timestamp}-${slug}.md`;
 }
-

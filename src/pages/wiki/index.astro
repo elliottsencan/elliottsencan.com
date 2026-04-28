@@ -5,9 +5,6 @@ import LabeledRule from "@components/LabeledRule.astro";
 import Link from "@components/Link.astro";
 import Layout from "@layouts/Layout.astro";
 
-// Wiki: concept-indexed synthesis articles compiled from clusters of
-// reading-log citations. One article per concept that has 2+ contributing
-// sources. The /reading page is the underlying citation index.
 const concepts = (await getCollection("wiki")).sort((a, b) => a.id.localeCompare(b.id));
 ---
 

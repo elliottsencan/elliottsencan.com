@@ -17,10 +17,8 @@
 
 import matter from "gray-matter";
 import { z } from "zod";
-import {
-  type CORPORA,
-  MAX_CROSSLINK_CALLS_PER_RUN,
-} from "./crosslink-config.ts";
+import { proposeCrosslinks } from "./anthropic.ts";
+import { type CORPORA, type CorpusName, MAX_CROSSLINK_CALLS_PER_RUN } from "./crosslink-config.ts";
 import {
   type CrosslinkPhaseResult,
   type CrosslinkProposal,
@@ -39,14 +37,13 @@ import {
   createBranch,
   createGitHubClient,
   findOpenPrByBranch,
+  type GitHubClient,
   getBranchSha,
   getFile,
-  type GitHubClient,
   listDir,
   openPullRequest,
   putFile,
 } from "./github.ts";
-import { proposeCrosslinks } from "./anthropic.ts";
 import { CROSSLINK_SUGGEST_SYSTEM } from "./prompts.ts";
 import type { Env } from "./types.ts";
 import { isNotFoundError, jsonResponse, log } from "./util.ts";
@@ -72,15 +69,19 @@ export const CrosslinkRequestSchema = z.object({
 export type CrosslinkRequest = z.infer<typeof CrosslinkRequestSchema>;
 
 // Exported for tests.
-export function validate(body: unknown): { ok: true; data: CrosslinkRequest } | { ok: false; error: string } {
+export function validate(
+  body: unknown,
+): { ok: true; data: CrosslinkRequest } | { ok: false; error: string } {
   const parsed = CrosslinkRequestSchema.safeParse(body);
   if (!parsed.success) {
-    return { ok: false, error: parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ") };
+    return {
+      ok: false,
+      error: parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; "),
+    };
   }
   return { ok: true, data: parsed.data };
 }
 
-// Exported for tests.
 export function resolveScope(
   scope: CrosslinkRequest["scope"],
   snapshot: { wiki: WikiEntry[]; blog: BlogEntry[] },
@@ -88,18 +89,30 @@ export function resolveScope(
   if (scope.kind === "slug") {
     if (scope.corpus === "wiki") {
       const w = snapshot.wiki.find((e) => e.slug === scope.slug);
-      if (!w) { return { pieces: [], capped: false }; }
+      if (!w) {
+        return { pieces: [], capped: false };
+      }
       return { pieces: [{ corpus: "wiki", slug: w.slug, url: `/wiki/${w.slug}` }], capped: false };
     }
     const b = snapshot.blog.find((e) => e.slug === scope.slug);
-    if (!b) { return { pieces: [], capped: false }; }
+    if (!b) {
+      return { pieces: [], capped: false };
+    }
     return { pieces: [{ corpus: "blog", slug: b.slug, url: `/writing/${b.slug}` }], capped: false };
   }
   // since + all both enumerate everything; "since" filters by date when
   // present, "all" returns the full set.
   const all: Piece[] = [
-    ...snapshot.wiki.map((w) => ({ corpus: "wiki" as const, slug: w.slug, url: `/wiki/${w.slug}` })),
-    ...snapshot.blog.map((b) => ({ corpus: "blog" as const, slug: b.slug, url: `/writing/${b.slug}` })),
+    ...snapshot.wiki.map((w) => ({
+      corpus: "wiki" as const,
+      slug: w.slug,
+      url: `/wiki/${w.slug}`,
+    })),
+    ...snapshot.blog.map((b) => ({
+      corpus: "blog" as const,
+      slug: b.slug,
+      url: `/writing/${b.slug}`,
+    })),
   ];
   const filtered =
     scope.kind === "since"
@@ -183,7 +196,9 @@ async function runScopedPhase(
   const forwardSources: Array<{ piece: Piece; body: string; candidates: Piece[] }> = [];
   for (const piece of pieces) {
     const row = rowsBySlug.get(`${piece.corpus}/${piece.slug}`);
-    if (!row?.body) { continue; }
+    if (!row?.body) {
+      continue;
+    }
     const pool = rows
       .filter((r) => !(r.piece.corpus === piece.corpus && r.piece.slug === piece.slug))
       .map((r) => ({ slug: `${r.piece.corpus}/${r.piece.slug}`, tags: r.tags, series: r.series }));
@@ -215,7 +230,9 @@ async function runScopedPhase(
       const backward: CrosslinkProposal[] = [];
       let apiFailures = 0;
       for (const src of forwardSources) {
-        if (callsLeft-- <= 0) { break; }
+        if (callsLeft-- <= 0) {
+          break;
+        }
         const r = await proposeCrosslinks({
           apiKey: env.ANTHROPIC_API_KEY,
           model: env.ANTHROPIC_MODEL || undefined,
@@ -233,7 +250,9 @@ async function runScopedPhase(
         }
       }
       for (const tgt of backwardTargets) {
-        if (callsLeft-- <= 0) { break; }
+        if (callsLeft-- <= 0) {
+          break;
+        }
         const r = await proposeCrosslinks({
           apiKey: env.ANTHROPIC_API_KEY,
           model: env.ANTHROPIC_MODEL || undefined,
@@ -283,7 +302,11 @@ function buildPrBody(scope: CrosslinkRequest["scope"], result: CrosslinkPhaseRes
   return lines.join("\n");
 }
 
-export async function handle(request: Request, env: Env, _ctx: ExecutionContext): Promise<Response> {
+export async function handle(
+  request: Request,
+  env: Env,
+  _ctx: ExecutionContext,
+): Promise<Response> {
   let body: unknown;
   try {
     body = await request.json();
@@ -291,7 +314,9 @@ export async function handle(request: Request, env: Env, _ctx: ExecutionContext)
     return jsonResponse({ error: "invalid JSON" }, 400);
   }
   const validated = validate(body);
-  if (!validated.ok) { return jsonResponse({ error: validated.error }, 400); }
+  if (!validated.ok) {
+    return jsonResponse({ error: validated.error }, 400);
+  }
 
   const gh = createGitHubClient(env.GITHUB_TOKEN, env.GITHUB_REPO);
   const ghDeps: EnumerateDeps = {
@@ -352,9 +377,13 @@ async function openCrosslinkPr(
 ): Promise<Response> {
   const branch = `crosslink/${new Date().toISOString().slice(0, 10)}-${Date.now().toString(36)}`;
   const head = await getBranchSha("main", gh);
-  if (!head.ok) { return jsonResponse({ ok: false, error: `branch sha: ${head.error}` }, 502); }
+  if (!head.ok) {
+    return jsonResponse({ ok: false, error: `branch sha: ${head.error}` }, 502);
+  }
   const created = await createBranch(branch, head.data, gh);
-  if (!created.ok) { return jsonResponse({ ok: false, error: `branch: ${created.error}` }, 502); }
+  if (!created.ok) {
+    return jsonResponse({ ok: false, error: `branch: ${created.error}` }, 502);
+  }
 
   const committed: string[] = [];
   for (const f of phase.changedFiles) {
@@ -405,10 +434,7 @@ async function openCrosslinkPr(
       gh,
     });
     if (!opened.ok) {
-      return jsonResponse(
-        { ok: false, error: `pr open: ${opened.error}`, branch, committed },
-        502,
-      );
+      return jsonResponse({ ok: false, error: `pr open: ${opened.error}`, branch, committed }, 502);
     }
     prNumber = opened.data.number;
     prUrl = opened.data.html_url;
@@ -428,6 +454,6 @@ async function openCrosslinkPr(
 
 // Compile-time assertion that CORPORA stays in sync with the corpora /crosslink
 // supports. Update both if you add a new corpus.
-type _CorporaCheck = (typeof CORPORA)[number]["name"] extends "wiki" | "blog" ? true : never;
+type _CorporaCheck = keyof typeof CORPORA extends Exclude<CorpusName, "reading"> ? true : never;
 const _check: _CorporaCheck = true;
 void _check;

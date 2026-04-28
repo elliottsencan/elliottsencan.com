@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { enumerateBlogWithBodies, enumerateWikiWithBodies } from "./enumerate.ts";
 import type { EnumerateDeps } from "./enumerate.ts";
+import { enumerateBlogWithBodies, enumerateWikiWithBodies } from "./enumerate.ts";
 
 const fakeDeps = (files: Record<string, string>): EnumerateDeps => ({
   listDir: vi.fn().mockImplementation(async (path: string) => {
@@ -22,7 +22,9 @@ const fakeDeps = (files: Record<string, string>): EnumerateDeps => ({
   }),
   getFile: vi.fn().mockImplementation(async (path: string) => {
     const content = files[path];
-    if (content == null) { return { ok: false, error: "not-found" }; }
+    if (content == null) {
+      return { ok: false, error: "not-found" };
+    }
     return { ok: true, data: { content, sha: "x" } };
   }),
 });

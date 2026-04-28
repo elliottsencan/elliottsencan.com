@@ -14,8 +14,8 @@
  * cross-link phase, which needs body text to scan for anchor candidates.
  */
 
-import { BlogFrontmatterSchema, WikiFrontmatterSchema } from "@shared/schemas/content.ts";
 import type { BlogFrontmatter, WikiFrontmatter } from "@shared/schemas/content.ts";
+import { BlogFrontmatterSchema, WikiFrontmatterSchema } from "@shared/schemas/content.ts";
 import matter from "gray-matter";
 import type { z } from "zod";
 import { CORPORA } from "./crosslink-config.ts";
@@ -61,10 +61,14 @@ async function enumerateCorpusWithBodies<T, S extends z.ZodTypeAny>(
   }
   const out: T[] = [];
   for (const entry of dir.data) {
-    if (entry.type !== "file") { continue; }
+    if (entry.type !== "file") {
+      continue;
+    }
     const dotIdx = entry.name.lastIndexOf(".");
     const ext = dotIdx >= 0 ? entry.name.slice(dotIdx) : "";
-    if (!allowedExtensions.includes(ext)) { continue; }
+    if (!allowedExtensions.includes(ext)) {
+      continue;
+    }
     const file = await deps.getFile(entry.path);
     if (!file.ok) {
       log.warn("enumerate", corpusName, "getFile-failed", {
@@ -90,8 +94,7 @@ async function enumerateCorpusWithBodies<T, S extends z.ZodTypeAny>(
 }
 
 export async function enumerateWikiWithBodies(deps: EnumerateDeps): Promise<WikiEntry[]> {
-  const wiki = CORPORA.find((c) => c.name === "wiki");
-  if (!wiki) { throw new Error("wiki corpus missing from CORPORA config"); }
+  const wiki = CORPORA.wiki;
   return enumerateCorpusWithBodies(
     wiki.contentDir,
     wiki.fileExtensions,
@@ -103,8 +106,7 @@ export async function enumerateWikiWithBodies(deps: EnumerateDeps): Promise<Wiki
 }
 
 export async function enumerateBlogWithBodies(deps: EnumerateDeps): Promise<BlogEntry[]> {
-  const blog = CORPORA.find((c) => c.name === "blog");
-  if (!blog) { throw new Error("blog corpus missing from CORPORA config"); }
+  const blog = CORPORA.blog;
   return enumerateCorpusWithBodies(
     blog.contentDir,
     blog.fileExtensions,

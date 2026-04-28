@@ -11,8 +11,16 @@
  * markdown-AST-aware insertion pass is added.
  */
 
+/**
+ * Every corpus the worker references. `reading` participates in cross-link
+ * proposals as a citation target/source but is enumerated via its own
+ * file-system layout, so it has no `Corpus` config entry; the file-system-
+ * managed corpora (wiki + blog) live in `CORPORA` below.
+ */
+export type CorpusName = "wiki" | "blog" | "reading";
+
 export type Corpus = {
-  name: "wiki" | "blog";
+  name: Exclude<CorpusName, "reading">;
   contentDir: string;
   urlPrefix: string;
   role: "reference" | "argument";
@@ -22,8 +30,10 @@ export type Corpus = {
   fileExtensions: ReadonlyArray<".md">;
 };
 
-export const CORPORA: ReadonlyArray<Corpus> = [
-  {
+// Keyed so missing entries surface as compile errors, not silent runtime
+// `undefined`s in the consumers that look up `wiki`/`blog` by name.
+export const CORPORA: Record<Exclude<CorpusName, "reading">, Corpus> = {
+  wiki: {
     name: "wiki",
     contentDir: "src/content/wiki",
     urlPrefix: "/wiki/",
@@ -33,7 +43,7 @@ export const CORPORA: ReadonlyArray<Corpus> = [
     seriesAware: false,
     fileExtensions: [".md"],
   },
-  {
+  blog: {
     name: "blog",
     contentDir: "src/content/blog",
     urlPrefix: "/writing/",
@@ -43,7 +53,7 @@ export const CORPORA: ReadonlyArray<Corpus> = [
     seriesAware: true,
     fileExtensions: [".md"],
   },
-];
+};
 
 /** Max candidate targets considered per source piece during scoring. */
 export const MAX_CANDIDATES_PER_PIECE = 50;

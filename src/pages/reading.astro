@@ -19,8 +19,10 @@ const entries = (await getCollection("reading")).sort(
 
 type Entry = CollectionEntry<"reading">;
 
-function monthLabel(date: Date): string {
-  return `${date.toLocaleString("en-US", { month: "long" })} ${date.getFullYear()}`;
+function monthLabel(key: string): string {
+  const [year, month] = key.split("-").map(Number);
+  const date = new Date(Date.UTC(year, month - 1, 1, 12));
+  return `${date.toLocaleString("en-US", { month: "long", timeZone: "UTC" })} ${year}`;
 }
 
 // Group into ordered buckets by month, preserving reverse-chron order so
@@ -29,12 +31,12 @@ function monthLabel(date: Date): string {
 type Bucket = { key: string; label: string; entries: Entry[] };
 const buckets: Bucket[] = [];
 for (const entry of entries) {
-  const key = monthKey(entry.data.added);
+  const key = monthKey(entry.id);
   const last = buckets[buckets.length - 1];
   if (last && last.key === key) {
     last.entries.push(entry);
   } else {
-    buckets.push({ key, label: monthLabel(entry.data.added), entries: [entry] });
+    buckets.push({ key, label: monthLabel(key), entries: [entry] });
   }
 }
 

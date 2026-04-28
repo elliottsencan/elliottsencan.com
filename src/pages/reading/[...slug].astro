@@ -22,13 +22,15 @@ const citingConcepts = wiki.filter((c) => c.data.sources.includes(entry.id));
 
 const allEntries = (await getCollection("reading")).filter((e) => e.id !== entry.id);
 const myTopics = new Set((entry.data.topics ?? []).map((t) => t.toLowerCase()));
-const myCatMonth = `${entry.data.category}:${monthKey(entry.data.added)}`;
+const myCatMonth = `${entry.data.category}:${monthKey(entry.id)}`;
 
 type RelatedReason = "topic" | "author" | "source" | "category-month";
 const related: Array<{ entry: CollectionEntry<"reading">; reason: RelatedReason }> = [];
 const seen = new Set<string>();
 for (const e of allEntries) {
-  if (seen.has(e.id)) { continue; }
+  if (seen.has(e.id)) {
+    continue;
+  }
   let reason: RelatedReason | null = null;
   if ((e.data.topics ?? []).some((t) => myTopics.has(t.toLowerCase()))) {
     reason = "topic";
@@ -36,7 +38,7 @@ for (const e of allEntries) {
     reason = "author";
   } else if (entry.data.source && e.data.source === entry.data.source) {
     reason = "source";
-  } else if (`${e.data.category}:${monthKey(e.data.added)}` === myCatMonth) {
+  } else if (`${e.data.category}:${monthKey(e.id)}` === myCatMonth) {
     reason = "category-month";
   }
   if (reason) {

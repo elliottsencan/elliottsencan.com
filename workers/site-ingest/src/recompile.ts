@@ -42,8 +42,6 @@ const IA_FETCH_TIMEOUT_MS = 10_000;
 const IA_MAX_BYTES = 500_000;
 const IA_EXCERPT_LENGTH = 16_000;
 
-// ---------- request validation ----------
-
 const ScopeSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("all") }),
   z.object({ kind: z.literal("since"), since: z.string() }),
@@ -62,7 +60,22 @@ const RecompileRequestSchema = z.object({
 
 export type RecompileRequest = z.infer<typeof RecompileRequestSchema>;
 
-type RecompileResultRow = { path: string; status: "updated" | "skipped"; reason?: string };
+type SkipReason = "no-snapshot" | "transient" | "frontmatter-invalid" | "other";
+
+type RecompileResultRow = {
+  path: string;
+  status: "updated" | "skipped";
+  reason?: string;
+  skip_reason?: SkipReason;
+};
+
+type SkipPartition = {
+  total: number;
+  no_snapshot: number;
+  transient: number;
+  frontmatter_invalid: number;
+  other: number;
+};
 
 type RecompileSummary = {
   matched: number;
@@ -70,23 +83,23 @@ type RecompileSummary = {
   scope: RecompileRequest["scope"];
 };
 
-// ---------- strategy ----------
-
 export function makeRecompileStrategy(req: RecompileRequest): Strategy<RecompileSummary> {
   return {
     name: "recompile",
     branchPrefix: "recompile",
     plan: async ({ env }): Promise<PlanResult<RecompileSummary>> => {
       const gh = createGitHubClient(env.GITHUB_TOKEN, env.GITHUB_REPO);
-      const entries = await enumerateEntries(env, gh);
-      if (!entries.ok) {
-        return { ok: false, error: entries.error, status: 500 };
+      const enumerated = await enumerateEntries(env, gh);
+      if (!enumerated.ok) {
+        return { ok: false, error: enumerated.error, status: 500 };
       }
-      const filtered = applyScope(entries.data, req.scope).slice(0, MAX_ENTRIES_PER_RUN);
+      const { entries, invalidPaths } = enumerated.data;
+      const filtered = applyScope(entries, req.scope).slice(0, MAX_ENTRIES_PER_RUN);
 
       log.info("recompile", "plan", "entries selected", {
-        total: entries.data.length,
+        total: entries.length,
         matched: filtered.length,
+        invalid: invalidPaths.length,
         cap: MAX_ENTRIES_PER_RUN,
       });
 
@@ -98,8 +111,21 @@ export function makeRecompileStrategy(req: RecompileRequest): Strategy<Recompile
           changed.push({ path: entry.path, before: entry.body, after: outcome.data.content });
           results.push({ path: entry.path, status: "updated" });
         } else {
-          results.push({ path: entry.path, status: "skipped", reason: outcome.error });
+          results.push({
+            path: entry.path,
+            status: "skipped",
+            reason: outcome.error,
+            skip_reason: outcome.skipReason,
+          });
         }
+      }
+      for (const path of invalidPaths) {
+        results.push({
+          path,
+          status: "skipped",
+          reason: "frontmatter parse failed",
+          skip_reason: "frontmatter-invalid",
+        });
       }
 
       const summary: RecompileSummary = {
@@ -112,25 +138,55 @@ export function makeRecompileStrategy(req: RecompileRequest): Strategy<Recompile
         data: { mutation: { added: [], changed }, summary },
       };
     },
-    prTitle: ({ mutation }) =>
-      `Recompile reading entries (${mutation.changed.length})`,
+    prTitle: ({ mutation }) => `Recompile reading entries (${mutation.changed.length})`,
     prBody: (plan, crosslink) => buildPrBody(plan, crosslink),
   };
 }
 
-function buildPrBody(
-  plan: PlanOutput<RecompileSummary>,
-  crosslink?: CrosslinkResult,
-): string {
-  if (!plan.summary) { return "Automated recompile run."; }
+// Exported for unit tests; in-file callers use it directly.
+export function partitionSkips(results: RecompileResultRow[]): SkipPartition {
+  const partition: SkipPartition = {
+    total: 0,
+    no_snapshot: 0,
+    transient: 0,
+    frontmatter_invalid: 0,
+    other: 0,
+  };
+  for (const r of results) {
+    if (r.status !== "skipped") {
+      continue;
+    }
+    partition.total += 1;
+    switch (r.skip_reason) {
+      case "no-snapshot":
+        partition.no_snapshot += 1;
+        break;
+      case "transient":
+        partition.transient += 1;
+        break;
+      case "frontmatter-invalid":
+        partition.frontmatter_invalid += 1;
+        break;
+      default:
+        partition.other += 1;
+    }
+  }
+  return partition;
+}
+
+function buildPrBody(plan: PlanOutput<RecompileSummary>, crosslink?: CrosslinkResult): string {
+  if (!plan.summary) {
+    return "Automated recompile run.";
+  }
   const summary = plan.summary;
   const updated = summary.results.filter((r) => r.status === "updated");
   const skipped = summary.results.filter((r) => r.status === "skipped");
+  const skips = partitionSkips(summary.results);
   const lines: string[] = [
     `Automated recompile run. Scope: \`${JSON.stringify(summary.scope)}\`.`,
     "",
     `- Updated: ${updated.length}`,
-    `- Skipped: ${skipped.length}`,
+    `- Skipped: ${skips.total} (no_snapshot=${skips.no_snapshot}, transient=${skips.transient}, frontmatter_invalid=${skips.frontmatter_invalid}, other=${skips.other})`,
     "",
     "### Updated",
     ...updated.map((r) => `- \`${r.path}\``),
@@ -138,7 +194,8 @@ function buildPrBody(
   if (skipped.length > 0) {
     lines.push("", "### Skipped");
     for (const r of skipped) {
-      lines.push(`- \`${r.path}\` — ${r.reason ?? "unknown"}`);
+      const tag = r.skip_reason ? `${r.skip_reason}: ` : "";
+      lines.push(`- \`${r.path}\` — ${tag}${r.reason ?? "unknown"}`);
     }
   }
   if (crosslink && crosslink.applied.length > 0) {
@@ -153,8 +210,6 @@ function buildPrBody(
   }
   return lines.join("\n");
 }
-
-// ---------- handler ----------
 
 export async function handle(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   let parsed: unknown;
@@ -190,7 +245,7 @@ export async function handle(request: Request, env: Env, ctx: ExecutionContext):
       dry_run: true,
       matched: summary.matched,
       processed: updated.length,
-      skipped: summary.matched - updated.length,
+      skipped: partitionSkips(summary.results),
       results: summary.results,
     });
   }
@@ -207,17 +262,17 @@ export async function handle(request: Request, env: Env, ctx: ExecutionContext):
     return jsonResponse({ ok: false, error: result.error }, result.status);
   }
   const summary = result.summary;
-  const updated = summary?.results.filter((r) => r.status === "updated") ?? [];
-  const skipped = summary?.results.filter((r) => r.status === "skipped") ?? [];
+  const results = summary?.results ?? [];
+  const updated = results.filter((r) => r.status === "updated");
   return jsonResponse({
     ok: true,
     dry_run: false,
     matched: summary?.matched ?? 0,
     committed: updated.length,
-    skipped: skipped.length,
+    skipped: partitionSkips(results),
     branch: result.branch,
     pr: result.pr_number ? { number: result.pr_number, url: result.pr_url } : null,
-    results: summary?.results ?? [],
+    results,
     crosslink: result.crosslink
       ? {
           forward: result.crosslink.forward,
@@ -228,8 +283,6 @@ export async function handle(request: Request, env: Env, ctx: ExecutionContext):
   });
 }
 
-// ---------- enumeration ----------
-
 interface ParsedEntry {
   path: string;
   sha: string;
@@ -237,13 +290,16 @@ interface ParsedEntry {
   body: string;
 }
 
-async function enumerateEntries(env: Env, gh: GitHubClient): Promise<Result<ParsedEntry[]>> {
+type Enumeration = { entries: ParsedEntry[]; invalidPaths: string[] };
+
+async function enumerateEntries(env: Env, gh: GitHubClient): Promise<Result<Enumeration>> {
   const months = await listDir(env.READING_DIR, "main", gh);
   if (!months.ok) {
     return { ok: false, error: `list months: ${months.error}` };
   }
 
-  const all: ParsedEntry[] = [];
+  const entries: ParsedEntry[] = [];
+  const invalidPaths: string[] = [];
   for (const month of months.data) {
     if (month.type !== "dir") {
       continue;
@@ -270,12 +326,13 @@ async function enumerateEntries(env: Env, gh: GitHubClient): Promise<Result<Pars
       }
       const parsed = parseFrontmatter(loaded.data.content);
       if (!parsed) {
+        invalidPaths.push(file.path);
         continue;
       }
-      all.push({ path: file.path, sha: loaded.data.sha, ...parsed });
+      entries.push({ path: file.path, sha: loaded.data.sha, ...parsed });
     }
   }
-  return { ok: true, data: all };
+  return { ok: true, data: { entries, invalidPaths } };
 }
 
 // Exported for unit tests; in-file callers use it directly.
@@ -315,9 +372,8 @@ function slugFromPath(path: string): string {
   return file.replace(/\.md$/, "");
 }
 
-// ---------- frontmatter parsing ----------
-
-function parseFrontmatter(
+// Exported for unit tests; in-file callers use it directly.
+export function parseFrontmatter(
   markdown: string,
 ): { frontmatter: Record<string, unknown>; body: string } | null {
   try {
@@ -334,23 +390,26 @@ function parseFrontmatter(
   }
 }
 
-// ---------- per-entry recompile ----------
+type RecompileOutcome =
+  | { ok: true; data: { path: string; content: string } }
+  | { ok: false; error: string; skipReason: SkipReason };
 
-async function recompileOne(
-  entry: ParsedEntry,
-  env: Env,
-): Promise<Result<{ path: string; content: string }>> {
+async function recompileOne(entry: ParsedEntry, env: Env): Promise<RecompileOutcome> {
   const url = typeof entry.frontmatter.url === "string" ? entry.frontmatter.url : null;
   const added = typeof entry.frontmatter.added === "string" ? entry.frontmatter.added : null;
   const existingTitle =
     typeof entry.frontmatter.title === "string" ? entry.frontmatter.title : undefined;
   if (!url || !added) {
-    return { ok: false, error: "missing url or added" };
+    return { ok: false, error: "missing url or added", skipReason: "other" };
   }
 
   const archive = await fetchInternetArchive(url, added);
   if (!archive.ok) {
-    return { ok: false, error: `ia: ${archive.error}` };
+    return {
+      ok: false,
+      error: `ia: ${archive.error}`,
+      skipReason: archive.kind === "no-snapshot" ? "no-snapshot" : "transient",
+    };
   }
 
   const summary = await summarizeLink({
@@ -364,7 +423,7 @@ async function recompileOne(
     }),
   });
   if (!summary.ok) {
-    return { ok: false, error: `anthropic: ${summary.error}` };
+    return { ok: false, error: `anthropic: ${summary.error}`, skipReason: "transient" };
   }
 
   const rebuilt = buildRecompiledMarkdown({
@@ -394,7 +453,6 @@ function buildRecompileUserMessage(args: {
   return parts.join("\n");
 }
 
-// Exported for unit tests; in-file callers use it directly.
 export function buildRecompiledMarkdown(args: {
   title: string;
   url: string;
@@ -425,12 +483,11 @@ export function buildRecompiledMarkdown(args: {
   return matter.stringify("", data);
 }
 
-// ---------- internet archive ----------
+type ArchiveResult =
+  | { ok: true; data: { excerpt: string; snapshotUrl: string } }
+  | { ok: false; error: string; kind: "no-snapshot" | "transient" };
 
-async function fetchInternetArchive(
-  url: string,
-  addedIso: string,
-): Promise<Result<{ excerpt: string; snapshotUrl: string }>> {
+async function fetchInternetArchive(url: string, addedIso: string): Promise<ArchiveResult> {
   // Wayback Availability API expects compact yyyyMMddHHmmss format.
   const ts = formatDate(new Date(addedIso), "yyyyMMddHHmmss");
   const availUrl = `https://archive.org/wayback/available?url=${encodeURIComponent(url)}&timestamp=${ts}`;
@@ -443,14 +500,14 @@ async function fetchInternetArchive(
       headers: { "User-Agent": "site-ingest-recompile/0.1" },
     });
     if (!availRes.ok) {
-      return { ok: false, error: `availability ${availRes.status}` };
+      return { ok: false, error: `availability ${availRes.status}`, kind: "transient" };
     }
     const avail = (await availRes.json()) as {
       archived_snapshots?: { closest?: { url?: string; available?: boolean } };
     };
     const snapshot = avail.archived_snapshots?.closest;
     if (!snapshot?.available || !snapshot.url) {
-      return { ok: false, error: "no snapshot" };
+      return { ok: false, error: "no snapshot", kind: "no-snapshot" };
     }
 
     const snapRes = await fetch(snapshot.url, {
@@ -459,7 +516,7 @@ async function fetchInternetArchive(
       headers: { "User-Agent": "site-ingest-recompile/0.1" },
     });
     if (!snapRes.ok || !snapRes.body) {
-      return { ok: false, error: `snapshot ${snapRes.status}` };
+      return { ok: false, error: `snapshot ${snapRes.status}`, kind: "transient" };
     }
 
     const reader = snapRes.body.getReader();
@@ -472,7 +529,11 @@ async function fetchInternetArchive(
       }
       html += decoder.decode(value, { stream: true });
     }
-    reader.cancel().catch(() => {});
+    reader.cancel().catch((err: unknown) => {
+      log.info("recompile", "fetch-cancel", "reader cancel rejected", {
+        msg: err instanceof Error ? err.message : "unknown",
+      });
+    });
 
     const excerpt = htmlToText(html, {
       wordwrap: false,
@@ -486,7 +547,7 @@ async function fetchInternetArchive(
     return { ok: true, data: { excerpt, snapshotUrl: snapshot.url } };
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    return { ok: false, error: msg };
+    return { ok: false, error: msg, kind: "transient" };
   } finally {
     clearTimeout(timeout);
   }

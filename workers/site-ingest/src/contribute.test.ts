@@ -43,9 +43,7 @@ describe("buildArticleMarkdown", () => {
   });
 
   it("omits related_concepts when present but empty", () => {
-    const { data } = parseEntry(
-      buildArticleMarkdown({ ...baseArgs, related_concepts: [] }),
-    );
+    const { data } = parseEntry(buildArticleMarkdown({ ...baseArgs, related_concepts: [] }));
     expect(data).not.toHaveProperty("related_concepts");
   });
 
@@ -57,9 +55,7 @@ describe("buildArticleMarkdown", () => {
   });
 
   it("trims body whitespace so re-runs don't churn diffs", () => {
-    const { content } = parseEntry(
-      buildArticleMarkdown({ ...baseArgs, body: "Body\n\n\n\n" }),
-    );
+    const { content } = parseEntry(buildArticleMarkdown({ ...baseArgs, body: "Body\n\n\n\n" }));
     expect(content.endsWith("\n\n\n")).toBe(false);
   });
 });

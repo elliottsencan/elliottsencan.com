@@ -26,6 +26,9 @@ jobs:
       - name: Biome check
         run: pnpm check
 
+      - name: Site tests
+        run: pnpm test
+
       - name: Astro build
         run: pnpm build
 

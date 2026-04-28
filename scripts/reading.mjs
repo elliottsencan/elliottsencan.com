@@ -78,7 +78,7 @@ Commands:
   search <query>        substring search
   get <slug>            full entry JSON by slug
   categories            list categories with counts
-  related <slug>        entries related via shared author/source/category+month
+  related <slug>        entries related via shared topic/author/source/category+month
 
 Flags:
   --category <name>     filter by category

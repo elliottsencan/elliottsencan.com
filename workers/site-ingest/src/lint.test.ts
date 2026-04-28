@@ -7,11 +7,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import {
-  computeLintReport,
-  type ReadingMeta,
-  type WikiMeta,
-} from "./lint.ts";
+import { computeLintReport, type ReadingMeta, type WikiMeta } from "./lint.ts";
 
 function reading(slug: string, topics: string[] = ["t"]): ReadingMeta {
   return { slug, topics, compiled_with: "claude-sonnet-4-6" };

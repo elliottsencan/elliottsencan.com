@@ -33,7 +33,7 @@ pnpm reading <command>
 - `search <query>` — substring search across title, summary, author, source
 - `get <slug>` — full entry as JSON
 - `categories` — category counts
-- `related <slug>` — entries linked by shared author / source / category+month
+- `related <slug>` — entries linked by shared topic / author / source / category+month (topic overlap is the strongest signal)
 
 ### Flags
 

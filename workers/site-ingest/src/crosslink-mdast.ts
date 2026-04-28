@@ -36,10 +36,18 @@ export function stringifyMarkdown(root: Root): string {
 }
 
 export function joinedText(node: Nodes): string {
-  if (node.type === "text") { return node.value; }
-  if (node.type === "inlineCode") { return node.value; }
-  if (node.type === "code") { return node.value; }
-  if (node.type === "image") { return node.alt ?? ""; }
+  if (node.type === "text") {
+    return node.value;
+  }
+  if (node.type === "inlineCode") {
+    return node.value;
+  }
+  if (node.type === "code") {
+    return node.value;
+  }
+  if (node.type === "image") {
+    return node.alt ?? "";
+  }
   if ("children" in node) {
     let out = "";
     for (const child of node.children) {
@@ -55,7 +63,9 @@ function isInLink(parents: Parent[]): boolean {
 }
 
 export function findAnchorOccurrences(root: Root, anchor: string): AnchorOccurrence[] {
-  if (!anchor) { return []; }
+  if (!anchor) {
+    return [];
+  }
   const out: AnchorOccurrence[] = [];
 
   const walk = (node: Nodes, parents: Parent[], block: Nodes | undefined): void => {
@@ -63,7 +73,9 @@ export function findAnchorOccurrences(root: Root, anchor: string): AnchorOccurre
       let from = 0;
       while (true) {
         const idx = node.value.indexOf(anchor, from);
-        if (idx < 0) { break; }
+        if (idx < 0) {
+          break;
+        }
         out.push({
           context: isInLink(parents) ? "in-link" : "eligible",
           textNode: node,
@@ -75,15 +87,21 @@ export function findAnchorOccurrences(root: Root, anchor: string): AnchorOccurre
       return;
     }
     if (node.type === "inlineCode") {
-      if (node.value.includes(anchor)) { out.push({ context: "in-inline-code", block }); }
+      if (node.value.includes(anchor)) {
+        out.push({ context: "in-inline-code", block });
+      }
       return;
     }
     if (node.type === "code") {
-      if (node.value.includes(anchor)) { out.push({ context: "in-code", block }); }
+      if (node.value.includes(anchor)) {
+        out.push({ context: "in-code", block });
+      }
       return;
     }
     if (node.type === "image") {
-      if (node.alt?.includes(anchor)) { out.push({ context: "in-image-alt", block }); }
+      if (node.alt?.includes(anchor)) {
+        out.push({ context: "in-image-alt", block });
+      }
       return;
     }
     if ("children" in node) {
@@ -141,11 +159,17 @@ export function locateAnchorInPassage(
 ): LocateResult {
   const passageRendered = joinedText(parseMarkdown(passage)).trim();
   const occs = findAnchorOccurrences(bodyRoot, anchor);
-  if (occs.length === 0) { return { ok: false, reason: "anchor-not-found" }; }
+  if (occs.length === 0) {
+    return { ok: false, reason: "anchor-not-found" };
+  }
 
   const inPassage = occs.filter((o) => {
-    if (!o.block) { return false; }
-    if (!passageRendered) { return true; }
+    if (!o.block) {
+      return false;
+    }
+    if (!passageRendered) {
+      return true;
+    }
     return joinedText(o.block).includes(passageRendered);
   });
 
@@ -158,12 +182,16 @@ export function locateAnchorInPassage(
 
 function resolveOccurrences(occs: AnchorOccurrence[]): LocateResult {
   const first = occs[0];
-  if (!first) { return { ok: false, reason: "anchor-not-found" }; }
+  if (!first) {
+    return { ok: false, reason: "anchor-not-found" };
+  }
   const eligible = occs.filter((o) => o.context === "eligible");
   if (eligible.length === 0) {
     return { ok: false, reason: contextToReason(first.context) };
   }
-  if (eligible.length > 1) { return { ok: false, reason: "anchor-not-unique" }; }
+  if (eligible.length > 1) {
+    return { ok: false, reason: "anchor-not-unique" };
+  }
   const winner = eligible[0];
   if (!winner?.textNode || winner.textNodeOffset === undefined || !winner.block) {
     return { ok: false, reason: "anchor-not-found" };
@@ -191,13 +219,6 @@ function contextToReason(ctx: AnchorContext): string {
   }
 }
 
-/**
- * Splits `textNode` at `offset` and replaces it within its parent's children
- * with [textBefore?, link, textAfter?]. Mutates `root`. Caller must locate
- * the parent — we pass it in via the block returned from locateAnchorInPassage,
- * but we re-find the immediate parent here because the text may be nested
- * inside emphasis/strong inline wrappers.
- */
 export function spliceLinkAtTextNode(
   root: Root,
   textNode: Text,
@@ -206,9 +227,13 @@ export function spliceLinkAtTextNode(
   targetUrl: string,
 ): boolean {
   const parent = findImmediateParent(root, textNode);
-  if (!parent) { return false; }
+  if (!parent) {
+    return false;
+  }
   const idx = parent.children.indexOf(textNode);
-  if (idx < 0) { return false; }
+  if (idx < 0) {
+    return false;
+  }
 
   const before = textNode.value.slice(0, offset);
   const after = textNode.value.slice(offset + anchor.length);
@@ -220,9 +245,13 @@ export function spliceLinkAtTextNode(
   };
 
   const replacement: Nodes[] = [];
-  if (before) { replacement.push({ type: "text", value: before }); }
+  if (before) {
+    replacement.push({ type: "text", value: before });
+  }
   replacement.push(linkNode);
-  if (after) { replacement.push({ type: "text", value: after }); }
+  if (after) {
+    replacement.push({ type: "text", value: after });
+  }
 
   parent.children.splice(idx, 1, ...(replacement as Parent["children"]));
   return true;
@@ -231,14 +260,18 @@ export function spliceLinkAtTextNode(
 function findImmediateParent(root: Root, target: Nodes): Parent | undefined {
   let found: Parent | undefined;
   const walk = (node: Nodes): boolean => {
-    if (!("children" in node)) { return false; }
+    if (!("children" in node)) {
+      return false;
+    }
     const parent = node as Parent;
     for (const child of parent.children) {
       if ((child as Nodes) === target) {
         found = parent;
         return true;
       }
-      if (walk(child as Nodes)) { return true; }
+      if (walk(child as Nodes)) {
+        return true;
+      }
     }
     return false;
   };
@@ -246,12 +279,6 @@ function findImmediateParent(root: Root, target: Nodes): Parent | undefined {
   return found;
 }
 
-/**
- * Given a body and a `passage`/`anchor`/`targetUrl`, produces the body with
- * the link inserted, or the original body if no eligible insertion site
- * exists. Returns null when the result is identical to input (idempotent
- * re-run on already-linked text or no eligible match).
- */
 export function applyAnchorInsertion(
   body: string,
   passage: string,
@@ -260,9 +287,13 @@ export function applyAnchorInsertion(
 ): string {
   const root = parseMarkdown(body);
   const located = locateAnchorInPassage(root, passage, anchor);
-  if (!located.ok) { return body; }
+  if (!located.ok) {
+    return body;
+  }
   const ok = spliceLinkAtTextNode(root, located.textNode, located.offset, anchor, targetUrl);
-  if (!ok) { return body; }
+  if (!ok) {
+    return body;
+  }
   // mdast-util-to-markdown adds a trailing newline; preserve original's
   // trailing-newline style so round-trips are minimally surprising.
   const out = stringifyMarkdown(root);

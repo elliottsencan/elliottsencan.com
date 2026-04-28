@@ -7,14 +7,9 @@
  * call, no IA fetch.
  */
 
-import matter from "gray-matter";
 import { MIN_WIKI_SOURCES } from "@shared/schemas/content.ts";
-import {
-  createGitHubClient,
-  type GitHubClient,
-  getFile,
-  listDir,
-} from "./github.ts";
+import matter from "gray-matter";
+import { createGitHubClient, type GitHubClient, getFile, listDir } from "./github.ts";
 import type { Env, Result } from "./types.ts";
 import { jsonResponse, log, readingSlugFromPath } from "./util.ts";
 
@@ -47,11 +42,16 @@ export interface LintReport {
   }>;
   hallucinated_related: Array<{ wiki_slug: string; missing_related: string }>;
   untagged_readings: string[];
+  unparseable_files: string[];
 }
 
 // Exported for unit tests. Pure: takes already-parsed reading + wiki
 // metadata and returns the structural report.
-export function computeLintReport(reading: ReadingMeta[], wiki: WikiMeta[]): LintReport {
+export function computeLintReport(
+  reading: ReadingMeta[],
+  wiki: WikiMeta[],
+  unparseable: string[] = [],
+): LintReport {
   const readingSlugs = new Set(reading.map((r) => r.slug));
   const wikiSlugs = new Set(wiki.map((w) => w.slug));
 
@@ -87,7 +87,8 @@ export function computeLintReport(reading: ReadingMeta[], wiki: WikiMeta[]): Lin
     orphan_citations.length +
     sub_threshold_concepts.length +
     hallucinated_related.length +
-    untagged_readings.length;
+    untagged_readings.length +
+    unparseable.length;
 
   return {
     counts: {
@@ -99,6 +100,7 @@ export function computeLintReport(reading: ReadingMeta[], wiki: WikiMeta[]): Lin
     sub_threshold_concepts,
     hallucinated_related,
     untagged_readings,
+    unparseable_files: [...unparseable].sort(),
   };
 }
 
@@ -115,7 +117,12 @@ export async function handle(_request: Request, env: Env): Promise<Response> {
   if (!wikiResult.ok) {
     return jsonResponse({ ok: false, error: wikiResult.error }, 500);
   }
-  const report = computeLintReport(readingResult.data, wikiResult.data);
+  const unparseable = [...readingResult.data.unparseable, ...wikiResult.data.unparseable];
+  const report = computeLintReport(
+    readingResult.data.entries,
+    wikiResult.data.entries,
+    unparseable,
+  );
 
   log.info("lint", "report", "complete", {
     readings: report.counts.reading_entries,
@@ -145,23 +152,33 @@ export async function handle(_request: Request, env: Env): Promise<Response> {
         items: report.hallucinated_related,
       },
       untagged_readings: {
-        description:
-          "Reading entries with empty topics[]; cannot contribute to wiki clustering.",
+        description: "Reading entries with empty topics[]; cannot contribute to wiki clustering.",
         count: report.untagged_readings.length,
         items: report.untagged_readings,
+      },
+      unparseable_files: {
+        description:
+          "Files dropped before checks because frontmatter could not be parsed; invisible to other checks until fixed.",
+        count: report.unparseable_files.length,
+        items: report.unparseable_files,
       },
     },
   });
 }
 
-async function enumerateReading(env: Env, gh: GitHubClient): Promise<Result<ReadingMeta[]>> {
+type EnumResult<T> = Result<{ entries: T[]; unparseable: string[] }>;
+
+async function enumerateReading(env: Env, gh: GitHubClient): Promise<EnumResult<ReadingMeta>> {
   const months = await listDir(env.READING_DIR, "main", gh);
   if (!months.ok) {
     return { ok: false, error: `list reading: ${months.error}` };
   }
-  const all: ReadingMeta[] = [];
+  const entries: ReadingMeta[] = [];
+  const unparseable: string[] = [];
   for (const month of months.data) {
-    if (month.type !== "dir") { continue; }
+    if (month.type !== "dir") {
+      continue;
+    }
     const files = await listDir(month.path, "main", gh);
     if (!files.ok) {
       log.warn("lint", "enum-reading", "month list failed", {
@@ -171,7 +188,9 @@ async function enumerateReading(env: Env, gh: GitHubClient): Promise<Result<Read
       continue;
     }
     for (const file of files.data) {
-      if (file.type !== "file" || !file.name.endsWith(".md")) { continue; }
+      if (file.type !== "file" || !file.name.endsWith(".md")) {
+        continue;
+      }
       const loaded = await getFile(file.path, "main", gh);
       if (!loaded.ok) {
         log.warn("lint", "enum-reading", "file load failed", {
@@ -183,36 +202,37 @@ async function enumerateReading(env: Env, gh: GitHubClient): Promise<Result<Read
       try {
         const parsed = matter(loaded.data.content);
         const data = parsed.data as Record<string, unknown>;
-        all.push({
+        entries.push({
           slug: readingSlugFromPath(file.path),
-          topics: Array.isArray(data.topics)
-            ? (data.topics as unknown[]).filter(isString)
-            : [],
-          compiled_with:
-            typeof data.compiled_with === "string" ? data.compiled_with : null,
+          topics: Array.isArray(data.topics) ? (data.topics as unknown[]).filter(isString) : [],
+          compiled_with: typeof data.compiled_with === "string" ? data.compiled_with : null,
         });
       } catch (err) {
         log.warn("lint", "enum-reading", "frontmatter parse failed", {
           path: file.path,
           msg: err instanceof Error ? err.message : "unknown",
         });
+        unparseable.push(file.path);
       }
     }
   }
-  return { ok: true, data: all };
+  return { ok: true, data: { entries, unparseable } };
 }
 
-async function enumerateWiki(gh: GitHubClient): Promise<Result<WikiMeta[]>> {
+async function enumerateWiki(gh: GitHubClient): Promise<EnumResult<WikiMeta>> {
   const dir = await listDir(WIKI_DIR, "main", gh);
   if (!dir.ok) {
     if (dir.error.includes("404") || dir.error.toLowerCase().includes("not found")) {
-      return { ok: true, data: [] };
+      return { ok: true, data: { entries: [], unparseable: [] } };
     }
     return { ok: false, error: `list wiki: ${dir.error}` };
   }
-  const all: WikiMeta[] = [];
+  const entries: WikiMeta[] = [];
+  const unparseable: string[] = [];
   for (const file of dir.data) {
-    if (file.type !== "file" || !file.name.endsWith(".md")) { continue; }
+    if (file.type !== "file" || !file.name.endsWith(".md")) {
+      continue;
+    }
     const loaded = await getFile(file.path, "main", gh);
     if (!loaded.ok) {
       log.warn("lint", "enum-wiki", "file load failed", {
@@ -224,25 +244,23 @@ async function enumerateWiki(gh: GitHubClient): Promise<Result<WikiMeta[]>> {
     try {
       const parsed = matter(loaded.data.content);
       const data = parsed.data as Record<string, unknown>;
-      all.push({
+      entries.push({
         slug: file.name.replace(/\.md$/, ""),
-        sources: Array.isArray(data.sources)
-          ? (data.sources as unknown[]).filter(isString)
-          : [],
+        sources: Array.isArray(data.sources) ? (data.sources as unknown[]).filter(isString) : [],
         related_concepts: Array.isArray(data.related_concepts)
           ? (data.related_concepts as unknown[]).filter(isString)
           : [],
-        compiled_with:
-          typeof data.compiled_with === "string" ? data.compiled_with : null,
+        compiled_with: typeof data.compiled_with === "string" ? data.compiled_with : null,
       });
     } catch (err) {
       log.warn("lint", "enum-wiki", "frontmatter parse failed", {
         path: file.path,
         msg: err instanceof Error ? err.message : "unknown",
       });
+      unparseable.push(file.path);
     }
   }
-  return { ok: true, data: all };
+  return { ok: true, data: { entries, unparseable } };
 }
 
 function isString(v: unknown): v is string {

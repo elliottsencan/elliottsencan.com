@@ -9,11 +9,7 @@
 
 import matter from "gray-matter";
 import { describe, expect, it } from "vitest";
-import {
-  buildArticleMarkdown,
-  clusterByTopic,
-  setEquals,
-} from "./synthesize.ts";
+import { buildArticleMarkdown, clusterByTopic, setEquals } from "./synthesize.ts";
 import type { WikiArticle } from "./types.ts";
 
 // ---------- setEquals ----------
@@ -85,20 +81,32 @@ describe("clusterByTopic", () => {
   });
 
   it("places a single source under each of its topics", () => {
-    const sources = [
-      source("a", ["x", "y"]),
-      source("b", ["x", "y"]),
-    ];
+    const sources = [source("a", ["x", "y"]), source("b", ["x", "y"])];
     const out = clusterByTopic(sources, 2);
-    expect(out.get("x")?.map((s) => s.slug).sort()).toEqual(["a", "b"]);
-    expect(out.get("y")?.map((s) => s.slug).sort()).toEqual(["a", "b"]);
+    expect(
+      out
+        .get("x")
+        ?.map((s) => s.slug)
+        .sort(),
+    ).toEqual(["a", "b"]);
+    expect(
+      out
+        .get("y")
+        ?.map((s) => s.slug)
+        .sort(),
+    ).toEqual(["a", "b"]);
   });
 
   it("ignores sources with no topics", () => {
     const sources = [source("a", []), source("b", ["x"]), source("c", ["x"])];
     const out = clusterByTopic(sources, 2);
     expect(out.size).toBe(1);
-    expect(out.get("x")?.map((s) => s.slug).sort()).toEqual(["b", "c"]);
+    expect(
+      out
+        .get("x")
+        ?.map((s) => s.slug)
+        .sort(),
+    ).toEqual(["b", "c"]);
   });
 
   it("returns an empty map for empty input", () => {

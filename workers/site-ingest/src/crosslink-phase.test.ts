@@ -1,9 +1,12 @@
+import matter from "gray-matter";
 import { describe, expect, it } from "vitest";
 import {
   applyInsertion,
+  augmentSnapshot,
   dedupeBatch,
   isAlreadyLinked,
   normalizeUrl,
+  pathToPiece,
   scoreCandidate,
   selectCandidates,
   validateProposal,
@@ -66,7 +69,9 @@ describe("validateProposal", () => {
   it("rejects when anchor is not a substring of source_passage", () => {
     const r = validateProposal({ ...baseProposal, anchor_phrase: "missing" });
     expect(r.ok).toBe(false);
-    if (!r.ok) { expect(r.reason).toBe("anchor-not-found"); }
+    if (!r.ok) {
+      expect(r.reason).toBe("anchor-not-found");
+    }
   });
 
   it("rejects when anchor occurs more than once", () => {
@@ -76,7 +81,9 @@ describe("validateProposal", () => {
       anchor_phrase: "AI",
     });
     expect(r.ok).toBe(false);
-    if (!r.ok) { expect(r.reason).toBe("anchor-not-unique"); }
+    if (!r.ok) {
+      expect(r.reason).toBe("anchor-not-unique");
+    }
   });
 
   it("rejects when anchor sits inside an existing markdown link", () => {
@@ -86,7 +93,9 @@ describe("validateProposal", () => {
       anchor_phrase: "the docs",
     });
     expect(r.ok).toBe(false);
-    if (!r.ok) { expect(r.reason).toBe("already-link"); }
+    if (!r.ok) {
+      expect(r.reason).toBe("already-link");
+    }
   });
 
   it("rejects when anchor sits inside inline code", () => {
@@ -96,7 +105,9 @@ describe("validateProposal", () => {
       anchor_phrase: "npm install",
     });
     expect(r.ok).toBe(false);
-    if (!r.ok) { expect(r.reason).toBe("inline-code"); }
+    if (!r.ok) {
+      expect(r.reason).toBe("inline-code");
+    }
   });
 
   it("rejects when anchor is image alt text", () => {
@@ -106,7 +117,9 @@ describe("validateProposal", () => {
       anchor_phrase: "the chart",
     });
     expect(r.ok).toBe(false);
-    if (!r.ok) { expect(r.reason).toBe("image-alt"); }
+    if (!r.ok) {
+      expect(r.reason).toBe("image-alt");
+    }
   });
 
   it("rejects when anchor is inside a fenced code block", () => {
@@ -116,7 +129,9 @@ describe("validateProposal", () => {
       anchor_phrase: "use the docs api",
     });
     expect(r.ok).toBe(false);
-    if (!r.ok) { expect(r.reason).toBe("code-fence"); }
+    if (!r.ok) {
+      expect(r.reason).toBe("code-fence");
+    }
   });
 
   it("rejects when source already links to target elsewhere in the passage", () => {
@@ -127,7 +142,9 @@ describe("validateProposal", () => {
       target_url: "/wiki/x",
     });
     expect(r.ok).toBe(false);
-    if (!r.ok) { expect(r.reason).toBe("already-linked-target"); }
+    if (!r.ok) {
+      expect(r.reason).toBe("already-linked-target");
+    }
   });
 });
 
@@ -145,7 +162,9 @@ describe("applyInsertion", () => {
       rationale: "",
       confidence: "high",
     });
-    if (!v.ok) { return body; }
+    if (!v.ok) {
+      return body;
+    }
     return applyInsertion(body, v.proposal);
   };
 
@@ -218,8 +237,8 @@ describe("dedupeBatch", () => {
   });
 });
 
+import type { CrosslinkProposal as CP, CrosslinkPhaseInput } from "./crosslink-phase.ts";
 import { runCrosslinkPhase } from "./crosslink-phase.ts";
-import type { CrosslinkPhaseInput, CrosslinkProposal as CP } from "./crosslink-phase.ts";
 
 const wikiEntry = (slug: string, body: string, sources: string[] = ["a", "b"]) => ({
   slug,
@@ -467,3 +486,141 @@ describe("runCrosslinkPhase", () => {
   });
 });
 
+describe("pathToPiece", () => {
+  it("maps a wiki content path to a wiki piece", () => {
+    const piece = pathToPiece("src/content/wiki/foo.md");
+    expect(piece).toEqual({ corpus: "wiki", slug: "foo", url: "/wiki/foo" });
+  });
+
+  it("maps a blog content path to a blog piece", () => {
+    const piece = pathToPiece("src/content/blog/my-post.md");
+    expect(piece).toEqual({ corpus: "blog", slug: "my-post", url: "/writing/my-post" });
+  });
+
+  it("maps a reading content path to a reading piece (slug includes month)", () => {
+    const piece = pathToPiece("src/content/reading/2026-04/abc.md");
+    expect(piece).toEqual({
+      corpus: "reading",
+      slug: "2026-04/abc",
+      url: "/reading/2026-04/abc",
+    });
+  });
+
+  it("returns null for an unknown corpus prefix", () => {
+    expect(pathToPiece("src/content/strange/x.md")).toBeNull();
+  });
+
+  it("returns null for a non-content path", () => {
+    expect(pathToPiece("workers/site-ingest/src/index.ts")).toBeNull();
+  });
+});
+
+describe("augmentSnapshot", () => {
+  const baseWiki = {
+    slug: "existing",
+    path: "src/content/wiki/existing.md",
+    frontmatter: {
+      title: "Existing",
+      summary: "x",
+      sources: ["a", "b"],
+      compiled_at: new Date("2026-01-01"),
+      compiled_with: "claude-opus-4-7",
+    },
+    body: "before body",
+  };
+
+  const newArticle = matter.stringify("new body content", {
+    title: "New",
+    summary: "n",
+    sources: ["a", "b"],
+    compiled_at: new Date("2026-04-01").toISOString(),
+    compiled_with: "claude-opus-4-7",
+  });
+
+  it("overlays an added wiki entry onto the snapshot", () => {
+    const augmented = augmentSnapshot(
+      { wiki: [baseWiki], blog: [] },
+      {
+        added: [{ path: "src/content/wiki/new.md", content: newArticle }],
+        changed: [],
+      },
+    );
+    const slugs = augmented.wiki.map((w) => w.slug).sort();
+    expect(slugs).toEqual(["existing", "new"]);
+    const added = augmented.wiki.find((w) => w.slug === "new");
+    expect(added?.body).toBe("new body content");
+  });
+
+  it("overlays a changed wiki entry, replacing the base body", () => {
+    const updated = matter.stringify("after body", {
+      title: "Existing",
+      summary: "x",
+      sources: ["a", "b", "c"],
+      compiled_at: new Date("2026-04-01").toISOString(),
+      compiled_with: "claude-opus-4-7",
+    });
+    const augmented = augmentSnapshot(
+      { wiki: [baseWiki], blog: [] },
+      {
+        added: [],
+        changed: [{ path: "src/content/wiki/existing.md", before: "before body", after: updated }],
+      },
+    );
+    expect(augmented.wiki).toHaveLength(1);
+    expect(augmented.wiki[0]?.body).toBe("after body");
+    expect(augmented.wiki[0]?.frontmatter.sources).toEqual(["a", "b", "c"]);
+  });
+
+  it("drops a mutation whose frontmatter fails the wiki schema", () => {
+    const broken = matter.stringify("body", {
+      title: "Broken",
+      // missing summary, sources, compiled_at, compiled_with
+    });
+    const augmented = augmentSnapshot(
+      { wiki: [baseWiki], blog: [] },
+      {
+        added: [{ path: "src/content/wiki/broken.md", content: broken }],
+        changed: [],
+      },
+    );
+    expect(augmented.wiki.map((w) => w.slug)).toEqual(["existing"]);
+  });
+
+  it("ignores a mutation under an unknown corpus path", () => {
+    const augmented = augmentSnapshot(
+      { wiki: [baseWiki], blog: [] },
+      {
+        added: [{ path: "src/content/strange/foo.md", content: newArticle }],
+        changed: [],
+      },
+    );
+    expect(augmented.wiki.map((w) => w.slug)).toEqual(["existing"]);
+    expect(augmented.blog).toEqual([]);
+  });
+
+  it("changed-after-added: the changed body wins for the same path", () => {
+    const initial = matter.stringify("initial body", {
+      title: "Same",
+      summary: "n",
+      sources: ["a", "b"],
+      compiled_at: new Date("2026-04-01").toISOString(),
+      compiled_with: "claude-opus-4-7",
+    });
+    const updated = matter.stringify("updated body", {
+      title: "Same",
+      summary: "n",
+      sources: ["a", "b"],
+      compiled_at: new Date("2026-04-02").toISOString(),
+      compiled_with: "claude-opus-4-7",
+    });
+    const augmented = augmentSnapshot(
+      { wiki: [], blog: [] },
+      {
+        added: [{ path: "src/content/wiki/same.md", content: initial }],
+        changed: [{ path: "src/content/wiki/same.md", before: "initial body", after: updated }],
+      },
+    );
+    const piece = augmented.wiki.find((w) => w.slug === "same");
+    expect(piece?.body).toBe("updated body");
+  });
+});

@@ -21,10 +21,13 @@ export function readingTime(html: string) {
 }
 
 /**
- * Bucket key for grouping reading entries by month. Locale-stable
- * (uses local fields rather than `toISOString()` which would force UTC
- * and shift entries across the month boundary).
+ * Bucket key for grouping reading entries by month. Reads the worker-stamped
+ * Pacific date from the slug prefix (e.g. `"2026-04/foo"` → `"2026-04"`) so
+ * site grouping matches the on-disk folder layout regardless of the build
+ * container's time zone — `entry.data.added` is a UTC `Date` that would
+ * shift across the month boundary on Cloudflare Pages.
  */
-export function monthKey(date: Date): string {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+export function monthKey(entryId: string): string {
+  const slash = entryId.indexOf("/");
+  return slash === -1 ? entryId : entryId.slice(0, slash);
 }

@@ -5,7 +5,11 @@
  * raw GraphQL / REST payloads never leak across module boundaries.
  */
 
-import type { ReadingCategory } from "@shared/schemas/content.ts";
+// `LinkSummary` and `WikiArticle` are re-exported from ./anthropic.ts (where
+// the Zod schemas live) so consumers keep importing them from a single place.
+// Type-only re-export = no runtime cycle even though anthropic.ts imports
+// `Result` from this file.
+export type { LinkSummary, WikiArticle } from "./anthropic.ts";
 
 // ---------- runtime environment ----------
 
@@ -143,42 +147,9 @@ export interface LinkRequest {
   excerpt?: string;
 }
 
-/** Strict-JSON shape Anthropic returns for link summarization. */
-export interface LinkSummary {
-  /**
-   * AI-cleaned title for the archive display. Strips publisher suffixes,
-   * GitHub's "GitHub - org/repo: description" boilerplate, etc. Falls back
-   * to the fetched page title if the model returns empty.
-   */
-  title: string;
-  summary: string;
-  category: ReadingCategory;
-  author?: string;
-  source?: string;
-  /** 3–5 lowercase kebab-case topic slugs. Drives wiki-layer clustering. */
-  topics: string[];
-  /**
-   * Resolved model ID that produced this summary. Written to frontmatter
-   * as `compiled_with` so `/recompile` can target older-model entries.
-   */
-  model: string;
-}
-
-// ---------- wiki synthesis ----------
-
-/** Strict-JSON shape Anthropic returns when compiling a wiki concept article. */
-export interface WikiArticle {
-  /** Human-readable concept name. Title-case-ish, not a headline. */
-  title: string;
-  /** One-sentence gist of the concept itself (not "this article is..."). */
-  summary: string;
-  /** Synthesis prose, markdown, with inline citations to source slugs. */
-  body: string;
-  /** Other topic slugs related to this concept; subset of those provided. */
-  related_concepts?: string[];
-  /** Resolved model ID that produced this article. */
-  model: string;
-}
+// LinkSummary and WikiArticle are re-exported at the top of this file; the
+// concrete shapes are derived via z.infer in ./anthropic.ts so the schemas
+// and the TS types can never drift.
 
 // ---------- discriminated results ----------
 

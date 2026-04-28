@@ -12,9 +12,9 @@
  * + PR + the inline cross-link phase.
  */
 
+import { MIN_WIKI_SOURCES } from "@shared/schemas/content.ts";
 import matter from "gray-matter";
 import { z } from "zod";
-import { MIN_WIKI_SOURCES } from "@shared/schemas/content.ts";
 import { createGitHubClient, getFile } from "./github.ts";
 import {
   type CrosslinkResult,
@@ -49,8 +49,6 @@ type ContributeSummary = {
   exists: boolean;
   sources: string[];
 };
-
-// ---------- strategy ----------
 
 export function makeContributeStrategy(req: ContributeRequest): Strategy<ContributeSummary> {
   return {
@@ -96,11 +94,10 @@ export function makeContributeStrategy(req: ContributeRequest): Strategy<Contrib
   };
 }
 
-function buildPrBody(
-  plan: PlanOutput<ContributeSummary>,
-  crosslink?: CrosslinkResult,
-): string {
-  if (!plan.summary) { return "Manually-authored wiki article filed via /contribute."; }
+function buildPrBody(plan: PlanOutput<ContributeSummary>, crosslink?: CrosslinkResult): string {
+  if (!plan.summary) {
+    return "Manually-authored wiki article filed via /contribute.";
+  }
   const summary = plan.summary;
   const lines: string[] = [
     "Manually-authored wiki article filed via /contribute.",
@@ -122,8 +119,6 @@ function buildPrBody(
   }
   return lines.join("\n");
 }
-
-// ---------- handler ----------
 
 export async function handle(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   let parsed: unknown;
@@ -191,8 +186,6 @@ export async function handle(request: Request, env: Env, ctx: ExecutionContext):
   });
 }
 
-// ---------- pure helpers ----------
-
 export function buildArticleMarkdown(args: {
   title: string;
   summary: string;
@@ -216,7 +209,9 @@ export function buildArticleMarkdown(args: {
 }
 
 export function humanize(topic: string): string {
-  if (topic.length === 0) { return topic; }
+  if (topic.length === 0) {
+    return topic;
+  }
   const spaced = topic.replace(/-/g, " ");
   return spaced[0]?.toUpperCase() + spaced.slice(1);
 }

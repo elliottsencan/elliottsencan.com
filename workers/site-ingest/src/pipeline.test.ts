@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { runPipeline } from "./pipeline.ts";
 import type { GithubDeps, Strategy } from "./pipeline.ts";
+import { runPipeline } from "./pipeline.ts";
 import type { Env } from "./types.ts";
 
 const fakeEnv = () =>
@@ -18,13 +18,12 @@ const okGithubDeps = (): GithubDeps => ({
   // Default to "file does not exist" — `added` paths take this path. Tests
   // for `changed` mutations override to return a valid sha.
   getFile: vi.fn().mockResolvedValue({ ok: false, error: "404 not found" }),
-  putFile: vi
-    .fn()
-    .mockResolvedValue({ ok: true, data: { blobSha: "blob", commitSha: "def456" } }),
+  putFile: vi.fn().mockResolvedValue({ ok: true, data: { blobSha: "blob", commitSha: "def456" } }),
   findOpenPrByBranch: vi.fn().mockResolvedValue({ ok: true, data: null }),
-  openPullRequest: vi
-    .fn()
-    .mockResolvedValue({ ok: true, data: { number: 42, html_url: "https://github.com/owner/repo/pull/42" } }),
+  openPullRequest: vi.fn().mockResolvedValue({
+    ok: true,
+    data: { number: 42, html_url: "https://github.com/owner/repo/pull/42" },
+  }),
 });
 
 const fakeStrategy = (overrides: Partial<Strategy> = {}): Strategy => ({
@@ -93,13 +92,9 @@ describe("runPipeline (PR target)", () => {
         },
       }),
     });
-    await runPipeline(
-      strategy,
-      { commitTarget: "pr", crosslink: "skip" },
-      fakeEnv(),
-      fakeCtx(),
-      { github },
-    );
+    await runPipeline(strategy, { commitTarget: "pr", crosslink: "skip" }, fakeEnv(), fakeCtx(), {
+      github,
+    });
     expect(github.putFile).toHaveBeenCalledTimes(2);
   });
 
@@ -119,13 +114,9 @@ describe("runPipeline (PR target)", () => {
         },
       }),
     });
-    await runPipeline(
-      strategy,
-      { commitTarget: "pr", crosslink: "skip" },
-      fakeEnv(),
-      fakeCtx(),
-      { github },
-    );
+    await runPipeline(strategy, { commitTarget: "pr", crosslink: "skip" }, fakeEnv(), fakeCtx(), {
+      github,
+    });
     expect(github.getFile).toHaveBeenCalledWith("b.md", "main");
     expect(github.putFile).toHaveBeenCalledWith(
       expect.objectContaining({ path: "b.md", sha: "main-sha" }),
@@ -170,7 +161,9 @@ describe("runPipeline (abort propagation)", () => {
       { github },
     );
     expect(result.ok).toBe(false);
-    if (!result.ok) { expect(result.status).toBe(409); }
+    if (!result.ok) {
+      expect(result.status).toBe(409);
+    }
   });
 
   it("returns 500 when plan() reports failure without status", async () => {
@@ -186,7 +179,9 @@ describe("runPipeline (abort propagation)", () => {
       { github },
     );
     expect(result.ok).toBe(false);
-    if (!result.ok) { expect(result.status).toBe(500); }
+    if (!result.ok) {
+      expect(result.status).toBe(500);
+    }
   });
 
   it("invokes injected runCrosslink on inline crosslink and commits changedFiles to the same branch", async () => {
@@ -214,7 +209,9 @@ describe("runPipeline (abort propagation)", () => {
     expect(runCrosslink).toHaveBeenCalledTimes(1);
     expect(github.putFile).toHaveBeenCalledTimes(2); // 1 added + 1 from crosslink phase
     expect(result.ok).toBe(true);
-    if (result.ok) { expect(result.crosslink?.applied.length).toBe(1); }
+    if (result.ok) {
+      expect(result.crosslink?.applied.length).toBe(1);
+    }
   });
 
   it("fires runCrosslink via ctx.waitUntil for followup (commitTarget=main)", async () => {
@@ -232,13 +229,10 @@ describe("runPipeline (abort propagation)", () => {
         data: { mutation: { added: [{ path: "r.md", content: "R" }], changed: [] } },
       }),
     });
-    await runPipeline(
-      strategy,
-      { commitTarget: "main", crosslink: "followup" },
-      fakeEnv(),
-      ctx,
-      { github, runCrosslink },
-    );
+    await runPipeline(strategy, { commitTarget: "main", crosslink: "followup" }, fakeEnv(), ctx, {
+      github,
+      runCrosslink,
+    });
     expect(ctx.waitUntil).toHaveBeenCalled();
   });
 
@@ -259,7 +253,9 @@ describe("runPipeline (abort propagation)", () => {
     );
     expect(result.ok).toBe(true);
     expect(github.createBranch).not.toHaveBeenCalled();
-    if (result.ok) { expect(result.summary).toEqual({ skipped: 3 }); }
+    if (result.ok) {
+      expect(result.summary).toEqual({ skipped: 3 });
+    }
   });
 });
 
@@ -297,16 +293,15 @@ describe("runCrosslinkFollowup (honesty)", () => {
         data: { mutation: { added: [{ path: "r.md", content: "R" }], changed: [] } },
       }),
     });
-    await runPipeline(
-      strategy,
-      { commitTarget: "main", crosslink: "followup" },
-      fakeEnv(),
-      ctx,
-      { github, runCrosslink },
-    );
+    await runPipeline(strategy, { commitTarget: "main", crosslink: "followup" }, fakeEnv(), ctx, {
+      github,
+      runCrosslink,
+    });
     // Manually invoke the captured waitUntil function to trigger the followup.
     const waitFn = (ctx.waitUntil as ReturnType<typeof vi.fn>).mock.calls[0]?.[0];
-    if (waitFn) { await waitFn; }
+    if (waitFn) {
+      await waitFn;
+    }
     // The followup should NOT have called openPullRequest because no files
     // committed successfully (all post-strategy putFile calls failed).
     expect(github.openPullRequest).not.toHaveBeenCalled();

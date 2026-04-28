@@ -13,7 +13,12 @@
 
 import matter from "gray-matter";
 import { describe, expect, it } from "vitest";
-import { applyScope, buildRecompiledMarkdown } from "./recompile.ts";
+import {
+  applyScope,
+  buildRecompiledMarkdown,
+  parseFrontmatter,
+  partitionSkips,
+} from "./recompile.ts";
 import type { LinkSummary } from "./types.ts";
 
 // ---------- applyScope ----------
@@ -140,5 +145,52 @@ describe("buildRecompiledMarkdown", () => {
       }),
     );
     expect(data).not.toHaveProperty("topics");
+  });
+});
+
+describe("parseFrontmatter", () => {
+  it("returns null when YAML is malformed", () => {
+    // Unclosed bracket → gray-matter throws; parseFrontmatter swallows + returns null.
+    const malformed = "---\ntitle: [unclosed\n---\nbody\n";
+    expect(parseFrontmatter(malformed)).toBeNull();
+  });
+
+  it("returns null when frontmatter block is empty", () => {
+    expect(parseFrontmatter("just body, no frontmatter")).toBeNull();
+  });
+});
+
+describe("partitionSkips", () => {
+  it("counts each skip reason and ignores updated rows", () => {
+    const partition = partitionSkips([
+      { path: "a.md", status: "updated" },
+      { path: "b.md", status: "skipped", skip_reason: "no-snapshot" },
+      { path: "c.md", status: "skipped", skip_reason: "transient" },
+      { path: "d.md", status: "skipped", skip_reason: "frontmatter-invalid" },
+      { path: "e.md", status: "skipped", skip_reason: "other" },
+      // Missing skip_reason buckets to `other` so legacy rows still count.
+      { path: "f.md", status: "skipped" },
+    ]);
+    expect(partition).toEqual({
+      total: 5,
+      no_snapshot: 1,
+      transient: 1,
+      frontmatter_invalid: 1,
+      other: 2,
+    });
+  });
+
+  it("surfaces a frontmatter-invalid row in the partition", () => {
+    // S3.3: malformed frontmatter must produce a skipped row, not a silent drop.
+    const partition = partitionSkips([
+      {
+        path: "src/content/reading/2026-04/corrupt.md",
+        status: "skipped",
+        reason: "frontmatter parse failed",
+        skip_reason: "frontmatter-invalid",
+      },
+    ]);
+    expect(partition.frontmatter_invalid).toBe(1);
+    expect(partition.total).toBe(1);
   });
 });

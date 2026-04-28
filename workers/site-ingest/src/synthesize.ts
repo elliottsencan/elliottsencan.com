@@ -19,9 +19,9 @@
  * owns branch + commit + PR + the inline cross-link phase.
  */
 
+import { MIN_WIKI_SOURCES, ReadingFrontmatterSchema } from "@shared/schemas/content.ts";
 import matter from "gray-matter";
 import { z } from "zod";
-import { MIN_WIKI_SOURCES } from "@shared/schemas/content.ts";
 import { compileWikiArticle } from "./anthropic.ts";
 import { makeCrosslinkRunner } from "./crosslink-phase.ts";
 import {
@@ -51,12 +51,8 @@ import { jsonResponse, log, readingSlugFromPath } from "./util.ts";
 const MAX_CONCEPTS_PER_RUN = 20;
 const WIKI_DIR = "src/content/wiki";
 
-// ---------- request validation ----------
-
 const SynthesizeRequestSchema = z.object({
-  /** Restrict to specific topic slugs. Default: every topic at threshold. */
   topics: z.array(z.string()).optional(),
-  /** Force recompile even when sources are unchanged. Default false. */
   force: z.boolean().optional().default(false),
   /** Defaults to true; flip to false to actually open a PR. */
   dry_run: z.boolean().optional().default(true),
@@ -92,12 +88,6 @@ type SynthesizeSummary = {
   skipped: Array<{ topic: string; reason: string }>;
 };
 
-// ---------- strategy ----------
-
-/**
- * Strategy factory: closes over the validated request so `plan()` can
- * read `topics`, `force`, and `dry_run` without re-parsing the body.
- */
 export function makeSynthesizeStrategy(req: SynthesizeRequest): Strategy<SynthesizeSummary> {
   return {
     name: "synthesize",
@@ -191,9 +181,7 @@ async function planSynthesis(
       added.push({ path, content: markdown });
     }
   }
-  // Topics with up-to-date sources never enter `capped` (filtered above);
-  // none currently land in skipped[]. Keeping the field for forward-compat
-  // when other reasons (e.g. token-cap) get split out.
+  // Topics with up-to-date sources are filtered above and never enter `capped`.
 
   const summary: SynthesizeSummary = {
     active_topics: allActiveTopics,
@@ -211,10 +199,7 @@ async function planSynthesis(
   };
 }
 
-function buildPrBody(
-  plan: PlanOutput<SynthesizeSummary>,
-  crosslink?: CrosslinkResult,
-): string {
+function buildPrBody(plan: PlanOutput<SynthesizeSummary>, crosslink?: CrosslinkResult): string {
   const summary = plan.summary ?? { active_topics: [], compiled: 0, failed: [], skipped: [] };
   const writes = [
     ...plan.mutation.added.map((f) => f.path),
@@ -260,8 +245,6 @@ function buildPrBody(
   }
   return lines.join("\n");
 }
-
-// ---------- handler ----------
 
 export async function handle(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   let parsed: unknown;
@@ -323,6 +306,7 @@ export async function handle(request: Request, env: Env, ctx: ExecutionContext):
     failed: summary?.failed.length ?? 0,
     skipped: summary?.skipped.length ?? 0,
     failures: summary?.failed ?? [],
+    skip_reasons: summary?.skipped ?? [],
     branch: result.branch,
     pr: result.pr_number ? { number: result.pr_number, url: result.pr_url } : null,
     crosslink: result.crosslink
@@ -335,8 +319,6 @@ export async function handle(request: Request, env: Env, ctx: ExecutionContext):
   });
 }
 
-// Adapts worker Env into substrate deps; curries `gh` into github.ts helpers
-// and wires the crosslink runner.
 export function makePipelineDeps(env: Env): {
   github: GithubDeps;
   runCrosslink: ReturnType<typeof makeCrosslinkRunner>;
@@ -356,8 +338,6 @@ export function makePipelineDeps(env: Env): {
   });
   return { github, runCrosslink };
 }
-
-// ---------- enumeration ----------
 
 async function enumerateReading(env: Env, gh: GitHubClient): Promise<Result<ReadingSource[]>> {
   const months = await listDir(env.READING_DIR, "main", gh);
@@ -383,24 +363,33 @@ async function enumerateReading(env: Env, gh: GitHubClient): Promise<Result<Read
       }
       const loaded = await getFile(file.path, "main", gh);
       if (!loaded.ok) {
+        log.warn("synthesize", "enum-reading", "file load failed", {
+          path: file.path,
+          error: loaded.error,
+        });
         continue;
       }
       const parsed = matter(loaded.data.content);
-      const data = parsed.data as Record<string, unknown>;
-      if (typeof data.url !== "string" || typeof data.added !== "string") {
+      const validation = ReadingFrontmatterSchema.safeParse(parsed.data);
+      if (!validation.success) {
+        log.warn("synthesize", "enum-reading", "frontmatter invalid", {
+          path: file.path,
+          first: validation.error.issues[0]?.path.join(".") ?? "(root)",
+        });
         continue;
       }
+      const fm = validation.data;
       all.push({
         slug: readingSlugFromPath(file.path),
         path: file.path,
-        title: typeof data.title === "string" ? data.title : "",
-        url: data.url,
-        summary: typeof data.summary === "string" ? data.summary : "",
-        category: typeof data.category === "string" ? data.category : "other",
-        added: data.added,
-        ...(typeof data.author === "string" ? { author: data.author } : {}),
-        ...(typeof data.source === "string" ? { source: data.source } : {}),
-        topics: Array.isArray(data.topics) ? (data.topics as unknown[]).filter(isString) : [],
+        title: fm.title,
+        url: fm.url,
+        summary: fm.summary,
+        category: fm.category,
+        added: fm.added.toISOString(),
+        ...(fm.author ? { author: fm.author } : {}),
+        ...(fm.source ? { source: fm.source } : {}),
+        topics: fm.topics ?? [],
       });
     }
   }
@@ -424,6 +413,10 @@ async function enumerateWiki(gh: GitHubClient): Promise<Result<ExistingWiki[]>> 
     }
     const loaded = await getFile(file.path, "main", gh);
     if (!loaded.ok) {
+      log.warn("synthesize", "enum-wiki", "file load failed", {
+        path: file.path,
+        error: loaded.error,
+      });
       continue;
     }
     const parsed = matter(loaded.data.content);
@@ -439,8 +432,6 @@ async function enumerateWiki(gh: GitHubClient): Promise<Result<ExistingWiki[]>> 
   }
   return { ok: true, data: all };
 }
-
-// ---------- clustering ----------
 
 // Exported for unit tests.
 export function clusterByTopic(
@@ -465,8 +456,6 @@ export function clusterByTopic(
   }
   return byTopic;
 }
-
-// ---------- prompt building ----------
 
 function buildUserMessage(args: {
   topic: string;
@@ -500,8 +489,6 @@ function buildUserMessage(args: {
   return parts.filter((line) => line !== "").join("\n");
 }
 
-// ---------- markdown writer ----------
-
 // Exported for unit tests.
 export function buildArticleMarkdown(args: {
   article: WikiArticle;
@@ -521,8 +508,6 @@ export function buildArticleMarkdown(args: {
   return matter.stringify(args.article.body.trim(), data);
 }
 
-// ---------- helpers ----------
-
 function isString(v: unknown): v is string {
   return typeof v === "string";
 }
@@ -541,4 +526,3 @@ export function setEquals(a: string[], b: string[]): boolean {
   }
   return true;
 }
-

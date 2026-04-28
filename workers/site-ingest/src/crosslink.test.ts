@@ -45,7 +45,9 @@ describe("validate", () => {
   });
   it("defaults dry_run to false", () => {
     const r = validate({ scope: { kind: "all" } });
-    if (r.ok) { expect(r.data.dry_run).toBe(false); }
+    if (r.ok) {
+      expect(r.data.dry_run).toBe(false);
+    }
   });
 });
 

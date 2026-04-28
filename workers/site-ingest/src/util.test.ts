@@ -145,9 +145,9 @@ describe("date helpers (Pacific / America/Los_Angeles)", () => {
 
 describe("readingSlugFromPath", () => {
   it("returns <month>/<basename> lowercased for canonical reading paths", () => {
-    expect(
-      readingSlugFromPath("src/content/reading/2026-04/2026-04-24T093356-Unsloth.md"),
-    ).toBe("2026-04/2026-04-24t093356-unsloth");
+    expect(readingSlugFromPath("src/content/reading/2026-04/2026-04-24T093356-Unsloth.md")).toBe(
+      "2026-04/2026-04-24t093356-unsloth",
+    );
   });
 
   it("falls back to lowercased path-without-extension when no /reading/ prefix", () => {
@@ -156,9 +156,7 @@ describe("readingSlugFromPath", () => {
 
   it("is idempotent on already-canonical slugs", () => {
     const canonical = "src/content/reading/2026-04/2026-04-24t093356-unsloth.md";
-    expect(readingSlugFromPath(canonical)).toBe(
-      readingSlugFromPath(`x${canonical}`.slice(1)),
-    );
+    expect(readingSlugFromPath(canonical)).toBe(readingSlugFromPath(`x${canonical}`.slice(1)));
   });
 });
 

@@ -17,13 +17,14 @@ import { BlogFrontmatterSchema, WikiFrontmatterSchema } from "@shared/schemas/co
 import matter from "gray-matter";
 import type { z } from "zod";
 import { type CrosslinkProposalSchema, proposeCrosslinks } from "./anthropic.ts";
-import { applyAnchorInsertion, locateAnchor, parseMarkdown } from "./crosslink-mdast.ts";
 import {
   CORPORA,
+  type CorpusName,
   MAX_CANDIDATES_PER_PIECE,
   MAX_CROSSLINK_CALLS_PER_RUN,
   SERIES_BOOST,
 } from "./crosslink-config.ts";
+import { applyAnchorInsertion, locateAnchor, parseMarkdown } from "./crosslink-mdast.ts";
 import type { BlogEntry, EnumerateDeps, WikiEntry } from "./enumerate.ts";
 import { enumerateBlogWithBodies, enumerateWikiWithBodies } from "./enumerate.ts";
 import { CROSSLINK_SUGGEST_SYSTEM } from "./prompts.ts";
@@ -41,12 +42,20 @@ export type ValidationResult =
 
 export function normalizeUrl(url: string): string {
   let u = url.trim();
-  if (!u.startsWith("/")) { u = `/${u}`; }
+  if (!u.startsWith("/")) {
+    u = `/${u}`;
+  }
   const hashIdx = u.indexOf("#");
-  if (hashIdx >= 0) { u = u.slice(0, hashIdx); }
+  if (hashIdx >= 0) {
+    u = u.slice(0, hashIdx);
+  }
   const queryIdx = u.indexOf("?");
-  if (queryIdx >= 0) { u = u.slice(0, queryIdx); }
-  if (u.length > 1 && u.endsWith("/")) { u = u.slice(0, -1); }
+  if (queryIdx >= 0) {
+    u = u.slice(0, queryIdx);
+  }
+  if (u.length > 1 && u.endsWith("/")) {
+    u = u.slice(0, -1);
+  }
   return u;
 }
 
@@ -59,7 +68,9 @@ export function isAlreadyLinked(body: string, targetUrl: string): boolean {
 export function validateProposal(p: CrosslinkProposal): ValidationResult {
   const root = parseMarkdown(p.source_passage);
   const located = locateAnchor(root, p.anchor_phrase);
-  if (!located.ok) { return { ok: false, reason: located.reason }; }
+  if (!located.ok) {
+    return { ok: false, reason: located.reason };
+  }
   if (isAlreadyLinked(p.source_passage, p.target_url)) {
     return { ok: false, reason: "already-linked-target" };
   }
@@ -67,7 +78,9 @@ export function validateProposal(p: CrosslinkProposal): ValidationResult {
 }
 
 export function applyInsertion(body: string, p: ValidProposal): string {
-  if (isAlreadyLinked(body, p.target_url)) { return body; }
+  if (isAlreadyLinked(body, p.target_url)) {
+    return body;
+  }
   return applyAnchorInsertion(body, p.source_passage, p.anchor_phrase, p.target_url);
 }
 
@@ -102,26 +115,25 @@ export function dedupeBatch<
   const out: P[] = [];
   for (const p of ps) {
     const key = `${p.source_slug}|${p.target_slug}|${p.anchor_phrase}`;
-    if (seen.has(key)) { continue; }
+    if (seen.has(key)) {
+      continue;
+    }
     seen.add(key);
     out.push(p);
   }
   return out;
 }
 
-// ---------- orchestration ----------
-
-export type Piece = { corpus: "wiki" | "blog" | "reading"; slug: string; url: string };
+export type Piece = { corpus: CorpusName; slug: string; url: string };
 
 export type CorpusSnapshot = { wiki: WikiEntry[]; blog: BlogEntry[] };
 
 export type CrosslinkPhaseInput = {
   newPieces: { added: Piece[]; changed: Piece[] };
   corpusSnapshot: CorpusSnapshot;
-  proposeProposals: (
-    forwardSources: Array<{ piece: Piece; body: string; candidates: Piece[] }>,
-    backwardTargets: Array<{ piece: Piece; candidates: Piece[] }>,
-  ) => Promise<{
+  // Caller owns enumerating sources/targets and per-piece prompt building.
+  // The orchestrator is post-model: validate, dedupe, apply.
+  proposeProposals: () => Promise<{
     forward: CrosslinkProposal[];
     backward: CrosslinkProposal[];
     apiFailures?: number;
@@ -173,12 +185,8 @@ function findInSnapshot(
   return undefined;
 }
 
-export async function runCrosslinkPhase(
-  input: CrosslinkPhaseInput,
-): Promise<CrosslinkPhaseResult> {
-  // Callers own per-piece prompt building and aggregation. The orchestrator
-  // is post-model: validate, dedupe, apply.
-  const proposals = await input.proposeProposals([], []);
+export async function runCrosslinkPhase(input: CrosslinkPhaseInput): Promise<CrosslinkPhaseResult> {
+  const proposals = await input.proposeProposals();
   const allRaw = [...proposals.forward, ...proposals.backward];
   const all = dedupeBatch(allRaw);
 
@@ -244,10 +252,8 @@ export async function runCrosslinkPhase(
   };
 }
 
-// ---------- runner glue ----------
-
 function corpusForPath(path: string): { corpus: Piece["corpus"]; urlPrefix: string } | null {
-  for (const c of CORPORA) {
+  for (const c of Object.values(CORPORA)) {
     if (path.startsWith(`${c.contentDir}/`)) {
       return { corpus: c.name, urlPrefix: c.urlPrefix };
     }
@@ -258,13 +264,13 @@ function corpusForPath(path: string): { corpus: Piece["corpus"]; urlPrefix: stri
   return null;
 }
 
-function pathToPiece(path: string): Piece | null {
+export function pathToPiece(path: string): Piece | null {
   const meta = corpusForPath(path);
-  if (!meta) { return null; }
+  if (!meta) {
+    return null;
+  }
   const dirPrefix =
-    meta.corpus === "reading"
-      ? "src/content/reading/"
-      : `${CORPORA.find((c) => c.name === meta.corpus)?.contentDir}/`;
+    meta.corpus === "reading" ? "src/content/reading/" : `${CORPORA[meta.corpus].contentDir}/`;
   const tail = path.slice(dirPrefix.length);
   const slug = tail.replace(/\.md$/, "");
   return { corpus: meta.corpus, slug, url: `${meta.urlPrefix}${slug}` };
@@ -278,7 +284,7 @@ function snapshotToRows(snapshot: CorpusSnapshot): EntryRow[] {
     rows.push({
       piece: { corpus: "wiki", slug: w.slug, url: `/wiki/${w.slug}` },
       // Wiki entries don't carry tags. Treat the slug as the only tag so
-      // candidate filtering has a signal until topic propagation is added.
+      // candidate filtering has a signal.
       tags: [w.slug],
       series: undefined,
       body: w.body,
@@ -337,10 +343,7 @@ type RunnerMutation = {
  * forward proposals from new wiki pages would have no source body and
  * backward proposals would target stale text.
  */
-export function augmentSnapshot(
-  base: CorpusSnapshot,
-  mutation: RunnerMutation,
-): CorpusSnapshot {
+export function augmentSnapshot(base: CorpusSnapshot, mutation: RunnerMutation): CorpusSnapshot {
   const wikiByPath = new Map(base.wiki.map((e) => [e.path, e]));
   const blogByPath = new Map(base.blog.map((e) => [e.path, e]));
 
@@ -351,17 +354,23 @@ export function augmentSnapshot(
 
   for (const f of all) {
     const piece = pathToPiece(f.path);
-    if (!piece) { continue; }
+    if (!piece) {
+      continue;
+    }
     const parsed = matter(f.content);
     const body = parsed.content.trim();
     const slug = piece.slug;
     if (piece.corpus === "wiki") {
       const fm = WikiFrontmatterSchema.safeParse(parsed.data);
-      if (!fm.success) { continue; }
+      if (!fm.success) {
+        continue;
+      }
       wikiByPath.set(f.path, { slug, path: f.path, frontmatter: fm.data, body });
     } else if (piece.corpus === "blog") {
       const fm = BlogFrontmatterSchema.safeParse(parsed.data);
-      if (!fm.success) { continue; }
+      if (!fm.success) {
+        continue;
+      }
       blogByPath.set(f.path, { slug, path: f.path, frontmatter: fm.data, body });
     }
   }
@@ -466,10 +475,13 @@ function buildForwardSources(
 ): Array<{ piece: Piece; body: string; candidates: Piece[] }> {
   const out: Array<{ piece: Piece; body: string; candidates: Piece[] }> = [];
   for (const piece of [...newPieces.added, ...newPieces.changed]) {
-    if (piece.corpus === "reading") { continue; // empty body
-}
+    if (piece.corpus === "reading") {
+      continue; // empty body
+    }
     const row = rows.find((r) => r.piece.corpus === piece.corpus && r.piece.slug === piece.slug);
-    if (!row?.body) { continue; }
+    if (!row?.body) {
+      continue;
+    }
     const pool: Array<{ slug: string; tags: string[]; series: string | undefined }> = rows
       .filter((r) => !(r.piece.corpus === piece.corpus && r.piece.slug === piece.slug))
       .map((r) => ({ slug: `${r.piece.corpus}/${r.piece.slug}`, tags: r.tags, series: r.series }));
@@ -489,12 +501,12 @@ function buildBackwardTargets(
 ): Array<{ piece: Piece; candidates: Piece[] }> {
   const out: Array<{ piece: Piece; candidates: Piece[] }> = [];
   for (const piece of [...newPieces.added, ...newPieces.changed]) {
-    // Backward = existing pieces that should now link TO the new piece.
-    // Candidate sources are rows in the snapshot (excluding the new piece itself).
     const candidates = rows
       .filter((r) => !(r.piece.corpus === piece.corpus && r.piece.slug === piece.slug))
       .map((r) => r.piece);
-    if (candidates.length === 0) { continue; }
+    if (candidates.length === 0) {
+      continue;
+    }
     out.push({ piece, candidates });
   }
   return out;
