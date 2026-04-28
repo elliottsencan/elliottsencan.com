@@ -5,7 +5,11 @@
  * raw GraphQL / REST payloads never leak across module boundaries.
  */
 
-import type { ReadingCategory } from "@shared/schemas/content.ts";
+// `LinkSummary` and `WikiArticle` are re-exported from ./anthropic.ts (where
+// the Zod schemas live) so consumers keep importing them from a single place.
+// Type-only re-export = no runtime cycle even though anthropic.ts imports
+// `Result` from this file.
+export type { LinkSummary, WikiArticle } from "./anthropic.ts";
 
 // ---------- runtime environment ----------
 
@@ -143,19 +147,9 @@ export interface LinkRequest {
   excerpt?: string;
 }
 
-/** Strict-JSON shape Anthropic returns for link summarization. */
-export interface LinkSummary {
-  /**
-   * AI-cleaned title for the archive display. Strips publisher suffixes,
-   * GitHub's "GitHub - org/repo: description" boilerplate, etc. Falls back
-   * to the fetched page title if the model returns empty.
-   */
-  title: string;
-  summary: string;
-  category: ReadingCategory;
-  author?: string;
-  source?: string;
-}
+// LinkSummary and WikiArticle are re-exported at the top of this file; the
+// concrete shapes are derived via z.infer in ./anthropic.ts so the schemas
+// and the TS types can never drift.
 
 // ---------- discriminated results ----------
 

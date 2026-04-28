@@ -26,9 +26,7 @@ function makeKV(): KVStore {
     async list(opts) {
       const prefix = opts?.prefix ?? "";
       return {
-        keys: [...store.keys()]
-          .filter((k) => k.startsWith(prefix))
-          .map((name) => ({ name })),
+        keys: [...store.keys()].filter((k) => k.startsWith(prefix)).map((name) => ({ name })),
         list_complete: true,
       };
     },
@@ -228,10 +226,7 @@ describe("consumeSnapshot", () => {
     const failingKey = inputKey("2026-04-17T10:00:00.000Z", "bad");
     const okKey = inputKey("2026-04-17T10:00:01.000Z", "ok");
     store.set(okKey, JSON.stringify({ type: "building", content: "ok", createdAt: "x" }));
-    store.set(
-      failingKey,
-      JSON.stringify({ type: "thinking", content: "bad", createdAt: "x" }),
-    );
+    store.set(failingKey, JSON.stringify({ type: "thinking", content: "bad", createdAt: "x" }));
 
     const kv: KVStore = {
       async put(key, value) {

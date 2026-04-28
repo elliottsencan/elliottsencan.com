@@ -118,25 +118,17 @@ export function fileTimestamp(date: Date): string {
   return formatInTimeZone(date, SITE_TIMEZONE, "yyyy-MM-dd'T'HHmmss");
 }
 
-// ---------- YAML frontmatter ----------
-
 /**
- * Escape a string for use as a YAML double-quoted scalar. Strips control
- * chars, escapes `\` and `"`, replaces newlines with spaces. Caller must
- * wrap the result in double quotes when emitting frontmatter.
- *
- * Prevents injection of unintended keys via titles like
- * `"test\narchived: true"` that would otherwise break the YAML parse.
+ * Reading slug in Astro's content-collection id format:
+ * `<month>/<filename-without-ext>`, lowercased. Used to bridge the worker's
+ * disk-path view with the public slug surfaces (`/reading.json`,
+ * `/reading/<slug>/`, wiki frontmatter `sources[]`). Single source of
+ * truth — synthesize and lint both read it.
  */
-export function yamlEscape(value: string, maxLength = 500): string {
-  const cleaned = value
-    // biome-ignore lint/suspicious/noControlCharactersInRegex: intentional — strip control chars before YAML emit
-    .replace(/[\x00-\x08\x0B-\x1F\x7F]/g, "")
-    .replace(/[\r\n]+/g, " ")
-    .replace(/\\/g, "\\\\")
-    .replace(/"/g, '\\"')
-    .trim();
-  return cleaned.length > maxLength ? cleaned.slice(0, maxLength) : cleaned;
+export function readingSlugFromPath(path: string): string {
+  const idx = path.indexOf("/reading/");
+  const tail = idx >= 0 ? path.slice(idx + "/reading/".length) : path;
+  return tail.replace(/\.md$/, "").toLowerCase();
 }
 
 // ---------- response helpers ----------
@@ -165,4 +157,15 @@ export function textResponse(message: string, status = 200): Response {
       "Cache-Control": "no-store",
     },
   });
+}
+
+// ---------- error helpers ----------
+
+/**
+ * Whether a Result.error string came from a 404 / "not found" GitHub
+ * response. Distinguishing this from 5xx prevents the substrate from
+ * silently treating a transient outage as "file doesn't exist yet."
+ */
+export function isNotFoundError(error: string): boolean {
+  return error.includes("404") || error.toLowerCase().includes("not found");
 }
