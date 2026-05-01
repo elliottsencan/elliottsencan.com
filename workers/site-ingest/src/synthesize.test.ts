@@ -153,7 +153,7 @@ describe("buildArticleMarkdown", () => {
       title: "Responsive design",
       summary: "Lessons from two recent essays on responsive design without breakpoints.",
       sources: ["2026-04/a", "2026-04/b"], // input was ["b", "a"], output sorted
-      compiled_at: "2026-04-24T00:00:00.000Z",
+      compiled_at: "2026-04-23T17:00:00.000-07:00",
       compiled_with: "claude-sonnet-4-6",
     });
     expect(content.trim()).toBe("Body content with [a citation](/reading/2026-04/foo).");

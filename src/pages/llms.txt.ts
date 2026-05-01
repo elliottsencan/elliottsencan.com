@@ -1,5 +1,6 @@
 import { getCollection } from "astro:content";
 import { SITE } from "@consts";
+import { siteDate } from "@lib/utils";
 
 /**
  * /llms.txt — the agent-facing index for this site.
@@ -11,10 +12,6 @@ import { SITE } from "@consts";
  */
 
 const SITE_URL = "https://elliottsencan.com";
-
-function dateLine(date: Date): string {
-  return date.toISOString().slice(0, 10);
-}
 
 export async function GET() {
   const [blog, reading, wiki] = await Promise.all([
@@ -83,7 +80,7 @@ export async function GET() {
   lines.push("");
   for (const post of writing) {
     lines.push(
-      `- [${post.data.title}](${SITE_URL}/writing/${post.id}/) (${dateLine(post.data.date)}): ${post.data.description}`,
+      `- [${post.data.title}](${SITE_URL}/writing/${post.id}/) (${siteDate(post.data.date)}): ${post.data.description}`,
     );
   }
   lines.push("");
@@ -99,7 +96,7 @@ export async function GET() {
   lines.push("");
   for (const entry of recentReading) {
     lines.push(
-      `- [${entry.data.title}](${entry.data.url}) (${dateLine(entry.data.added)}, ${entry.data.category}): ${entry.data.summary}`,
+      `- [${entry.data.title}](${entry.data.url}) (${siteDate(entry.data.added)}, ${entry.data.category}): ${entry.data.summary}`,
     );
   }
   lines.push("");

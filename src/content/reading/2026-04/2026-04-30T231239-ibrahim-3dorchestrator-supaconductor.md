@@ -10,7 +10,7 @@ summary: >-
   evaluation, and a virtual Board of Directors for high-stakes architectural
   decisions.
 category: tech
-added: '2026-05-01T06:12:39.997Z'
+added: '2026-04-30T23:12:39.997-07:00'
 source: GitHub
 topics:
   - llm-orchestration
@@ -18,7 +18,7 @@ topics:
   - ai-assisted-coding
   - llm-agents
   - developer-tooling
-compiled_at: '2026-05-01T06:12:39.997Z'
+compiled_at: '2026-04-30T23:12:39.997-07:00'
 compiled_with: claude-sonnet-4-6
 title_source: model
 ---

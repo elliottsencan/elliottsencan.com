@@ -52,7 +52,7 @@ import {
 } from "./pipeline.ts";
 import { WIKI_SYNTHESIS_SYSTEM } from "./prompts.ts";
 import type { Env, Result, WikiArticle } from "./types.ts";
-import { jsonResponse, log, readingSlugFromPath } from "./util.ts";
+import { isoWithSiteOffset, jsonResponse, log, readingSlugFromPath } from "./util.ts";
 
 const MAX_CONCEPTS_PER_RUN = 20;
 const WIKI_DIR = "src/content/wiki";
@@ -469,7 +469,7 @@ async function enumerateReading(env: Env, gh: GitHubClient): Promise<Result<Read
         url: fm.url,
         summary: fm.summary,
         category: fm.category,
-        added: fm.added.toISOString(),
+        added: isoWithSiteOffset(fm.added),
         ...(fm.author ? { author: fm.author } : {}),
         ...(fm.source ? { source: fm.source } : {}),
         topics: fm.topics ?? [],
@@ -572,7 +572,7 @@ export function buildArticleMarkdown(args: {
     title: args.article.title,
     summary: args.article.summary,
     sources: [...args.sources].sort(),
-    compiled_at: args.compiledAt.toISOString(),
+    compiled_at: isoWithSiteOffset(args.compiledAt),
     compiled_with: args.article.model,
   };
   return matter.stringify(args.article.body.trim(), data);

@@ -1,4 +1,5 @@
 import { getCollection } from "astro:content";
+import { isoWithSiteOffset } from "@lib/utils";
 import { buildWikiLinkGraph, resolveRelatedConcepts } from "@lib/wiki-graph";
 
 /**
@@ -42,7 +43,7 @@ export async function GET() {
         summary: concept.data.summary,
         sources: concept.data.sources,
         related_concepts: resolved.related,
-        compiled_at: concept.data.compiled_at.toISOString(),
+        compiled_at: isoWithSiteOffset(concept.data.compiled_at),
         compiled_with: concept.data.compiled_with,
         body: concept.body?.trim() ?? "",
       };

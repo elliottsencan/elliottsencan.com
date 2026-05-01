@@ -23,7 +23,7 @@ import { type PlanResult, runPipeline, type Strategy } from "./pipeline.ts";
 import { LINK_SUMMARY_SYSTEM } from "./prompts.ts";
 import { makePipelineDeps } from "./synthesize.ts";
 import type { Env, LinkRequest, LinkSummary, Result } from "./types.ts";
-import { fileTimestamp, jsonResponse, log, monthKey, slugify } from "./util.ts";
+import { fileTimestamp, isoWithSiteOffset, jsonResponse, log, monthKey, slugify } from "./util.ts";
 
 // iOS Safari share sheet can pass whole article text as `excerpt` when the
 // user hasn't selected anything. 100 KB caps adversarial payloads and
@@ -373,7 +373,7 @@ function buildEntryMarkdown(args: {
     url,
     summary: summary.summary,
     category: summary.category,
-    added: added.toISOString(),
+    added: isoWithSiteOffset(added),
   };
   if (summary.author) {
     data.author = summary.author;
@@ -384,7 +384,7 @@ function buildEntryMarkdown(args: {
   if (summary.topics.length > 0) {
     data.topics = summary.topics;
   }
-  data.compiled_at = added.toISOString();
+  data.compiled_at = isoWithSiteOffset(added);
   data.compiled_with = summary.model;
   data.title_source = titleSource;
   // Body intentionally empty: reading entries are source citations, not

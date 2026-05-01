@@ -10,7 +10,7 @@ summary: >-
   and complete implementations of two Lox interpreters (jlox in Java and clox in
   C) with a build system that weaves code and prose into the final site.
 category: tech
-added: '2026-05-01T06:10:27.479Z'
+added: '2026-04-30T23:10:27.479-07:00'
 author: Robert Nystrom
 source: GitHub
 topics:
@@ -19,7 +19,7 @@ topics:
   - open-source-tools
   - systems-design
   - developer-tools
-compiled_at: '2026-05-01T06:10:27.479Z'
+compiled_at: '2026-04-30T23:10:27.479-07:00'
 compiled_with: claude-sonnet-4-6
 title_source: model
 ---

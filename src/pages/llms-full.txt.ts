@@ -1,5 +1,6 @@
 import { getCollection } from "astro:content";
 import { SITE } from "@consts";
+import { siteDate } from "@lib/utils";
 
 /**
  * /llms-full.txt — the full corpus concatenated as markdown.
@@ -12,10 +13,6 @@ import { SITE } from "@consts";
 
 const SITE_URL = "https://elliottsencan.com";
 const SEP = "\n\n---\n\n";
-
-function isoDate(date: Date): string {
-  return date.toISOString().slice(0, 10);
-}
 
 export async function GET() {
   const [blog, reading, wiki] = await Promise.all([
@@ -57,7 +54,7 @@ export async function GET() {
     const { body } = post;
     const header = [
       `### ${post.data.title}`,
-      `*${isoDate(post.data.date)} — ${SITE_URL}/writing/${post.id}/*`,
+      `*${siteDate(post.data.date)} — ${SITE_URL}/writing/${post.id}/*`,
       "",
       post.data.description,
     ].join("\n");
@@ -73,7 +70,7 @@ export async function GET() {
     const topics = entry.data.topics?.length ? `\nTopics: ${entry.data.topics.join(", ")}` : "";
     const lines = [
       `### ${entry.data.title}`,
-      `*${isoDate(entry.data.added)} — ${entry.data.category}${meta ? ` — ${meta}` : ""}*`,
+      `*${siteDate(entry.data.added)} — ${entry.data.category}${meta ? ` — ${meta}` : ""}*`,
       "",
       `Source: ${entry.data.url}${topics}`,
       "",

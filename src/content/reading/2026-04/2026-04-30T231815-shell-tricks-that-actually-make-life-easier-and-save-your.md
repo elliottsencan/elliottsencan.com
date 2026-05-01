@@ -13,7 +13,7 @@ summary: >-
   covering Readline key bindings, history search, brace expansion, process
   substitution, and script safety flags across POSIX, Bash, and Zsh.
 category: tech
-added: '2026-05-01T06:18:15.948Z'
+added: '2026-04-30T23:18:15.948-07:00'
 author: Christian Hofstede-Kuhn
 source: Larvitz Blog
 topics:
@@ -21,7 +21,7 @@ topics:
   - developer-tooling
   - software-engineering
   - engineering-craft
-compiled_at: '2026-05-01T06:18:15.948Z'
+compiled_at: '2026-04-30T23:18:15.948-07:00'
 compiled_with: claude-sonnet-4-6
 title_source: model
 ---

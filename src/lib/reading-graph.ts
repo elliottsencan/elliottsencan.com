@@ -1,4 +1,4 @@
-import { monthKey } from "@lib/utils";
+import { isoWithSiteOffset, monthKey } from "@lib/utils";
 
 /**
  * Pure transform behind /reading.json — kept out of the Astro endpoint
@@ -155,11 +155,11 @@ export function buildReadingGraph(
         url: entry.data.url,
         summary: entry.data.summary,
         category: entry.data.category,
-        added: entry.data.added.toISOString(),
+        added: isoWithSiteOffset(entry.data.added),
         author: entry.data.author,
         source: entry.data.source,
         topics: entry.data.topics ?? [],
-        compiled_at: entry.data.compiled_at?.toISOString(),
+        compiled_at: entry.data.compiled_at ? isoWithSiteOffset(entry.data.compiled_at) : undefined,
         compiled_with: entry.data.compiled_with,
         wiki_concepts: wikiByEntry.get(entry.id) ?? [],
         related: related.slice(0, 8),

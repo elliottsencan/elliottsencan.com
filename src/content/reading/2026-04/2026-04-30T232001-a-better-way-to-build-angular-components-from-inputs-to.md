@@ -10,7 +10,7 @@ summary: >-
   directives and sub-components so each concern stays encapsulated and APIs
   remain clean.
 category: tech
-added: '2026-05-01T06:20:01.673Z'
+added: '2026-04-30T23:20:01.673-07:00'
 author: Kobi Hari
 source: Medium
 topics:
@@ -18,7 +18,7 @@ topics:
   - api-design
   - software-engineering
   - engineering-craft
-compiled_at: '2026-05-01T06:20:01.673Z'
+compiled_at: '2026-04-30T23:20:01.673-07:00'
 compiled_with: claude-sonnet-4-6
 title_source: model
 ---

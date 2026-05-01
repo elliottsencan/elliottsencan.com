@@ -10,7 +10,7 @@ summary: >-
   characters, defeating code review and static analysis tools while using LLMs
   to generate convincingly legitimate surrounding code.
 category: news
-added: '2026-05-01T06:16:34.094Z'
+added: '2026-04-30T23:16:34.094-07:00'
 author: Dan Goodin
 source: Ars Technica
 topics:
@@ -18,7 +18,7 @@ topics:
   - open-source-tools
   - developer-tools
   - software-engineering
-compiled_at: '2026-05-01T06:16:34.094Z'
+compiled_at: '2026-04-30T23:16:34.094-07:00'
 compiled_with: claude-sonnet-4-6
 title_source: model
 ---

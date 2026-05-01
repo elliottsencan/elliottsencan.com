@@ -10,7 +10,7 @@ summary: >-
   controls, avoid undefined, and translate cleanly between form models and
   domain models using linkedSignal.
 category: tech
-added: '2026-05-01T06:14:12.171Z'
+added: '2026-04-30T23:14:12.171-07:00'
 source: Angular
 topics:
   - software-architecture
@@ -18,7 +18,7 @@ topics:
   - type-system-design
   - developer-tools
   - software-engineering
-compiled_at: '2026-05-01T06:14:12.171Z'
+compiled_at: '2026-04-30T23:14:12.171-07:00'
 compiled_with: claude-sonnet-4-6
 title_source: model
 ---
