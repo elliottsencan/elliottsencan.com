@@ -1,5 +1,7 @@
+import matter from "gray-matter";
 import { describe, expect, it } from "vitest";
-import { validate } from "./link.ts";
+import type { LinkSummary } from "./anthropic.ts";
+import { buildEntryMarkdown, validate } from "./link.ts";
 
 describe("link.validate", () => {
   it("rejects non-object bodies", () => {
@@ -91,6 +93,56 @@ describe("link.validate", () => {
   it("rejects a non-boolean topic_priors", () => {
     expect(validate({ url: "https://example.com/", topic_priors: "yes" })).toMatchObject({
       ok: false,
+    });
+  });
+});
+
+// ---------- buildEntryMarkdown ----------
+
+const baseSummary: LinkSummary = {
+  title: "Hello World",
+  summary: "A short summary.",
+  category: "tech",
+  topics: ["topic-a", "topic-b"],
+  model: "claude-sonnet-4-6",
+  cost: {
+    usage: {
+      input_tokens: 100,
+      output_tokens: 50,
+      cache_creation_input_tokens: 0,
+      cache_read_input_tokens: 0,
+    },
+    model: "claude-sonnet-4-6",
+    pricing: null,
+    cost_usd: 0.001,
+  },
+};
+
+const baseArgs = {
+  title: "Hello World",
+  titleSource: "model" as const,
+  url: "https://example.com/post",
+  summary: baseSummary,
+  added: new Date("2026-05-01T00:00:00.000Z"),
+};
+
+function parseEntry(md: string): { data: Record<string, unknown> } {
+  return { data: matter(md).data };
+}
+
+describe("buildEntryMarkdown", () => {
+  it("persists compile_cost into frontmatter", () => {
+    const { data } = parseEntry(buildEntryMarkdown(baseArgs));
+    expect(data.compile_cost).toEqual({
+      usage: {
+        input_tokens: 100,
+        output_tokens: 50,
+        cache_creation_input_tokens: 0,
+        cache_read_input_tokens: 0,
+      },
+      model: "claude-sonnet-4-6",
+      pricing: null,
+      cost_usd: 0.001,
     });
   });
 });
