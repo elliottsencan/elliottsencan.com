@@ -58,12 +58,8 @@ const projectBlurbs = [
         </p>
       </section>
 
-      <EditorialRule />
-
       <section class="space-y-4">
-        <h2 class="font-heading text-sm font-medium text-black/65 dark:text-white/65">
-          Career
-        </h2>
+        <LabeledRule>Career</LabeledRule>
         <ul class="not-prose flex flex-col gap-3 text-sm">
           {
             career.map((role) => (
@@ -96,17 +92,15 @@ const projectBlurbs = [
         </ul>
       </section>
 
-      <EditorialRule />
 
       <section class="space-y-4">
-        <div class="flex items-baseline justify-between">
-          <h2 class="font-heading text-sm font-medium text-black/65 dark:text-white/65">
-            Projects
-          </h2>
+        <LabeledRule>Projects</LabeledRule>
+        <!-- <div class="flex items-baseline justify-between">
+          
           <Link href="/projects">
             <span class="text-sm">All projects &rarr;</span>
           </Link>
-        </div>
+        </div> -->
         <ul class="not-prose flex flex-col gap-3 text-sm">
           {
             projectBlurbs.map((project) => (
@@ -135,12 +129,8 @@ const projectBlurbs = [
         </ul>
       </section>
 
-      <EditorialRule />
-
       <section class="space-y-4">
-        <h2 class="font-heading text-sm font-medium text-black/65 dark:text-white/65">
-          Elsewhere
-        </h2>
+        <LabeledRule>Elsewhere</LabeledRule>
         <ul class="not-prose flex flex-col gap-2 text-sm">
           <li class="flex items-baseline gap-4">
             <span
