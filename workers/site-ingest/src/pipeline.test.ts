@@ -15,10 +15,7 @@ const fakeCtx = () => ({ waitUntil: vi.fn() }) as unknown as ExecutionContext;
 const okGithubDeps = (): GithubDeps => ({
   getBranchSha: vi.fn().mockResolvedValue({ ok: true, data: "abc123" }),
   createBranch: vi.fn().mockResolvedValue({ ok: true, data: { alreadyExists: false } }),
-  // Default to "file does not exist" — `added` paths take this path. Tests
-  // for `changed` mutations override to return a valid sha.
-  getFile: vi.fn().mockResolvedValue({ ok: false, error: "404 not found" }),
-  putFile: vi.fn().mockResolvedValue({ ok: true, data: { blobSha: "blob", commitSha: "def456" } }),
+  commitFiles: vi.fn().mockResolvedValue({ ok: true, data: { commitSha: "def456" } }),
   findOpenPrByBranch: vi.fn().mockResolvedValue({ ok: true, data: null }),
   openPullRequest: vi.fn().mockResolvedValue({
     ok: true,
@@ -42,7 +39,7 @@ const fakeStrategy = (overrides: Partial<Strategy> = {}): Strategy => ({
 });
 
 describe("runPipeline (PR target)", () => {
-  it("creates branch, commits files, opens PR via injected github helpers", async () => {
+  it("creates branch, commits files in one call, opens PR via injected github helpers", async () => {
     const github = okGithubDeps();
     const result = await runPipeline(
       fakeStrategy(),
@@ -53,7 +50,9 @@ describe("runPipeline (PR target)", () => {
     );
     expect(result.ok).toBe(true);
     expect(github.createBranch).toHaveBeenCalled();
-    expect(github.putFile).toHaveBeenCalledTimes(1);
+    // Single batched commit regardless of file count — the whole point of the
+    // Trees-API substrate.
+    expect(github.commitFiles).toHaveBeenCalledTimes(1);
     expect(github.openPullRequest).toHaveBeenCalled();
     if (result.ok) {
       expect(result.pr_number).toBe(42);
@@ -79,7 +78,7 @@ describe("runPipeline (PR target)", () => {
     }
   });
 
-  it("commits both added and changed files", async () => {
+  it("batches added and changed files into a single commit", async () => {
     const github = okGithubDeps();
     const strategy = fakeStrategy({
       plan: async () => ({
@@ -95,32 +94,38 @@ describe("runPipeline (PR target)", () => {
     await runPipeline(strategy, { commitTarget: "pr", crosslink: "skip" }, fakeEnv(), fakeCtx(), {
       github,
     });
-    expect(github.putFile).toHaveBeenCalledTimes(2);
+    expect(github.commitFiles).toHaveBeenCalledTimes(1);
+    const args = (github.commitFiles as ReturnType<typeof vi.fn>).mock.calls[0]?.[0];
+    expect(args?.files).toEqual([
+      { path: "a.md", content: "A" },
+      { path: "b.md", content: "new" },
+    ]);
   });
 
-  it("looks up sha from main and threads it to putFile for changed files", async () => {
+  it("uses the strategy commitMessage override when provided", async () => {
     const github = okGithubDeps();
-    github.getFile = vi
-      .fn()
-      .mockResolvedValue({ ok: true, data: { content: "old", sha: "main-sha" } });
     const strategy = fakeStrategy({
-      plan: async () => ({
-        ok: true,
-        data: {
-          mutation: {
-            added: [],
-            changed: [{ path: "b.md", before: "old", after: "new" }],
-          },
-        },
-      }),
+      commitMessage: ({ added, changed }) =>
+        `custom: ${added.length} added, ${changed.length} changed`,
     });
     await runPipeline(strategy, { commitTarget: "pr", crosslink: "skip" }, fakeEnv(), fakeCtx(), {
       github,
     });
-    expect(github.getFile).toHaveBeenCalledWith("b.md", "main");
-    expect(github.putFile).toHaveBeenCalledWith(
-      expect.objectContaining({ path: "b.md", sha: "main-sha" }),
+    const args = (github.commitFiles as ReturnType<typeof vi.fn>).mock.calls[0]?.[0];
+    expect(args?.message).toBe("custom: 1 added, 0 changed");
+  });
+
+  it("falls back to a default message when commitMessage is not provided", async () => {
+    const github = okGithubDeps();
+    await runPipeline(
+      fakeStrategy(),
+      { commitTarget: "pr", crosslink: "skip" },
+      fakeEnv(),
+      fakeCtx(),
+      { github },
     );
+    const args = (github.commitFiles as ReturnType<typeof vi.fn>).mock.calls[0]?.[0];
+    expect(args?.message).toBe("fake: 1 file");
   });
 });
 
@@ -141,7 +146,7 @@ describe("runPipeline (main target)", () => {
       { github },
     );
     expect(result.ok).toBe(true);
-    expect(github.putFile).toHaveBeenCalledWith(expect.objectContaining({ branch: "main" }));
+    expect(github.commitFiles).toHaveBeenCalledWith(expect.objectContaining({ branch: "main" }));
     expect(github.createBranch).not.toHaveBeenCalled();
     expect(github.openPullRequest).not.toHaveBeenCalled();
   });
@@ -184,7 +189,7 @@ describe("runPipeline (abort propagation)", () => {
     }
   });
 
-  it("invokes injected runCrosslink on inline crosslink and commits changedFiles to the same branch", async () => {
+  it("invokes runCrosslink on inline crosslink and batches changedFiles into one extra commit", async () => {
     const github = okGithubDeps();
     const runCrosslink = vi.fn().mockResolvedValue({
       forward: 1,
@@ -207,27 +212,21 @@ describe("runPipeline (abort propagation)", () => {
       { github, runCrosslink },
     );
     expect(runCrosslink).toHaveBeenCalledTimes(1);
-    expect(github.putFile).toHaveBeenCalledTimes(2); // 1 added + 1 from crosslink phase
+    // Two commits: the strategy mutation + the crosslink batch.
+    expect(github.commitFiles).toHaveBeenCalledTimes(2);
     expect(result.ok).toBe(true);
     if (result.ok) {
       expect(result.crosslink?.applied.length).toBe(1);
     }
   });
 
-  it("resolves crosslink sha against the synthesis branch, not main, so newly-added files commit cleanly", async () => {
-    // Regression: when synthesize creates a new wiki article and the inline
-    // crosslink phase modifies it, the sha lookup must hit the branch (where
-    // the file now exists) and not main (where it 404s, leaving the sha
-    // undefined and triggering a 422 "sha wasn't supplied" on put).
+  it("commits a freshly-added file plus its crosslink edit cleanly (regression: synth-then-crosslink seam)", async () => {
+    // Before the Trees-API substrate, the crosslink phase did getFile+putFile
+    // per file. For a wiki article synthesize had just added (404 on main, exists
+    // on the branch), the put failed with 422 "sha wasn't supplied". With the
+    // batched commit there is no per-file sha to look up — both commits land
+    // cleanly off the branch's current head.
     const github = okGithubDeps();
-    const refsSeen: string[] = [];
-    github.getFile = vi.fn().mockImplementation(async (_path: string, ref: string) => {
-      refsSeen.push(ref);
-      if (ref === "main") {
-        return { ok: false, error: "404 not found" };
-      }
-      return { ok: true, data: { content: "stub", sha: "branch-sha-1" } };
-    });
     const runCrosslink = vi.fn().mockResolvedValue({
       forward: 1,
       backward: 0,
@@ -260,15 +259,13 @@ describe("runPipeline (abort propagation)", () => {
       { github, runCrosslink },
     );
     expect(result.ok).toBe(true);
-    // commitMutation reads from main (added path) → 404 expected.
-    // Crosslink commit MUST read from the synthesis branch.
-    const crosslinkRef = refsSeen[refsSeen.length - 1];
-    expect(crosslinkRef).not.toBe("main");
-    expect(crosslinkRef?.startsWith("fake/")).toBe(true);
-    // Put used the branch-resolved sha, not undefined.
-    const putCalls = (github.putFile as unknown as { mock: { calls: Array<[Record<string, unknown>]> } }).mock.calls;
-    const crosslinkPut = putCalls.find(([arg]) => arg.message === "crosslink: src/content/wiki/ai-agents.md");
-    expect(crosslinkPut?.[0]?.sha).toBe("branch-sha-1");
+    expect(github.commitFiles).toHaveBeenCalledTimes(2);
+    const calls = (github.commitFiles as ReturnType<typeof vi.fn>).mock.calls;
+    // First call is the synth mutation, second is the crosslink batch — both
+    // address the same branch.
+    const branches = calls.map(([arg]) => arg.branch);
+    expect(new Set(branches).size).toBe(1);
+    expect(branches[0]?.startsWith("fake/")).toBe(true);
   });
 
   it("fires runCrosslink via ctx.waitUntil for followup (commitTarget=main)", async () => {
@@ -310,6 +307,7 @@ describe("runPipeline (abort propagation)", () => {
     );
     expect(result.ok).toBe(true);
     expect(github.createBranch).not.toHaveBeenCalled();
+    expect(github.commitFiles).not.toHaveBeenCalled();
     if (result.ok) {
       expect(result.summary).toEqual({ skipped: 3 });
     }
@@ -317,15 +315,14 @@ describe("runPipeline (abort propagation)", () => {
 });
 
 describe("runCrosslinkFollowup (honesty)", () => {
-  it("does not open a PR when every file commit fails", async () => {
+  it("does not open a PR when the crosslink batch commit fails", async () => {
     const github = okGithubDeps();
-    // Make every putFile call fail except the strategy's own create.
-    let putCallCount = 0;
-    github.putFile = vi.fn().mockImplementation(async () => {
-      putCallCount++;
-      if (putCallCount === 1) {
-        // strategy commit succeeds
-        return { ok: true, data: { blobSha: "blob", commitSha: "main456" } };
+    let commitCallCount = 0;
+    github.commitFiles = vi.fn().mockImplementation(async () => {
+      commitCallCount++;
+      if (commitCallCount === 1) {
+        // strategy mutation succeeds
+        return { ok: true, data: { commitSha: "main456" } };
       }
       return { ok: false, error: "github 502" };
     });
@@ -354,13 +351,10 @@ describe("runCrosslinkFollowup (honesty)", () => {
       github,
       runCrosslink,
     });
-    // Manually invoke the captured waitUntil function to trigger the followup.
     const waitFn = (ctx.waitUntil as ReturnType<typeof vi.fn>).mock.calls[0]?.[0];
     if (waitFn) {
       await waitFn;
     }
-    // The followup should NOT have called openPullRequest because no files
-    // committed successfully (all post-strategy putFile calls failed).
     expect(github.openPullRequest).not.toHaveBeenCalled();
   });
 });
@@ -368,8 +362,6 @@ describe("runCrosslinkFollowup (honesty)", () => {
 describe("runPipeline (frontmatter preservation on crosslink)", () => {
   it("commits crosslink edits with frontmatter recombined (regression: was committing body only)", async () => {
     const github = okGithubDeps();
-    // The crosslink runner produces body-only `after`. The substrate must
-    // re-stringify with the carried frontmatter before putFile.
     const runCrosslink = vi.fn().mockResolvedValue({
       forward: 1,
       backward: 0,
@@ -398,11 +390,15 @@ describe("runPipeline (frontmatter preservation on crosslink)", () => {
       { github, runCrosslink },
     );
     expect(result.ok).toBe(true);
-    const calls = (github.putFile as ReturnType<typeof vi.fn>).mock.calls;
-    const crosslinkCall = calls.find((c) => c[0].path === "src/content/wiki/x.md");
+    const calls = (github.commitFiles as ReturnType<typeof vi.fn>).mock.calls;
+    const crosslinkCall = calls.find(([arg]) =>
+      arg.files.some((f: { path: string }) => f.path === "src/content/wiki/x.md"),
+    );
     expect(crosslinkCall).toBeDefined();
-    const committedContent = crosslinkCall?.[0].content as string;
-    // Frontmatter recombined (the bug: this used to be body-only):
+    const committedFile = crosslinkCall?.[0].files.find(
+      (f: { path: string }) => f.path === "src/content/wiki/x.md",
+    );
+    const committedContent = committedFile?.content as string;
     expect(committedContent.startsWith("---\n")).toBe(true);
     expect(committedContent).toContain("title: Karpathy");
     expect(committedContent).toContain("compiled_with: claude-test");

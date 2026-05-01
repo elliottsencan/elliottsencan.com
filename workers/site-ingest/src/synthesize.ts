@@ -30,6 +30,7 @@ import {
 } from "./crosslink-mdast.ts";
 import { makeCrosslinkRunner } from "./crosslink-phase.ts";
 import {
+  commitFiles,
   createBranch,
   createGitHubClient,
   findOpenPrByBranch,
@@ -38,7 +39,6 @@ import {
   getFile,
   listDir,
   openPullRequest,
-  putFile,
 } from "./github.ts";
 import {
   type CrosslinkResult,
@@ -386,8 +386,7 @@ export function makePipelineDeps(env: Env): {
   const github: GithubDeps = {
     getBranchSha: (branch) => getBranchSha(branch, gh),
     createBranch: (branch, fromSha) => createBranch(branch, fromSha, gh),
-    getFile: (path, ref) => getFile(path, ref, gh),
-    putFile: (args) => putFile({ ...args, gh }),
+    commitFiles: (args) => commitFiles({ ...args, gh }),
     findOpenPrByBranch: (branch) => findOpenPrByBranch(branch, gh),
     openPullRequest: (args) => openPullRequest({ ...args, gh }),
   };
