@@ -197,7 +197,7 @@ describe("partitionSkips", () => {
   it("counts each skip reason and ignores updated rows", () => {
     const partition = partitionSkips([
       { path: "a.md", status: "updated" },
-      { path: "b.md", status: "skipped", skip_reason: "no-snapshot" },
+      { path: "b.md", status: "skipped", skip_reason: "no-source" },
       { path: "c.md", status: "skipped", skip_reason: "transient" },
       { path: "d.md", status: "skipped", skip_reason: "frontmatter-invalid" },
       { path: "e.md", status: "skipped", skip_reason: "other" },
@@ -206,7 +206,7 @@ describe("partitionSkips", () => {
     ]);
     expect(partition).toEqual({
       total: 5,
-      no_snapshot: 1,
+      no_source: 1,
       transient: 1,
       frontmatter_invalid: 1,
       other: 2,
