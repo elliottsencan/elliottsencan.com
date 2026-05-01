@@ -1,9 +1,9 @@
 ---
 title: Developer tools for AI agents
 summary: >-
-  The current generation of agent developer tools clusters around a shared
-  insight: constraining what an agent can see and do produces more reliable
-  behavior than prompting it toward reliability.
+  A cluster of practices and infrastructure for building reliable AI agents,
+  covering MCP tooling, orchestration architecture, and the tradeoff between
+  discoverability and composability.
 sources:
   - 2026-04/2026-04-23t150424-your-agent-loves-mcp-as-much-as-you-love-guis
   - 2026-04/2026-04-27t113354-the-orchestrator-isnt-your-moat
@@ -11,13 +11,13 @@ sources:
   - >-
     2026-04/2026-04-27t114138-scaling-managed-agents-decoupling-the-brain-from-the-hands
   - 2026-04/2026-04-27t114426-dont-prompt-your-agent-for-reliability-engineer-it
-compiled_at: '2026-05-01T05:20:40.655Z'
+compiled_at: '2026-05-01T05:34:15.073Z'
 compiled_with: claude-sonnet-4-6
 ---
-MCP has become the default surface for exposing platform capabilities to AI agents, but its role is contested. [Ajeesh Mohan](/reading/2026-04/2026-04-23t150424-your-agent-loves-mcp-as-much-as-you-love-guis) argues MCP functions like a GUI for agents: it trades composability and efficiency for discoverability, which matters more for human developers than for agents that can write and execute code directly. Against that, [Aiyan](/reading/2026-04/2026-04-27t113354-the-orchestrator-isnt-your-moat) treats MCP tools as the right unit of investment precisely because they slot into existing frontier agents without requiring teams to own the orchestration loop.
+The central tension in AI agent tooling is whether to give agents broad, flexible access or constrained, opinionated interfaces. [Mad About Code](/reading/2026-04/2026-04-23t150424-your-agent-loves-mcp-as-much-as-you-love-guis) frames MCP as the GUI equivalent for AI agents: discoverable and approachable, but trading composability and raw efficiency for that convenience. Agents capable of writing code are often better served by layered scripts and direct API calls than by MCP wrappers.
 
-The Databricks AI Dev Kit [illustrates the MCP-as-platform-extension model in practice](/reading/2026-04/2026-04-27t113526-databricks-solutionsai-dev-kit): it packages Spark, Unity Catalog, and MLflow context into MCP tools and coding-assistant skills so that Claude Code, Cursor, and Windsurf can operate inside a Databricks environment without bespoke integrations per tool.
+That critique sits in productive tension with the practical case for MCP. [aiyan.io](/reading/2026-04/2026-04-27t113354-the-orchestrator-isnt-your-moat) argues that teams should ship MCP tools and agent skills rather than maintain custom orchestration frameworks, letting model providers handle the orchestration loop. The moat, on this view, is platform-specific context and actions, not the scaffolding that connects them.
 
-At the infrastructure layer, Anthropic's Managed Agents work [decouples the agent harness, the execution sandbox, and the session log into independent interfaces](/reading/2026-04/2026-04-27t114138-scaling-managed-agents-decoupling-the-brain-from-the-hands), so the orchestration code can evolve as models improve without breaking state or replaying history. That separation echoes the reliability argument made by [Aiyan's data engineering rewrites](/reading/2026-04/2026-04-27t114426-dont-prompt-your-agent-for-reliability-engineer-it): atomic tools, reference IDs, and narrow APIs reduce what the model has to reason about, and that reduction does more for output quality than prompt engineering.
+Databricks takes the practical case further with [ai-dev-kit](/reading/2026-04/2026-04-27t113526-databricks-solutionsai-dev-kit), a toolkit that equips Claude Code, Cursor, Windsurf, and similar coding assistants with Databricks-specific MCP tools and a visual builder, targeting Spark, Unity Catalog, and MLflow workflows. It is a concrete example of the pattern aiyan.io recommends: domain expertise packaged as agent-consumable tooling.
 
-The tension running through all of this is between discoverability and control. MCP tools make capabilities findable; layered scripts and direct API calls make them precise. The Mohan and Aiyan positions are not simply opposed, they apply at different points in an agent's maturity: discoverability first, then tighten the surface area as failure modes become clear.
+Reliability is a separate problem from tooling shape. [Anthropic's Managed Agents](/reading/2026-04/2026-04-27t114138-scaling-managed-agents-decoupling-the-brain-from-the-hands) addresses it at the infrastructure level by separating the agent harness, sandbox, and session log into independent interfaces so each can evolve without breaking the others. A second piece from [aiyan.io](/reading/2026-04/2026-04-27t114426-dont-prompt-your-agent-for-reliability-engineer-it) addresses it at the API design level: atomic tools, reference IDs, and unambiguous interfaces consistently outperform prompt engineering when the goal is predictable agent behavior. Both sources land on the same conclusion from different angles: reliability is an engineering problem, not a prompting problem.
