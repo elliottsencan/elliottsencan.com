@@ -6,7 +6,7 @@ summary: >-
   to calculate viewport-width and rem parameters so font sizes scale smoothly
   between fixed breakpoints without media query boilerplate.
 category: design
-added: '2026-04-24T15:59:27.985Z'
+added: '2026-04-24T08:59:27.985-07:00'
 author: Adrian Bece
 source: Smashing Magazine
 topics:
@@ -15,7 +15,7 @@ topics:
   - responsive-design
   - type-system-design
   - web-accessibility
-compiled_at: '2026-05-01T03:59:35.397Z'
+compiled_at: '2026-04-30T20:59:35.397-07:00'
 compiled_with: claude-sonnet-4-6
 ---
 

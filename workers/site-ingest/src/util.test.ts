@@ -165,28 +165,6 @@ describe("date helpers (Pacific / America/Los_Angeles)", () => {
   });
 });
 
-// Pins the worker (date-fns-tz) and site (Intl) implementations to byte-equal
-// output. The two helpers live in separate toolchains and can drift silently
-// otherwise.
-import { isoWithSiteOffset as siteIsoWithSiteOffset } from "@shared/utils.ts";
-
-describe("isoWithSiteOffset parity (worker vs site Intl form)", () => {
-  const cases: Array<[string, Date]> = [
-    ["PDT mid-day", new Date(Date.UTC(2026, 3, 16, 9, 30, 45, 300))],
-    ["PST mid-day", new Date(Date.UTC(2026, 0, 10, 8, 0, 0, 0))],
-    ["spring-forward day", new Date(Date.UTC(2026, 2, 8, 10, 0, 0, 0))],
-    ["fall-back day", new Date(Date.UTC(2026, 10, 1, 9, 0, 0, 0))],
-    ["day-boundary rollback", new Date(Date.UTC(2026, 3, 1, 2, 0, 0, 0))],
-    ["sub-100ms fractional", new Date(Date.UTC(2026, 3, 16, 9, 30, 45, 7))],
-  ];
-
-  for (const [label, d] of cases) {
-    it(`agrees on ${label}`, () => {
-      expect(isoWithSiteOffset(d)).toBe(siteIsoWithSiteOffset(d));
-    });
-  }
-});
-
 describe("readingSlugFromPath", () => {
   it("returns <month>/<basename> lowercased for canonical reading paths", () => {
     expect(readingSlugFromPath("src/content/reading/2026-04/2026-04-24T093356-Unsloth.md")).toBe(

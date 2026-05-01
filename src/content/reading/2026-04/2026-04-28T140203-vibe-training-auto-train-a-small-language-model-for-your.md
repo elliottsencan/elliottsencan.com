@@ -6,7 +6,7 @@ summary: >-
   via multi-agent debate to fine-tune small classifiers that outperform GPT-4.1
   on custom policy guardrail tasks at a fraction of the cost.
 category: tech
-added: '2026-04-28T21:02:03.102Z'
+added: '2026-04-28T14:02:03.102-07:00'
 author: Nir Diamant
 source: DiamantAI
 topics:
@@ -15,7 +15,7 @@ topics:
   - ai-safety
   - model-training
   - small-language-models
-compiled_at: '2026-05-01T04:00:10.369Z'
+compiled_at: '2026-04-30T21:00:10.369-07:00'
 compiled_with: claude-sonnet-4-6
 ---
 

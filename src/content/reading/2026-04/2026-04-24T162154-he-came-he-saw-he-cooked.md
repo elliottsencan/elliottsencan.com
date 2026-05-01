@@ -7,7 +7,7 @@ summary: >-
   the proposed SpaceX-Cursor deal, Cold War 2.0 fronts including the Strait of
   Hormuz, and TSMC earnings analysis.
 category: tech
-added: '2026-04-24T23:21:54.148Z'
+added: '2026-04-24T16:21:54.148-07:00'
 author: Ben Thompson
 source: Stratechery
 topics:
@@ -16,7 +16,7 @@ topics:
   - geopolitics
   - semiconductor-industry
   - enterprise-software
-compiled_at: '2026-05-01T03:59:43.638Z'
+compiled_at: '2026-04-30T20:59:43.638-07:00'
 compiled_with: claude-sonnet-4-6
 ---
 

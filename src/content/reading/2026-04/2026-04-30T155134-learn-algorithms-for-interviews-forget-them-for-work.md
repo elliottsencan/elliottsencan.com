@@ -8,7 +8,7 @@ summary: >-
   context, handling dirty inputs, and shipping incremental value over
   puzzle-solving on clean arrays.
 category: essay
-added: '2026-04-30T22:51:34.677Z'
+added: '2026-04-30T15:51:34.677-07:00'
 author: Fayner Brack
 source: Medium
 topics:
@@ -17,7 +17,7 @@ topics:
   - production-systems
   - career-development
   - software-engineering
-compiled_at: '2026-05-01T04:00:24.695Z'
+compiled_at: '2026-04-30T21:00:24.695-07:00'
 compiled_with: claude-sonnet-4-6
 ---
 

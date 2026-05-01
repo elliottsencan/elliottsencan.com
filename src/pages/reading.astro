@@ -5,7 +5,7 @@ import EditorialRule from "@components/EditorialRule.astro";
 import LabeledRule from "@components/LabeledRule.astro";
 import Link from "@components/Link.astro";
 import Layout from "@layouts/Layout.astro";
-import { monthKey } from "@lib/utils";
+import { monthKey, SITE_TIMEZONE } from "@lib/utils";
 
 // Reading log — the per-source citation index. Every entry is public; the
 // site-ingest worker commits a markdown file to src/content/reading/{YYYY-MM}/
@@ -40,10 +40,15 @@ for (const entry of entries) {
   }
 }
 
+// Format in the site's time zone — entry.data.added is the same instant
+// regardless of representation (UTC `Z` or Pacific offset), but rendering it
+// without `timeZone` falls back to the build container's TZ (UTC on
+// Cloudflare Pages) and an entry stamped 23:22 PDT renders as the next day.
 const dateFormatter = new Intl.DateTimeFormat("en-US", {
   day: "numeric",
   month: "long",
   year: "numeric",
+  timeZone: SITE_TIMEZONE,
 });
 ---
 

@@ -7,7 +7,7 @@ summary: >-
   with platform-specific context and actions, letting model providers handle the
   orchestration loop.
 category: tech
-added: '2026-04-27T18:33:54.406Z'
+added: '2026-04-27T11:33:54.406-07:00'
 author: Aiyan
 source: aiyan.io
 topics:
@@ -16,7 +16,7 @@ topics:
   - mcp
   - developer-tools
   - platform-strategy
-compiled_at: '2026-05-01T03:59:47.739Z'
+compiled_at: '2026-04-30T20:59:47.739-07:00'
 compiled_with: claude-sonnet-4-6
 ---
 

@@ -13,7 +13,7 @@ summary: >-
   browser passwords, exfiltrates them via GitHub, and abuses Claude Code and VS
   Code configs as persistence vectors.
 category: news
-added: '2026-05-01T17:23:45.277Z'
+added: '2026-05-01T10:23:45.277-07:00'
 author: Ravie Lakshmanan
 source: The Hacker News
 topics:
@@ -22,7 +22,7 @@ topics:
   - developer-tooling
   - ai-coding-assistants
   - enterprise-software
-compiled_at: '2026-05-01T17:23:45.277Z'
+compiled_at: '2026-05-01T10:23:45.277-07:00'
 compiled_with: claude-sonnet-4-6
 title_source: model
 ---

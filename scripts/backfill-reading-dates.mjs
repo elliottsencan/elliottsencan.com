@@ -1,14 +1,12 @@
 #!/usr/bin/env node
 /**
  * One-shot backfill: rewrite reading-entry `added` and `compiled_at` from
- * UTC ISO (`...Z`) to Pacific-offset ISO (`...-07:00`/`-08:00`) on entries
- * where the slug-prefix date and the UTC date disagree.
+ * UTC ISO (`...Z`) to Pacific-offset ISO (`...-07:00`/`-08:00`).
  *
- * The same instant — just a representation change so the visible YYYY-MM-DD
- * in the frontmatter matches the visible YYYY-MM-DD in the filename slug.
- * Entries whose slug date already agrees with the UTC date are left as-is
- * (the user opted for "fix only the visible mismatches", not "rewrite every
- * entry's format").
+ * The same instant — just a representation change. After the migration the
+ * canonical form is offset-ISO across every entry, so the visible YYYY-MM-DD
+ * always agrees with the Pacific filename slug regardless of build-host TZ.
+ * Entries already in offset form are skipped.
  *
  * Usage:
  *   node scripts/backfill-reading-dates.mjs           # dry-run (default)
@@ -109,7 +107,6 @@ async function main() {
 
     const slugPrefix = path.basename(file).slice(0, 10); // YYYY-MM-DD
     const pacificDate = siteDate(addedDate);
-    const visibleDate = added.value.slice(0, 10); // leading YYYY-MM-DD in frontmatter
 
     // Sanity check: the slug was always written from the Pacific date of the
     // same instant the worker stamped, so these must agree on every entry.
@@ -120,10 +117,9 @@ async function main() {
       );
     }
 
-    if (visibleDate === slugPrefix) {
-      // Frontmatter already shows the Pacific date — either it was written
-      // post-fix (offset form) or the UTC date happens to match the Pacific
-      // date for this instant. Either way, no visible mismatch.
+    if (!added.value.endsWith("Z")) {
+      // Already in Pacific-offset form (or some other non-UTC form); leave
+      // alone. The script's job is converting UTC `Z` → offset only.
       skippedAlreadyAligned.push(file);
       continue;
     }

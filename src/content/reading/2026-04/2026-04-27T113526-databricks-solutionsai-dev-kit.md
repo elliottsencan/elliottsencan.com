@@ -6,7 +6,7 @@ summary: >-
   etc.) with Databricks-specific skills, MCP tools, and a visual builder app to
   accelerate development on Spark, Unity Catalog, MLflow, and Databricks Apps.
 category: tech
-added: '2026-04-27T18:35:26.978Z'
+added: '2026-04-27T11:35:26.978-07:00'
 source: GitHub
 topics:
   - developer-tools
@@ -14,7 +14,7 @@ topics:
   - ai-coding-assistants
   - mcp
   - llm-agents
-compiled_at: '2026-05-01T03:59:52.923Z'
+compiled_at: '2026-04-30T20:59:52.923-07:00'
 compiled_with: claude-sonnet-4-6
 ---
 
