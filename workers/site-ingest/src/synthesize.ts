@@ -574,6 +574,7 @@ export function buildArticleMarkdown(args: {
     sources: [...args.sources].sort(),
     compiled_at: args.compiledAt.toISOString(),
     compiled_with: args.article.model,
+    compile_cost: args.article.cost,
   };
   return matter.stringify(args.article.body.trim(), data);
 }
