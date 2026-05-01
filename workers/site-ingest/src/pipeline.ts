@@ -162,7 +162,12 @@ async function commitToPR<S>(
   if (options.crosslink === "inline" && deps.runCrosslink) {
     crosslink = await deps.runCrosslink({ mutation, env });
     for (const f of crosslink.changedFiles) {
-      const existing = await deps.github.getFile(f.path, "main");
+      // Resolve sha against the synthesis branch, not main: files added by
+      // commitMutation in the same run only exist on `branch`, and files it
+      // changed have a fresh post-commit sha there. Reading from main would
+      // miss the former (404 → no sha → 422 "sha wasn't supplied" on put)
+      // and supply a stale sha for the latter.
+      const existing = await deps.github.getFile(f.path, branch);
       if (!existing.ok && !isNotFoundError(existing.error)) {
         return { ok: false, status: 502, error: `getFile ${f.path}: ${existing.error}` };
       }

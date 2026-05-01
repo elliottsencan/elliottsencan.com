@@ -214,6 +214,63 @@ describe("runPipeline (abort propagation)", () => {
     }
   });
 
+  it("resolves crosslink sha against the synthesis branch, not main, so newly-added files commit cleanly", async () => {
+    // Regression: when synthesize creates a new wiki article and the inline
+    // crosslink phase modifies it, the sha lookup must hit the branch (where
+    // the file now exists) and not main (where it 404s, leaving the sha
+    // undefined and triggering a 422 "sha wasn't supplied" on put).
+    const github = okGithubDeps();
+    const refsSeen: string[] = [];
+    github.getFile = vi.fn().mockImplementation(async (_path: string, ref: string) => {
+      refsSeen.push(ref);
+      if (ref === "main") {
+        return { ok: false, error: "404 not found" };
+      }
+      return { ok: true, data: { content: "stub", sha: "branch-sha-1" } };
+    });
+    const runCrosslink = vi.fn().mockResolvedValue({
+      forward: 1,
+      backward: 0,
+      applied: [{ path: "src/content/wiki/ai-agents.md", anchor: "y", target: "/wiki/y" }],
+      changedFiles: [
+        {
+          path: "src/content/wiki/ai-agents.md",
+          before: "raw",
+          after: "with-link",
+          frontmatter: { title: "AI Agents", summary: "x", sources: ["a", "b"] },
+        },
+      ],
+    });
+    const strategy = fakeStrategy({
+      plan: async () => ({
+        ok: true,
+        data: {
+          mutation: {
+            added: [{ path: "src/content/wiki/ai-agents.md", content: "raw" }],
+            changed: [],
+          },
+        },
+      }),
+    });
+    const result = await runPipeline(
+      strategy,
+      { commitTarget: "pr", crosslink: "inline" },
+      fakeEnv(),
+      fakeCtx(),
+      { github, runCrosslink },
+    );
+    expect(result.ok).toBe(true);
+    // commitMutation reads from main (added path) → 404 expected.
+    // Crosslink commit MUST read from the synthesis branch.
+    const crosslinkRef = refsSeen[refsSeen.length - 1];
+    expect(crosslinkRef).not.toBe("main");
+    expect(crosslinkRef?.startsWith("fake/")).toBe(true);
+    // Put used the branch-resolved sha, not undefined.
+    const putCalls = (github.putFile as unknown as { mock: { calls: Array<[Record<string, unknown>]> } }).mock.calls;
+    const crosslinkPut = putCalls.find(([arg]) => arg.message === "crosslink: src/content/wiki/ai-agents.md");
+    expect(crosslinkPut?.[0]?.sha).toBe("branch-sha-1");
+  });
+
   it("fires runCrosslink via ctx.waitUntil for followup (commitTarget=main)", async () => {
     const ctx = { waitUntil: vi.fn() } as unknown as ExecutionContext;
     const github = okGithubDeps();
