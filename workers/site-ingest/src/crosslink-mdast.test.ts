@@ -6,6 +6,7 @@ import {
   locateAnchor,
   locateAnchorInPassage,
   parseMarkdown,
+  repairWikiBodyLinks,
   spliceLinkAtTextNode,
   stringifyMarkdown,
 } from "./crosslink-mdast.ts";
@@ -223,5 +224,28 @@ describe("applyAnchorInsertion", () => {
     const body = "First world here.\n\nSecond world there.\n";
     const out = applyAnchorInsertion(body, "Second world there.", "world", "/wiki/world");
     expect(out).toBe("First world here.\n\nSecond [world](/wiki/world) there.\n");
+  });
+});
+
+describe("repairWikiBodyLinks → applyAnchorInsertion round-trip", () => {
+  // The synthesize prompt forbids /wiki links in the LLM output; repair strips
+  // any that slip through, then the validated crosslink phase re-inserts them
+  // by anchor + corpus snapshot. This pins the seam: after repair the anchor
+  // text remains, and a downstream crosslink can re-link it cleanly.
+  it("re-links a stripped /wiki anchor when the crosslink phase runs after", () => {
+    const raw = "Discussion of [model training](/wiki/model-training) techniques.";
+    const known = new Set<string>();
+    const repaired = repairWikiBodyLinks(raw, known);
+    expect(repaired.body).toBe("Discussion of model training techniques.");
+    expect(repaired.dropped).toEqual([
+      { url: "/wiki/model-training", anchor: "model training", reason: "wiki-link" },
+    ]);
+    const relinked = applyAnchorInsertion(
+      repaired.body,
+      "Discussion of model training techniques.",
+      "model training",
+      "/wiki/model-training",
+    );
+    expect(relinked).toBe("Discussion of [model training](/wiki/model-training) techniques.");
   });
 });

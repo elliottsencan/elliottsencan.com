@@ -23,6 +23,11 @@ import { MIN_WIKI_SOURCES, ReadingFrontmatterSchema } from "@shared/schemas/cont
 import matter from "gray-matter";
 import { z } from "zod";
 import { compileWikiArticle } from "./anthropic.ts";
+import {
+  type DroppedLink,
+  type DroppedLinkReason,
+  repairWikiBodyLinks,
+} from "./crosslink-mdast.ts";
 import { makeCrosslinkRunner } from "./crosslink-phase.ts";
 import {
   createBranch,
@@ -86,6 +91,7 @@ type SynthesizeSummary = {
   compiled: number;
   failed: Array<{ path: string; topic: string; error: string }>;
   skipped: Array<{ topic: string; reason: string }>;
+  auto_repaired: Array<{ topic: string; dropped: DroppedLink[] }>;
 };
 
 export function makeSynthesizeStrategy(req: SynthesizeRequest): Strategy<SynthesizeSummary> {
@@ -146,10 +152,12 @@ async function planSynthesis(
     cap: MAX_CONCEPTS_PER_RUN,
   });
 
+  const knownReadingSlugs = new Set(sourcesResult.data.map((s) => s.slug));
   const added: Mutation["added"] = [];
   const changed: Mutation["changed"] = [];
   const failed: SynthesizeSummary["failed"] = [];
   const skipped: SynthesizeSummary["skipped"] = [];
+  const autoRepaired: SynthesizeSummary["auto_repaired"] = [];
   for (const target of capped) {
     const article = await compileWikiArticle({
       apiKey: env.ANTHROPIC_API_KEY,
@@ -158,7 +166,6 @@ async function planSynthesis(
       userMessage: buildUserMessage({
         topic: target.topic,
         sources: target.sources,
-        otherActiveTopics: allActiveTopics.filter((t) => t !== target.topic),
       }),
     });
     if (!article.ok) {
@@ -169,8 +176,32 @@ async function planSynthesis(
       });
       continue;
     }
+    const repaired = repairWikiBodyLinks(article.data.body, knownReadingSlugs);
+    if (repaired.dropped.length > 0) {
+      log.warn("synthesize", "repair", "dropped invalid links", {
+        topic: target.topic,
+        count: repaired.dropped.length,
+        urls: repaired.dropped.map((d) => `${d.reason}:${d.url}`).join(","),
+      });
+      autoRepaired.push({ topic: target.topic, dropped: repaired.dropped });
+    }
+    // Wiki-link drops are expected (the prompt forbids them); only the
+    // unknown-reading-slug failures signal a malfunctioning prompt or stale
+    // source list and are worth refusing to ship over.
+    const unknownReadingDrops = repaired.dropped.filter(
+      (d) => d.reason === "unknown-reading-slug",
+    ).length;
+    const dropThreshold = Math.max(2, Math.ceil(target.sources.length / 4));
+    if (unknownReadingDrops > dropThreshold) {
+      failed.push({
+        path: `${WIKI_DIR}/${target.topic}.md`,
+        topic: target.topic,
+        error: `${unknownReadingDrops} invalid /reading citations after repair (threshold ${dropThreshold})`,
+      });
+      continue;
+    }
     const markdown = buildArticleMarkdown({
-      article: article.data,
+      article: { ...article.data, body: repaired.body },
       sources: target.sources.map((s) => s.slug),
       compiledAt: new Date(),
     });
@@ -188,6 +219,7 @@ async function planSynthesis(
     compiled: added.length + changed.length,
     failed,
     skipped,
+    auto_repaired: autoRepaired,
   };
 
   return {
@@ -199,13 +231,32 @@ async function planSynthesis(
   };
 }
 
+function droppedReasonLabel(reason: DroppedLinkReason): string {
+  switch (reason) {
+    case "unknown-reading-slug":
+      return "unknown reading slug";
+    case "wiki-link":
+      return "stripped /wiki link";
+    default: {
+      const _exhaustive: never = reason;
+      return _exhaustive;
+    }
+  }
+}
+
 function buildPrBody(plan: PlanOutput<SynthesizeSummary>, crosslink?: CrosslinkResult): string {
-  const summary = plan.summary ?? { active_topics: [], compiled: 0, failed: [], skipped: [] };
+  const summary = plan.summary ?? {
+    active_topics: [],
+    compiled: 0,
+    failed: [],
+    skipped: [],
+    auto_repaired: [],
+  };
   const writes = [
     ...plan.mutation.added.map((f) => f.path),
     ...plan.mutation.changed.map((f) => f.path),
   ];
-  const { skipped, failed } = summary;
+  const { skipped, failed, auto_repaired: autoRepaired } = summary;
   const lines: string[] = [
     "Automated wiki synthesis run.",
     "",
@@ -231,6 +282,14 @@ function buildPrBody(plan: PlanOutput<SynthesizeSummary>, crosslink?: CrosslinkR
     lines.push("", "### Skipped");
     for (const s of skipped) {
       lines.push(`- \`${s.topic}\` (${s.reason})`);
+    }
+  }
+  if (autoRepaired.length > 0) {
+    lines.push("", "### Auto-repaired body links");
+    for (const r of autoRepaired) {
+      for (const d of r.dropped) {
+        lines.push(`- \`${r.topic}\` — ${droppedReasonLabel(d.reason)}: \`${d.url}\``);
+      }
     }
   }
   if (crosslink && crosslink.applied.length > 0) {
@@ -457,11 +516,7 @@ export function clusterByTopic(
   return byTopic;
 }
 
-function buildUserMessage(args: {
-  topic: string;
-  sources: ReadingSource[];
-  otherActiveTopics: string[];
-}): string {
+function buildUserMessage(args: { topic: string; sources: ReadingSource[] }): string {
   const parts = [
     `Concept: ${args.topic}`,
     "",
@@ -480,12 +535,6 @@ function buildUserMessage(args: {
       `  summary: ${source.summary}`,
     );
   }
-  if (args.otherActiveTopics.length > 0) {
-    parts.push(
-      "",
-      `Other active concepts (use only these for related_concepts if relevant): ${args.otherActiveTopics.join(", ")}`,
-    );
-  }
   return parts.filter((line) => line !== "").join("\n");
 }
 
@@ -499,12 +548,9 @@ export function buildArticleMarkdown(args: {
     title: args.article.title,
     summary: args.article.summary,
     sources: [...args.sources].sort(),
+    compiled_at: args.compiledAt.toISOString(),
+    compiled_with: args.article.model,
   };
-  if (args.article.related_concepts && args.article.related_concepts.length > 0) {
-    data.related_concepts = args.article.related_concepts;
-  }
-  data.compiled_at = args.compiledAt.toISOString();
-  data.compiled_with = args.article.model;
   return matter.stringify(args.article.body.trim(), data);
 }
 

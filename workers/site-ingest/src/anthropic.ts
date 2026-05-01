@@ -188,7 +188,6 @@ export const WikiArticleSchema = z.object({
   // overruns fail at the worker tier instead of at next astro build.
   summary: z.string().min(1).max(240),
   body: z.string().min(1),
-  related_concepts: z.array(z.string()).optional(),
 });
 
 export type WikiArticle = z.infer<typeof WikiArticleSchema> & { model: string };

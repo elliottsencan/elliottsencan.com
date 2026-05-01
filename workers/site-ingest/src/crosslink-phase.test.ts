@@ -9,6 +9,7 @@ import {
   pathToPiece,
   scoreCandidate,
   selectCandidates,
+  snapshotToRows,
   validateProposal,
 } from "./crosslink-phase.ts";
 
@@ -622,5 +623,61 @@ describe("augmentSnapshot", () => {
     );
     const piece = augmented.wiki.find((w) => w.slug === "same");
     expect(piece?.body).toBe("updated body");
+  });
+});
+
+describe("snapshotToRows", () => {
+  const wiki = (slug: string, sources: string[]) => ({
+    slug,
+    path: `src/content/wiki/${slug}.md`,
+    frontmatter: {
+      title: slug,
+      summary: "x",
+      sources,
+      compiled_at: new Date("2026-04-01"),
+      compiled_with: "claude-opus-4-7",
+    },
+    body: "",
+  });
+
+  it("falls back to slug-only tags when no reading-topics map is supplied", () => {
+    const rows = snapshotToRows({ wiki: [wiki("a", ["2026-04/foo"])], blog: [] });
+    expect(rows[0]?.tags).toEqual(["a"]);
+  });
+
+  it("inherits topic tags from contributing reading sources", () => {
+    const readingTopics = new Map<string, string[]>([
+      ["2026-04/foo", ["responsive-design", "fluid-typography"]],
+      ["2026-04/bar", ["responsive-design"]],
+    ]);
+    const rows = snapshotToRows(
+      { wiki: [wiki("a", ["2026-04/foo", "2026-04/bar"])], blog: [] },
+      readingTopics,
+    );
+    expect(new Set(rows[0]?.tags)).toEqual(new Set(["a", "responsive-design", "fluid-typography"]));
+  });
+
+  it("dedupes shared topics across two wiki articles so they match each other", () => {
+    const readingTopics = new Map<string, string[]>([
+      ["2026-04/foo", ["responsive-design"]],
+      ["2026-04/bar", ["responsive-design"]],
+    ]);
+    const rows = snapshotToRows(
+      { wiki: [wiki("a", ["2026-04/foo"]), wiki("b", ["2026-04/bar"])], blog: [] },
+      readingTopics,
+    );
+    const aTags = rows.find((r) => r.piece.slug === "a")?.tags ?? [];
+    const bTags = rows.find((r) => r.piece.slug === "b")?.tags ?? [];
+    expect(aTags).toContain("responsive-design");
+    expect(bTags).toContain("responsive-design");
+  });
+
+  it("ignores sources missing from the reading-topics map", () => {
+    const readingTopics = new Map<string, string[]>();
+    const rows = snapshotToRows(
+      { wiki: [wiki("a", ["2026-04/missing"])], blog: [] },
+      readingTopics,
+    );
+    expect(rows[0]?.tags).toEqual(["a"]);
   });
 });
