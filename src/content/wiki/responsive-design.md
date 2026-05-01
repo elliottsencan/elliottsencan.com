@@ -1,21 +1,19 @@
 ---
 title: Responsive design
 summary: >-
-  Modern CSS primitives like clamp(), intrinsic grid, and container queries can
-  replace viewport breakpoints as the primary responsive engine, reserving media
-  queries for device capabilities and user preferences.
+  Modern CSS primitives like clamp() and container queries can replace
+  breakpoint-heavy media queries, letting layouts and typography scale
+  continuously rather than snapping at fixed viewport widths.
 sources:
   - 2026-04/2026-04-24t085352-building-a-ui-without-breakpoints
   - 2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp
-related_concepts:
-  - css-primitives
-compiled_at: '2026-05-01T03:36:12.654Z'
+compiled_at: '2026-05-01T05:13:03.972Z'
 compiled_with: claude-sonnet-4-6
 ---
-Responsive design is the practice of building layouts and typography that adapt to different screen sizes and contexts. The traditional approach relies on viewport-width breakpoints in media queries, but two recent sources argue that breakpoints are increasingly a workaround for problems CSS can now solve natively.
+Responsive design has long meant defining breakpoints where layouts shift: narrow viewport gets one set of rules, wide viewport gets another. Two recent approaches push against that model, arguing that modern CSS is expressive enough to make most breakpoints unnecessary.
 
-[Building a UI Without Breakpoints](/reading/2026-04/2026-04-24t085352-building-a-ui-without-breakpoints) makes the case that intrinsic grid layouts, `clamp()` fluid values, container units, and container queries together handle most adaptation at the component level, leaving media queries for things like `prefers-reduced-motion` or input type. The shift is conceptual: instead of telling every element what to do at each viewport width, you define constraints and let the browser resolve them.
+[Amit Sheen](/reading/2026-04/2026-04-24t085352-building-a-ui-without-breakpoints) makes the case that intrinsic grid layouts, `clamp()` fluid values, container units, and container queries together handle the bulk of what media queries used to do. Under this model, media queries survive for device capabilities and user preferences, not for raw viewport dimensions. The layout adapts because the primitives themselves are fluid, not because a threshold triggers a rule change.
 
-`clamp()` sits at the center of both sources. [Modern Fluid Typography Using CSS Clamp](/reading/2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp) focuses specifically on typography, showing how `clamp(min, preferred, max)` produces smooth scaling between size bounds without a single breakpoint. The same logic extends to spacing and layout when combined with viewport or container units as the middle value.
+The math behind `clamp()` is not intuitive, and [Adrian Bece](/reading/2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp) works through it specifically for typography. Given a minimum and maximum font size and the viewport widths at which each should apply, you can derive exact `vw` and `rem` parameters so type scales continuously between those bounds. The result is smooth interpolation with no media query boilerplate, though the calculation still requires understanding how the linear slope between two fixed points maps to CSS units.
 
-The practical upshot is that breakpoints remain useful but are no longer the primary design mechanism. Fluid sizing and intrinsic layout handle the continuous range; breakpoints handle the categorical differences.
+Both sources converge on the same underlying shift: fixed breakpoints model the designer's assumptions about device sizes, while fluid primitives model the content's own behavior across any size. The breakpoint approach requires you to predict every context; the fluid approach handles contexts you never anticipated.
