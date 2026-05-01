@@ -43,6 +43,9 @@ const MAX_ENTRIES_PER_RUN = 25;
 const IA_FETCH_TIMEOUT_MS = 10_000;
 const IA_MAX_BYTES = 500_000;
 const IA_EXCERPT_LENGTH = 16_000;
+const LIVE_FETCH_TIMEOUT_MS = 8_000;
+const LIVE_MAX_BYTES = 500_000;
+const LIVE_EXCERPT_LENGTH = 16_000;
 
 const ScopeSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("all") }),
@@ -62,7 +65,7 @@ const RecompileRequestSchema = z.object({
 
 export type RecompileRequest = z.infer<typeof RecompileRequestSchema>;
 
-type SkipReason = "no-snapshot" | "transient" | "frontmatter-invalid" | "other";
+type SkipReason = "no-source" | "transient" | "frontmatter-invalid" | "other";
 
 type RecompileResultRow = {
   path: string;
@@ -73,7 +76,7 @@ type RecompileResultRow = {
 
 type SkipPartition = {
   total: number;
-  no_snapshot: number;
+  no_source: number;
   transient: number;
   frontmatter_invalid: number;
   other: number;
@@ -149,7 +152,7 @@ export function makeRecompileStrategy(req: RecompileRequest): Strategy<Recompile
 export function partitionSkips(results: RecompileResultRow[]): SkipPartition {
   const partition: SkipPartition = {
     total: 0,
-    no_snapshot: 0,
+    no_source: 0,
     transient: 0,
     frontmatter_invalid: 0,
     other: 0,
@@ -160,8 +163,8 @@ export function partitionSkips(results: RecompileResultRow[]): SkipPartition {
     }
     partition.total += 1;
     switch (r.skip_reason) {
-      case "no-snapshot":
-        partition.no_snapshot += 1;
+      case "no-source":
+        partition.no_source += 1;
         break;
       case "transient":
         partition.transient += 1;
@@ -188,7 +191,7 @@ function buildPrBody(plan: PlanOutput<RecompileSummary>, crosslink?: CrosslinkRe
     `Automated recompile run. Scope: \`${JSON.stringify(summary.scope)}\`.`,
     "",
     `- Updated: ${updated.length}`,
-    `- Skipped: ${skips.total} (no_snapshot=${skips.no_snapshot}, transient=${skips.transient}, frontmatter_invalid=${skips.frontmatter_invalid}, other=${skips.other})`,
+    `- Skipped: ${skips.total} (no_source=${skips.no_source}, transient=${skips.transient}, frontmatter_invalid=${skips.frontmatter_invalid}, other=${skips.other})`,
     "",
     "### Updated",
     ...updated.map((r) => `- \`${r.path}\``),
@@ -404,24 +407,42 @@ type RecompileOutcome =
 
 async function recompileOne(entry: ParsedEntry, env: Env): Promise<RecompileOutcome> {
   const { url, title, added } = entry.frontmatter;
-  const archive = await fetchInternetArchive(url, added.toISOString());
-  if (!archive.ok) {
-    return {
-      ok: false,
-      error: `ia: ${archive.error}`,
-      skipReason: archive.kind === "no-snapshot" ? "no-snapshot" : "transient",
-    };
+
+  // Try the live URL first (closest to the original source /link saw at
+  // ingest). Fall back to Wayback only on link rot — that's what the
+  // archive is for. Empty live + empty Wayback = no source we can use.
+  const live = await fetchLivePage(url);
+  let excerpt: string;
+  if (live.ok) {
+    excerpt = live.data.excerpt;
+    log.info("recompile", "fetch", "using live page", { path: entry.path });
+  } else {
+    log.info("recompile", "fetch", "live failed, trying wayback", {
+      path: entry.path,
+      error: live.error,
+    });
+    const archive = await fetchInternetArchive(url, added.toISOString());
+    if (!archive.ok) {
+      const skipReason: SkipReason =
+        archive.kind === "no-snapshot" && live.kind === "missing" ? "no-source" : "transient";
+      return {
+        ok: false,
+        error: `live: ${live.error}; ia: ${archive.error}`,
+        skipReason,
+      };
+    }
+    excerpt = archive.data.excerpt;
+    log.info("recompile", "fetch", "using wayback snapshot", {
+      path: entry.path,
+      snapshot: archive.data.snapshotUrl,
+    });
   }
 
   const summary = await summarizeLink({
     apiKey: env.ANTHROPIC_API_KEY,
     model: env.ANTHROPIC_MODEL,
     systemPrompt: LINK_SUMMARY_SYSTEM,
-    userMessage: buildRecompileUserMessage({
-      title,
-      url,
-      excerpt: archive.data.excerpt,
-    }),
+    userMessage: buildRecompileUserMessage({ title, url, excerpt }),
   });
   if (!summary.ok) {
     return { ok: false, error: `anthropic: ${summary.error}`, skipReason: "transient" };
@@ -482,6 +503,64 @@ export function buildRecompiledMarkdown(args: {
   data.compiled_with = summary.model;
   // Reading entries are source citations, not articles — body stays empty.
   return matter.stringify("", data);
+}
+
+type LiveResult =
+  | { ok: true; data: { excerpt: string } }
+  // `missing` = 4xx (URL is gone or paywalled). `transient` = network /
+  // 5xx / timeout. The split lets recompileOne decide whether a Wayback
+  // miss should classify as no-source (live missing + no snapshot) vs.
+  // transient (live transient + no snapshot — worth retrying later).
+  | { ok: false; error: string; kind: "missing" | "transient" };
+
+async function fetchLivePage(url: string): Promise<LiveResult> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), LIVE_FETCH_TIMEOUT_MS);
+  try {
+    const res = await fetch(url, {
+      signal: controller.signal,
+      redirect: "follow",
+      headers: { "User-Agent": "site-ingest-recompile/0.1" },
+    });
+    if (!res.ok || !res.body) {
+      const kind: "missing" | "transient" =
+        res.status >= 400 && res.status < 500 ? "missing" : "transient";
+      return { ok: false, error: `live ${res.status}`, kind };
+    }
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder("utf-8");
+    let html = "";
+    while (html.length < LIVE_MAX_BYTES) {
+      const { done, value } = await reader.read();
+      if (done) {
+        break;
+      }
+      html += decoder.decode(value, { stream: true });
+    }
+    reader.cancel().catch((err: unknown) => {
+      log.info("recompile", "live-cancel", "reader cancel rejected", {
+        msg: err instanceof Error ? err.message : "unknown",
+      });
+    });
+    const excerpt = htmlToText(html, {
+      wordwrap: false,
+      selectors: [
+        { selector: "a", options: { ignoreHref: true } },
+        { selector: "img", format: "skip" },
+        { selector: "nav", format: "skip" },
+        { selector: "footer", format: "skip" },
+      ],
+    }).slice(0, LIVE_EXCERPT_LENGTH);
+    if (excerpt.length === 0) {
+      return { ok: false, error: "empty page", kind: "transient" };
+    }
+    return { ok: true, data: { excerpt } };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return { ok: false, error: msg, kind: "transient" };
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 type ArchiveResult =
