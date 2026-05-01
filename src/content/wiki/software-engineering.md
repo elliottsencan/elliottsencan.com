@@ -1,20 +1,18 @@
 ---
 title: Software engineering
 summary: >-
-  What makes effective software engineering is contested: one view warns that
-  over-delegating to AI agents erodes the critical thinking required to oversee
-  them; another argues algorithm fluency is a poor proxy for production skill.
+  The discipline of building production software demands contextual judgment and
+  comprehension that neither algorithmic puzzle-solving nor AI delegation can
+  substitute for, as both create skill gaps that compound over time.
 sources:
   - 2026-04/2026-04-27t145041-agentic-coding-is-a-trap
   - >-
     2026-04/2026-04-30t155134-learn-algorithms-for-interviews-forget-them-for-work
-compiled_at: '2026-05-01T05:21:54.569Z'
+compiled_at: '2026-05-01T05:35:26.311Z'
 compiled_with: claude-sonnet-4-6
 ---
-Two persistent tensions run through how software engineering gets defined and practiced: what skills actually matter, and how much of the work can or should be delegated.
+Two persistent myths in software engineering point to the same underlying confusion: that technical performance on isolated problems predicts real-world effectiveness. [Fagner Brack](/reading/2026-04/2026-04-30t155134-learn-algorithms-for-interviews-forget-them-for-work) argues that algorithm interview preparation trains a narrow, rehearsable skill with weak correlation to production work, where engineers must read business context, handle dirty inputs, and ship incremental value rather than solve clean puzzles on whiteboards.
 
-[Fagner Brack](/reading/2026-04/2026-04-30t155134-learn-algorithms-for-interviews-forget-them-for-work) makes the case that algorithm-focused interviews measure a trainable, narrow skill that has little to do with production performance. Real engineering, in that framing, means reading business context, handling messy inputs, and delivering incremental value rather than solving clean puzzle problems under a timer. The interview process selects for one thing while the job demands another.
+The analogy to AI-assisted coding is direct. [Lars Faye](/reading/2026-04/2026-04-27t145041-agentic-coding-is-a-trap) describes how fully delegating code generation to AI agents erodes the debugging and critical thinking skills required to oversee those same agents. The engineer who stops reading and reasoning about code loses the capacity to catch agent errors, creating a self-defeating loop. Faye also flags practical costs: vendor lock-in, unpredictable token expenses, and comprehension debt that accumulates as codebases grow harder to reason about.
 
-The gap between what looks like engineering and what engineering requires shows up again in [Lars Faye's argument](/reading/2026-04/2026-04-27t145041-agentic-coding-is-a-trap) against fully delegating code to AI agents. The trap is self-defeating: handing off coding to an agent means less practice reading, debugging, and reasoning about code, which is exactly the capacity needed to oversee and correct what the agent produces. Comprehension debt compounds, and vendor lock-in and unpredictable token costs accumulate alongside it.
-
-The two pieces point in the same direction from different angles. Optimizing for the wrong proxy, whether algorithmic puzzle-solving or raw output volume from an agent, can hollow out the judgment that makes someone capable of doing the work well. Engineering skill, in both accounts, is grounded in context-reading and critical thinking that does not survive pure delegation or pure performance.
+Both sources converge on the same point. Production engineering is a judgment discipline. Offloading the cognitive work, whether to interview-prep shortcuts or to autonomous agents, degrades the situated understanding that makes an engineer useful when something breaks or a requirement shifts. The skill that matters is not solving the problem in isolation but knowing enough to evaluate any proposed solution against a messy, real context.
