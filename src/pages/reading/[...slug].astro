@@ -1,0 +1,155 @@
+---
+import { type CollectionEntry, getCollection } from "astro:content";
+import Container from "@components/Container.astro";
+import LabeledRule from "@components/LabeledRule.astro";
+import Link from "@components/Link.astro";
+import Layout from "@layouts/Layout.astro";
+import { monthKey } from "@lib/utils";
+
+export async function getStaticPaths() {
+  const entries = await getCollection("reading");
+  return entries.map((entry) => ({
+    params: { slug: entry.id },
+    props: entry,
+  }));
+}
+
+type Props = CollectionEntry<"reading">;
+const entry = Astro.props;
+
+const wiki = await getCollection("wiki");
+const citingConcepts = wiki.filter((c) => c.data.sources.includes(entry.id));
+
+const allEntries = (await getCollection("reading")).filter((e) => e.id !== entry.id);
+const myTopics = new Set((entry.data.topics ?? []).map((t) => t.toLowerCase()));
+const myCatMonth = `${entry.data.category}:${monthKey(entry.id)}`;
+
+type RelatedReason = "topic" | "author" | "source" | "category-month";
+const related: Array<{ entry: CollectionEntry<"reading">; reason: RelatedReason }> = [];
+const seen = new Set<string>();
+for (const e of allEntries) {
+  if (seen.has(e.id)) {
+    continue;
+  }
+  let reason: RelatedReason | null = null;
+  if ((e.data.topics ?? []).some((t) => myTopics.has(t.toLowerCase()))) {
+    reason = "topic";
+  } else if (entry.data.author && e.data.author === entry.data.author) {
+    reason = "author";
+  } else if (entry.data.source && e.data.source === entry.data.source) {
+    reason = "source";
+  } else if (`${e.data.category}:${monthKey(e.id)}` === myCatMonth) {
+    reason = "category-month";
+  }
+  if (reason) {
+    seen.add(e.id);
+    related.push({ entry: e, reason });
+  }
+}
+const relatedCapped = related.slice(0, 8);
+
+const dateFormatter = new Intl.DateTimeFormat("en-US", {
+  day: "2-digit",
+  month: "short",
+  year: "numeric",
+});
+---
+
+<Layout title={`Reading: ${entry.data.title}`} description={entry.data.summary}>
+  <Container>
+    <div
+      class="space-y-10"
+      data-pagefind-body
+      data-pagefind-filter="type:Reading"
+    >
+      <LabeledRule>
+        <Link href="/reading/">Reading</Link> / {entry.id}
+      </LabeledRule>
+
+      <div class="space-y-3">
+        <h1 class="text-2xl font-semibold text-black dark:text-white">
+          {entry.data.title}
+        </h1>
+        <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
+          {entry.data.summary}
+        </p>
+        <p
+          class="font-mono text-xs uppercase tracking-wider text-black/50 dark:text-white/60"
+        >
+          {dateFormatter.format(entry.data.added)} &middot; {entry.data.category}
+          {
+            (entry.data.author || entry.data.source) && (
+              <>
+                {" · "}
+                {[entry.data.author, entry.data.source].filter(Boolean).join(", ")}
+              </>
+            )
+          }
+        </p>
+      </div>
+
+      <div>
+        <Link href={entry.data.url} external>
+          Read at the source &rarr;
+        </Link>
+      </div>
+
+      {
+        entry.data.topics && entry.data.topics.length > 0 && (
+          <section class="space-y-3">
+            <h2 class="font-mono text-xs uppercase tracking-wider text-black/50 dark:text-white/60">
+              Topics
+            </h2>
+            <ul class="not-prose flex flex-wrap gap-2 text-sm">
+              {entry.data.topics.map((topic) => (
+                <li class="rounded bg-black/5 px-2 py-1 font-mono text-xs dark:bg-white/10">
+                  {topic}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )
+      }
+
+      {
+        citingConcepts.length > 0 && (
+          <section class="space-y-4">
+            <h2 class="font-mono text-xs uppercase tracking-wider text-black/50 dark:text-white/60">
+              Cited by
+            </h2>
+            <ul class="not-prose flex flex-col gap-3 text-sm">
+              {citingConcepts.map((c) => (
+                <li class="space-y-1">
+                  <Link href={`/wiki/${c.id}/`}>{c.data.title}</Link>
+                  <p class="text-sm leading-relaxed text-black/75 dark:text-white/75">
+                    {c.data.summary}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )
+      }
+
+      {
+        relatedCapped.length > 0 && (
+          <section class="space-y-4">
+            <h2 class="font-mono text-xs uppercase tracking-wider text-black/50 dark:text-white/60">
+              Related
+            </h2>
+            <ul class="not-prose flex flex-col gap-3 text-sm">
+              {relatedCapped.map(({ entry: e, reason }) => (
+                <li>
+                  <Link href={`/reading/${e.id}/`}>{e.data.title}</Link>
+                  <span class="ml-2 font-mono text-[10px] uppercase tracking-widest text-black/40 dark:text-white/40">
+                    {reason}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )
+      }
+    </div>
+  </Container>
+</Layout>

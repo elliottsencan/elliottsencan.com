@@ -3,14 +3,20 @@
  * automation.
  *
  * Endpoints (all POST, all require `Authorization: Bearer ${API_TOKEN}`):
- *   POST /input    — queue a phone-shortcut input in KV (consumed by weekly
- *                    /now draft).
- *   POST /link     — synchronous: fetch → Anthropic summarize → commit a
- *                    reading entry to the repo.
- *   POST /trigger  — ad-hoc run of the /now draft pipeline. Same logic as
- *                    the cron; used for seeding and manual refresh.
- *   POST /consume  — clear the KV inputs snapshotted for a merged /now PR.
- *                    Called by the now-consume.yml workflow on merge.
+ *   POST /input      — queue a phone-shortcut input in KV (consumed by
+ *                      weekly /now draft).
+ *   POST /link       — synchronous: fetch → Anthropic summarize → commit
+ *                      a reading entry to the repo.
+ *   POST /trigger    — ad-hoc run of the /now draft pipeline. Same logic
+ *                      as the cron; used for seeding and manual refresh.
+ *   POST /consume    — clear the KV inputs snapshotted for a merged /now
+ *                      PR. Called by the now-consume.yml workflow on merge.
+ *   POST /synthesize — compile wiki concept articles from reading clusters.
+ *   POST /recompile  — rebuild reading entries via Wayback Machine.
+ *   POST /lint       — read-only health check on reading + wiki collections.
+ *   POST /contribute — file a manually-authored wiki article via PR.
+ *   POST /crosslink  — propose anchor-phrase link insertions across wiki
+ *                      and writing corpora as a reviewable PR.
  *
  * Cron trigger: runs the /now draft weekly.
  *
@@ -18,9 +24,14 @@
  */
 
 import * as consume from "./consume.ts";
+import * as contribute from "./contribute.ts";
+import * as crosslink from "./crosslink.ts";
 import * as inputs from "./inputs.ts";
 import * as link from "./link.ts";
+import * as lint from "./lint.ts";
 import * as now from "./now.ts";
+import * as recompile from "./recompile.ts";
+import * as synthesize from "./synthesize.ts";
 import type { Env } from "./types.ts";
 import { log, requireBearer, textResponse } from "./util.ts";
 
@@ -60,6 +71,26 @@ export default {
       return now.handle(env, "trigger");
     }
 
+    if (request.method === "POST" && url.pathname === "/synthesize") {
+      // Wiki concept compilation. Long-running like /recompile (multiple
+      // Anthropic calls per invocation), so it shares the trigger limiter.
+      const limited = await env.TRIGGER_LIMITER.limit({ key: ip });
+      if (!limited.success) {
+        return textResponse("rate limited", 429);
+      }
+      return synthesize.handle(request, env, ctx);
+    }
+
+    if (request.method === "POST" && url.pathname === "/recompile") {
+      // Runs longer than other endpoints (enumerates + rewrites many entries);
+      // share the trigger limiter to cap accidental repeat invocations.
+      const limited = await env.TRIGGER_LIMITER.limit({ key: ip });
+      if (!limited.success) {
+        return textResponse("rate limited", 429);
+      }
+      return recompile.handle(request, env, ctx);
+    }
+
     if (request.method === "POST" && url.pathname === "/consume") {
       // Low volume (one call per /now merge), so reuse the trigger limiter
       // rather than carving out a new binding.
@@ -68,6 +99,37 @@ export default {
         return textResponse("rate limited", 429);
       }
       return consume.handle(request, env);
+    }
+
+    if (request.method === "POST" && url.pathname === "/lint") {
+      // Read-only structural check. Reuse the trigger limiter to gate
+      // accidental repeat invocations from automation loops.
+      const limited = await env.TRIGGER_LIMITER.limit({ key: ip });
+      if (!limited.success) {
+        return textResponse("rate limited", 429);
+      }
+      return lint.handle(request, env);
+    }
+
+    if (request.method === "POST" && url.pathname === "/contribute") {
+      // File a manually-authored wiki article. Same write surface as
+      // /synthesize so it shares the trigger limiter.
+      const limited = await env.TRIGGER_LIMITER.limit({ key: ip });
+      if (!limited.success) {
+        return textResponse("rate limited", 429);
+      }
+      return contribute.handle(request, env, ctx);
+    }
+
+    if (request.method === "POST" && url.pathname === "/crosslink") {
+      // Cross-link suggestion run against existing content. Long-running
+      // (one Anthropic call per piece, capped at MAX_CROSSLINK_CALLS_PER_RUN);
+      // shares the trigger limiter with /synthesize and /recompile.
+      const limited = await env.TRIGGER_LIMITER.limit({ key: ip });
+      if (!limited.success) {
+        return textResponse("rate limited", 429);
+      }
+      return crosslink.handle(request, env, ctx);
     }
 
     return textResponse("not found", 404);

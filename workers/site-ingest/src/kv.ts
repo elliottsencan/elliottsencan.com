@@ -14,13 +14,7 @@
  */
 
 import { z } from "zod";
-import type {
-  ConsumeResult,
-  KeyedNowInput,
-  KVStore,
-  NowInput,
-  NowInputType,
-} from "./types.ts";
+import type { ConsumeResult, KeyedNowInput, KVStore, NowInput, NowInputType } from "./types.ts";
 import { log } from "./util.ts";
 
 // ---------- key shapes ----------
@@ -174,10 +168,7 @@ export async function writeConsumedSnapshot(
  * The snapshot is only removed on the fully-clean path so that every
  * failure mode remains debuggable and retryable.
  */
-export async function consumeSnapshot(
-  kv: KVStore,
-  branch: string,
-): Promise<ConsumeResult> {
+export async function consumeSnapshot(kv: KVStore, branch: string): Promise<ConsumeResult> {
   const key = consumedKey(branch);
   const raw = await kv.get(key);
   if (!raw) {

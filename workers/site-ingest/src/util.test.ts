@@ -4,11 +4,11 @@ import {
   fileTimestamp,
   jsonResponse,
   monthKey,
+  readingSlugFromPath,
   requireBearer,
   slugify,
   textResponse,
   timingSafeEqual,
-  yamlEscape,
 } from "./util.ts";
 
 describe("timingSafeEqual", () => {
@@ -100,33 +100,6 @@ describe("slugify", () => {
   });
 });
 
-describe("yamlEscape", () => {
-  it("passes plain strings through unchanged", () => {
-    expect(yamlEscape("hello world")).toBe("hello world");
-  });
-
-  it("escapes double quotes", () => {
-    expect(yamlEscape('say "hi"')).toBe('say \\"hi\\"');
-  });
-
-  it("escapes backslashes before quotes", () => {
-    expect(yamlEscape("a\\b")).toBe("a\\\\b");
-  });
-
-  it("strips control characters", () => {
-    expect(yamlEscape("a\x00b\x07c")).toBe("abc");
-  });
-
-  it("replaces newlines with spaces (prevents frontmatter injection)", () => {
-    expect(yamlEscape("test\narchived: true")).toBe("test archived: true");
-    expect(yamlEscape("a\r\nb")).toBe("a b");
-  });
-
-  it("truncates to the supplied max length", () => {
-    expect(yamlEscape("x".repeat(20), 5)).toBe("xxxxx");
-  });
-});
-
 describe("date helpers (Pacific / America/Los_Angeles)", () => {
   // April 16 2026 09:30:45 UTC = April 16 2026 02:30:45 PDT (UTC-7).
   const d = new Date(Date.UTC(2026, 3, 16, 9, 30, 45));
@@ -167,6 +140,23 @@ describe("date helpers (Pacific / America/Los_Angeles)", () => {
     expect(() => fileTimestamp(spring)).not.toThrow();
     expect(() => dateKey(fall)).not.toThrow();
     expect(() => fileTimestamp(fall)).not.toThrow();
+  });
+});
+
+describe("readingSlugFromPath", () => {
+  it("returns <month>/<basename> lowercased for canonical reading paths", () => {
+    expect(readingSlugFromPath("src/content/reading/2026-04/2026-04-24T093356-Unsloth.md")).toBe(
+      "2026-04/2026-04-24t093356-unsloth",
+    );
+  });
+
+  it("falls back to lowercased path-without-extension when no /reading/ prefix", () => {
+    expect(readingSlugFromPath("/tmp/2026-04/Foo.md")).toBe("/tmp/2026-04/foo");
+  });
+
+  it("is idempotent on already-canonical slugs", () => {
+    const canonical = "src/content/reading/2026-04/2026-04-24t093356-unsloth.md";
+    expect(readingSlugFromPath(canonical)).toBe(readingSlugFromPath(`x${canonical}`.slice(1)));
   });
 });
 

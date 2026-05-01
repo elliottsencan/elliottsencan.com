@@ -20,9 +20,7 @@ function makeKV(): KVStore {
     async list(opts) {
       const prefix = opts?.prefix ?? "";
       return {
-        keys: [...store.keys()]
-          .filter((k) => k.startsWith(prefix))
-          .map((name) => ({ name })),
+        keys: [...store.keys()].filter((k) => k.startsWith(prefix)).map((name) => ({ name })),
         list_complete: true,
       };
     },
@@ -112,10 +110,7 @@ describe("consume.handle", () => {
   it("rejects validation failure with 400", async () => {
     const env = makeEnv(makeKV());
     // Long enough to pass min-length, but missing the prefix.
-    const res = await handle(
-      postRequest(JSON.stringify({ branch: "feature/some-branch" })),
-      env,
-    );
+    const res = await handle(postRequest(JSON.stringify({ branch: "feature/some-branch" })), env);
     expect(res.status).toBe(400);
     const body = (await res.json()) as { ok: boolean; error: string };
     expect(body.ok).toBe(false);
@@ -131,10 +126,7 @@ describe("consume.handle", () => {
     await writeConsumedSnapshot(kv, "now-update/2026-04-17", keys);
 
     const env = makeEnv(kv);
-    const res = await handle(
-      postRequest(JSON.stringify({ branch: "now-update/2026-04-17" })),
-      env,
-    );
+    const res = await handle(postRequest(JSON.stringify({ branch: "now-update/2026-04-17" })), env);
     expect(res.status).toBe(200);
     await expect(res.json()).resolves.toEqual({
       ok: true,
@@ -145,10 +137,7 @@ describe("consume.handle", () => {
 
   it("returns 200 with status=no-snapshot when nothing to clear", async () => {
     const env = makeEnv(makeKV());
-    const res = await handle(
-      postRequest(JSON.stringify({ branch: "now-update/2026-04-17" })),
-      env,
-    );
+    const res = await handle(postRequest(JSON.stringify({ branch: "now-update/2026-04-17" })), env);
     expect(res.status).toBe(200);
     await expect(res.json()).resolves.toEqual({
       ok: true,
@@ -160,10 +149,7 @@ describe("consume.handle", () => {
     const kv = makeKV();
     await kv.put(consumedKey("now-update/2026-04-17"), "{not valid");
     const env = makeEnv(kv);
-    const res = await handle(
-      postRequest(JSON.stringify({ branch: "now-update/2026-04-17" })),
-      env,
-    );
+    const res = await handle(postRequest(JSON.stringify({ branch: "now-update/2026-04-17" })), env);
     expect(res.status).toBe(500);
     await expect(res.json()).resolves.toEqual({
       ok: false,
@@ -205,10 +191,7 @@ describe("consume.handle", () => {
     await writeConsumedSnapshot(kv, "now-update/2026-04-17", [okKey, failKey]);
 
     const env = makeEnv(kv);
-    const res = await handle(
-      postRequest(JSON.stringify({ branch: "now-update/2026-04-17" })),
-      env,
-    );
+    const res = await handle(postRequest(JSON.stringify({ branch: "now-update/2026-04-17" })), env);
     expect(res.status).toBe(500);
     await expect(res.json()).resolves.toEqual({
       ok: false,

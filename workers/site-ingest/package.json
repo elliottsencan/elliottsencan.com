@@ -22,12 +22,20 @@
     "date-fns": "^4.1.0",
     "date-fns-tz": "^3.2.0",
     "gray-matter": "^4.0.3",
+    "html-entities": "^2.6.0",
+    "html-to-text": "^9.0.5",
+    "mdast-util-from-markdown": "^2.0.3",
+    "mdast-util-gfm": "^3.1.0",
+    "mdast-util-to-markdown": "^2.1.2",
+    "micromark-extension-gfm": "^3.0.0",
     "octokit": "^5.0.0",
     "slugify": "^1.6.9",
     "zod": "^4.0.0"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250101.0",
+    "@types/html-to-text": "^9.0.4",
+    "@types/mdast": "^4.0.4",
     "typescript": "^5.9.3",
     "vitest": "^2.1.0",
     "wrangler": "^4.0.0"

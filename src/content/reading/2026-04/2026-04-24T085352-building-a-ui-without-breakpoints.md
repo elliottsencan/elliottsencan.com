@@ -6,5 +6,8 @@ category: tech
 added: 2026-04-24T15:53:52.177Z
 author: "Amit Sheen"
 source: "Frontend Masters Blog"
+topics: ["responsive-design", "css-primitives", "container-queries"]
+compiled_at: 2026-04-24T15:53:52.177Z
+compiled_with: claude-sonnet-4-6
 ---
 

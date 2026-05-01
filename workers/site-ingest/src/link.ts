@@ -6,34 +6,123 @@
  *   2. If title missing, fetch the URL and extract <title> via regex.
  *      Fallback: hostname. We never fail the request over this step.
  *   3. Call Anthropic to produce a strict-JSON summary + category.
- *   4. Compose a markdown entry and commit it directly to main.
+ *   4. Compose a markdown entry and commit it directly to main via the
+ *      runPipeline substrate. The cross-link follow-up PR (proposing links
+ *      from existing wiki/blog content into the new reading entry) fires
+ *      after the synchronous response returns, via ctx.waitUntil.
  *
  * Auth + rate limiting already enforced upstream in index.ts.
  */
 
+import matter from "gray-matter";
+import { decode as decodeHtmlEntities } from "html-entities";
 import { z } from "zod";
 import { summarizeLink } from "./anthropic.ts";
-import { createGitHubClient, getBranchSha, getFile, putFile } from "./github.ts";
+import { type PlanResult, runPipeline, type Strategy } from "./pipeline.ts";
 import { LINK_SUMMARY_SYSTEM } from "./prompts.ts";
+import { makePipelineDeps } from "./synthesize.ts";
 import type { Env, LinkRequest, LinkSummary, Result } from "./types.ts";
-import { fileTimestamp, jsonResponse, log, monthKey, slugify, yamlEscape } from "./util.ts";
+import { fileTimestamp, jsonResponse, log, monthKey, slugify } from "./util.ts";
 
 // iOS Safari share sheet can pass whole article text as `excerpt` when the
-// user hasn't selected anything. 10 KB bounces legit shares; 100 KB still
-// caps adversarial payloads and excerpt is truncated to MAX_EXCERPT_LENGTH
-// post-parse, so the stored value stays bounded regardless. 16 KB excerpt
-// gives Anthropic enough context for longform tech articles (~$0.015/call
-// at Sonnet 4.6 prices) while keeping prompt budget reasonable.
+// user hasn't selected anything. 100 KB caps adversarial payloads and
+// excerpt is truncated to MAX_EXCERPT_LENGTH post-parse, so the stored
+// value stays bounded regardless.
 const MAX_BODY_BYTES = 100_000;
 const MAX_EXCERPT_LENGTH = 16_000;
 const MAX_PAGE_FETCH_BYTES = 200_000;
 const PAGE_FETCH_TIMEOUT_MS = 5000;
 
-export async function handle(
-  request: Request,
-  env: Env,
-  _ctx: ExecutionContext,
-): Promise<Response> {
+type TitleSource = "model" | "fetched" | "hostname";
+
+type LinkSummaryRow = {
+  path: string;
+  category: string;
+  topics_context_loaded: boolean;
+  title_source: TitleSource;
+};
+
+// ---------- strategy ----------
+
+export function makeLinkStrategy(req: LinkRequest): Strategy<LinkSummaryRow> {
+  return {
+    name: "link",
+    branchPrefix: "link",
+    plan: async ({ env }): Promise<PlanResult<LinkSummaryRow>> => {
+      const resolvedTitle = req.title ?? (await fetchPageTitle(req.url));
+      const topicsContext = await loadExistingTopics();
+
+      const summaryResult = await summarizeLink({
+        apiKey: env.ANTHROPIC_API_KEY,
+        model: env.ANTHROPIC_MODEL,
+        systemPrompt: LINK_SUMMARY_SYSTEM,
+        userMessage: buildLinkUserMessage({
+          title: resolvedTitle,
+          url: req.url,
+          excerpt: req.excerpt,
+          existingTopics: topicsContext.topics,
+        }),
+      });
+      if (!summaryResult.ok) {
+        return { ok: false, status: 502, error: `summarize: ${summaryResult.error}` };
+      }
+      const summary = summaryResult.data;
+
+      const added = new Date();
+      const cleanedTitle = summary.title?.trim();
+      let finalTitle: string;
+      let titleSource: TitleSource;
+      if (cleanedTitle) {
+        finalTitle = cleanedTitle;
+        titleSource = "model";
+      } else if (resolvedTitle) {
+        finalTitle = resolvedTitle;
+        titleSource = "fetched";
+      } else {
+        finalTitle = new URL(req.url).hostname;
+        titleSource = "hostname";
+      }
+      const markdown = buildEntryMarkdown({
+        title: finalTitle,
+        titleSource,
+        url: req.url,
+        summary,
+        added,
+      });
+      const path = buildEntryPath({ env, added, title: finalTitle });
+      const summaryRow: LinkSummaryRow = {
+        path,
+        category: summary.category,
+        topics_context_loaded: topicsContext.loaded,
+        title_source: titleSource,
+      };
+      return {
+        ok: true,
+        data: {
+          mutation: { added: [{ path, content: markdown }], changed: [] },
+          summary: summaryRow,
+        },
+      };
+    },
+    // /link is committed directly to main, so the substrate never opens
+    // a PR for the strategy itself. These are still required by the
+    // Strategy contract; they only run if the followup wiring opens a PR
+    // (which it does separately, with its own title/body).
+    prTitle: () => "",
+    prBody: () => "",
+    commitMessage: (input) => {
+      const fm = matter(input.kind === "added" ? input.content : input.after).data as {
+        title?: string;
+      };
+      const title = (fm.title ?? "").slice(0, 60) || "entry";
+      return `reading: ${title}`;
+    },
+  };
+}
+
+// ---------- handler ----------
+
+export async function handle(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const raw = await request.text();
   if (raw.length > MAX_BODY_BYTES) {
     return jsonResponse({ ok: false, error: "body too large" }, 413);
@@ -50,75 +139,34 @@ export async function handle(
   if (!validation.ok) {
     return jsonResponse({ ok: false, error: validation.error }, 400);
   }
-  const body = validation.data;
+  const strategy = makeLinkStrategy(validation.data);
 
-  // Resolve title if missing. Best-effort; page fetch failures don't block.
-  const resolvedTitle = body.title ?? (await fetchPageTitle(body.url));
-
-  // Falls back to a stub summary if Anthropic is unavailable so a transient
-  // outage doesn't lose the link entirely. The stub is committed to the
-  // repo but the response signals `degraded: true` so the client knows the
-  // entry needs a manual pass.
-  const summaryResult = await summarizeLink({
-    apiKey: env.ANTHROPIC_API_KEY,
-    model: env.ANTHROPIC_MODEL,
-    systemPrompt: LINK_SUMMARY_SYSTEM,
-    userMessage: buildLinkUserMessage({
-      title: resolvedTitle,
-      url: body.url,
-      excerpt: body.excerpt,
-    }),
-  });
-
-  const degraded = !summaryResult.ok;
-  // On degraded path, title is empty so the fallback chain in the caller
-  // picks the page-fetched title (or hostname) instead.
-  const summary: LinkSummary = summaryResult.ok
-    ? summaryResult.data
-    : { title: "", summary: "Saved link.", category: "other" };
-  if (!summaryResult.ok) {
-    log.warn("link", "summarize", "using stub summary after failure", {
-      error: summaryResult.error,
-    });
-  }
-
-  const added = new Date();
-  // Title priority: AI-cleaned > page-fetched > hostname. The AI-cleaned
-  // title strips GitHub's "GitHub - org/repo: description" boilerplate,
-  // publisher suffixes like " - NYT", and hostname-only fallbacks into a
-  // short archive-friendly form. Non-empty check guards against a
-  // degenerate empty string that would otherwise produce a blank title.
-  const cleanedTitle = summary.title?.trim();
-  const finalTitle =
-    cleanedTitle || resolvedTitle || new URL(body.url).hostname;
-  const markdown = buildEntryMarkdown({
-    title: finalTitle,
-    url: body.url,
-    summary,
-    added,
-  });
-  const path = buildEntryPath({ env, added, title: finalTitle });
-  const commitResult = await commitEntry({
+  const deps = makePipelineDeps(env);
+  const result = await runPipeline(
+    strategy,
+    { commitTarget: "main", crosslink: "followup" },
     env,
-    path,
-    markdown,
-    title: finalTitle,
-  });
-  if (!commitResult.ok) {
-    return jsonResponse({ ok: false, error: commitResult.error }, 500);
+    ctx,
+    deps,
+  );
+  if (!result.ok) {
+    return jsonResponse({ ok: false, error: result.error }, result.status);
   }
-
+  const summary = result.summary;
   log.info("link", "commit", "reading entry committed", {
-    path,
-    category: summary.category,
+    path: summary?.path,
+    category: summary?.category,
+    topics_context_loaded: summary?.topics_context_loaded,
+    title_source: summary?.title_source,
   });
   return jsonResponse(
     {
       ok: true,
-      path,
-      category: summary.category,
-      commit: commitResult.commitSha,
-      ...(degraded ? { degraded: true } : {}),
+      path: summary?.path,
+      category: summary?.category,
+      topics_context_loaded: summary?.topics_context_loaded ?? false,
+      title_source: summary?.title_source,
+      commit: result.commit_sha,
     },
     200,
   );
@@ -128,8 +176,6 @@ export async function handle(
 
 const MAX_TITLE_LENGTH = 200;
 
-// Trim + truncate a string field to `max` chars; empty-string / null inputs
-// fold to undefined so callers can drop the field entirely.
 const optionalTrimmedString = (max: number) =>
   z.preprocess(
     (v) => (v === "" || v === null ? undefined : v),
@@ -169,6 +215,64 @@ export function validate(input: unknown): Result<LinkRequest> {
   return { ok: false, error: `${path}: ${message}` };
 }
 
+// ---------- existing topics ----------
+
+const READING_JSON_URL = "https://elliottsencan.com/reading.json";
+const TOPICS_FETCH_TIMEOUT_MS = 3000;
+const MAX_TOPICS_IN_PROMPT = 60;
+
+/**
+ * Load the union of topic slugs already in use across the reading log.
+ * Source is the public `reading.json` because it's a single Cloudflare-
+ * edge-cached HTTP fetch — much cheaper than enumerating GitHub contents
+ * per ingest. Best-effort: any failure returns an empty list.
+ */
+const ReadingIndexSchema = z.object({
+  entries: z.array(z.object({ topics: z.array(z.string()).optional() })),
+});
+
+type TopicsContext = { topics: string[]; loaded: boolean };
+
+async function loadExistingTopics(): Promise<TopicsContext> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), TOPICS_FETCH_TIMEOUT_MS);
+  try {
+    const res = await fetch(READING_JSON_URL, { signal: controller.signal });
+    if (!res.ok) {
+      log.warn("link", "topics", "reading.json fetch failed", { status: res.status });
+      return { topics: [], loaded: false };
+    }
+    const raw = await res.json();
+    const parsed = ReadingIndexSchema.safeParse(raw);
+    if (!parsed.success) {
+      log.error("link", "topics", "reading.json shape changed", {
+        issues: parsed.error.issues.length,
+        first: parsed.error.issues[0]?.path.join(".") ?? "(root)",
+      });
+      return { topics: [], loaded: false };
+    }
+    const seen = new Set<string>();
+    for (const entry of parsed.data.entries) {
+      for (const t of entry.topics ?? []) {
+        if (t.length > 0) {
+          seen.add(t);
+        }
+      }
+    }
+    return {
+      topics: [...seen].sort().slice(0, MAX_TOPICS_IN_PROMPT),
+      loaded: true,
+    };
+  } catch (err) {
+    log.warn("link", "topics", "reading.json fetch threw", {
+      msg: err instanceof Error ? err.message : "unknown",
+    });
+    return { topics: [], loaded: false };
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 // ---------- page title fetch ----------
 
 async function fetchPageTitle(url: string): Promise<string | undefined> {
@@ -184,8 +288,6 @@ async function fetchPageTitle(url: string): Promise<string | undefined> {
       return undefined;
     }
 
-    // HTML <title> is near the top, so a partial read is sufficient.
-    // Stream-decode until we have enough characters, then cancel.
     const reader = res.body.getReader();
     const decoder = new TextDecoder("utf-8");
     let html = "";
@@ -196,7 +298,11 @@ async function fetchPageTitle(url: string): Promise<string | undefined> {
       }
       html += decoder.decode(value, { stream: true });
     }
-    reader.cancel().catch(() => {});
+    reader.cancel().catch((err: unknown) => {
+      log.info("link", "fetch-cancel", "reader cancel rejected", {
+        msg: err instanceof Error ? err.message : "unknown",
+      });
+    });
 
     const match = /<title[^>]*>([^<]+)<\/title>/i.exec(html);
     if (!match?.[1]) {
@@ -213,37 +319,22 @@ async function fetchPageTitle(url: string): Promise<string | undefined> {
   }
 }
 
-function decodeHtmlEntities(s: string): string {
-  return (
-    s
-      // Named entities — common set sufficient for page titles.
-      .replace(/&amp;/g, "&")
-      .replace(/&lt;/g, "<")
-      .replace(/&gt;/g, ">")
-      .replace(/&quot;/g, '"')
-      .replace(/&apos;/g, "'")
-      .replace(/&nbsp;/g, " ")
-      // Hex numeric entities — &#x27; (apostrophe), &#x2014; (em dash), etc.
-      .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) =>
-        String.fromCodePoint(Number.parseInt(hex, 16)),
-      )
-      // Decimal numeric entities — &#39; (apostrophe), &#8212; (em dash), etc.
-      .replace(/&#(\d+);/g, (_, num) => String.fromCodePoint(Number.parseInt(num, 10)))
-  );
-}
-
 // ---------- markdown composition ----------
 
 function buildLinkUserMessage(args: {
   title?: string | undefined;
   url: string;
   excerpt?: string | undefined;
+  existingTopics: string[];
 }): string {
   const parts = [
     "Article data for summarization:",
     `Title: ${args.title ?? "(unknown)"}`,
     `URL: ${args.url}`,
   ];
+  if (args.existingTopics.length > 0) {
+    parts.push("", `Existing topics in use: ${args.existingTopics.join(", ")}`);
+  }
   if (args.excerpt) {
     parts.push("", "Excerpt:", args.excerpt);
   }
@@ -252,27 +343,35 @@ function buildLinkUserMessage(args: {
 
 function buildEntryMarkdown(args: {
   title: string;
+  titleSource: TitleSource;
   url: string;
   summary: LinkSummary;
   added: Date;
 }): string {
-  const { title, url, summary, added } = args;
-  const lines = [
-    "---",
-    `title: "${yamlEscape(title, 200)}"`,
-    `url: ${url}`,
-    `summary: "${yamlEscape(summary.summary, 240)}"`,
-    `category: ${summary.category}`,
-    `added: ${added.toISOString()}`,
-  ];
+  const { title, titleSource, url, summary, added } = args;
+  const data: Record<string, unknown> = {
+    title,
+    url,
+    summary: summary.summary,
+    category: summary.category,
+    added: added.toISOString(),
+  };
   if (summary.author) {
-    lines.push(`author: "${yamlEscape(summary.author, 80)}"`);
+    data.author = summary.author;
   }
   if (summary.source) {
-    lines.push(`source: "${yamlEscape(summary.source, 80)}"`);
+    data.source = summary.source;
   }
-  lines.push("---", "");
-  return `${lines.join("\n")}\n`;
+  if (summary.topics.length > 0) {
+    data.topics = summary.topics;
+  }
+  data.compiled_at = added.toISOString();
+  data.compiled_with = summary.model;
+  data.title_source = titleSource;
+  // Body intentionally empty: reading entries are source citations, not
+  // wiki articles. Cross-source synthesis lives in src/content/wiki/,
+  // produced by the /synthesize pipeline.
+  return matter.stringify("", data);
 }
 
 function buildEntryPath(args: { env: Env; added: Date; title: string }): string {
@@ -280,39 +379,4 @@ function buildEntryPath(args: { env: Env; added: Date; title: string }): string 
   const timestamp = fileTimestamp(args.added);
   const slug = slugify(args.title);
   return `${args.env.READING_DIR}/${month}/${timestamp}-${slug}.md`;
-}
-
-// ---------- commit ----------
-
-async function commitEntry(args: {
-  env: Env;
-  path: string;
-  markdown: string;
-  title: string;
-}): Promise<{ ok: true; commitSha: string } | { ok: false; error: string }> {
-  const gh = createGitHubClient(args.env.GITHUB_TOKEN, args.env.GITHUB_REPO);
-  // Confirm main exists (sanity check; also catches invalid repo config early).
-  const mainSha = await getBranchSha("main", gh);
-  if (!mainSha.ok) {
-    return { ok: false, error: `failed to resolve main: ${mainSha.error}` };
-  }
-
-  // Check whether the path already exists (extremely rare collision). If so,
-  // pass the blob SHA so the PUT succeeds as an update. Usually this returns
-  // not-found and we create the file fresh.
-  const existing = await getFile(args.path, "main", gh);
-  const existingSha = existing.ok ? existing.data.sha : undefined;
-
-  const put = await putFile({
-    path: args.path,
-    branch: "main",
-    content: args.markdown,
-    message: `reading: ${args.title.slice(0, 60)}`,
-    ...(existingSha ? { sha: existingSha } : {}),
-    gh,
-  });
-  if (!put.ok) {
-    return { ok: false, error: put.error };
-  }
-  return { ok: true, commitSha: put.data.commitSha };
 }

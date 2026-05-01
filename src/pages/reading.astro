@@ -5,23 +5,24 @@ import EditorialRule from "@components/EditorialRule.astro";
 import LabeledRule from "@components/LabeledRule.astro";
 import Link from "@components/Link.astro";
 import Layout from "@layouts/Layout.astro";
+import { monthKey } from "@lib/utils";
 
-// Reading log. Every entry is public — the site-ingest worker commits a
-// markdown file to src/content/reading/{YYYY-MM}/ each time the mobile
-// shortcut pings /link with a URL. Anthropic drafts the summary + category;
-// nothing is hand-edited post-commit unless I decide to.
+// Reading log — the per-source citation index. Every entry is public; the
+// site-ingest worker commits a markdown file to src/content/reading/{YYYY-MM}/
+// each time the mobile shortcut pings /link with a URL. Anthropic drafts the
+// summary, category, and topics; nothing is hand-edited post-commit unless I
+// decide to. Cross-source synthesis (one article per concept, drawing on
+// multiple sources from this index) lives at /wiki.
 const entries = (await getCollection("reading")).sort(
   (a, b) => b.data.added.valueOf() - a.data.added.valueOf(),
 );
 
 type Entry = CollectionEntry<"reading">;
 
-function monthKey(date: Date): string {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-}
-
-function monthLabel(date: Date): string {
-  return `${date.toLocaleString("en-US", { month: "long" })} ${date.getFullYear()}`;
+function monthLabel(key: string): string {
+  const [year, month] = key.split("-").map(Number);
+  const date = new Date(Date.UTC(year, month - 1, 1, 12));
+  return `${date.toLocaleString("en-US", { month: "long", timeZone: "UTC" })} ${year}`;
 }
 
 // Group into ordered buckets by month, preserving reverse-chron order so
@@ -30,12 +31,12 @@ function monthLabel(date: Date): string {
 type Bucket = { key: string; label: string; entries: Entry[] };
 const buckets: Bucket[] = [];
 for (const entry of entries) {
-  const key = monthKey(entry.data.added);
+  const key = monthKey(entry.id);
   const last = buckets[buckets.length - 1];
   if (last && last.key === key) {
     last.entries.push(entry);
   } else {
-    buckets.push({ key, label: monthLabel(entry.data.added), entries: [entry] });
+    buckets.push({ key, label: monthLabel(key), entries: [entry] });
   }
 }
 
@@ -57,6 +58,13 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
       data-pagefind-filter="type:Reading"
     >
       <LabeledRule>Reading</LabeledRule>
+
+      <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
+        Per-source citation index. Each entry is one URL with a short
+        AI-compiled summary and topic tags. Cross-source synthesis lives at the{" "}
+        <Link href="/wiki">wiki</Link>, where any concept with two or more
+        contributing sources gets a compiled article.
+      </p>
 
       {
         buckets.length > 0 ? (
