@@ -23,8 +23,11 @@ import type { Result } from "./types.ts";
 import { log } from "./util.ts";
 
 const DEFAULT_MODEL = "claude-sonnet-4-6";
-const MAX_ANTHROPIC_RETRIES = 3;
+const MAX_ANTHROPIC_RETRIES = 5;
 const RETRY_BASE_DELAY_MS = 500;
+// Cap on `retry-after` so a long Anthropic-suggested wait can't blow past
+// the Cloudflare Worker subrequest budget on a single attempt.
+const RETRY_AFTER_MAX_MS = 15_000;
 
 export const LinkSummarySchema = z.object({
   title: z.string(),
@@ -63,6 +66,24 @@ function isRetryable(err: unknown): boolean {
   return err.status === 429 || (err.status >= 500 && err.status < 600);
 }
 
+function retryDelayMs(err: unknown, attempt: number): number {
+  // For 429s, prefer Anthropic's `retry-after` header — it tells us exactly
+  // when the rate-limit window reopens. Caller's exponential backoff is the
+  // fallback for 5xx and for 429s that don't surface a usable header.
+  if (err instanceof Anthropic.APIError && err.status === 429) {
+    const headers = (err as { headers?: Record<string, string | undefined> }).headers ?? {};
+    const retryAfter = headers["retry-after"] ?? headers["x-ratelimit-reset"];
+    if (retryAfter) {
+      const seconds = Number(retryAfter);
+      if (Number.isFinite(seconds) && seconds > 0) {
+        return Math.min(seconds * 1000, RETRY_AFTER_MAX_MS);
+      }
+    }
+  }
+  // Exponential backoff with jitter: 500ms, 1000ms, 2000ms, 4000ms, ...
+  return RETRY_BASE_DELAY_MS * 2 ** (attempt - 1) + Math.floor(Math.random() * 250);
+}
+
 async function withRetries<T>(op: string, fn: () => Promise<T>): Promise<T> {
   let lastErr: unknown;
   for (let attempt = 1; attempt <= MAX_ANTHROPIC_RETRIES; attempt++) {
@@ -74,8 +95,7 @@ async function withRetries<T>(op: string, fn: () => Promise<T>): Promise<T> {
       lastErr = err;
       const status = err instanceof Anthropic.APIError ? err.status : "throw";
       if (attempt < MAX_ANTHROPIC_RETRIES && isRetryable(err)) {
-        // Exponential backoff with jitter: 500ms, 1000ms, ... + up to 250ms.
-        const delay = RETRY_BASE_DELAY_MS * 2 ** (attempt - 1) + Math.floor(Math.random() * 250);
+        const delay = retryDelayMs(err, attempt);
         log.warn("anthropic", "request", "retry", { op, attempt, status, delay_ms: delay });
         await new Promise((resolve) => setTimeout(resolve, delay));
         continue;
