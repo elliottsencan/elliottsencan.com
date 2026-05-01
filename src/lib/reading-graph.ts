@@ -1,4 +1,5 @@
 import { monthKey } from "@lib/utils";
+import type { CompileCost } from "@lib/schemas/content";
 
 /**
  * Pure transform behind /reading.json — kept out of the Astro endpoint
@@ -30,6 +31,7 @@ export type ReadingGraphEntry = {
   topics: string[];
   compiled_at: string | undefined;
   compiled_with: string | undefined;
+  compile_cost: CompileCost | undefined;
   wiki_concepts: string[];
   related: Related[];
 };
@@ -58,6 +60,7 @@ export type ReadingInput = {
     topics?: string[];
     compiled_at?: Date;
     compiled_with?: string;
+    compile_cost?: CompileCost;
   };
 };
 
@@ -161,6 +164,7 @@ export function buildReadingGraph(
         topics: entry.data.topics ?? [],
         compiled_at: entry.data.compiled_at?.toISOString(),
         compiled_with: entry.data.compiled_with,
+        compile_cost: entry.data.compile_cost,
         wiki_concepts: wikiByEntry.get(entry.id) ?? [],
         related: related.slice(0, 8),
       };

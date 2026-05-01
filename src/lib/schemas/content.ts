@@ -132,6 +132,7 @@ export const BlogFrontmatterSchema = z.object({
   series: z.string().optional(),
 });
 
+export type CompileCost = z.infer<typeof CompileCostSchema>;
 export type ReadingCategory = z.infer<typeof ReadingCategorySchema>;
 export type NowFrontmatter = z.infer<typeof NowFrontmatterSchema>;
 export type NowArchiveFrontmatter = z.infer<typeof NowArchiveFrontmatterSchema>;
