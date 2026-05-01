@@ -1,16 +1,9 @@
 import { type ClassValue, clsx } from "clsx";
+import { formatInTimeZone } from "date-fns-tz";
 import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
-}
-
-export function formatDate(date: Date) {
-  return Intl.DateTimeFormat("en-US", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(date);
 }
 
 export function readingTime(html: string) {
@@ -30,4 +23,10 @@ export function readingTime(html: string) {
 export function monthKey(entryId: string): string {
   const slash = entryId.indexOf("/");
   return slash === -1 ? entryId : entryId.slice(0, slash);
+}
+
+export const SITE_TIMEZONE = "America/Los_Angeles";
+
+export function siteDate(date: Date): string {
+  return formatInTimeZone(date, SITE_TIMEZONE, "yyyy-MM-dd");
 }

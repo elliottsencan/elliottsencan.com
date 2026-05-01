@@ -4,7 +4,7 @@ import Container from "@components/Container.astro";
 import LabeledRule from "@components/LabeledRule.astro";
 import Link from "@components/Link.astro";
 import Layout from "@layouts/Layout.astro";
-import { monthKey } from "@lib/utils";
+import { monthKey, SITE_TIMEZONE } from "@lib/utils";
 
 export async function getStaticPaths() {
   const entries = await getCollection("reading");
@@ -52,6 +52,7 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
   day: "2-digit",
   month: "short",
   year: "numeric",
+  timeZone: SITE_TIMEZONE,
 });
 ---
 
