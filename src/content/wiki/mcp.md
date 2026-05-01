@@ -7,10 +7,10 @@ summary: >-
 sources:
   - 2026-04/2026-04-27t113354-the-orchestrator-isnt-your-moat
   - 2026-04/2026-04-27t113526-databricks-solutionsai-dev-kit
-compiled_at: '2026-05-01T05:35:16.661Z'
+compiled_at: 2026-05-01T05:35:16.661Z
 compiled_with: claude-sonnet-4-6
 ---
-MCP (Model Context Protocol) is a convention for packaging tools, actions, and platform-specific context in a form that AI agents can consume directly. Instead of each team building its own orchestration layer to connect LLMs to their systems, they ship MCP tools that existing agents pick up and use.
+MCP (Model Context Protocol) is a convention for packaging tools, actions, and platform-specific context in a form that [AI agents](/wiki/ai-agents) can consume directly. Instead of each team building its own orchestration layer to connect LLMs to their systems, they ship MCP tools that existing agents pick up and use.
 
 [The Orchestrator Isn't Your Moat](/reading/2026-04/2026-04-27t113354-the-orchestrator-isnt-your-moat) argues that custom orchestration frameworks are not a durable advantage. Model providers already handle the orchestration loop; the real leverage is in the tools and skills that give agents platform-specific knowledge and actions. MCP is the mechanism that makes those tools portable across agents and environments.
 
