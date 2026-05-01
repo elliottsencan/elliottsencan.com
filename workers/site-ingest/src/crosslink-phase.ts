@@ -17,6 +17,7 @@ import { BlogFrontmatterSchema, WikiFrontmatterSchema } from "@shared/schemas/co
 import matter from "gray-matter";
 import type { z } from "zod";
 import { type CrosslinkProposalSchema, proposeCrosslinks } from "./anthropic.ts";
+import { aggregateCost, type CostRecord, type RunCost } from "./cost.ts";
 import {
   CORPORA,
   type CorpusName,
@@ -141,6 +142,8 @@ export type CrosslinkPhaseInput = {
     forward: CrosslinkProposal[];
     backward: CrosslinkProposal[];
     apiFailures?: number;
+    /** Per-call Anthropic cost records. Aggregated into the phase result's run_cost. */
+    costRecords?: CostRecord[];
   }>;
 };
 
@@ -164,6 +167,8 @@ export type CrosslinkPhaseResult = {
   applied: Array<{ path: string; anchor: string; target: string }>;
   changedFiles: ChangedFile[];
   skipped: CrosslinkSkipCounters;
+  /** Aggregated Anthropic cost across all proposeCrosslinks calls in this phase. */
+  run_cost: RunCost;
 };
 
 function findInSnapshot(
@@ -253,6 +258,7 @@ export async function runCrosslinkPhase(input: CrosslinkPhaseInput): Promise<Cro
     applied,
     changedFiles: [...changedByPath.entries()].map(([path, rest]) => ({ path, ...rest })),
     skipped: counters,
+    run_cost: aggregateCost(proposals.costRecords ?? []),
   };
 }
 
@@ -431,9 +437,11 @@ export function makeCrosslinkRunner(
       forward: CrosslinkProposal[];
       backward: CrosslinkProposal[];
       apiFailures: number;
+      costRecords: CostRecord[];
     }> => {
       const forward: CrosslinkProposal[] = [];
       const backward: CrosslinkProposal[] = [];
+      const costRecords: CostRecord[] = [];
       let apiFailures = 0;
       for (const src of forwardSources) {
         if (callsLeft-- <= 0) {
@@ -450,6 +458,7 @@ export function makeCrosslinkRunner(
         });
         if (r.ok) {
           forward.push(...r.data.proposals);
+          costRecords.push(r.data.cost);
         } else {
           apiFailures++;
           log.warn("crosslink", "runner", "forward call failed", {
@@ -473,6 +482,7 @@ export function makeCrosslinkRunner(
         });
         if (r.ok) {
           backward.push(...r.data.proposals);
+          costRecords.push(r.data.cost);
         } else {
           apiFailures++;
           log.warn("crosslink", "runner", "backward call failed", {
@@ -481,7 +491,7 @@ export function makeCrosslinkRunner(
           });
         }
       }
-      return { forward, backward, apiFailures };
+      return { forward, backward, apiFailures, costRecords };
     };
 
     return runCrosslinkPhase({

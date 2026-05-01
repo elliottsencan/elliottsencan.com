@@ -18,6 +18,7 @@
 import matter from "gray-matter";
 import { z } from "zod";
 import { proposeCrosslinks } from "./anthropic.ts";
+import type { CostRecord } from "./cost.ts";
 import { type CORPORA, type CorpusName, MAX_CROSSLINK_CALLS_PER_RUN } from "./crosslink-config.ts";
 import {
   type CrosslinkPhaseResult,
@@ -34,11 +35,11 @@ import {
   type WikiEntry,
 } from "./enumerate.ts";
 import {
+  commitFiles,
   createBranch,
   createGitHubClient,
   findOpenPrByBranch,
   type GitHubClient,
-  commitFiles,
   getBranchSha,
   getFile,
   listDir,
@@ -228,6 +229,7 @@ async function runScopedPhase(
     proposeProposals: async () => {
       const forward: CrosslinkProposal[] = [];
       const backward: CrosslinkProposal[] = [];
+      const costRecords: CostRecord[] = [];
       let apiFailures = 0;
       for (const src of forwardSources) {
         if (callsLeft-- <= 0) {
@@ -241,6 +243,7 @@ async function runScopedPhase(
         });
         if (r.ok) {
           forward.push(...r.data.proposals);
+          costRecords.push(r.data.cost);
         } else {
           apiFailures++;
           log.warn("crosslink", "scoped", "forward call failed", {
@@ -261,6 +264,7 @@ async function runScopedPhase(
         });
         if (r.ok) {
           backward.push(...r.data.proposals);
+          costRecords.push(r.data.cost);
         } else {
           apiFailures++;
           log.warn("crosslink", "scoped", "backward call failed", {
@@ -269,7 +273,7 @@ async function runScopedPhase(
           });
         }
       }
-      return { forward, backward, apiFailures };
+      return { forward, backward, apiFailures, costRecords };
     },
   });
 }
@@ -399,7 +403,10 @@ async function openCrosslinkPr(
     gh,
   });
   if (!put.ok) {
-    log.error("crosslink", "commit", "commit failed", { count: committed.length, error: put.error });
+    log.error("crosslink", "commit", "commit failed", {
+      count: committed.length,
+      error: put.error,
+    });
     return jsonResponse({ ok: false, error: `commit: ${put.error}`, branch }, 502);
   }
 

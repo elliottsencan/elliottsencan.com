@@ -18,6 +18,7 @@ import matter from "gray-matter";
 import { decode as decodeHtmlEntities } from "html-entities";
 import { z } from "zod";
 import { summarizeLink } from "./anthropic.ts";
+import type { CostRecord } from "./cost.ts";
 import { type PlanResult, runPipeline, type Strategy } from "./pipeline.ts";
 import { LINK_SUMMARY_SYSTEM } from "./prompts.ts";
 import { makePipelineDeps } from "./synthesize.ts";
@@ -40,6 +41,7 @@ type LinkSummaryRow = {
   category: string;
   topics_context_loaded: boolean;
   title_source: TitleSource;
+  cost: CostRecord;
 };
 
 // ---------- strategy ----------
@@ -50,7 +52,10 @@ export function makeLinkStrategy(req: LinkRequest): Strategy<LinkSummaryRow> {
     branchPrefix: "link",
     plan: async ({ env }): Promise<PlanResult<LinkSummaryRow>> => {
       const resolvedTitle = req.title ?? (await fetchPageTitle(req.url));
-      const topicsContext = await loadExistingTopics();
+      // topic_priors=false short-circuits the existing-topics fetch so the
+      // model summarizes without seeing any in-use slugs. Used by the rigor-
+      // pass A/B run measuring topic-stability drift.
+      const topicsContext = req.topic_priors ? await loadExistingTopics() : EMPTY_TOPICS;
 
       const summaryResult = await summarizeLink({
         apiKey: env.ANTHROPIC_API_KEY,
@@ -95,6 +100,7 @@ export function makeLinkStrategy(req: LinkRequest): Strategy<LinkSummaryRow> {
         category: summary.category,
         topics_context_loaded: topicsContext.loaded,
         title_source: titleSource,
+        cost: summary.cost,
       };
       return {
         ok: true,
@@ -161,6 +167,10 @@ export async function handle(request: Request, env: Env, ctx: ExecutionContext):
     category: summary?.category,
     topics_context_loaded: summary?.topics_context_loaded,
     title_source: summary?.title_source,
+    cost_usd: summary?.cost.cost_usd,
+    input_tokens: summary?.cost.usage.input_tokens,
+    output_tokens: summary?.cost.usage.output_tokens,
+    model: summary?.cost.model,
   });
   return jsonResponse(
     {
@@ -170,6 +180,7 @@ export async function handle(request: Request, env: Env, ctx: ExecutionContext):
       topics_context_loaded: summary?.topics_context_loaded ?? false,
       title_source: summary?.title_source,
       commit: result.commit_sha,
+      cost: summary?.cost ?? null,
     },
     200,
   );
@@ -204,6 +215,9 @@ const LinkRequestSchema = z.object({
   url: httpUrlSchema,
   title: optionalTrimmedString(MAX_TITLE_LENGTH),
   excerpt: optionalTrimmedString(MAX_EXCERPT_LENGTH),
+  // Default true (production behavior — show in-use slugs to the model
+  // for stability). Flip to false to measure A/B topic drift.
+  topic_priors: z.boolean().default(true),
 });
 
 // Exported for unit tests; in-file callers use it directly.
@@ -235,6 +249,8 @@ const ReadingIndexSchema = z.object({
 });
 
 type TopicsContext = { topics: string[]; loaded: boolean };
+
+const EMPTY_TOPICS: TopicsContext = { topics: [], loaded: false };
 
 async function loadExistingTopics(): Promise<TopicsContext> {
   const controller = new AbortController();

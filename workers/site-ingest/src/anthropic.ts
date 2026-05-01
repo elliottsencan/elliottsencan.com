@@ -18,9 +18,29 @@ import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { ReadingCategorySchema } from "@shared/schemas/content.ts";
 import { z } from "zod";
+import { type CostRecord, computeCost, type Usage } from "./cost.ts";
 import type { CorpusName } from "./crosslink-config.ts";
 import type { Result } from "./types.ts";
 import { log } from "./util.ts";
+
+// Shape on the Anthropic SDK response. Cache fields are absent when caching
+// isn't requested (which is the worker's default — see header comment above).
+type RawUsage = {
+  input_tokens?: number;
+  output_tokens?: number;
+  cache_creation_input_tokens?: number | null;
+  cache_read_input_tokens?: number | null;
+};
+
+function readUsage(response: { usage?: RawUsage | null }): Usage {
+  const u = response.usage ?? {};
+  return {
+    input_tokens: u.input_tokens ?? 0,
+    output_tokens: u.output_tokens ?? 0,
+    cache_creation_input_tokens: u.cache_creation_input_tokens ?? 0,
+    cache_read_input_tokens: u.cache_read_input_tokens ?? 0,
+  };
+}
 
 const DEFAULT_MODEL = "claude-sonnet-4-6";
 const MAX_ANTHROPIC_RETRIES = 5;
@@ -45,9 +65,13 @@ export const LinkSummarySchema = z.object({
     .max(5),
 });
 
-// `model` is appended by the wrapper (resolveModel-derived) — schemas
-// describe what Anthropic returns, not the post-processed shape.
-export type LinkSummary = z.infer<typeof LinkSummarySchema> & { model: string };
+// `model` and `cost` are appended by the wrapper (resolveModel-derived /
+// usage-derived) — schemas describe what Anthropic returns, not the
+// post-processed shape.
+export type LinkSummary = z.infer<typeof LinkSummarySchema> & {
+  model: string;
+  cost: CostRecord;
+};
 
 function client(apiKey: string): Anthropic {
   // maxRetries: 0 — withRetries() below owns retry/backoff so every attempt
@@ -108,16 +132,19 @@ async function withRetries<T>(op: string, fn: () => Promise<T>): Promise<T> {
   throw lastErr;
 }
 
+export type DraftNowResult = { markdown: string; model: string; cost: CostRecord };
+
 export async function draftNow(args: {
   apiKey: string;
   model?: string;
   systemPrompt: string;
   userMessage: string;
-}): Promise<Result<string>> {
+}): Promise<Result<DraftNowResult>> {
   try {
+    const model = resolveModel(args.model);
     const response = await withRetries("draft-now", () =>
       client(args.apiKey).messages.create({
-        model: resolveModel(args.model),
+        model,
         // No thinking: this task (voice-match + re-phrase structured data)
         // is not deep reasoning — enabling adaptive thinking made the model
         // burn through the whole max_tokens budget before emitting the text
@@ -128,9 +155,10 @@ export async function draftNow(args: {
         messages: [{ role: "user", content: args.userMessage }],
       }),
     );
+    const cost = computeCost(readUsage(response), model);
     for (const block of response.content) {
       if (block.type === "text") {
-        return { ok: true, data: block.text };
+        return { ok: true, data: { markdown: block.text, model, cost } };
       }
     }
     log.warn("anthropic", "draft-now", "no text block in response", {
@@ -153,9 +181,10 @@ export async function summarizeLink(args: {
   userMessage: string;
 }): Promise<Result<LinkSummary>> {
   try {
+    const model = resolveModel(args.model);
     const response = await withRetries("summarize-link", () =>
       client(args.apiKey).messages.parse({
-        model: resolveModel(args.model),
+        model,
         // 600: title + summary + 5 topics, no body.
         max_tokens: 600,
         system: args.systemPrompt,
@@ -170,12 +199,13 @@ export async function summarizeLink(args: {
       });
       return { ok: false, error: `parsed_output missing (stop_reason: ${response.stop_reason})` };
     }
+    const cost = computeCost(readUsage(response), model);
     return {
       ok: true,
       // Thread the resolved model back to the caller so the committed entry
       // frontmatter records which model produced it (enables targeted
       // recompiles against older-model entries later).
-      data: { ...response.parsed_output, model: resolveModel(args.model) },
+      data: { ...response.parsed_output, model, cost },
     };
   } catch (err) {
     return mapError(err, "summarize-link");
@@ -190,7 +220,10 @@ export const WikiArticleSchema = z.object({
   body: z.string().min(1),
 });
 
-export type WikiArticle = z.infer<typeof WikiArticleSchema> & { model: string };
+export type WikiArticle = z.infer<typeof WikiArticleSchema> & {
+  model: string;
+  cost: CostRecord;
+};
 
 export async function compileWikiArticle(args: {
   apiKey: string;
@@ -199,9 +232,10 @@ export async function compileWikiArticle(args: {
   userMessage: string;
 }): Promise<Result<WikiArticle>> {
   try {
+    const model = resolveModel(args.model);
     const response = await withRetries("compile-wiki", () =>
       client(args.apiKey).messages.parse({
-        model: resolveModel(args.model),
+        model,
         // Wiki articles are 400–1500 chars markdown; 2500 leaves headroom.
         max_tokens: 2500,
         system: args.systemPrompt,
@@ -216,9 +250,10 @@ export async function compileWikiArticle(args: {
       });
       return { ok: false, error: `parsed_output missing (stop_reason: ${response.stop_reason})` };
     }
+    const cost = computeCost(readUsage(response), model);
     return {
       ok: true,
-      data: { ...response.parsed_output, model: resolveModel(args.model) },
+      data: { ...response.parsed_output, model, cost },
     };
   } catch (err) {
     return mapError(err, "compile-wiki");
@@ -250,11 +285,12 @@ export async function proposeCrosslinks(args: {
   model?: string;
   systemPrompt: string;
   userMessage: string;
-}): Promise<Result<CrosslinkBatch & { model: string }>> {
+}): Promise<Result<CrosslinkBatch & { model: string; cost: CostRecord }>> {
   try {
+    const model = resolveModel(args.model);
     const response = await withRetries("propose-crosslinks", () =>
       client(args.apiKey).messages.parse({
-        model: resolveModel(args.model),
+        model,
         // Up to ~25 proposals × ~150 tokens each, plus the batch wrapper.
         max_tokens: 3000,
         system: args.systemPrompt,
@@ -269,9 +305,10 @@ export async function proposeCrosslinks(args: {
       });
       return { ok: false, error: `parsed_output missing (stop_reason: ${response.stop_reason})` };
     }
+    const cost = computeCost(readUsage(response), model);
     return {
       ok: true,
-      data: { ...response.parsed_output, model: resolveModel(args.model) },
+      data: { ...response.parsed_output, model, cost },
     };
   } catch (err) {
     return mapError(err, "propose-crosslinks");

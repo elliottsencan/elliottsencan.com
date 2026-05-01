@@ -95,6 +95,17 @@ const baseSummary: LinkSummary = {
   category: "tech",
   topics: ["topic-a", "topic-b"],
   model: "claude-sonnet-4-6",
+  cost: {
+    usage: {
+      input_tokens: 0,
+      output_tokens: 0,
+      cache_creation_input_tokens: 0,
+      cache_read_input_tokens: 0,
+    },
+    model: "claude-sonnet-4-6",
+    pricing: null,
+    cost_usd: null,
+  },
 };
 
 const baseArgs = {

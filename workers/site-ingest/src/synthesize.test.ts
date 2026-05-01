@@ -122,6 +122,17 @@ const baseArticle: WikiArticle = {
   summary: "Lessons from two recent essays on responsive design without breakpoints.",
   body: "Body content with [a citation](/reading/2026-04/foo).",
   model: "claude-sonnet-4-6",
+  cost: {
+    usage: {
+      input_tokens: 0,
+      output_tokens: 0,
+      cache_creation_input_tokens: 0,
+      cache_read_input_tokens: 0,
+    },
+    model: "claude-sonnet-4-6",
+    pricing: null,
+    cost_usd: null,
+  },
 };
 
 const baseArgs = {
@@ -161,6 +172,31 @@ describe("buildArticleMarkdown", () => {
       }),
     );
     expect(content.endsWith("\n\n\n")).toBe(false);
+  });
+
+  it("does not leak cost or usage into frontmatter (cost is per-call metadata, not content)", () => {
+    const { data } = parseEntry(
+      buildArticleMarkdown({
+        ...baseArgs,
+        article: {
+          ...baseArticle,
+          cost: {
+            usage: {
+              input_tokens: 12_345,
+              output_tokens: 678,
+              cache_creation_input_tokens: 0,
+              cache_read_input_tokens: 0,
+            },
+            model: "claude-sonnet-4-6",
+            pricing: null,
+            cost_usd: 0.42,
+          },
+        },
+      }),
+    );
+    expect(data).not.toHaveProperty("cost");
+    expect(data).not.toHaveProperty("usage");
+    expect(data).not.toHaveProperty("cost_usd");
   });
 });
 

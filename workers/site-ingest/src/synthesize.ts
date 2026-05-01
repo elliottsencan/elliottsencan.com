@@ -23,6 +23,7 @@ import { MIN_WIKI_SOURCES, ReadingFrontmatterSchema } from "@shared/schemas/cont
 import matter from "gray-matter";
 import { z } from "zod";
 import { compileWikiArticle } from "./anthropic.ts";
+import { aggregateCost, type CostRecord, type RunCost } from "./cost.ts";
 import {
   type DroppedLink,
   type DroppedLinkReason,
@@ -92,6 +93,8 @@ type SynthesizeSummary = {
   failed: Array<{ path: string; topic: string; error: string }>;
   skipped: Array<{ topic: string; reason: string }>;
   auto_repaired: Array<{ topic: string; dropped: DroppedLink[] }>;
+  /** Aggregated Anthropic cost across all per-topic compile calls in this run. */
+  run_cost: RunCost;
 };
 
 export function makeSynthesizeStrategy(req: SynthesizeRequest): Strategy<SynthesizeSummary> {
@@ -158,6 +161,7 @@ async function planSynthesis(
   const failed: SynthesizeSummary["failed"] = [];
   const skipped: SynthesizeSummary["skipped"] = [];
   const autoRepaired: SynthesizeSummary["auto_repaired"] = [];
+  const costRecords: CostRecord[] = [];
   for (const target of capped) {
     const article = await compileWikiArticle({
       apiKey: env.ANTHROPIC_API_KEY,
@@ -176,6 +180,7 @@ async function planSynthesis(
       });
       continue;
     }
+    costRecords.push(article.data.cost);
     const repaired = repairWikiBodyLinks(article.data.body, knownReadingSlugs);
     if (repaired.dropped.length > 0) {
       log.warn("synthesize", "repair", "dropped invalid links", {
@@ -214,12 +219,21 @@ async function planSynthesis(
   }
   // Topics with up-to-date sources are filtered above and never enter `capped`.
 
+  const runCost = aggregateCost(costRecords);
+  log.info("synthesize", "run-cost", "aggregated", {
+    calls: runCost.records.length,
+    total_usd: runCost.total_usd,
+    input_tokens: runCost.total_usage.input_tokens,
+    output_tokens: runCost.total_usage.output_tokens,
+  });
+
   const summary: SynthesizeSummary = {
     active_topics: allActiveTopics,
     compiled: added.length + changed.length,
     failed,
     skipped,
     auto_repaired: autoRepaired,
+    run_cost: runCost,
   };
 
   return {
@@ -251,6 +265,7 @@ function buildPrBody(plan: PlanOutput<SynthesizeSummary>, crosslink?: CrosslinkR
     failed: [],
     skipped: [],
     auto_repaired: [],
+    run_cost: aggregateCost([]),
   };
   const writes = [
     ...plan.mutation.added.map((f) => f.path),
@@ -265,6 +280,13 @@ function buildPrBody(plan: PlanOutput<SynthesizeSummary>, crosslink?: CrosslinkR
   ];
   if (failed.length > 0) {
     lines.push(`- Failed: ${failed.length}`);
+  }
+  const { run_cost: runCost } = summary;
+  if (runCost.records.length > 0) {
+    lines.push(
+      `- Cost: $${runCost.total_usd.toFixed(4)} (${runCost.records.length} call${runCost.records.length === 1 ? "" : "s"}, ` +
+        `${runCost.total_usage.input_tokens} input + ${runCost.total_usage.output_tokens} output tokens)`,
+    );
   }
   if (writes.length > 0) {
     lines.push("", "### Compiled");
@@ -342,6 +364,7 @@ export async function handle(request: Request, env: Env, ctx: ExecutionContext):
       ],
       failures: summary?.failed ?? [],
       skip_reasons: summary?.skipped ?? [],
+      run_cost: summary?.run_cost ?? null,
     });
   }
 
@@ -366,6 +389,7 @@ export async function handle(request: Request, env: Env, ctx: ExecutionContext):
     skipped: summary?.skipped.length ?? 0,
     failures: summary?.failed ?? [],
     skip_reasons: summary?.skipped ?? [],
+    run_cost: summary?.run_cost ?? null,
     branch: result.branch,
     pr: result.pr_number ? { number: result.pr_number, url: result.pr_url } : null,
     crosslink: result.crosslink
@@ -373,6 +397,7 @@ export async function handle(request: Request, env: Env, ctx: ExecutionContext):
           forward: result.crosslink.forward,
           backward: result.crosslink.backward,
           applied: result.crosslink.applied.length,
+          run_cost: result.crosslink.run_cost,
         }
       : null,
   });
