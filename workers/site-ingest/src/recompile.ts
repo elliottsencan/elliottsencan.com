@@ -26,6 +26,7 @@ import matter from "gray-matter";
 import { convert as htmlToText } from "html-to-text";
 import { z } from "zod";
 import { summarizeLink } from "./anthropic.ts";
+import { aggregateCost, type CostRecord, type RunCost } from "./cost.ts";
 import { createGitHubClient, type GitHubClient, getFile, listDir } from "./github.ts";
 import {
   type CrosslinkResult,
@@ -86,6 +87,8 @@ type RecompileSummary = {
   matched: number;
   results: RecompileResultRow[];
   scope: RecompileRequest["scope"];
+  /** Aggregated Anthropic cost across all per-entry recompile calls in this run. */
+  run_cost: RunCost;
 };
 
 export function makeRecompileStrategy(req: RecompileRequest): Strategy<RecompileSummary> {
@@ -110,11 +113,13 @@ export function makeRecompileStrategy(req: RecompileRequest): Strategy<Recompile
 
       const results: RecompileResultRow[] = [];
       const changed: Array<{ path: string; before: string; after: string }> = [];
+      const costRecords: CostRecord[] = [];
       for (const entry of filtered) {
         const outcome = await recompileOne(entry, env);
         if (outcome.ok) {
           changed.push({ path: entry.path, before: entry.body, after: outcome.data.content });
           results.push({ path: entry.path, status: "updated" });
+          costRecords.push(outcome.data.cost);
         } else {
           results.push({
             path: entry.path,
@@ -133,10 +138,19 @@ export function makeRecompileStrategy(req: RecompileRequest): Strategy<Recompile
         });
       }
 
+      const runCost = aggregateCost(costRecords);
+      log.info("recompile", "run-cost", "aggregated", {
+        calls: runCost.records.length,
+        total_usd: runCost.total_usd,
+        input_tokens: runCost.total_usage.input_tokens,
+        output_tokens: runCost.total_usage.output_tokens,
+      });
+
       const summary: RecompileSummary = {
         matched: filtered.length,
         results,
         scope: req.scope,
+        run_cost: runCost,
       };
       return {
         ok: true,
@@ -187,11 +201,17 @@ function buildPrBody(plan: PlanOutput<RecompileSummary>, crosslink?: CrosslinkRe
   const updated = summary.results.filter((r) => r.status === "updated");
   const skipped = summary.results.filter((r) => r.status === "skipped");
   const skips = partitionSkips(summary.results);
+  const runCost = summary.run_cost;
+  const costLine =
+    runCost.records.length > 0
+      ? `- Cost: $${runCost.total_usd.toFixed(4)} (${runCost.records.length} call${runCost.records.length === 1 ? "" : "s"}, ${runCost.total_usage.input_tokens} input + ${runCost.total_usage.output_tokens} output tokens)`
+      : null;
   const lines: string[] = [
     `Automated recompile run. Scope: \`${JSON.stringify(summary.scope)}\`.`,
     "",
     `- Updated: ${updated.length}`,
     `- Skipped: ${skips.total} (no_source=${skips.no_source}, transient=${skips.transient}, frontmatter_invalid=${skips.frontmatter_invalid}, other=${skips.other})`,
+    ...(costLine ? [costLine] : []),
     "",
     "### Updated",
     ...updated.map((r) => `- \`${r.path}\``),
@@ -252,6 +272,7 @@ export async function handle(request: Request, env: Env, ctx: ExecutionContext):
       processed: updated.length,
       skipped: partitionSkips(summary.results),
       results: summary.results,
+      run_cost: summary.run_cost,
     });
   }
 
@@ -275,6 +296,7 @@ export async function handle(request: Request, env: Env, ctx: ExecutionContext):
     matched: summary?.matched ?? 0,
     committed: updated.length,
     skipped: partitionSkips(results),
+    run_cost: summary?.run_cost ?? null,
     branch: result.branch,
     pr: result.pr_number ? { number: result.pr_number, url: result.pr_url } : null,
     results,
@@ -283,6 +305,7 @@ export async function handle(request: Request, env: Env, ctx: ExecutionContext):
           forward: result.crosslink.forward,
           backward: result.crosslink.backward,
           applied: result.crosslink.applied.length,
+          run_cost: result.crosslink.run_cost,
         }
       : null,
   });
@@ -402,7 +425,7 @@ export function parseFrontmatter(
 }
 
 type RecompileOutcome =
-  | { ok: true; data: { path: string; content: string } }
+  | { ok: true; data: { path: string; content: string; cost: CostRecord } }
   | { ok: false; error: string; skipReason: SkipReason };
 
 async function recompileOne(entry: ParsedEntry, env: Env): Promise<RecompileOutcome> {
@@ -456,7 +479,7 @@ async function recompileOne(entry: ParsedEntry, env: Env): Promise<RecompileOutc
     compiledAt: new Date(),
   });
 
-  return { ok: true, data: { path: entry.path, content: rebuilt } };
+  return { ok: true, data: { path: entry.path, content: rebuilt, cost: summary.data.cost } };
 }
 
 function buildRecompileUserMessage(args: {

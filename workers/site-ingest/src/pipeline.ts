@@ -20,6 +20,7 @@
  */
 
 import matter from "gray-matter";
+import type { RunCost } from "./cost.ts";
 import type { Env, Result } from "./types.ts";
 import { log } from "./util.ts";
 
@@ -49,6 +50,8 @@ export type CrosslinkResult = {
   backward: number;
   applied: Array<{ path: string; anchor: string; target: string }>;
   changedFiles: CrosslinkChangedFile[];
+  /** Aggregated Anthropic cost across the proposeCrosslinks calls in this phase. */
+  run_cost: RunCost;
 };
 
 export type CommitMessageInput = {

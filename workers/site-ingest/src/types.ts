@@ -145,6 +145,8 @@ export interface LinkRequest {
   url: string;
   title?: string;
   excerpt?: string;
+  /** Default true (production). Set false to skip the existing-topics fetch — used by the rigor-pass A/B run measuring topic-stability drift. */
+  topic_priors: boolean;
 }
 
 // LinkSummary and WikiArticle are re-exported at the top of this file; the

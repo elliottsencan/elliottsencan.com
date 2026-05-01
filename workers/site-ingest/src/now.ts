@@ -120,7 +120,7 @@ export async function handle(env: Env, source: "scheduled" | "trigger"): Promise
     return jsonResponse({ ok: false, error: `anthropic: ${draft.error}` }, 502);
   }
 
-  const drafted = draft.data.trim();
+  const drafted = draft.data.markdown.trim();
   // Byte-identical short-circuit: the model occasionally regenerates an
   // identical page. Skipping here keeps the git log clean (no churn PRs).
   if (drafted === currentNow.data.content.trim()) {

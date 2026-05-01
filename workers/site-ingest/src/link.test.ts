@@ -71,4 +71,26 @@ describe("link.validate", () => {
       expect((r.data.excerpt ?? "").length).toBeLessThanOrEqual(16_000);
     }
   });
+
+  it("defaults topic_priors to true (production behavior)", () => {
+    const r = validate({ url: "https://example.com/" });
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.data.topic_priors).toBe(true);
+    }
+  });
+
+  it("preserves topic_priors=false so the A/B run can opt out of priors", () => {
+    const r = validate({ url: "https://example.com/", topic_priors: false });
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.data.topic_priors).toBe(false);
+    }
+  });
+
+  it("rejects a non-boolean topic_priors", () => {
+    expect(validate({ url: "https://example.com/", topic_priors: "yes" })).toMatchObject({
+      ok: false,
+    });
+  });
 });
