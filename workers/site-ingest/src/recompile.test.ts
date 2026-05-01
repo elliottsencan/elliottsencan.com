@@ -129,8 +129,8 @@ describe("buildRecompiledMarkdown", () => {
       url: "https://example.com/post",
       summary: "A short summary.",
       category: "tech",
-      added: "2026-03-31T17:00:00.000-07:00",
-      compiled_at: "2026-04-23T17:00:00.000-07:00",
+      added: "2026-04-01T00:00:00.000Z",
+      compiled_at: "2026-04-24T00:00:00.000Z",
       compiled_with: "claude-sonnet-4-6",
       topics: ["topic-a", "topic-b"],
     });

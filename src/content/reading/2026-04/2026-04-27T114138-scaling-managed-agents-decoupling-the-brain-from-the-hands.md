@@ -6,7 +6,7 @@ summary: >-
   sandbox (hands), and session log into independent interfaces so that harnesses
   can evolve as models improve without breaking the system or losing state.
 category: tech
-added: '2026-04-27T11:41:38.802-07:00'
+added: '2026-04-27T18:41:38.802Z'
 author: 'Lance Martin, Gabe Cemaj, and Michael Cohen'
 source: Anthropic
 topics:
@@ -15,7 +15,7 @@ topics:
   - llm-inference
   - context-engineering
   - developer-tools
-compiled_at: '2026-04-30T20:59:57.146-07:00'
+compiled_at: '2026-05-01T03:59:57.146Z'
 compiled_with: claude-sonnet-4-6
 ---
 

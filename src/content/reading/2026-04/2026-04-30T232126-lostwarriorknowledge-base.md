@@ -12,14 +12,14 @@ summary: >-
   manifest.json so AI agents can navigate knowledge bases without burning excess
   tokens.
 category: tech
-added: '2026-04-30T23:21:26.198-07:00'
+added: '2026-05-01T06:21:26.198Z'
 topics:
   - developer-tooling
   - ai-agents
   - context-engineering
   - llm-tooling
   - open-source-tools
-compiled_at: '2026-04-30T23:21:26.198-07:00'
+compiled_at: '2026-05-01T06:21:26.198Z'
 compiled_with: claude-sonnet-4-6
 title_source: model
 ---

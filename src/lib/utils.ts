@@ -6,14 +6,6 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatDate(date: Date) {
-  return Intl.DateTimeFormat("en-US", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(date);
-}
-
 export function readingTime(html: string) {
   const textOnly = html.replace(/<[^>]+>/g, "");
   const wordCount = textOnly.split(/\s+/).length;
@@ -37,13 +29,4 @@ export const SITE_TIMEZONE = "America/Los_Angeles";
 
 export function siteDate(date: Date): string {
   return formatInTimeZone(date, SITE_TIMEZONE, "yyyy-MM-dd");
-}
-
-/**
- * ISO 8601 with the site's UTC offset (e.g. `2026-04-30T23:12:06.300-07:00`).
- * Same instant as `date.toISOString()` but the date portion matches the
- * worker-stamped Pacific filename slug — no UTC drift in agent surfaces.
- */
-export function isoWithSiteOffset(date: Date): string {
-  return formatInTimeZone(date, SITE_TIMEZONE, "yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
 }

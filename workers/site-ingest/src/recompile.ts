@@ -38,7 +38,7 @@ import {
 import { LINK_SUMMARY_SYSTEM } from "./prompts.ts";
 import { makePipelineDeps } from "./synthesize.ts";
 import type { Env, LinkSummary, Result } from "./types.ts";
-import { isoWithSiteOffset, jsonResponse, log } from "./util.ts";
+import { jsonResponse, log } from "./util.ts";
 
 const MAX_ENTRIES_PER_RUN = 25;
 const IA_FETCH_TIMEOUT_MS = 10_000;
@@ -511,7 +511,7 @@ export function buildRecompiledMarkdown(args: {
     url,
     summary: summary.summary,
     category: summary.category,
-    added: isoWithSiteOffset(added),
+    added: added.toISOString(),
   };
   if (summary.author) {
     data.author = summary.author;
@@ -522,7 +522,7 @@ export function buildRecompiledMarkdown(args: {
   if (summary.topics.length > 0) {
     data.topics = summary.topics;
   }
-  data.compiled_at = isoWithSiteOffset(compiledAt);
+  data.compiled_at = compiledAt.toISOString();
   data.compiled_with = summary.model;
   // Reading entries are source citations, not articles — body stays empty.
   return matter.stringify("", data);

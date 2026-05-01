@@ -7,7 +7,7 @@ summary: >-
   a self-defeating loop that also introduces vendor lock-in, unpredictable token
   costs, and compounding comprehension debt.
 category: essay
-added: '2026-04-27T14:50:41.527-07:00'
+added: '2026-04-27T21:50:41.527Z'
 author: Lars Faye
 source: larsfaye.com
 topics:
@@ -16,7 +16,7 @@ topics:
   - cognitive-debt
   - llm-tooling
   - software-engineering
-compiled_at: '2026-04-30T21:00:05.691-07:00'
+compiled_at: '2026-05-01T04:00:05.691Z'
 compiled_with: claude-sonnet-4-6
 ---
 

@@ -25,7 +25,7 @@ import {
 } from "./pipeline.ts";
 import { makePipelineDeps } from "./synthesize.ts";
 import type { Env } from "./types.ts";
-import { isoWithSiteOffset, jsonResponse } from "./util.ts";
+import { jsonResponse } from "./util.ts";
 
 const WIKI_DIR = "src/content/wiki";
 const TOPIC_SLUG_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
@@ -203,7 +203,7 @@ export function buildArticleMarkdown(args: {
   if (args.related_concepts && args.related_concepts.length > 0) {
     data.related_concepts = args.related_concepts;
   }
-  data.compiled_at = isoWithSiteOffset(args.compiled_at);
+  data.compiled_at = args.compiled_at.toISOString();
   data.compiled_with = args.compiled_with;
   return matter.stringify(args.body.trim(), data);
 }

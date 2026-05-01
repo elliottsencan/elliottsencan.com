@@ -32,7 +32,7 @@ summary: >-
   but hallucinations baked in at ingest propagate structurally — making the lint
   step non-negotiable.
 category: tech
-added: '2026-04-30T23:22:01.537-07:00'
+added: '2026-05-01T06:22:01.537Z'
 source: Reddit
 topics:
   - llm-engineering
@@ -40,7 +40,7 @@ topics:
   - llm-agents
   - context-engineering
   - software-architecture
-compiled_at: '2026-04-30T23:22:01.537-07:00'
+compiled_at: '2026-05-01T06:22:01.537Z'
 compiled_with: claude-sonnet-4-6
 title_source: model
 ---

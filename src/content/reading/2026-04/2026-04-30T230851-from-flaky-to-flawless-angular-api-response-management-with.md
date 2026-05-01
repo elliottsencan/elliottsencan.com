@@ -13,7 +13,7 @@ summary: >-
   to catch unexpected backend response shapes at dev time before they cause
   runtime errors.
 category: tech
-added: '2026-04-30T23:08:51.781-07:00'
+added: '2026-05-01T06:08:51.781Z'
 author: Daniel Sogl
 source: DEV Community
 topics:
@@ -22,7 +22,7 @@ topics:
   - software-architecture
   - reliability
   - developer-tooling
-compiled_at: '2026-04-30T23:08:51.781-07:00'
+compiled_at: '2026-05-01T06:08:51.781Z'
 compiled_with: claude-sonnet-4-6
 title_source: model
 ---

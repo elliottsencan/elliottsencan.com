@@ -119,16 +119,6 @@ export function fileTimestamp(date: Date): string {
 }
 
 /**
- * ISO 8601 with the site's UTC offset (e.g. 2026-04-30T23:12:06.300-07:00).
- * Same instant as `date.toISOString()` but the date portion matches
- * `monthKey` / `fileTimestamp` so frontmatter `added` agrees with the
- * filename slug across the day boundary.
- */
-export function isoWithSiteOffset(date: Date): string {
-  return formatInTimeZone(date, SITE_TIMEZONE, "yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
-}
-
-/**
  * Reading slug in Astro's content-collection id format:
  * `<month>/<filename-without-ext>`, lowercased. Used to bridge the worker's
  * disk-path view with the public slug surfaces (`/reading.json`,

@@ -20,7 +20,7 @@ summary: >-
   structured Markdown files, querying at scale without RAG, and running health
   checks to prevent knowledge drift.
 category: tech
-added: '2026-04-30T23:20:52.345-07:00'
+added: '2026-05-01T06:20:52.345Z'
 source: Reddit
 topics:
   - llm-engineering
@@ -28,7 +28,7 @@ topics:
   - retrieval-augmented-generation
   - developer-tooling
   - llm-tooling
-compiled_at: '2026-04-30T23:20:52.345-07:00'
+compiled_at: '2026-05-01T06:20:52.345Z'
 compiled_with: claude-sonnet-4-6
 title_source: model
 ---

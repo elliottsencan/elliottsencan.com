@@ -9,7 +9,7 @@ summary: >-
   over 300 kB of JavaScript libraries like Floating UI, GSAP, and react-select
   with zero-dependency platform primitives.
 category: tech
-added: '2026-04-30T23:19:09.815-07:00'
+added: '2026-05-01T06:19:09.815Z'
 author: Pavel Laptev
 source: Butler's Log
 topics:
@@ -18,7 +18,7 @@ topics:
   - developer-tooling
   - web-accessibility
   - software-engineering
-compiled_at: '2026-04-30T23:19:09.815-07:00'
+compiled_at: '2026-05-01T06:19:09.815Z'
 compiled_with: claude-sonnet-4-6
 title_source: model
 ---

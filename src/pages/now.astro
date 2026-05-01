@@ -18,7 +18,7 @@ if (!entry) {
 const { Content } = await render(entry);
 
 const updated = entry.data.updated;
-const lastUpdated = `${updated.toLocaleString("en-US", { month: "long" })} ${updated.getFullYear()}`;
+const lastUpdated = `${updated.toLocaleString("en-US", { month: "long", timeZone: "UTC" })} ${updated.getUTCFullYear()}`;
 const lastUpdatedISO = updated.toISOString().slice(0, 10);
 ---
 

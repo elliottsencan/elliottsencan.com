@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import {
   dateKey,
   fileTimestamp,
-  isoWithSiteOffset,
   jsonResponse,
   monthKey,
   readingSlugFromPath,
@@ -141,27 +140,6 @@ describe("date helpers (Pacific / America/Los_Angeles)", () => {
     expect(() => fileTimestamp(spring)).not.toThrow();
     expect(() => dateKey(fall)).not.toThrow();
     expect(() => fileTimestamp(fall)).not.toThrow();
-  });
-
-  it("isoWithSiteOffset emits extended ISO offset for PDT", () => {
-    const d = new Date(Date.UTC(2026, 3, 16, 9, 30, 45, 300));
-    expect(isoWithSiteOffset(d)).toBe("2026-04-16T02:30:45.300-07:00");
-  });
-
-  it("isoWithSiteOffset emits extended ISO offset for PST", () => {
-    const d = new Date(Date.UTC(2026, 0, 10, 8, 0, 0, 0));
-    expect(isoWithSiteOffset(d)).toBe("2026-01-10T00:00:00.000-08:00");
-  });
-
-  it("isoWithSiteOffset rolls back across the day boundary", () => {
-    // The whole reason this helper exists: frontmatter date matches slug date.
-    const late = new Date(Date.UTC(2026, 3, 1, 2, 0, 0, 0));
-    expect(isoWithSiteOffset(late)).toBe("2026-03-31T19:00:00.000-07:00");
-  });
-
-  it("isoWithSiteOffset preserves the same instant as toISOString()", () => {
-    const d = new Date(Date.UTC(2026, 3, 16, 9, 30, 45, 300));
-    expect(new Date(isoWithSiteOffset(d)).toISOString()).toBe(d.toISOString());
   });
 });
 

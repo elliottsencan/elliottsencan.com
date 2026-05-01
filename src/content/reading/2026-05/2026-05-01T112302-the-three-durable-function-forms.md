@@ -7,7 +7,7 @@ summary: >-
   continuum, then applies the model to engines like Temporal, Restate, DBOS, and
   Resonate.
 category: tech
-added: '2026-05-01T11:23:02.131-07:00'
+added: '2026-05-01T18:23:02.131Z'
 author: Jack Vanlightly
 source: jack-vanlightly.com
 topics:
@@ -15,7 +15,7 @@ topics:
   - production-systems
   - distributed-systems
   - software-engineering
-compiled_at: '2026-05-01T11:23:02.131-07:00'
+compiled_at: '2026-05-01T18:23:02.131Z'
 compiled_with: claude-sonnet-4-6
 title_source: model
 ---
