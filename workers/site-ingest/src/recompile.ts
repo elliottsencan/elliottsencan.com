@@ -19,6 +19,8 @@
  * runs across multiple invocations with the `slugs` scope.
  */
 
+import { ReadingFrontmatterSchema } from "@shared/schemas/content.ts";
+import type { ReadingFrontmatter } from "@shared/schemas/content.ts";
 import { format as formatDate } from "date-fns";
 import matter from "gray-matter";
 import { convert as htmlToText } from "html-to-text";
@@ -286,7 +288,7 @@ export async function handle(request: Request, env: Env, ctx: ExecutionContext):
 interface ParsedEntry {
   path: string;
   sha: string;
-  frontmatter: Record<string, unknown>;
+  frontmatter: ReadingFrontmatter;
   body: string;
 }
 
@@ -345,10 +347,7 @@ export function applyScope(
       return entries;
     case "since": {
       const threshold = new Date(scope.since);
-      return entries.filter((e) => {
-        const added = e.frontmatter.added;
-        return typeof added === "string" && new Date(added) >= threshold;
-      });
+      return entries.filter((e) => e.frontmatter.added >= threshold);
     }
     case "slugs": {
       const set = new Set(scope.slugs);
@@ -356,12 +355,9 @@ export function applyScope(
     }
     case "compiled_before_model": {
       return entries.filter((e) => {
-        const model = e.frontmatter.compiled_with;
         // Missing compiled_with => eligible for recompile.
-        if (typeof model !== "string") {
-          return true;
-        }
-        return model !== scope.model;
+        const model = e.frontmatter.compiled_with;
+        return !model || model !== scope.model;
       });
     }
   }
@@ -373,15 +369,27 @@ function slugFromPath(path: string): string {
 }
 
 // Exported for unit tests; in-file callers use it directly.
+// Returns null on YAML parse failure or when the frontmatter doesn't match
+// ReadingFrontmatterSchema (e.g. missing required fields). z.coerce.date()
+// handles both string and Date forms of `added` / `compiled_at`, since
+// js-yaml parses unquoted ISO datetimes into Date objects.
 export function parseFrontmatter(
   markdown: string,
-): { frontmatter: Record<string, unknown>; body: string } | null {
+): { frontmatter: ReadingFrontmatter; body: string } | null {
   try {
     const parsed = matter(markdown);
     if (!parsed.data || Object.keys(parsed.data).length === 0) {
       return null;
     }
-    return { frontmatter: parsed.data, body: parsed.content };
+    const fm = ReadingFrontmatterSchema.safeParse(parsed.data);
+    if (!fm.success) {
+      log.warn("recompile", "frontmatter", "schema-invalid", {
+        issues: fm.error.issues.length,
+        first: fm.error.issues[0]?.path.join(".") ?? "(root)",
+      });
+      return null;
+    }
+    return { frontmatter: fm.data, body: parsed.content };
   } catch (err) {
     log.warn("recompile", "frontmatter", "parse failed", {
       msg: err instanceof Error ? err.message : "unknown",
@@ -395,15 +403,8 @@ type RecompileOutcome =
   | { ok: false; error: string; skipReason: SkipReason };
 
 async function recompileOne(entry: ParsedEntry, env: Env): Promise<RecompileOutcome> {
-  const url = typeof entry.frontmatter.url === "string" ? entry.frontmatter.url : null;
-  const added = typeof entry.frontmatter.added === "string" ? entry.frontmatter.added : null;
-  const existingTitle =
-    typeof entry.frontmatter.title === "string" ? entry.frontmatter.title : undefined;
-  if (!url || !added) {
-    return { ok: false, error: "missing url or added", skipReason: "other" };
-  }
-
-  const archive = await fetchInternetArchive(url, added);
+  const { url, title, added } = entry.frontmatter;
+  const archive = await fetchInternetArchive(url, added.toISOString());
   if (!archive.ok) {
     return {
       ok: false,
@@ -417,7 +418,7 @@ async function recompileOne(entry: ParsedEntry, env: Env): Promise<RecompileOutc
     model: env.ANTHROPIC_MODEL,
     systemPrompt: LINK_SUMMARY_SYSTEM,
     userMessage: buildRecompileUserMessage({
-      title: existingTitle,
+      title,
       url,
       excerpt: archive.data.excerpt,
     }),
@@ -427,10 +428,10 @@ async function recompileOne(entry: ParsedEntry, env: Env): Promise<RecompileOutc
   }
 
   const rebuilt = buildRecompiledMarkdown({
-    title: summary.data.title || existingTitle || url,
+    title: summary.data.title || title || url,
     url,
     summary: summary.data,
-    added: new Date(added),
+    added,
     compiledAt: new Date(),
   });
 

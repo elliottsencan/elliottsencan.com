@@ -25,16 +25,21 @@ import type { LinkSummary } from "./types.ts";
 
 type Entry = Parameters<typeof applyScope>[0][number];
 
-function entry(overrides: Partial<Entry["frontmatter"]> & { path?: string } = {}): Entry {
-  const { path, ...frontmatter } = overrides;
+function entry(
+  overrides: Partial<Omit<Entry["frontmatter"], "added">> & { path?: string; added?: string | Date } = {},
+): Entry {
+  const { path, added, ...rest } = overrides;
   return {
     path: path ?? "src/content/reading/2026-04/2026-04-01t000000-example.md",
     sha: "deadbeef",
     body: "",
     frontmatter: {
+      title: "Example",
       url: "https://example.com/",
-      added: "2026-04-01T00:00:00.000Z",
-      ...frontmatter,
+      summary: "An example entry.",
+      category: "tech",
+      added: added ? new Date(added) : new Date("2026-04-01T00:00:00.000Z"),
+      ...rest,
     },
   };
 }
@@ -157,6 +162,34 @@ describe("parseFrontmatter", () => {
 
   it("returns null when frontmatter block is empty", () => {
     expect(parseFrontmatter("just body, no frontmatter")).toBeNull();
+  });
+
+  it("parses unquoted ISO dates that js-yaml turns into Date objects", () => {
+    // Regression: typeof === 'string' check failed for every entry written
+    // by /link because js-yaml parses bare ISO datetimes as !!timestamp.
+    const md = [
+      "---",
+      'title: "Example"',
+      "url: https://example.com/post",
+      'summary: "An example."',
+      "category: tech",
+      "added: 2026-04-23T22:04:24.354Z",
+      "compiled_at: 2026-04-23T22:04:24.354Z",
+      "compiled_with: claude-sonnet-4-6",
+      "---",
+      "",
+    ].join("\n");
+    const out = parseFrontmatter(md);
+    expect(out).not.toBeNull();
+    expect(out!.frontmatter.added).toBeInstanceOf(Date);
+    expect(out!.frontmatter.added.toISOString()).toBe("2026-04-23T22:04:24.354Z");
+  });
+
+  it("returns null when frontmatter is missing required fields", () => {
+    // Schema rejects entries without `summary`, `category`, etc. — better to
+    // skip with a logged reason than commit garbage downstream.
+    const md = ["---", 'title: "Just a title"', "---", ""].join("\n");
+    expect(parseFrontmatter(md)).toBeNull();
   });
 });
 
