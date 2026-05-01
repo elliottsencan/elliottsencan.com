@@ -17,10 +17,11 @@ function dateLine(date: Date): string {
 }
 
 export async function GET() {
-  const [blog, reading, wiki] = await Promise.all([
+  const [blog, reading, wiki, experiments] = await Promise.all([
     getCollection("blog"),
     getCollection("reading"),
     getCollection("wiki"),
+    getCollection("experiments"),
   ]);
 
   const writing = blog
@@ -93,6 +94,23 @@ export async function GET() {
   lines.push(
     `- [What I'm working on now](${SITE_URL}/now): Weekly-updated snapshot of current focus, reading, and recent commits.`,
   );
+  lines.push("");
+
+  lines.push("## Experiments");
+  lines.push("");
+  lines.push(
+    `- [Experiments index](${SITE_URL}/experiments): AI engineering experiments with live numbers, runnable harnesses, and reproducible results. Distinct from writing (essays) and projects (case studies).`,
+  );
+  if (experiments.length > 0) {
+    const recent = [...experiments]
+      .sort((a, b) => b.data.lastRunDate.valueOf() - a.data.lastRunDate.valueOf())
+      .slice(0, 5);
+    for (const e of recent) {
+      lines.push(
+        `- [${e.data.title}](${SITE_URL}/experiments/${e.id}/) (${dateLine(e.data.lastRunDate)}, ${e.data.status}): ${e.data.tldr}`,
+      );
+    }
+  }
   lines.push("");
 
   lines.push("## Reading log (recent citations)");

@@ -3,6 +3,7 @@ import { glob } from "astro/loaders";
 import { z } from "astro/zod";
 import {
   BlogFrontmatterSchema,
+  ExperimentFrontmatterSchema,
   NowArchiveFrontmatterSchema,
   NowFrontmatterSchema,
   ReadingFrontmatterSchema,
@@ -60,4 +61,11 @@ const wiki = defineCollection({
   schema: WikiFrontmatterSchema,
 });
 
-export const collections = { blog, projects, now, nowArchive, reading, wiki };
+// Glob is intentionally non-recursive: raw measurements live in
+// `src/content/experiments/data/*.json` and are not Astro-managed content.
+const experiments = defineCollection({
+  loader: glob({ pattern: "*.md", base: "./src/content/experiments" }),
+  schema: ExperimentFrontmatterSchema,
+});
+
+export const collections = { blog, projects, now, nowArchive, reading, wiki, experiments };

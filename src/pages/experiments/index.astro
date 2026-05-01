@@ -1,0 +1,78 @@
+---
+import { getCollection } from "astro:content";
+import Container from "@components/Container.astro";
+import LabeledRule from "@components/LabeledRule.astro";
+import Link from "@components/Link.astro";
+import Layout from "@layouts/Layout.astro";
+
+const experiments = (await getCollection("experiments")).sort(
+  (a, b) => b.data.lastRunDate.valueOf() - a.data.lastRunDate.valueOf(),
+);
+
+const dateFormatter = new Intl.DateTimeFormat("en-US", {
+  day: "2-digit",
+  month: "short",
+  year: "numeric",
+});
+---
+
+<Layout
+  title="Experiments"
+  description="AI engineering experiments with live numbers, runnable harnesses, and reproducible results."
+>
+  <Container>
+    <div
+      class="space-y-10"
+      data-pagefind-body
+      data-pagefind-filter="type:Experiment"
+    >
+      <LabeledRule>Experiments</LabeledRule>
+
+      <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
+        AI engineering work with numbers attached. Each experiment states its
+        hypothesis up front, links to the harness, and reports measured
+        results. Distinct from <Link href="/writing">writing</Link>{" "}
+        (essays about work) and <Link href="/projects">projects</Link>{" "}
+        (case studies of shipped work).
+      </p>
+
+      {
+        experiments.length > 0 ? (
+          <ul class="not-prose flex flex-col gap-10 text-sm">
+            {experiments.map((experiment) => (
+              <li class="space-y-2">
+                <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                  <Link href={`/experiments/${experiment.id}/`}>
+                    {experiment.data.title}
+                  </Link>
+                  <span class="font-mono text-[10px] uppercase tracking-widest text-black/50 dark:text-white/50">
+                    {experiment.data.status}
+                  </span>
+                </div>
+                <p class="text-sm leading-relaxed text-black/75 dark:text-white/75">
+                  {experiment.data.hypothesis}
+                </p>
+                <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1 font-mono text-[10px] uppercase tracking-widest text-black/50 dark:text-white/50">
+                  <span>
+                    {experiment.data.headlineMetric.label}:{" "}
+                    <span class="text-black/75 dark:text-white/75">
+                      {experiment.data.headlineMetric.value}
+                    </span>
+                  </span>
+                  <time datetime={experiment.data.lastRunDate.toISOString()}>
+                    last run {dateFormatter.format(experiment.data.lastRunDate)}
+                  </time>
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
+            Nothing here yet. Experiments land here once their harnesses
+            produce measurements.
+          </p>
+        )
+      }
+    </div>
+  </Container>
+</Layout>

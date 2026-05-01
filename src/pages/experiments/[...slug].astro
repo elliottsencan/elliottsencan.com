@@ -1,0 +1,128 @@
+---
+import { type CollectionEntry, getCollection, render } from "astro:content";
+import Container from "@components/Container.astro";
+import LabeledRule from "@components/LabeledRule.astro";
+import Link from "@components/Link.astro";
+import Layout from "@layouts/Layout.astro";
+import { loadExperimentData } from "@lib/experiment-data";
+
+export async function getStaticPaths() {
+  const experiments = await getCollection("experiments");
+  // Eagerly load each experiment's JSON at build time so the detail page
+  // renders inert HTML — no client-side fetches, no runtime file reads.
+  return Promise.all(
+    experiments.map(async (experiment) => ({
+      params: { slug: experiment.id },
+      props: {
+        experiment,
+        data: await loadExperimentData(experiment.data.dataPath),
+      },
+    })),
+  );
+}
+
+type Props = {
+  experiment: CollectionEntry<"experiments">;
+  data: unknown | null;
+};
+const { experiment, data } = Astro.props;
+const { Content } = await render(experiment);
+
+const dateFormatter = new Intl.DateTimeFormat("en-US", {
+  day: "2-digit",
+  month: "short",
+  year: "numeric",
+});
+---
+
+<Layout
+  title={`Experiment: ${experiment.data.title}`}
+  description={experiment.data.tldr}
+>
+  <Container>
+    <div
+      class="space-y-10"
+      data-pagefind-body
+      data-pagefind-filter="type:Experiment"
+    >
+      <LabeledRule>
+        <Link href="/experiments/">Experiments</Link> / {experiment.id}
+      </LabeledRule>
+
+      <div class="space-y-4">
+        <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <h1 class="text-2xl font-semibold text-black dark:text-white">
+            {experiment.data.title}
+          </h1>
+          <span
+            class="font-mono text-[10px] uppercase tracking-widest text-black/50 dark:text-white/50"
+          >
+            {experiment.data.status}
+          </span>
+        </div>
+        <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
+          <span
+            class="font-mono text-[10px] uppercase tracking-widest text-black/50 dark:text-white/50"
+            >Hypothesis</span
+          >{" "}
+          — {experiment.data.hypothesis}
+        </p>
+        <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
+          {experiment.data.tldr}
+        </p>
+        <div
+          class="flex flex-wrap gap-x-4 gap-y-1 font-mono text-xs uppercase tracking-wider text-black/50 dark:text-white/60"
+        >
+          <span>
+            {experiment.data.headlineMetric.label}:{" "}
+            <span class="text-black/80 dark:text-white/80">
+              {experiment.data.headlineMetric.value}
+            </span>
+          </span>
+          <time datetime={experiment.data.lastRunDate.toISOString()}>
+            last run {dateFormatter.format(experiment.data.lastRunDate)}
+          </time>
+          <time datetime={experiment.data.publishedDate.toISOString()}>
+            published {dateFormatter.format(experiment.data.publishedDate)}
+          </time>
+        </div>
+        {
+          (experiment.data.repoUrl || experiment.data.blogPostSlug) && (
+            <div class="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+              {experiment.data.repoUrl && (
+                <Link href={experiment.data.repoUrl} external>
+                  Harness repo →
+                </Link>
+              )}
+              {experiment.data.blogPostSlug && (
+                <Link href={`/writing/${experiment.data.blogPostSlug}/`}>
+                  Related post →
+                </Link>
+              )}
+            </div>
+          )
+        }
+      </div>
+
+      <div class="prose dark:prose-invert max-w-none">
+        <Content />
+      </div>
+
+      {
+        data !== null && (
+          <section class="space-y-4">
+            <h2 class="font-mono text-xs uppercase tracking-wider text-black/50 dark:text-white/60">
+              Raw measurements
+            </h2>
+            <pre class="not-prose overflow-x-auto rounded border border-black/10 bg-black/5 p-4 font-mono text-[11px] leading-relaxed text-black/85 dark:border-white/10 dark:bg-white/5 dark:text-white/85">{JSON.stringify(data, null, 2)}</pre>
+            {experiment.data.dataPath && (
+              <p class="font-mono text-[10px] uppercase tracking-widest text-black/40 dark:text-white/40">
+                source: {experiment.data.dataPath}
+              </p>
+            )}
+          </section>
+        )
+      }
+    </div>
+  </Container>
+</Layout>

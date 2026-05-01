@@ -14,6 +14,11 @@ import { experimental_AstroContainer as AstroContainer } from "astro/container";
  *
  * `<atom:link rel="self">` is required for feed readers to distinguish this
  * URL as the canonical feed location, and matters for syndication services.
+ *
+ * Experiments are intentionally excluded: they update on re-run (lastRunDate
+ * moves), and feed readers don't have semantics for "edited" entries —
+ * subscribers would either see duplicate items every refresh or miss the
+ * updates entirely. Net-new prose belongs in RSS; living experiments don't.
  */
 export async function GET(context) {
   // Register the MDX renderer so .mdx entries' Content component resolves

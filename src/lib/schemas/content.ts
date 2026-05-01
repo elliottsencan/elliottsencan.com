@@ -83,6 +83,45 @@ export const WikiFrontmatterSchema = z.object({
   compiled_with: z.string(),
 });
 
+export const ExperimentStatuses = ["draft", "running", "live", "archived"] as const;
+
+export const ExperimentFrontmatterSchema = z.object({
+  title: z.string(),
+  // The hypothesis the experiment tests, stated up front. Required so every
+  // experiment page leads with the question, not the result.
+  hypothesis: z.string().min(1),
+  status: z.enum(ExperimentStatuses),
+  // Last time the experiment was run end-to-end. Surfaced on the index card
+  // so a stale experiment is visible before clicking in.
+  lastRunDate: z.coerce.date(),
+  // First-publish date. `lastRunDate` updates as the experiment is re-run;
+  // `publishedDate` is fixed for stable canonical URLs and dating.
+  publishedDate: z.coerce.date(),
+  // 1-2 sentences that include the headline number — what a recruiter or
+  // skim-reader takes away in five seconds.
+  tldr: z.string().min(1),
+  // Single canonical metric for the index card and OG image. `value` is a
+  // formatted string, not a number, so units / percentages / ratios all
+  // render the same way.
+  headlineMetric: z.object({
+    label: z.string().min(1),
+    value: z.string().min(1),
+  }),
+  // Public repo with the harness, dataset, and reproduction instructions.
+  // Optional because some experiments are evaluation-only with no harness
+  // worth open-sourcing.
+  repoUrl: z.url().optional(),
+  // Path under src/content/experiments/data/ to a JSON file holding the raw
+  // measurements. Detail page reads this at build time and renders a numeric
+  // table below the markdown body. Optional so prose-only experiments
+  // (rare) still validate.
+  dataPath: z.string().optional(),
+  // Slug of the blog post that introduces or contextualizes this
+  // experiment, if any. Used to backlink from the detail page.
+  blogPostSlug: z.string().optional(),
+  tags: z.array(z.string()).default([]),
+});
+
 export const BlogFrontmatterSchema = z.object({
   title: z.string(),
   description: z.string(),
@@ -103,3 +142,5 @@ export type NowArchiveFrontmatter = z.infer<typeof NowArchiveFrontmatterSchema>;
 export type ReadingFrontmatter = z.infer<typeof ReadingFrontmatterSchema>;
 export type WikiFrontmatter = z.infer<typeof WikiFrontmatterSchema>;
 export type BlogFrontmatter = z.infer<typeof BlogFrontmatterSchema>;
+export type ExperimentStatus = (typeof ExperimentStatuses)[number];
+export type ExperimentFrontmatter = z.infer<typeof ExperimentFrontmatterSchema>;
