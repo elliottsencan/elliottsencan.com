@@ -165,6 +165,39 @@ describe("buildRecompiledMarkdown", () => {
     );
     expect(data).not.toHaveProperty("topics");
   });
+
+  it("persists compile_cost into frontmatter (recompiles overwrite the prior cost)", () => {
+    const { data } = parseEntry(
+      buildRecompiledMarkdown({
+        ...baseArgs,
+        summary: {
+          ...baseSummary,
+          cost: {
+            usage: {
+              input_tokens: 4_451,
+              output_tokens: 125,
+              cache_creation_input_tokens: 0,
+              cache_read_input_tokens: 0,
+            },
+            model: "claude-sonnet-4-6",
+            pricing: null,
+            cost_usd: 0.015228,
+          },
+        },
+      }),
+    );
+    expect(data.compile_cost).toEqual({
+      usage: {
+        input_tokens: 4_451,
+        output_tokens: 125,
+        cache_creation_input_tokens: 0,
+        cache_read_input_tokens: 0,
+      },
+      model: "claude-sonnet-4-6",
+      pricing: null,
+      cost_usd: 0.015228,
+    });
+  });
 });
 
 describe("parseFrontmatter", () => {
