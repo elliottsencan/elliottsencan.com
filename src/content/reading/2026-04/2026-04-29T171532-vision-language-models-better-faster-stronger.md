@@ -1,10 +1,22 @@
 ---
-title: "Vision Language Models (Better, faster, stronger)"
-url: https://huggingface.co/blog/vlms-2025
-summary: "A comprehensive 2025 update on VLM progress covering new architectures like any-to-any models, reasoning VLMs, small-but-capable models, MoE decoders, vision-language-action models for robotics, multimodal RAG, and emerging safety models."
+title: 'Vision Language Models (Better, Faster, Stronger)'
+url: 'https://huggingface.co/blog/vlms-2025'
+summary: >-
+  A comprehensive 2025 update on VLMs covering new architectures (any-to-any,
+  MoE decoders, reasoning models), smaller capable models, multimodal RAG,
+  safety models, video understanding, and vision-language-action models for
+  robotics.
 category: tech
-added: 2026-04-30T00:15:32.867Z
-author: "merve"
-source: "Hugging Face"
+added: '2026-04-30T00:15:32.867Z'
+author: merve
+source: Hugging Face
+topics:
+  - vision-language-models
+  - multimodal-ai
+  - model-architecture
+  - retrieval-augmented-generation
+  - robotics
+compiled_at: '2026-05-01T04:00:14.438Z'
+compiled_with: claude-sonnet-4-6
 ---
 
