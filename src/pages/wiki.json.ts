@@ -44,6 +44,7 @@ export async function GET() {
         related_concepts: resolved.related,
         compiled_at: concept.data.compiled_at.toISOString(),
         compiled_with: concept.data.compiled_with,
+        compile_cost: concept.data.compile_cost,
         body: concept.body?.trim() ?? "",
       };
     }),
