@@ -299,3 +299,102 @@ export function applyAnchorInsertion(
   const out = stringifyMarkdown(root);
   return body.endsWith("\n") ? out : out.replace(/\n$/, "");
 }
+
+export type DroppedLinkReason = "unknown-reading-slug" | "wiki-link";
+export type DroppedLink = { url: string; anchor: string; reason: DroppedLinkReason };
+
+/**
+ * Unwrap LLM-emitted /wiki/<slug> links unconditionally (those are inserted
+ * downstream by the validated crosslink phase) and unwrap /reading/<slug>
+ * links whose slug isn't in the known set. Unwrapping replaces the link
+ * node with its inline children, preserving the anchor text.
+ */
+export function repairWikiBodyLinks(
+  body: string,
+  knownReadingSlugs: ReadonlySet<string>,
+): { body: string; dropped: DroppedLink[] } {
+  const root = parseMarkdown(body);
+  const dropped: DroppedLink[] = [];
+  const toUnwrap: Array<{ parent: Parent; index: number; link: Link; reason: DroppedLinkReason }> =
+    [];
+
+  const walk = (node: Nodes): void => {
+    if (!("children" in node)) {
+      return;
+    }
+    const parent = node as Parent;
+    parent.children.forEach((child, index) => {
+      if ((child as Nodes).type === "link") {
+        const link = child as Link;
+        const slug = readingSlugFromInternalUrl(link.url);
+        if (slug !== null) {
+          if (!knownReadingSlugs.has(slug)) {
+            toUnwrap.push({ parent, index, link, reason: "unknown-reading-slug" });
+          }
+          return;
+        }
+        if (isWikiUrl(link.url)) {
+          toUnwrap.push({ parent, index, link, reason: "wiki-link" });
+          return;
+        }
+      }
+      walk(child as Nodes);
+    });
+  };
+  walk(root);
+
+  // Unwrap from highest index down so earlier indices remain valid as we splice.
+  const grouped = new Map<Parent, typeof toUnwrap>();
+  for (const item of toUnwrap) {
+    const list = grouped.get(item.parent);
+    if (list) {
+      list.push(item);
+    } else {
+      grouped.set(item.parent, [item]);
+    }
+  }
+  for (const [parent, items] of grouped) {
+    items.sort((a, b) => b.index - a.index);
+    for (const { index, link, reason } of items) {
+      const anchor = joinedText(link);
+      dropped.push({ url: link.url, anchor, reason });
+      parent.children.splice(index, 1, ...(link.children as Parent["children"]));
+    }
+  }
+
+  if (dropped.length === 0) {
+    return { body, dropped };
+  }
+  const out = stringifyMarkdown(root);
+  return {
+    body: body.endsWith("\n") ? out : out.replace(/\n$/, ""),
+    dropped,
+  };
+}
+
+function readingSlugFromInternalUrl(url: string): string | null {
+  const cleaned = stripQueryAndFragment(url);
+  const match = cleaned.match(/^\/reading\/(.+?)\/?$/);
+  if (!match) {
+    return null;
+  }
+  return match[1] ?? null;
+}
+
+function isWikiUrl(url: string): boolean {
+  return /^\/wiki\//.test(stripQueryAndFragment(url));
+}
+
+function stripQueryAndFragment(url: string): string {
+  const trimmed = url.trim();
+  const hashIdx = trimmed.indexOf("#");
+  const queryIdx = trimmed.indexOf("?");
+  let end = trimmed.length;
+  if (hashIdx >= 0) {
+    end = Math.min(end, hashIdx);
+  }
+  if (queryIdx >= 0) {
+    end = Math.min(end, queryIdx);
+  }
+  return trimmed.slice(0, end);
+}

@@ -4,17 +4,24 @@ import Container from "@components/Container.astro";
 import LabeledRule from "@components/LabeledRule.astro";
 import Link from "@components/Link.astro";
 import Layout from "@layouts/Layout.astro";
+import { buildWikiLinkGraph, resolveRelatedConcepts, type WikiLinkGraph } from "@lib/wiki-graph";
 
 export async function getStaticPaths() {
   const concepts = await getCollection("wiki");
+  const graph = buildWikiLinkGraph(concepts.map((c) => ({ id: c.id, body: c.body ?? "" })));
+  const knownSlugs = new Set(concepts.map((c) => c.id));
   return concepts.map((concept) => ({
     params: { slug: concept.id },
-    props: concept,
+    props: { concept, graph, knownSlugs },
   }));
 }
 
-type Props = CollectionEntry<"wiki">;
-const concept = Astro.props;
+type Props = {
+  concept: CollectionEntry<"wiki">;
+  graph: WikiLinkGraph;
+  knownSlugs: Set<string>;
+};
+const { concept, graph, knownSlugs } = Astro.props;
 const { Content } = await render(concept);
 
 const reading = await getCollection("reading");
@@ -30,6 +37,18 @@ const missingSources = resolvedSources.filter((s) => !s.entry).map((s) => s.slug
 if (missingSources.length > 0) {
   console.warn(
     `[wiki:${concept.id}] ${missingSources.length} missing source slug(s): ${missingSources.join(", ")}`,
+  );
+}
+
+const { related: relatedConcepts, hallucinated } = resolveRelatedConcepts(
+  graph,
+  concept.id,
+  concept.data.related_concepts,
+  knownSlugs,
+);
+if (hallucinated.length > 0) {
+  console.warn(
+    `[wiki:${concept.id}] ${hallucinated.length} hallucinated related_concept(s): ${hallucinated.join(", ")}`,
   );
 }
 
@@ -113,13 +132,13 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
       </section>
 
       {
-        concept.data.related_concepts && concept.data.related_concepts.length > 0 && (
+        relatedConcepts.length > 0 && (
           <section class="space-y-4">
             <h2 class="font-mono text-xs uppercase tracking-wider text-black/50 dark:text-white/60">
               Related concepts
             </h2>
             <ul class="not-prose flex flex-wrap gap-3 text-sm">
-              {concept.data.related_concepts.map((slug) => (
+              {relatedConcepts.map((slug) => (
                 <li>
                   <Link href={`/wiki/${slug}/`}>{slug}</Link>
                 </li>

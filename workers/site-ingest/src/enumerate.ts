@@ -15,12 +15,16 @@
  */
 
 import type { BlogFrontmatter, WikiFrontmatter } from "@shared/schemas/content.ts";
-import { BlogFrontmatterSchema, WikiFrontmatterSchema } from "@shared/schemas/content.ts";
+import {
+  BlogFrontmatterSchema,
+  ReadingFrontmatterSchema,
+  WikiFrontmatterSchema,
+} from "@shared/schemas/content.ts";
 import matter from "gray-matter";
 import type { z } from "zod";
 import { CORPORA } from "./crosslink-config.ts";
 import type { Result } from "./types.ts";
-import { log } from "./util.ts";
+import { log, readingSlugFromPath } from "./util.ts";
 
 type DirEntry = { type: "file" | "dir"; name: string; path: string; sha: string };
 
@@ -115,4 +119,60 @@ export async function enumerateBlogWithBodies(deps: EnumerateDeps): Promise<Blog
     deps,
     (slug, path, fm, body) => ({ slug, path, frontmatter: fm, body }),
   );
+}
+
+/**
+ * Slug → topics[] for every reading entry. The wiki layer uses these to
+ * inherit candidate-selection tags from its contributing sources, so that
+ * wiki↔wiki proposals match by shared topic rather than just by slug.
+ */
+export async function enumerateReadingTopics(
+  readingDir: string,
+  deps: EnumerateDeps,
+): Promise<Map<string, string[]>> {
+  const out = new Map<string, string[]>();
+  const months = await deps.listDir(readingDir);
+  if (!months.ok) {
+    if (months.error.includes("404") || months.error.toLowerCase().includes("not found")) {
+      return out;
+    }
+    log.warn("enumerate", "reading-topics", "listDir-failed", {
+      dir: readingDir,
+      error: months.error,
+    });
+    return out;
+  }
+  for (const month of months.data) {
+    if (month.type !== "dir") {
+      continue;
+    }
+    const files = await deps.listDir(month.path);
+    if (!files.ok) {
+      log.warn("enumerate", "reading-topics", "month-listDir-failed", {
+        month: month.path,
+        error: files.error,
+      });
+      continue;
+    }
+    for (const file of files.data) {
+      if (file.type !== "file" || !file.name.endsWith(".md")) {
+        continue;
+      }
+      const loaded = await deps.getFile(file.path);
+      if (!loaded.ok) {
+        log.warn("enumerate", "reading-topics", "getFile-failed", {
+          path: file.path,
+          error: loaded.error,
+        });
+        continue;
+      }
+      const parsed = matter(loaded.data.content);
+      const fm = ReadingFrontmatterSchema.safeParse(parsed.data);
+      if (!fm.success) {
+        continue;
+      }
+      out.set(readingSlugFromPath(file.path), fm.data.topics ?? []);
+    }
+  }
+  return out;
 }

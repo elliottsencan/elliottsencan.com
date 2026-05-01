@@ -69,6 +69,15 @@ export const WikiFrontmatterSchema = z.object({
     .array(z.string().regex(/^[a-z0-9-]+(\/[a-z0-9-]+)*$/, "kebab-case slug required"))
     .min(MIN_WIKI_SOURCES)
     .refine((arr) => new Set(arr).size === arr.length, "duplicate sources"),
+  /**
+   * @deprecated Synthesize no longer emits this. The render layer unions
+   *   graph-derived edges (from inline `[…](/wiki/<slug>)` links inserted by
+   *   the validated crosslink phase) with any legacy entries here that still
+   *   resolve against the live wiki collection. Hallucinated entries are
+   *   logged at build time. Remove this field once every
+   *   `src/content/wiki/*.md` entry has been recompiled with the
+   *   link-graph-aware synthesize prompt.
+   */
   related_concepts: z.array(z.string()).optional(),
   compiled_at: z.coerce.date(),
   compiled_with: z.string(),

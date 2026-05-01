@@ -149,8 +149,7 @@ Return ONE JSON object with these exact fields:
 
 - title: short human-readable concept name. Title-case-ish but not a headline ("Responsive design", "LLM finetuning", "Festival operations"). Match the natural reading of the topic slug; do not include the word "concept" or "wiki" or "topic".
 - summary: ONE sentence, 240 characters or fewer, describing the concept itself and what the cited sources collectively say about it. No "this article" or "this wiki page" framings.
-- body: the synthesis article. 400 to 1500 characters. Markdown paragraphs. Inline citations as described above. If the cited evidence is thin (only two sources, narrow overlap), write a shorter article rather than padding.
-- related_concepts: optional array of other topic slugs that materially relate to this one. Pull from the "Other active concepts" list in the user message if any are relevant; never invent slugs not in that list.
+- body: the synthesis article. 400 to 1500 characters. Markdown paragraphs. Inline citations to /reading/<slug> as described above. Do NOT emit any /wiki/<slug> links — wiki-to-wiki links are inserted by a downstream pipeline stage that validates against the actual compiled corpus.
 
 Return ONLY the JSON object. No preamble, no explanation, no code fence.
 

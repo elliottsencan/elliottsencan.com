@@ -9,6 +9,7 @@
 
 import matter from "gray-matter";
 import { describe, expect, it } from "vitest";
+import { WikiArticleSchema } from "./anthropic.ts";
 import { buildArticleMarkdown, clusterByTopic, setEquals } from "./synthesize.ts";
 import type { WikiArticle } from "./types.ts";
 
@@ -147,29 +148,9 @@ describe("buildArticleMarkdown", () => {
     expect(content.trim()).toBe("Body content with [a citation](/reading/2026-04/foo).");
   });
 
-  it("omits related_concepts when absent", () => {
+  it("never emits related_concepts (derived at render time from the link graph)", () => {
     const { data } = parseEntry(buildArticleMarkdown(baseArgs));
     expect(data).not.toHaveProperty("related_concepts");
-  });
-
-  it("omits related_concepts when present but empty", () => {
-    const { data } = parseEntry(
-      buildArticleMarkdown({
-        ...baseArgs,
-        article: { ...baseArticle, related_concepts: [] },
-      }),
-    );
-    expect(data).not.toHaveProperty("related_concepts");
-  });
-
-  it("includes related_concepts when populated", () => {
-    const { data } = parseEntry(
-      buildArticleMarkdown({
-        ...baseArgs,
-        article: { ...baseArticle, related_concepts: ["css-primitives"] },
-      }),
-    );
-    expect(data.related_concepts).toEqual(["css-primitives"]);
   });
 
   it("trims trailing whitespace from the body so re-runs don't produce diff churn", () => {
@@ -180,5 +161,26 @@ describe("buildArticleMarkdown", () => {
       }),
     );
     expect(content.endsWith("\n\n\n")).toBe(false);
+  });
+});
+
+// ---------- WikiArticleSchema ----------
+
+describe("WikiArticleSchema", () => {
+  // Pin the contract: the schema dropped `related_concepts`, but Zod's default
+  // strip behavior should silently ignore the field if a model still emits it
+  // (e.g. via training inertia). Tightening to .strict() later would break
+  // every wiki run; this test surfaces that as an intentional decision.
+  it("silently ignores stray related_concepts on input (default strip)", () => {
+    const result = WikiArticleSchema.safeParse({
+      title: "Responsive design",
+      summary: "ok",
+      body: "ok",
+      related_concepts: ["x"],
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data).not.toHaveProperty("related_concepts");
+    }
   });
 });

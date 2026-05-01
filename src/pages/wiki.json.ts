@@ -1,4 +1,5 @@
 import { getCollection } from "astro:content";
+import { buildWikiLinkGraph, resolveRelatedConcepts } from "@lib/wiki-graph";
 
 /**
  * Agent-queryable snapshot of the wiki concept layer.
@@ -8,35 +9,39 @@ import { getCollection } from "astro:content";
  * (reading entries sharing a topic). This endpoint emits every concept
  * with its frontmatter and body for programmatic consumption.
  *
- * `related_concepts` is filtered to entries that resolve against the
- * current wiki collection — broken edges are dropped so downstream
- * consumers never see hallucinated targets. Drift is logged at build
- * time; `/lint` carries the canonical structural report.
+ * `related_concepts` is the union of (a) graph-derived edges from inline
+ * `[…](/wiki/<slug>)` references in article bodies (inserted by the
+ * validated crosslink phase) and (b) legacy frontmatter entries that still
+ * resolve against the live collection. Hallucinated legacy entries are
+ * dropped here and warned about at build time. `/lint` carries the
+ * canonical structural drift report.
  */
 
 export async function GET() {
   const concepts = (await getCollection("wiki")).sort((a, b) => a.id.localeCompare(b.id));
-  const wikiSlugs = new Set(concepts.map((c) => c.id));
+  const knownSlugs = new Set(concepts.map((c) => c.id));
+  const graph = buildWikiLinkGraph(concepts.map((c) => ({ id: c.id, body: c.body ?? "" })));
 
   const hallucinated: Array<{ concept: string; missing: string }> = [];
-
   const payload = {
     generated_at: new Date().toISOString(),
     count: concepts.length,
     concepts: concepts.map((concept) => {
-      const related = (concept.data.related_concepts ?? []).filter((slug) => {
-        if (wikiSlugs.has(slug)) {
-          return true;
-        }
-        hallucinated.push({ concept: concept.id, missing: slug });
-        return false;
-      });
+      const resolved = resolveRelatedConcepts(
+        graph,
+        concept.id,
+        concept.data.related_concepts,
+        knownSlugs,
+      );
+      for (const missing of resolved.hallucinated) {
+        hallucinated.push({ concept: concept.id, missing });
+      }
       return {
         slug: concept.id,
         title: concept.data.title,
         summary: concept.data.summary,
         sources: concept.data.sources,
-        related_concepts: related,
+        related_concepts: resolved.related,
         compiled_at: concept.data.compiled_at.toISOString(),
         compiled_with: concept.data.compiled_with,
         body: concept.body?.trim() ?? "",

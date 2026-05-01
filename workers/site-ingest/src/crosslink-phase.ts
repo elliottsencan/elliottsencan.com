@@ -26,7 +26,11 @@ import {
 } from "./crosslink-config.ts";
 import { applyAnchorInsertion, locateAnchor, parseMarkdown } from "./crosslink-mdast.ts";
 import type { BlogEntry, EnumerateDeps, WikiEntry } from "./enumerate.ts";
-import { enumerateBlogWithBodies, enumerateWikiWithBodies } from "./enumerate.ts";
+import {
+  enumerateBlogWithBodies,
+  enumerateReadingTopics,
+  enumerateWikiWithBodies,
+} from "./enumerate.ts";
 import { CROSSLINK_SUGGEST_SYSTEM } from "./prompts.ts";
 import type { Env } from "./types.ts";
 import { log } from "./util.ts";
@@ -276,16 +280,34 @@ export function pathToPiece(path: string): Piece | null {
   return { corpus: meta.corpus, slug, url: `${meta.urlPrefix}${slug}` };
 }
 
-type EntryRow = { piece: Piece; tags: string[]; series: string | undefined; body: string };
+export type EntryRow = { piece: Piece; tags: string[]; series: string | undefined; body: string };
 
-function snapshotToRows(snapshot: CorpusSnapshot): EntryRow[] {
+export function snapshotToRows(
+  snapshot: CorpusSnapshot,
+  readingTopics?: ReadonlyMap<string, string[]>,
+): EntryRow[] {
   const rows: EntryRow[] = [];
   for (const w of snapshot.wiki) {
+    // Wiki entries inherit topic tags from their contributing reading
+    // sources so wiki↔wiki candidate selection matches by shared concept,
+    // not just by slug. Slug is kept as a tag for self-citing edge cases
+    // (a reading entry tagged with the wiki concept's slug remains a
+    // valid pairing).
+    const inherited = new Set<string>([w.slug]);
+    if (readingTopics) {
+      for (const sourceSlug of w.frontmatter.sources) {
+        const topics = readingTopics.get(sourceSlug);
+        if (!topics) {
+          continue;
+        }
+        for (const t of topics) {
+          inherited.add(t);
+        }
+      }
+    }
     rows.push({
       piece: { corpus: "wiki", slug: w.slug, url: `/wiki/${w.slug}` },
-      // Wiki entries don't carry tags. Treat the slug as the only tag so
-      // candidate filtering has a signal.
-      tags: [w.slug],
+      tags: [...inherited],
       series: undefined,
       body: w.body,
     });
@@ -390,12 +412,13 @@ export function makeCrosslinkRunner(
       .map((f) => pathToPiece(f.path))
       .filter((p): p is Piece => !!p);
 
-    const [wiki, blog] = await Promise.all([
+    const [wiki, blog, readingTopics] = await Promise.all([
       enumerateWikiWithBodies(ghDeps),
       enumerateBlogWithBodies(ghDeps),
+      enumerateReadingTopics(env.READING_DIR, ghDeps),
     ]);
     const snapshot = augmentSnapshot({ wiki, blog }, input.mutation);
-    const rows = snapshotToRows(snapshot);
+    const rows = snapshotToRows(snapshot, readingTopics);
     const rowsBySlug = new Map(rows.map((r) => [`${r.piece.corpus}/${r.piece.slug}`, r]));
 
     const newPieces = { added: newAdded, changed: newChanged };

@@ -26,7 +26,10 @@ import type { LinkSummary } from "./types.ts";
 type Entry = Parameters<typeof applyScope>[0][number];
 
 function entry(
-  overrides: Partial<Omit<Entry["frontmatter"], "added">> & { path?: string; added?: string | Date } = {},
+  overrides: Partial<Omit<Entry["frontmatter"], "added">> & {
+    path?: string;
+    added?: string | Date;
+  } = {},
 ): Entry {
   const { path, added, ...rest } = overrides;
   return {

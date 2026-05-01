@@ -19,8 +19,8 @@
  * runs across multiple invocations with the `slugs` scope.
  */
 
-import { ReadingFrontmatterSchema } from "@shared/schemas/content.ts";
 import type { ReadingFrontmatter } from "@shared/schemas/content.ts";
+import { ReadingFrontmatterSchema } from "@shared/schemas/content.ts";
 import { format as formatDate } from "date-fns";
 import matter from "gray-matter";
 import { convert as htmlToText } from "html-to-text";
