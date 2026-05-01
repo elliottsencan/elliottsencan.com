@@ -38,15 +38,15 @@ import {
   createGitHubClient,
   findOpenPrByBranch,
   type GitHubClient,
+  commitFiles,
   getBranchSha,
   getFile,
   listDir,
   openPullRequest,
-  putFile,
 } from "./github.ts";
 import { CROSSLINK_SUGGEST_SYSTEM } from "./prompts.ts";
 import type { Env } from "./types.ts";
-import { isNotFoundError, jsonResponse, log } from "./util.ts";
+import { jsonResponse, log } from "./util.ts";
 
 const MAX_SCOPE_PIECES = 25;
 
@@ -385,32 +385,22 @@ async function openCrosslinkPr(
     return jsonResponse({ ok: false, error: `branch: ${created.error}` }, 502);
   }
 
-  const committed: string[] = [];
-  for (const f of phase.changedFiles) {
-    const sha = await getFile(f.path, "main", gh);
-    if (!sha.ok && !isNotFoundError(sha.error)) {
-      log.error("crosslink", "commit", "getFile non-404 failure", {
-        path: f.path,
-        error: sha.error,
-      });
-      continue;
-    }
-    const put = await putFile({
-      path: f.path,
-      branch,
-      content: matter.stringify(f.after, f.frontmatter),
-      message: `crosslink: ${f.path}`,
-      ...(sha.ok ? { sha: sha.data.sha } : {}),
-      gh,
-    });
-    if (!put.ok) {
-      log.error("crosslink", "commit", "put failed", { path: f.path, error: put.error });
-      continue;
-    }
-    committed.push(f.path);
-  }
+  const committed = phase.changedFiles.map((f) => f.path);
   if (committed.length === 0) {
     return jsonResponse({ ok: false, error: "no files committed", branch }, 502);
+  }
+  const put = await commitFiles({
+    branch,
+    files: phase.changedFiles.map((f) => ({
+      path: f.path,
+      content: matter.stringify(f.after, f.frontmatter),
+    })),
+    message: `crosslink: ${committed.length} file${committed.length === 1 ? "" : "s"}`,
+    gh,
+  });
+  if (!put.ok) {
+    log.error("crosslink", "commit", "commit failed", { count: committed.length, error: put.error });
+    return jsonResponse({ ok: false, error: `commit: ${put.error}`, branch }, 502);
   }
 
   const existing = await findOpenPrByBranch(branch, gh);

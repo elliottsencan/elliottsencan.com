@@ -143,6 +143,94 @@ export async function putFile(args: {
   }
 }
 
+/**
+ * Atomic multi-file commit via the Git Trees API. One commit on `branch`
+ * regardless of how many files are written, so a synthesis run that touches
+ * 20 wiki articles produces 1 commit (and 1 Cloudflare Pages preview build)
+ * instead of 20.
+ *
+ * Sha-free by construction: blob shas come from `git/blobs`, the tree is
+ * built off the branch's current head, and the ref is advanced atomically.
+ * No "look up sha first" dance, no main-vs-branch confusion.
+ *
+ * Empty `files` is a caller bug (it would still create a no-op commit), so
+ * fail loudly rather than silently producing an empty commit.
+ */
+export async function commitFiles(args: {
+  branch: string;
+  files: Array<{ path: string; content: string }>;
+  message: string;
+  gh: GitHubClient;
+}): Promise<Result<{ commitSha: string }>> {
+  const { branch, files, message, gh } = args;
+  if (files.length === 0) {
+    return { ok: false, error: "commitFiles called with no files" };
+  }
+  try {
+    const head = await gh.octokit.rest.git.getRef({
+      owner: gh.owner,
+      repo: gh.repo,
+      ref: `heads/${branch}`,
+    });
+    const parentSha = head.data.object.sha;
+    const parentCommit = await gh.octokit.rest.git.getCommit({
+      owner: gh.owner,
+      repo: gh.repo,
+      commit_sha: parentSha,
+    });
+    const baseTreeSha = parentCommit.data.tree.sha;
+
+    const blobs = await Promise.all(
+      files.map(async (f) => {
+        const bytes = new TextEncoder().encode(f.content);
+        let binary = "";
+        for (const byte of bytes) {
+          binary += String.fromCharCode(byte);
+        }
+        const base64 = btoa(binary);
+        const r = await gh.octokit.rest.git.createBlob({
+          owner: gh.owner,
+          repo: gh.repo,
+          content: base64,
+          encoding: "base64",
+        });
+        return { path: f.path, sha: r.data.sha };
+      }),
+    );
+
+    const tree = await gh.octokit.rest.git.createTree({
+      owner: gh.owner,
+      repo: gh.repo,
+      base_tree: baseTreeSha,
+      tree: blobs.map((b) => ({
+        path: b.path,
+        mode: "100644",
+        type: "blob",
+        sha: b.sha,
+      })),
+    });
+
+    const commit = await gh.octokit.rest.git.createCommit({
+      owner: gh.owner,
+      repo: gh.repo,
+      message,
+      tree: tree.data.sha,
+      parents: [parentSha],
+    });
+
+    await gh.octokit.rest.git.updateRef({
+      owner: gh.owner,
+      repo: gh.repo,
+      ref: `heads/${branch}`,
+      sha: commit.data.sha,
+    });
+
+    return { ok: true, data: { commitSha: commit.data.sha } };
+  } catch (err) {
+    return mapError(err, "commit-files", { branch, files: String(files.length) });
+  }
+}
+
 // ---------- pull requests ----------
 
 export async function findOpenPrByBranch(

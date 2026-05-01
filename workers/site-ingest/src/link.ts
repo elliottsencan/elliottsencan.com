@@ -110,10 +110,13 @@ export function makeLinkStrategy(req: LinkRequest): Strategy<LinkSummaryRow> {
     // (which it does separately, with its own title/body).
     prTitle: () => "",
     prBody: () => "",
-    commitMessage: (input) => {
-      const fm = matter(input.kind === "added" ? input.content : input.after).data as {
-        title?: string;
-      };
+    commitMessage: ({ added, changed }) => {
+      const f = added[0] ?? changed[0];
+      if (!f) {
+        return "reading: empty";
+      }
+      const content = "content" in f ? f.content : f.after;
+      const fm = matter(content).data as { title?: string };
       const title = (fm.title ?? "").slice(0, 60) || "entry";
       return `reading: ${title}`;
     },

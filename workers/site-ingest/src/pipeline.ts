@@ -21,7 +21,7 @@
 
 import matter from "gray-matter";
 import type { Env, Result } from "./types.ts";
-import { isNotFoundError, log } from "./util.ts";
+import { log } from "./util.ts";
 
 export type Mutation = {
   added: Array<{ path: string; content: string }>;
@@ -51,9 +51,10 @@ export type CrosslinkResult = {
   changedFiles: CrosslinkChangedFile[];
 };
 
-export type CommitMessageInput =
-  | { kind: "added"; path: string; content: string }
-  | { kind: "changed"; path: string; before: string; after: string };
+export type CommitMessageInput = {
+  added: Array<{ path: string; content: string }>;
+  changed: Array<{ path: string; before: string; after: string }>;
+};
 
 export type Strategy<S = unknown> = {
   name: string;
@@ -61,7 +62,7 @@ export type Strategy<S = unknown> = {
   plan(state: { env: Env }, env: Env): Promise<PlanResult<S>>;
   prTitle(plan: PlanOutput<S>): string;
   prBody(plan: PlanOutput<S>, crosslink?: CrosslinkResult): string;
-  /** Optional per-file commit-message formatter. Default: `${name}: ${path}`. */
+  /** Optional commit-message formatter for the batched mutation commit. Default: `${name}: ${count} file(s)`. */
   commitMessage?(input: CommitMessageInput): string;
 };
 
@@ -86,15 +87,12 @@ export type RunResult<S = unknown> =
 export type GithubDeps = {
   getBranchSha: (branch: string) => Promise<Result<string>>;
   createBranch: (branch: string, fromSha: string) => Promise<Result<{ alreadyExists: boolean }>>;
-  /** Returns `{ ok: false }` with a 404 error for new files; substrate uses that to distinguish "no sha needed" from "sha required but unavailable". */
-  getFile: (path: string, ref: string) => Promise<Result<{ content: string; sha: string }>>;
-  putFile: (args: {
-    path: string;
+  /** Atomic multi-file commit on `branch`. One commit regardless of file count, so a 20-article synthesis run produces 1 commit (and 1 Cloudflare preview build) instead of 20. */
+  commitFiles: (args: {
     branch: string;
-    content: string;
+    files: Array<{ path: string; content: string }>;
     message: string;
-    sha?: string;
-  }) => Promise<Result<{ blobSha: string; commitSha: string }>>;
+  }) => Promise<Result<{ commitSha: string }>>;
   findOpenPrByBranch: (branch: string) => Promise<Result<{ number: number } | null>>;
   openPullRequest: (args: {
     title: string;
@@ -153,7 +151,7 @@ async function commitToPR<S>(
     return { ok: false, status: 502, error: created.error };
   }
 
-  const commitOutcome = await commitMutation(strategy, branch, "main", mutation, deps.github);
+  const commitOutcome = await commitMutation(strategy, branch, mutation, deps.github);
   if (commitOutcome.failure) {
     return commitOutcome.failure;
   }
@@ -161,23 +159,14 @@ async function commitToPR<S>(
   let crosslink: CrosslinkResult | undefined;
   if (options.crosslink === "inline" && deps.runCrosslink) {
     crosslink = await deps.runCrosslink({ mutation, env });
-    for (const f of crosslink.changedFiles) {
-      // Resolve sha against the synthesis branch, not main: files added by
-      // commitMutation in the same run only exist on `branch`, and files it
-      // changed have a fresh post-commit sha there. Reading from main would
-      // miss the former (404 → no sha → 422 "sha wasn't supplied" on put)
-      // and supply a stale sha for the latter.
-      const existing = await deps.github.getFile(f.path, branch);
-      if (!existing.ok && !isNotFoundError(existing.error)) {
-        return { ok: false, status: 502, error: `getFile ${f.path}: ${existing.error}` };
-      }
-      const sha = existing.ok ? existing.data.sha : undefined;
-      const r = await deps.github.putFile({
-        path: f.path,
+    if (crosslink.changedFiles.length > 0) {
+      const r = await deps.github.commitFiles({
         branch,
-        content: matter.stringify(f.after, f.frontmatter),
-        message: `crosslink: ${f.path}`,
-        ...(sha ? { sha } : {}),
+        files: crosslink.changedFiles.map((f) => ({
+          path: f.path,
+          content: matter.stringify(f.after, f.frontmatter),
+        })),
+        message: `crosslink: ${crosslink.changedFiles.length} file${crosslink.changedFiles.length === 1 ? "" : "s"}`,
       });
       if (!r.ok) {
         return { ok: false, status: 502, error: r.error };
@@ -229,7 +218,7 @@ async function commitToMain<S>(
   ctx: ExecutionContext,
   deps: RunDeps,
 ): Promise<RunResult<S>> {
-  const commitOutcome = await commitMutation(strategy, "main", "main", mutation, deps.github);
+  const commitOutcome = await commitMutation(strategy, "main", mutation, deps.github);
   if (commitOutcome.failure) {
     return commitOutcome.failure;
   }
@@ -280,50 +269,24 @@ async function runCrosslinkFollowup(args: {
       });
       return;
     }
-    const committed: typeof result.changedFiles = [];
-    for (const f of result.changedFiles) {
-      const existing = await args.github.getFile(f.path, "main");
-      if (!existing.ok && !isNotFoundError(existing.error)) {
-        log.error("pipeline", "crosslink-followup", "getFile non-404 failure", {
-          path: f.path,
-          error: existing.error,
-        });
-        continue;
-      }
-      const sha = existing.ok ? existing.data.sha : undefined;
-      const put = await args.github.putFile({
+    const put = await args.github.commitFiles({
+      branch,
+      files: result.changedFiles.map((f) => ({
         path: f.path,
-        branch,
         content: matter.stringify(f.after, f.frontmatter),
-        message: `crosslink: ${f.path}`,
-        ...(sha ? { sha } : {}),
-      });
-      if (!put.ok) {
-        log.error("pipeline", "crosslink-followup", "put failed", {
-          path: f.path,
-          error: put.error,
-        });
-        continue;
-      }
-      committed.push(f);
-    }
-    if (committed.length === 0) {
-      log.warn("pipeline", "crosslink-followup", "no files committed; skipping PR open", {
-        strategy: args.strategyName,
+      })),
+      message: `crosslink: ${result.changedFiles.length} file${result.changedFiles.length === 1 ? "" : "s"}`,
+    });
+    if (!put.ok) {
+      log.error("pipeline", "crosslink-followup", "commit failed", {
         proposed: result.changedFiles.length,
+        error: put.error,
       });
       return;
     }
-    const committedPaths = new Set(committed.map((f) => f.path));
-    const appliedCommitted = result.applied.filter((a) => committedPaths.has(a.path));
-    const dropped = result.changedFiles.length - committed.length;
     const opened = await args.github.openPullRequest({
-      title: `Cross-link suggestions (from ${args.strategyName}, ${committed.length} file${committed.length === 1 ? "" : "s"})`,
-      body: buildFollowupPrBody(
-        { ...result, changedFiles: committed, applied: appliedCommitted },
-        args.strategyName,
-        dropped,
-      ),
+      title: `Cross-link suggestions (from ${args.strategyName}, ${result.changedFiles.length} file${result.changedFiles.length === 1 ? "" : "s"})`,
+      body: buildFollowupPrBody(result, args.strategyName, 0),
       head: branch,
       base: "main",
     });
@@ -369,75 +332,28 @@ function buildFollowupPrBody(
 async function commitMutation<S>(
   strategy: Strategy<S>,
   branch: string,
-  destBranch: string,
   mutation: Mutation,
   github: GithubDeps,
 ): Promise<{
   failure: { ok: false; status: number; error: string } | null;
   lastCommitSha: string | undefined;
 }> {
-  let lastCommitSha: string | undefined;
-  for (const f of mutation.added) {
-    // For commitTarget=main, an `added` path can collide with an existing
-    // file (e.g. /link's same-second share-sheet retries). Look up sha
-    // first; treat 404 as a real create. 5xx stays loud.
-    const existing = await github.getFile(f.path, destBranch);
-    if (!existing.ok && !isNotFoundError(existing.error)) {
-      return {
-        failure: { ok: false, status: 502, error: `getFile ${f.path}: ${existing.error}` },
-        lastCommitSha,
-      };
-    }
-    const sha = existing.ok ? existing.data.sha : undefined;
-    const r = await github.putFile({
-      path: f.path,
-      branch,
-      content: f.content,
-      message:
-        strategy.commitMessage?.({ kind: "added", path: f.path, content: f.content }) ??
-        `${strategy.name}: ${f.path}`,
-      ...(sha ? { sha } : {}),
-    });
-    if (!r.ok) {
-      return { failure: { ok: false, status: 502, error: r.error }, lastCommitSha };
-    }
-    lastCommitSha = r.data.commitSha;
+  const total = mutation.added.length + mutation.changed.length;
+  if (total === 0) {
+    return { failure: null, lastCommitSha: undefined };
   }
-  for (const f of mutation.changed) {
-    // Update commits to an existing path require the file's sha. Look it up
-    // on the destination branch rather than threading it through the
-    // strategy contract — keeps Mutation simple.
-    const existing = await github.getFile(f.path, destBranch);
-    if (!existing.ok && !isNotFoundError(existing.error)) {
-      return {
-        failure: {
-          ok: false,
-          status: 502,
-          error: `getFile ${f.path}: ${existing.error}`,
-        },
-        lastCommitSha,
-      };
-    }
-    const sha = existing.ok ? existing.data.sha : undefined;
-    const r = await github.putFile({
-      path: f.path,
-      branch,
-      content: f.after,
-      message:
-        strategy.commitMessage?.({
-          kind: "changed",
-          path: f.path,
-          before: f.before,
-          after: f.after,
-        }) ?? `${strategy.name}: update ${f.path}`,
-      ...(sha ? { sha } : {}),
-    });
-    if (!r.ok) {
-      return { failure: { ok: false, status: 502, error: r.error }, lastCommitSha };
-    }
-    lastCommitSha = r.data.commitSha;
+  const files = [
+    ...mutation.added.map((f) => ({ path: f.path, content: f.content })),
+    ...mutation.changed.map((f) => ({ path: f.path, content: f.after })),
+  ];
+  const message =
+    strategy.commitMessage?.({ added: mutation.added, changed: mutation.changed }) ??
+    `${strategy.name}: ${total} file${total === 1 ? "" : "s"}`;
+  const r = await github.commitFiles({ branch, files, message });
+  if (!r.ok) {
+    return { failure: { ok: false, status: 502, error: r.error }, lastCommitSha: undefined };
   }
-  return { failure: null, lastCommitSha };
+  return { failure: null, lastCommitSha: r.data.commitSha };
 }
 
 function buildBranchName(prefix: string): string {
