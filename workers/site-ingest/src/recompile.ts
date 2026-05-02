@@ -524,6 +524,7 @@ export function buildRecompiledMarkdown(args: {
   }
   data.compiled_at = compiledAt.toISOString();
   data.compiled_with = summary.model;
+  data.compile_cost = summary.cost;
   // Reading entries are source citations, not articles — body stays empty.
   return matter.stringify("", data);
 }

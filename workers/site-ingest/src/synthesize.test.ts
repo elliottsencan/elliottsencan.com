@@ -174,7 +174,7 @@ describe("buildArticleMarkdown", () => {
     expect(content.endsWith("\n\n\n")).toBe(false);
   });
 
-  it("does not leak cost or usage into frontmatter (cost is per-call metadata, not content)", () => {
+  it("persists compile_cost into frontmatter (snapshotted so git becomes the cost-over-time graph)", () => {
     const { data } = parseEntry(
       buildArticleMarkdown({
         ...baseArgs,
@@ -194,9 +194,17 @@ describe("buildArticleMarkdown", () => {
         },
       }),
     );
-    expect(data).not.toHaveProperty("cost");
-    expect(data).not.toHaveProperty("usage");
-    expect(data).not.toHaveProperty("cost_usd");
+    expect(data.compile_cost).toEqual({
+      usage: {
+        input_tokens: 12_345,
+        output_tokens: 678,
+        cache_creation_input_tokens: 0,
+        cache_read_input_tokens: 0,
+      },
+      model: "claude-sonnet-4-6",
+      pricing: null,
+      cost_usd: 0.42,
+    });
   });
 });
 

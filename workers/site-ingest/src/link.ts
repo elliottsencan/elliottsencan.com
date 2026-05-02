@@ -360,7 +360,8 @@ function buildLinkUserMessage(args: {
   return parts.join("\n");
 }
 
-function buildEntryMarkdown(args: {
+// Exported for unit tests.
+export function buildEntryMarkdown(args: {
   title: string;
   titleSource: TitleSource;
   url: string;
@@ -387,6 +388,7 @@ function buildEntryMarkdown(args: {
   data.compiled_at = added.toISOString();
   data.compiled_with = summary.model;
   data.title_source = titleSource;
+  data.compile_cost = summary.cost;
   // Body intentionally empty: reading entries are source citations, not
   // wiki articles. Cross-source synthesis lives in src/content/wiki/,
   // produced by the /synthesize pipeline.

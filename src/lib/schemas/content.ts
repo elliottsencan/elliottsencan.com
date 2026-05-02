@@ -29,6 +29,33 @@ export const NowArchiveFrontmatterSchema = z.object({
   archivedDate: z.coerce.date(),
 });
 
+/**
+ * Per-call Anthropic cost snapshot persisted in reading + wiki frontmatter.
+ * Mirrors `CostRecord` in workers/site-ingest/src/cost.ts so the worker can
+ * write its computed cost directly without translation. Pricing is captured
+ * inline so historical numbers stay reproducible across price-table updates.
+ */
+export const CompileCostSchema = z.object({
+  usage: z.object({
+    input_tokens: z.number().int().nonnegative(),
+    output_tokens: z.number().int().nonnegative(),
+    cache_creation_input_tokens: z.number().int().nonnegative(),
+    cache_read_input_tokens: z.number().int().nonnegative(),
+  }),
+  model: z.string(),
+  pricing: z
+    .object({
+      model: z.string(),
+      input_per_million: z.number(),
+      output_per_million: z.number(),
+      cache_read_per_million: z.number(),
+      cache_write_5m_per_million: z.number(),
+      priced_at: z.string(),
+    })
+    .nullable(),
+  cost_usd: z.number().nullable(),
+});
+
 export const ReadingFrontmatterSchema = z.object({
   title: z.string(),
   url: z.url(),
@@ -53,6 +80,10 @@ export const ReadingFrontmatterSchema = z.object({
   // model's title differs from the page's <title>. Optional so older entries
   // pre-dating the field still validate.
   title_source: z.enum(["model", "fetched", "hostname"]).optional(),
+  // Per-call Anthropic cost snapshot. Optional so existing entries (compiled
+  // before this field landed) validate; populated organically as entries are
+  // ingested or recompiled.
+  compile_cost: CompileCostSchema.optional(),
 });
 
 /**
@@ -81,6 +112,10 @@ export const WikiFrontmatterSchema = z.object({
   related_concepts: z.array(z.string()).optional(),
   compiled_at: z.coerce.date(),
   compiled_with: z.string(),
+  // Per-call Anthropic cost snapshot. Optional so the 8 existing wiki articles
+  // (compiled before this field landed) validate; populated organically as
+  // articles are recompiled by /synthesize.
+  compile_cost: CompileCostSchema.optional(),
 });
 
 export const BlogFrontmatterSchema = z.object({
@@ -97,6 +132,7 @@ export const BlogFrontmatterSchema = z.object({
   series: z.string().optional(),
 });
 
+export type CompileCost = z.infer<typeof CompileCostSchema>;
 export type ReadingCategory = z.infer<typeof ReadingCategorySchema>;
 export type NowFrontmatter = z.infer<typeof NowFrontmatterSchema>;
 export type NowArchiveFrontmatter = z.infer<typeof NowArchiveFrontmatterSchema>;
