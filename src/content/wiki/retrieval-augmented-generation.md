@@ -8,7 +8,7 @@ sources:
   - 2026-04/2026-04-29t171532-vision-language-models-better-faster-stronger
   - 2026-04/2026-04-30t232052-how-to-implement-karpathys-llm-knowledge-base
   - 2026-04/2026-04-30t232201-building-karpathys-llm-wiki-honest-takeaways
-compiled_at: '2026-05-03T19:08:31.169Z'
+compiled_at: 2026-05-03T19:08:31.169Z
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
@@ -28,7 +28,7 @@ compile_cost:
 ---
 Retrieval-augmented generation couples a language model with a retrieval step: at query time, relevant documents or passages are fetched from an index and injected into the prompt as grounding context. The approach addresses the fact that models cannot hold all relevant information in weights, and it keeps knowledge updatable without retraining.
 
-The multimodal frontier has extended RAG to images, video, and interleaved documents. [Vision Language Models (2025)](/reading/2026-04/2026-04-29t171532-vision-language-models-better-faster-stronger) notes that multimodal RAG is now an active subfield, pairing VLMs with retrieval pipelines that index visual as well as textual content. This matters because much real-world knowledge is encoded in figures, diagrams, and video frames that a text-only index would miss.
+The multimodal frontier has extended RAG to images, video, and interleaved documents. [Vision Language Models (2025)](/reading/2026-04/2026-04-29t171532-vision-language-models-better-faster-stronger) notes that [multimodal RAG is now an active subfield](/wiki/multimodal-ai), pairing VLMs with retrieval pipelines that index visual as well as textual content. This matters because much real-world knowledge is encoded in figures, diagrams, and video frames that a text-only index would miss.
 
 A different line of work questions whether runtime retrieval is always the right architecture. Andrej Karpathy's LLM-compiled wiki pattern pre-processes a document corpus into structured Markdown files during an ingest phase, so that queries are answered from a maintained knowledge base rather than by live retrieval. [The practical Reddit walkthrough](/reading/2026-04/2026-04-30t232052-how-to-implement-karpathys-llm-knowledge-base) describes this as querying at scale without RAG, emphasizing that the model synthesizes across documents once rather than repeatedly.
 
