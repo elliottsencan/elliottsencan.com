@@ -1,19 +1,37 @@
 ---
 title: Model Context Protocol (MCP)
 summary: >-
-  MCP is a standard for exposing platform-specific tools and context to AI
-  agents, letting teams ship capabilities that plug into frontier models rather
-  than building custom orchestration infrastructure.
+  MCP is a protocol for exposing tools and context to AI agents, debated as
+  either a composable integration layer worth building around or a constrained,
+  token-expensive interface that code-capable agents may outgrow.
 sources:
+  - 2026-04/2026-04-23t150424-your-agent-loves-mcp-as-much-as-you-love-guis
   - 2026-04/2026-04-27t113354-the-orchestrator-isnt-your-moat
-  - 2026-04/2026-04-27t113526-databricks-solutionsai-dev-kit
-compiled_at: 2026-05-01T05:35:16.661Z
+  - 2026-04/2026-04-30t231435-mintlify
+compiled_at: '2026-05-03T19:05:05.596Z'
 compiled_with: claude-sonnet-4-6
+compile_cost:
+  usage:
+    input_tokens: 1390
+    output_tokens: 516
+    cache_creation_input_tokens: 0
+    cache_read_input_tokens: 0
+  model: claude-sonnet-4-6
+  pricing:
+    model: claude-sonnet-4-6
+    input_per_million: 3
+    output_per_million: 15
+    cache_read_per_million: 0.3
+    cache_write_5m_per_million: 3.75
+    priced_at: '2026-04-30'
+  cost_usd: 0.01191
 ---
-MCP (Model Context Protocol) is a convention for packaging tools, actions, and platform-specific context in a form that [AI agents](/wiki/ai-agents) can consume directly. Instead of each team building its own orchestration layer to connect LLMs to their systems, they ship MCP tools that existing agents pick up and use.
+MCP (Model Context Protocol) gives AI agents a standardized way to discover and invoke tools, query context, and interact with external systems. In practice, it shows up as a server that exposes capabilities a host agent can call at runtime.
 
-[The Orchestrator Isn't Your Moat](/reading/2026-04/2026-04-27t113354-the-orchestrator-isnt-your-moat) argues that custom orchestration frameworks are not a durable advantage. Model providers already handle the orchestration loop; the real leverage is in the tools and skills that give agents platform-specific knowledge and actions. MCP is the mechanism that makes those tools portable across agents and environments.
+The case for building around MCP centers on positioning. [The Orchestrator Isn't Your Moat](/reading/2026-04/2026-04-27t113354-the-orchestrator-isnt-your-moat) argues that custom orchestration harnesses decay with every model upgrade, while MCP tool servers and agent skills appreciate in value as frontier models improve. On that view, shipping an MCP server is how a platform makes itself legible to agents like Claude Code without betting on any one orchestration layer.
 
-The Databricks AI Dev Kit ([databricks-solutions/ai-dev-kit](/reading/2026-04/2026-04-27t113526-databricks-solutionsai-dev-kit)) shows what this looks like in practice. The kit packages Databricks-specific skills as MCP tools that drop into Claude Code, Cursor, Windsurf, and similar coding assistants. Teams working with Spark, Unity Catalog, MLflow, or Databricks Apps get those capabilities without writing integration glue for each assistant separately.
+MCP also extends into documentation. [Mintlify](/reading/2026-04/2026-04-30t231435-mintlify) treats MCP as a first-class delivery mechanism alongside llms.txt, letting documentation platforms serve structured knowledge directly to agents rather than relying on unstructured web retrieval.
 
-Together, the two sources frame MCP less as a protocol curiosity and more as a production strategy: define capabilities once, distribute them to wherever agents are already running, and let the model handle reasoning about when and how to use them.
+The skeptical read comes from [Your agent loves MCP as much as you love GUIs](/reading/2026-04/2026-04-23t150424-your-agent-loves-mcp-as-much-as-you-love-guis), which frames MCP as the GUI of the agent era: useful for humans navigating tools visually, but costly for agents that must load tool definitions into context each session. Agents capable of writing code, the argument goes, are better served by layered scripts and direct API calls than by MCP abstractions. The GUI analogy is deliberately pointed: GUIs are not wrong, but they are not the native interface for programmatic consumers.
+
+The tension between these positions is real. MCP solves a discovery and standardization problem that matters at ecosystem scale. Whether that standardization is worth the token overhead depends on what the agent is doing and how much of its context budget tool definitions consume.
