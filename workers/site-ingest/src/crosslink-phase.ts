@@ -66,7 +66,12 @@ export function normalizeUrl(url: string): string {
 
 export function isAlreadyLinked(body: string, targetUrl: string): boolean {
   const norm = normalizeUrl(targetUrl).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const re = new RegExp(`\\]\\([^)]*?${norm}(?:[/#?][^)]*)?\\)`);
+  // Case-insensitive: synthesized wiki bodies emit lowercased reading slugs
+  // (e.g. /reading/2026-04/2026-04-23t150424-...) but recompile passes target
+  // URLs preserving the filename's uppercase `T` timestamp delimiter. Without
+  // the `i` flag, the regex misses every duplicate and we either rewaste an
+  // Anthropic call or insert a redundant link.
+  const re = new RegExp(`\\]\\([^)]*?${norm}(?:[/#?][^)]*)?\\)`, "i");
   return re.test(body);
 }
 
