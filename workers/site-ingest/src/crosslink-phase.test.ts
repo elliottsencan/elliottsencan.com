@@ -54,6 +54,12 @@ describe("isAlreadyLinked", () => {
   it("does not partial-match a longer slug", () => {
     expect(isAlreadyLinked("see [x](/wiki/foobar)", "/wiki/foo")).toBe(false);
   });
+  it("matches case-insensitively (synthesized bodies lowercase the timestamp T)", () => {
+    // Wiki citations land as `/reading/2026-04/2026-04-23t150424-foo` (lowercase t)
+    // while recompile target URLs preserve the filename's `T`.
+    const body = "see [x](/reading/2026-04/2026-04-23t150424-foo)";
+    expect(isAlreadyLinked(body, "/reading/2026-04/2026-04-23T150424-foo")).toBe(true);
+  });
 });
 
 describe("validateProposal", () => {
