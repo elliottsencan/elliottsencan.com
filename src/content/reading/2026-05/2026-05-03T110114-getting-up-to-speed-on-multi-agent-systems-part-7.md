@@ -5,26 +5,25 @@ title: >-
 url: >-
   https://christophermeiklejohn.com/ai/agents/mas-series/2026/04/30/mas-series-07-benchmarks.html
 summary: >-
-  Argues that most MAS benchmarks were designed for single agents and can't
-  measure coordination quality, communication overhead, or failure recovery —
-  explaining why ChatDev and MetaGPT report contradictory results and when
-  multi-agent overhead actually pays off.
+  Most MAS benchmarks were designed for single agents and can't measure
+  coordination quality, communication overhead, or failure recovery — causing
+  papers like ChatDev and MetaGPT to report contradictory results while
+  multi-agent overhead only pays off on breadth-first, parallel-decomposable
+  tasks.
 category: tech
 added: '2026-05-03T18:01:14.561Z'
 author: Christopher Meiklejohn
-source: christophermeiklejohn.com
 topics:
-  - ai-agents
+  - multi-agent-systems
+  - benchmarking
   - llm-agents
-  - distributed-systems
-  - software-engineering
-  - llm-engineering
-compiled_at: '2026-05-03T18:01:14.561Z'
+  - evaluation-methodology
+  - agentic-coding
+compiled_at: '2026-05-03T18:39:32.614Z'
 compiled_with: claude-sonnet-4-6
-title_source: model
 compile_cost:
   usage:
-    input_tokens: 3999
+    input_tokens: 3593
     output_tokens: 137
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
@@ -36,6 +35,6 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.014052
+  cost_usd: 0.012834
 ---
 
