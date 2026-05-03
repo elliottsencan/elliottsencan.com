@@ -118,6 +118,52 @@ export const WikiFrontmatterSchema = z.object({
   compile_cost: CompileCostSchema.optional(),
 });
 
+export const LabStatuses = ["draft", "running", "live", "archived"] as const;
+export const LabStatusSchema = z.enum(LabStatuses);
+
+export const LabKinds = ["chart", "table", "barchart", "stat", "calendar", "scatter"] as const;
+export const LabKindSchema = z.enum(LabKinds);
+
+/**
+ * Labs frontmatter — Observable-style cells holding the data behind posts
+ * (cost breakdowns, eval runs, telemetry). Combines the rigor of an
+ * "experiment write-up" (hypothesis, status, headline metric) with a
+ * presentation shape lifted from the wiki-design bundle (`kind` selects a
+ * viz primitive; `pre` is the code-cell text; `post` is the commentary
+ * paragraph below the result).
+ *
+ * Fields prefixed with `experiment-`-scaffold are required so every cell
+ * leads with the question, not the result. The `kind`/`pre`/`post` trio is
+ * optional so an early-stage cell can ship with only a JSON measurement
+ * file (rendered as a `<pre>` block) and graduate to a full visualization
+ * later without a schema migration.
+ */
+export const LabFrontmatterSchema = z.object({
+  title: z.string(),
+  hypothesis: z.string().min(1),
+  status: LabStatusSchema,
+  lastRunDate: z.coerce.date(),
+  publishedDate: z.coerce.date(),
+  tldr: z.string().min(1),
+  headlineMetric: z.object({
+    label: z.string().min(1),
+    value: z.string().min(1),
+  }),
+  repoUrl: z.url().optional(),
+  // Path under src/content/labs/data/ to a JSON file holding the raw
+  // measurements. The detail page reads this at build time.
+  dataPath: z.string().optional(),
+  blogPostSlug: z.string().optional(),
+  tags: z.array(z.string()).default([]),
+  // Visual shape — picks the viz primitive on the result cell. Optional
+  // because early-stage cells fall back to a `<pre>` JSON dump.
+  kind: LabKindSchema.optional(),
+  // Code-cell text (mono, inset surface) shown above the result.
+  pre: z.string().optional(),
+  // Commentary paragraph under the result cell.
+  post: z.string().optional(),
+});
+
 export const BlogFrontmatterSchema = z.object({
   title: z.string(),
   description: z.string(),

@@ -17,6 +17,24 @@ const entries = (await getCollection("reading")).sort(
   (a, b) => b.data.added.valueOf() - a.data.added.valueOf(),
 );
 
+// Forward-link from reading → wiki. When a reading entry contributed sources
+// to one or more wiki articles, the entry-level page already shows a "cited
+// by" section; here we lift the same query up to the index so the through-
+// line (raw input → synthesis) is visible without clicking in.
+const wikiCitations = await getCollection("wiki");
+const citingByEntry = new Map<string, { id: string; title: string }[]>();
+for (const concept of wikiCitations) {
+  for (const source of concept.data.sources) {
+    const list = citingByEntry.get(source);
+    const ref = { id: concept.id, title: concept.data.title };
+    if (list) {
+      list.push(ref);
+    } else {
+      citingByEntry.set(source, [ref]);
+    }
+  }
+}
+
 type Entry = CollectionEntry<"reading">;
 
 function monthLabel(key: string): string {
@@ -107,10 +125,21 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
                       <p class="leading-relaxed text-black/75 dark:text-white/75">
                         {entry.data.summary}
                       </p>
-                      <div class="pt-1">
+                      <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5 pt-1">
                         <span class="inline-flex items-center rounded-sm bg-black/5 px-2 py-0.5 text-xs capitalize text-black/65 dark:bg-white/5 dark:text-white/65">
                           {entry.data.category}
                         </span>
+                        {(citingByEntry.get(entry.id) ?? []).map((ref) => (
+                          <span class="inline-flex items-baseline gap-1 font-mono text-[11px] text-[color:var(--accent)]">
+                            <span aria-hidden="true">→</span>
+                            <a
+                              href={`/wiki/${ref.id}/`}
+                              class="font-sans text-xs underline decoration-[color:var(--accent)]/40 underline-offset-[3px] hover:decoration-[color:var(--accent)]"
+                            >
+                              cited in /wiki/{ref.id}
+                            </a>
+                          </span>
+                        ))}
                       </div>
                     </div>
                   </li>

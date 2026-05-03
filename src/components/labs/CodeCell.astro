@@ -1,0 +1,22 @@
+---
+/**
+ * Code cell — mono, on a slightly inset surface. Mimics Observable's input
+ * cell. Pure presentation; takes the cell's `pre` text as a slot.
+ */
+type Props = {
+  lang?: string;
+};
+
+const { lang = "js" } = Astro.props;
+---
+
+<pre
+  class="relative m-0 overflow-x-auto rounded-sm border border-black/10 bg-black/5 p-3.5 font-mono text-xs leading-relaxed text-black/85 dark:border-white/10 dark:bg-white/5 dark:text-white/85"
+>
+  <span
+    class="absolute right-3 top-2 font-mono text-[10px] uppercase tracking-widest text-black/40 dark:text-white/40"
+    aria-hidden="true"
+  >
+    {lang}
+  </span><slot />
+</pre>

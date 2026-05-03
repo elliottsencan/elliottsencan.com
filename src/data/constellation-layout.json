@@ -1,0 +1,897 @@
+{
+  "generated_at": "2026-05-03T02:53:36.328Z",
+  "titles": {
+    "ai-agents": "AI agents",
+    "css-primitives": "CSS primitives",
+    "developer-tools": "Developer tools for AI agents",
+    "llm-fine-tuning": "LLM fine-tuning",
+    "llm-inference": "LLM inference",
+    "local-ai": "Local AI",
+    "mcp": "Model Context Protocol (MCP)",
+    "model-training": "Model training",
+    "responsive-design": "Responsive design",
+    "software-engineering": "Software engineering"
+  },
+  "global": {
+    "nodes": [
+      {
+        "id": "ai-agents",
+        "x": 526.1953733552122,
+        "y": 88.94593341641696,
+        "weight": 3
+      },
+      {
+        "id": "css-primitives",
+        "x": 624.4462169284166,
+        "y": 93.11077341198221,
+        "weight": 2
+      },
+      {
+        "id": "developer-tools",
+        "x": 509.03877413128714,
+        "y": 175.95412905242176,
+        "weight": 4
+      },
+      {
+        "id": "llm-fine-tuning",
+        "x": 443.4462918025301,
+        "y": 117.3478400151683,
+        "weight": 2
+      },
+      {
+        "id": "llm-inference",
+        "x": 538.3853770224629,
+        "y": 135.62154110874616,
+        "weight": 2
+      },
+      {
+        "id": "local-ai",
+        "x": 395.8569091024879,
+        "y": 64.04806362717694,
+        "weight": 2
+      },
+      {
+        "id": "mcp",
+        "x": 589.7224496676963,
+        "y": 150.84429413271155,
+        "weight": 2
+      },
+      {
+        "id": "model-training",
+        "x": 474.6769635185714,
+        "y": 73.93665708194953,
+        "weight": 2
+      },
+      {
+        "id": "responsive-design",
+        "x": 563.1781763720911,
+        "y": 43.5,
+        "weight": 2
+      },
+      {
+        "id": "software-engineering",
+        "x": 455.0534680992443,
+        "y": 165.29362665553376,
+        "weight": 2
+      }
+    ],
+    "edges": [
+      {
+        "a": "developer-tools",
+        "b": "mcp"
+      },
+      {
+        "a": "developer-tools",
+        "b": "ai-agents"
+      },
+      {
+        "a": "mcp",
+        "b": "ai-agents"
+      },
+      {
+        "a": "ai-agents",
+        "b": "llm-inference"
+      },
+      {
+        "a": "developer-tools",
+        "b": "llm-inference"
+      },
+      {
+        "a": "ai-agents",
+        "b": "llm-fine-tuning"
+      },
+      {
+        "a": "ai-agents",
+        "b": "model-training"
+      },
+      {
+        "a": "ai-agents",
+        "b": "software-engineering"
+      },
+      {
+        "a": "developer-tools",
+        "b": "llm-fine-tuning"
+      },
+      {
+        "a": "developer-tools",
+        "b": "model-training"
+      },
+      {
+        "a": "developer-tools",
+        "b": "software-engineering"
+      },
+      {
+        "a": "llm-fine-tuning",
+        "b": "llm-inference"
+      },
+      {
+        "a": "llm-fine-tuning",
+        "b": "model-training"
+      },
+      {
+        "a": "llm-fine-tuning",
+        "b": "software-engineering"
+      },
+      {
+        "a": "llm-inference",
+        "b": "model-training"
+      },
+      {
+        "a": "llm-inference",
+        "b": "software-engineering"
+      },
+      {
+        "a": "model-training",
+        "b": "software-engineering"
+      },
+      {
+        "a": "css-primitives",
+        "b": "responsive-design"
+      },
+      {
+        "a": "llm-fine-tuning",
+        "b": "local-ai"
+      },
+      {
+        "a": "local-ai",
+        "b": "model-training"
+      }
+    ]
+  },
+  "local": {
+    "ai-agents": {
+      "nodes": [
+        {
+          "id": "ai-agents",
+          "x": 100,
+          "y": 100
+        },
+        {
+          "id": "developer-tools",
+          "x": 129.4100411862054,
+          "y": 88.33554158765126
+        },
+        {
+          "id": "mcp",
+          "x": 110.57799241268553,
+          "y": 141.61289647055503
+        },
+        {
+          "id": "llm-inference",
+          "x": 76.74228261342974,
+          "y": 116.49267603105854
+        },
+        {
+          "id": "llm-fine-tuning",
+          "x": 74.09543420114119,
+          "y": 79.7616532423107
+        },
+        {
+          "id": "model-training",
+          "x": 104.64409568264,
+          "y": 64.31726227406529
+        },
+        {
+          "id": "software-engineering",
+          "x": 122.36736928009293,
+          "y": 117.49707949475835
+        }
+      ],
+      "edges": [
+        {
+          "a": "developer-tools",
+          "b": "mcp"
+        },
+        {
+          "a": "developer-tools",
+          "b": "ai-agents"
+        },
+        {
+          "a": "mcp",
+          "b": "ai-agents"
+        },
+        {
+          "a": "ai-agents",
+          "b": "llm-inference"
+        },
+        {
+          "a": "developer-tools",
+          "b": "llm-inference"
+        },
+        {
+          "a": "ai-agents",
+          "b": "llm-fine-tuning"
+        },
+        {
+          "a": "ai-agents",
+          "b": "model-training"
+        },
+        {
+          "a": "ai-agents",
+          "b": "software-engineering"
+        },
+        {
+          "a": "developer-tools",
+          "b": "llm-fine-tuning"
+        },
+        {
+          "a": "developer-tools",
+          "b": "model-training"
+        },
+        {
+          "a": "developer-tools",
+          "b": "software-engineering"
+        },
+        {
+          "a": "llm-fine-tuning",
+          "b": "llm-inference"
+        },
+        {
+          "a": "llm-fine-tuning",
+          "b": "model-training"
+        },
+        {
+          "a": "llm-fine-tuning",
+          "b": "software-engineering"
+        },
+        {
+          "a": "llm-inference",
+          "b": "model-training"
+        },
+        {
+          "a": "llm-inference",
+          "b": "software-engineering"
+        },
+        {
+          "a": "model-training",
+          "b": "software-engineering"
+        }
+      ]
+    },
+    "css-primitives": {
+      "nodes": [
+        {
+          "id": "css-primitives",
+          "x": 100,
+          "y": 100
+        },
+        {
+          "id": "responsive-design",
+          "x": 63.99892651419718,
+          "y": 100.00000000000001
+        }
+      ],
+      "edges": [
+        {
+          "a": "css-primitives",
+          "b": "responsive-design"
+        }
+      ]
+    },
+    "developer-tools": {
+      "nodes": [
+        {
+          "id": "developer-tools",
+          "x": 100,
+          "y": 100
+        },
+        {
+          "id": "mcp",
+          "x": 139.95555676339305,
+          "y": 123.5248835110494
+        },
+        {
+          "id": "ai-agents",
+          "x": 99.06733406630684,
+          "y": 127.60592273789251
+        },
+        {
+          "id": "llm-inference",
+          "x": 67.77221154584987,
+          "y": 112.19426837063838
+        },
+        {
+          "id": "llm-fine-tuning",
+          "x": 68.11532921513174,
+          "y": 79.93214350895512
+        },
+        {
+          "id": "model-training",
+          "x": 97.14089466235845,
+          "y": 65.76554858324046
+        },
+        {
+          "id": "software-engineering",
+          "x": 124.46929494127437,
+          "y": 87.70411369746284
+        }
+      ],
+      "edges": [
+        {
+          "a": "developer-tools",
+          "b": "mcp"
+        },
+        {
+          "a": "developer-tools",
+          "b": "ai-agents"
+        },
+        {
+          "a": "mcp",
+          "b": "ai-agents"
+        },
+        {
+          "a": "ai-agents",
+          "b": "llm-inference"
+        },
+        {
+          "a": "developer-tools",
+          "b": "llm-inference"
+        },
+        {
+          "a": "ai-agents",
+          "b": "llm-fine-tuning"
+        },
+        {
+          "a": "ai-agents",
+          "b": "model-training"
+        },
+        {
+          "a": "ai-agents",
+          "b": "software-engineering"
+        },
+        {
+          "a": "developer-tools",
+          "b": "llm-fine-tuning"
+        },
+        {
+          "a": "developer-tools",
+          "b": "model-training"
+        },
+        {
+          "a": "developer-tools",
+          "b": "software-engineering"
+        },
+        {
+          "a": "llm-fine-tuning",
+          "b": "llm-inference"
+        },
+        {
+          "a": "llm-fine-tuning",
+          "b": "model-training"
+        },
+        {
+          "a": "llm-fine-tuning",
+          "b": "software-engineering"
+        },
+        {
+          "a": "llm-inference",
+          "b": "model-training"
+        },
+        {
+          "a": "llm-inference",
+          "b": "software-engineering"
+        },
+        {
+          "a": "model-training",
+          "b": "software-engineering"
+        }
+      ]
+    },
+    "llm-fine-tuning": {
+      "nodes": [
+        {
+          "id": "llm-fine-tuning",
+          "x": 100,
+          "y": 100
+        },
+        {
+          "id": "ai-agents",
+          "x": 126.00778111009863,
+          "y": 111.40361000255484
+        },
+        {
+          "id": "developer-tools",
+          "x": 70.77998671773693,
+          "y": 121.00038618946894
+        },
+        {
+          "id": "llm-inference",
+          "x": 69.90198746864812,
+          "y": 86.78081506397552
+        },
+        {
+          "id": "model-training",
+          "x": 103.66685424945332,
+          "y": 131.42553567634033
+        },
+        {
+          "id": "software-engineering",
+          "x": 103.50044795499863,
+          "y": 71.70376977739012
+        },
+        {
+          "id": "local-ai",
+          "x": 141.6560385400442,
+          "y": 89.5931979308383
+        }
+      ],
+      "edges": [
+        {
+          "a": "developer-tools",
+          "b": "ai-agents"
+        },
+        {
+          "a": "ai-agents",
+          "b": "llm-inference"
+        },
+        {
+          "a": "developer-tools",
+          "b": "llm-inference"
+        },
+        {
+          "a": "ai-agents",
+          "b": "llm-fine-tuning"
+        },
+        {
+          "a": "ai-agents",
+          "b": "model-training"
+        },
+        {
+          "a": "ai-agents",
+          "b": "software-engineering"
+        },
+        {
+          "a": "developer-tools",
+          "b": "llm-fine-tuning"
+        },
+        {
+          "a": "developer-tools",
+          "b": "model-training"
+        },
+        {
+          "a": "developer-tools",
+          "b": "software-engineering"
+        },
+        {
+          "a": "llm-fine-tuning",
+          "b": "llm-inference"
+        },
+        {
+          "a": "llm-fine-tuning",
+          "b": "model-training"
+        },
+        {
+          "a": "llm-fine-tuning",
+          "b": "software-engineering"
+        },
+        {
+          "a": "llm-inference",
+          "b": "model-training"
+        },
+        {
+          "a": "llm-inference",
+          "b": "software-engineering"
+        },
+        {
+          "a": "model-training",
+          "b": "software-engineering"
+        },
+        {
+          "a": "llm-fine-tuning",
+          "b": "local-ai"
+        },
+        {
+          "a": "local-ai",
+          "b": "model-training"
+        }
+      ]
+    },
+    "llm-inference": {
+      "nodes": [
+        {
+          "id": "llm-inference",
+          "x": 100,
+          "y": 100
+        },
+        {
+          "id": "ai-agents",
+          "x": 125.19656110761164,
+          "y": 118.3063732040904
+        },
+        {
+          "id": "developer-tools",
+          "x": 90.3757700565696,
+          "y": 129.62033405505053
+        },
+        {
+          "id": "llm-fine-tuning",
+          "x": 68.85533767181327,
+          "y": 100.00000000000009
+        },
+        {
+          "id": "model-training",
+          "x": 90.37577005656944,
+          "y": 70.37966594494954
+        },
+        {
+          "id": "software-engineering",
+          "x": 125.19656110761154,
+          "y": 81.69362679590945
+        }
+      ],
+      "edges": [
+        {
+          "a": "developer-tools",
+          "b": "ai-agents"
+        },
+        {
+          "a": "ai-agents",
+          "b": "llm-inference"
+        },
+        {
+          "a": "developer-tools",
+          "b": "llm-inference"
+        },
+        {
+          "a": "ai-agents",
+          "b": "llm-fine-tuning"
+        },
+        {
+          "a": "ai-agents",
+          "b": "model-training"
+        },
+        {
+          "a": "ai-agents",
+          "b": "software-engineering"
+        },
+        {
+          "a": "developer-tools",
+          "b": "llm-fine-tuning"
+        },
+        {
+          "a": "developer-tools",
+          "b": "model-training"
+        },
+        {
+          "a": "developer-tools",
+          "b": "software-engineering"
+        },
+        {
+          "a": "llm-fine-tuning",
+          "b": "llm-inference"
+        },
+        {
+          "a": "llm-fine-tuning",
+          "b": "model-training"
+        },
+        {
+          "a": "llm-fine-tuning",
+          "b": "software-engineering"
+        },
+        {
+          "a": "llm-inference",
+          "b": "model-training"
+        },
+        {
+          "a": "llm-inference",
+          "b": "software-engineering"
+        },
+        {
+          "a": "model-training",
+          "b": "software-engineering"
+        }
+      ]
+    },
+    "local-ai": {
+      "nodes": [
+        {
+          "id": "local-ai",
+          "x": 100,
+          "y": 100
+        },
+        {
+          "id": "llm-fine-tuning",
+          "x": 72.82635609788804,
+          "y": 123.61504539928517
+        },
+        {
+          "id": "model-training",
+          "x": 72.82635609788811,
+          "y": 76.38495460071478
+        }
+      ],
+      "edges": [
+        {
+          "a": "llm-fine-tuning",
+          "b": "model-training"
+        },
+        {
+          "a": "llm-fine-tuning",
+          "b": "local-ai"
+        },
+        {
+          "a": "local-ai",
+          "b": "model-training"
+        }
+      ]
+    },
+    "mcp": {
+      "nodes": [
+        {
+          "id": "mcp",
+          "x": 100,
+          "y": 100
+        },
+        {
+          "id": "developer-tools",
+          "x": 72.82635609788808,
+          "y": 123.6150453992852
+        },
+        {
+          "id": "ai-agents",
+          "x": 72.82635609788807,
+          "y": 76.38495460071482
+        }
+      ],
+      "edges": [
+        {
+          "a": "developer-tools",
+          "b": "mcp"
+        },
+        {
+          "a": "developer-tools",
+          "b": "ai-agents"
+        },
+        {
+          "a": "mcp",
+          "b": "ai-agents"
+        }
+      ]
+    },
+    "model-training": {
+      "nodes": [
+        {
+          "id": "model-training",
+          "x": 100,
+          "y": 100
+        },
+        {
+          "id": "ai-agents",
+          "x": 133.91994773117995,
+          "y": 108.5014621540449
+        },
+        {
+          "id": "developer-tools",
+          "x": 71.73569719060896,
+          "y": 93.33700450066844
+        },
+        {
+          "id": "llm-fine-tuning",
+          "x": 110.2110157190284,
+          "y": 127.4445636135713
+        },
+        {
+          "id": "llm-inference",
+          "x": 117.03546407852771,
+          "y": 76.48278745527136
+        },
+        {
+          "id": "software-engineering",
+          "x": 79.88598982261605,
+          "y": 128.6053195667624
+        },
+        {
+          "id": "local-ai",
+          "x": 87.46275307813609,
+          "y": 66.30312987200475
+        }
+      ],
+      "edges": [
+        {
+          "a": "developer-tools",
+          "b": "ai-agents"
+        },
+        {
+          "a": "ai-agents",
+          "b": "llm-inference"
+        },
+        {
+          "a": "developer-tools",
+          "b": "llm-inference"
+        },
+        {
+          "a": "ai-agents",
+          "b": "llm-fine-tuning"
+        },
+        {
+          "a": "ai-agents",
+          "b": "model-training"
+        },
+        {
+          "a": "ai-agents",
+          "b": "software-engineering"
+        },
+        {
+          "a": "developer-tools",
+          "b": "llm-fine-tuning"
+        },
+        {
+          "a": "developer-tools",
+          "b": "model-training"
+        },
+        {
+          "a": "developer-tools",
+          "b": "software-engineering"
+        },
+        {
+          "a": "llm-fine-tuning",
+          "b": "llm-inference"
+        },
+        {
+          "a": "llm-fine-tuning",
+          "b": "model-training"
+        },
+        {
+          "a": "llm-fine-tuning",
+          "b": "software-engineering"
+        },
+        {
+          "a": "llm-inference",
+          "b": "model-training"
+        },
+        {
+          "a": "llm-inference",
+          "b": "software-engineering"
+        },
+        {
+          "a": "model-training",
+          "b": "software-engineering"
+        },
+        {
+          "a": "llm-fine-tuning",
+          "b": "local-ai"
+        },
+        {
+          "a": "local-ai",
+          "b": "model-training"
+        }
+      ]
+    },
+    "responsive-design": {
+      "nodes": [
+        {
+          "id": "responsive-design",
+          "x": 100,
+          "y": 100
+        },
+        {
+          "id": "css-primitives",
+          "x": 63.99892651419718,
+          "y": 100.00000000000001
+        }
+      ],
+      "edges": [
+        {
+          "a": "css-primitives",
+          "b": "responsive-design"
+        }
+      ]
+    },
+    "software-engineering": {
+      "nodes": [
+        {
+          "id": "software-engineering",
+          "x": 100,
+          "y": 100
+        },
+        {
+          "id": "ai-agents",
+          "x": 125.19656110761161,
+          "y": 118.30637320409045
+        },
+        {
+          "id": "developer-tools",
+          "x": 90.37577005656956,
+          "y": 129.6203340550505
+        },
+        {
+          "id": "llm-fine-tuning",
+          "x": 68.85533767181326,
+          "y": 100.00000000000004
+        },
+        {
+          "id": "llm-inference",
+          "x": 90.37577005656948,
+          "y": 70.37966594494954
+        },
+        {
+          "id": "model-training",
+          "x": 125.19656110761156,
+          "y": 81.69362679590948
+        }
+      ],
+      "edges": [
+        {
+          "a": "developer-tools",
+          "b": "ai-agents"
+        },
+        {
+          "a": "ai-agents",
+          "b": "llm-inference"
+        },
+        {
+          "a": "developer-tools",
+          "b": "llm-inference"
+        },
+        {
+          "a": "ai-agents",
+          "b": "llm-fine-tuning"
+        },
+        {
+          "a": "ai-agents",
+          "b": "model-training"
+        },
+        {
+          "a": "ai-agents",
+          "b": "software-engineering"
+        },
+        {
+          "a": "developer-tools",
+          "b": "llm-fine-tuning"
+        },
+        {
+          "a": "developer-tools",
+          "b": "model-training"
+        },
+        {
+          "a": "developer-tools",
+          "b": "software-engineering"
+        },
+        {
+          "a": "llm-fine-tuning",
+          "b": "llm-inference"
+        },
+        {
+          "a": "llm-fine-tuning",
+          "b": "model-training"
+        },
+        {
+          "a": "llm-fine-tuning",
+          "b": "software-engineering"
+        },
+        {
+          "a": "llm-inference",
+          "b": "model-training"
+        },
+        {
+          "a": "llm-inference",
+          "b": "software-engineering"
+        },
+        {
+          "a": "model-training",
+          "b": "software-engineering"
+        }
+      ]
+    }
+  }
+}
