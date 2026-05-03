@@ -40,7 +40,7 @@ import { makePipelineDeps } from "./synthesize.ts";
 import type { Env, LinkSummary, Result } from "./types.ts";
 import { jsonResponse, log } from "./util.ts";
 
-const MAX_ENTRIES_PER_RUN = 25;
+const MAX_ENTRIES_PER_RUN = 100;
 const IA_FETCH_TIMEOUT_MS = 10_000;
 const IA_MAX_BYTES = 500_000;
 const IA_EXCERPT_LENGTH = 16_000;
