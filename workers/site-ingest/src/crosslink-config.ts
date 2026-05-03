@@ -59,9 +59,11 @@ export const CORPORA: Record<Exclude<CorpusName, "reading">, Corpus> = {
 export const MAX_CANDIDATES_PER_PIECE = 50;
 
 /**
- * Hard cap on Anthropic calls per pipeline run. Worst case (25-entry
- * /recompile, forward + backward passes per piece) is ~50 calls; cap
- * at 30 with logging for the remainder.
+ * Hard cap on Anthropic calls per pipeline run. Worst case (100-entry
+ * /recompile, forward + backward passes per piece) is ~200 calls; cap
+ * at 30 with logging for the remainder. Coverage degrades gracefully —
+ * uncrossed entries surface in the run log and can be picked up by a
+ * follow-up `/crosslink` pass.
  */
 export const MAX_CROSSLINK_CALLS_PER_RUN = 30;
 
