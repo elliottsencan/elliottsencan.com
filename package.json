@@ -3,6 +3,7 @@
   "type": "module",
   "version": "0.1.0",
   "scripts": {
+    "predev": "pnpm labs:aggregate",
     "dev": "astro dev",
     "start": "astro dev",
     "build": "pnpm constellation && pnpm labs:aggregate && astro check && astro build",

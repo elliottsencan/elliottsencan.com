@@ -31,3 +31,8 @@ PP Neue Montreal*/
 .wrangler/
 workers/**/node_modules/
 workers/**/.dev.vars
+
+# Labs data files regenerated at build by scripts/labs-aggregate.mjs.
+# Treated as build artifacts (like dist/, .astro/, public/pagefind/) so
+# the committed copy never goes stale relative to the corpus.
+src/content/labs/data/ingest-pipeline-cost.json
