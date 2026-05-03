@@ -5,13 +5,14 @@
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
-    "build": "astro check && astro build",
+    "build": "pnpm constellation && astro check && astro build",
     "preview": "astro preview",
     "check": "biome check --write",
     "format": "biome format --write",
     "lint": "biome lint --write",
     "favicons": "node scripts/build-favicons.mjs",
     "reading": "node scripts/reading.mjs",
+    "constellation": "node scripts/build-constellation-layout.mjs",
     "test": "vitest run",
     "astro": "astro"
   },

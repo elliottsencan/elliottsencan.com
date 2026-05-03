@@ -14,10 +14,11 @@ import { siteDate } from "@lib/utils";
 const SITE_URL = "https://elliottsencan.com";
 
 export async function GET() {
-  const [blog, reading, wiki] = await Promise.all([
+  const [blog, reading, wiki, labs] = await Promise.all([
     getCollection("blog"),
     getCollection("reading"),
     getCollection("wiki"),
+    getCollection("labs"),
   ]);
 
   const writing = blog
@@ -91,6 +92,20 @@ export async function GET() {
     `- [What I'm working on now](${SITE_URL}/now): Weekly-updated snapshot of current focus, reading, and recent commits.`,
   );
   lines.push("");
+
+  if (labs.length > 0) {
+    const recentLabs = [...labs]
+      .sort((a, b) => b.data.lastRunDate.valueOf() - a.data.lastRunDate.valueOf())
+      .slice(0, 5);
+    lines.push(`## Labs (${labs.length} cells; ${recentLabs.length} most recent)`);
+    lines.push("");
+    for (const cell of recentLabs) {
+      lines.push(
+        `- [${cell.data.title}](${SITE_URL}/labs/${cell.id}/) (${cell.data.status}): ${cell.data.tldr}`,
+      );
+    }
+    lines.push("");
+  }
 
   lines.push("## Reading log (recent citations)");
   lines.push("");

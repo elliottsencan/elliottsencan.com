@@ -1,0 +1,61 @@
+---
+/**
+ * Scatter — 2D x/y dot plot with axis baselines and tiny axis labels.
+ */
+type Props = {
+  points: { x: number; y: number }[];
+  xLabel?: string;
+  yLabel?: string;
+  height?: number;
+  width?: number;
+};
+
+const { points, xLabel = "x", yLabel = "y", height = 140, width = 600 } = Astro.props;
+
+const xs = points.map((p) => p.x);
+const ys = points.map((p) => p.y);
+const minX = xs.length > 0 ? Math.min(...xs) : 0;
+const maxX = xs.length > 0 ? Math.max(...xs) : 1;
+const maxY = ys.length > 0 ? Math.max(...ys) * 1.1 : 1;
+
+const sx = (x: number) => ((x - minX) / (maxX - minX || 1)) * (width - 32) + 24;
+const sy = (y: number) => height - (y / maxY) * (height - 24) - 12;
+---
+
+<svg
+  width="100%"
+  height={height}
+  viewBox={`0 0 ${width} ${height}`}
+  preserveAspectRatio="none"
+  style="display: block;"
+  role="img"
+>
+  <line x1="24" y1={height - 12} x2={width - 8} y2={height - 12} stroke="currentColor" opacity="0.15"></line>
+  <line x1="24" y1="12" x2="24" y2={height - 12} stroke="currentColor" opacity="0.15"></line>
+  {
+    points.map((p) => (
+      <circle cx={sx(p.x)} cy={sy(p.y)} r="3" fill="currentColor" opacity="0.65" />
+    ))
+  }
+  <text
+    x={width - 8}
+    y={height - 16}
+    text-anchor="end"
+    font-family="var(--font-mono)"
+    font-size="10"
+    fill="currentColor"
+    opacity="0.55"
+  >
+    {xLabel}
+  </text>
+  <text
+    x="28"
+    y="20"
+    font-family="var(--font-mono)"
+    font-size="10"
+    fill="currentColor"
+    opacity="0.55"
+  >
+    {yLabel}
+  </text>
+</svg>

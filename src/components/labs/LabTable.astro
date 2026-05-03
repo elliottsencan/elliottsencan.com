@@ -1,0 +1,42 @@
+---
+/**
+ * Tabular result — mono digits in a thin-rule grid. Used for eval results
+ * and similar small comparisons.
+ */
+type Props = {
+  headers: string[];
+  rows: string[][];
+};
+
+const { headers, rows } = Astro.props;
+---
+
+<table class="w-full border-collapse font-mono text-xs">
+  <thead>
+    <tr>
+      {
+        headers.map((h) => (
+          <th class="border-b border-black/10 px-2 py-1 text-left font-medium text-black/55 dark:border-white/10 dark:text-white/55">
+            {h}
+          </th>
+        ))
+      }
+    </tr>
+  </thead>
+  <tbody>
+    {
+      rows.map((row) => (
+        <tr>
+          {row.map((cell) => (
+            <td
+              class="px-2 py-1 text-black/85 dark:text-white/85"
+              style="font-variant-numeric: tabular-nums;"
+            >
+              {cell}
+            </td>
+          ))}
+        </tr>
+      ))
+    }
+  </tbody>
+</table>

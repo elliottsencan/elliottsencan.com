@@ -1,0 +1,116 @@
+---
+/**
+ * Local constellation — neighborhood widget for a single wiki entry.
+ *
+ * Renders the concept and its 1-hop neighbors from the pre-solved layout.
+ * Active concept is the accent-filled node, neighbors are inkwells.
+ * Tucks into the upper-right of the entry hero so the title and summary
+ * read first.
+ */
+import layout from "@data/constellation-layout.json";
+
+type Props = {
+  slug: string;
+  size?: number;
+};
+
+const { slug, size = 200 } = Astro.props;
+
+type LocalLayout = {
+  nodes: { id: string; x: number; y: number }[];
+  edges: { a: string; b: string }[];
+};
+
+const localLayouts: Record<string, LocalLayout> = layout.local;
+const titles: Record<string, string> = layout.titles;
+const local = localLayouts[slug];
+---
+
+{
+  local && local.nodes.length > 1 && (
+    <div class="constellation-local" style={`width: ${size}px;`}>
+      <svg
+        width={size}
+        height={size}
+        viewBox={`0 0 ${size} ${size}`}
+        style="display: block;"
+        role="img"
+        aria-label={`Neighborhood graph for ${titles[slug] ?? slug}`}
+      >
+        <rect
+          x="0.5"
+          y="0.5"
+          width={size - 1}
+          height={size - 1}
+          fill="none"
+          stroke="currentColor"
+          opacity="0.12"
+        />
+        {local.edges.map((e) => {
+          const a = local.nodes.find((n) => n.id === e.a);
+          const b = local.nodes.find((n) => n.id === e.b);
+          if (!a || !b) return null;
+          const onActive = e.a === slug || e.b === slug;
+          return (
+            <line
+              x1={a.x}
+              y1={a.y}
+              x2={b.x}
+              y2={b.y}
+              stroke={onActive ? "var(--accent)" : "currentColor"}
+              stroke-width={onActive ? 0.7 : 0.4}
+              opacity={onActive ? 0.5 : 0.16}
+            />
+          );
+        })}
+        {local.nodes.map((n) => {
+          const isActive = n.id === slug;
+          const r = isActive ? 4 : 2.4;
+          const title = titles[n.id] ?? n.id;
+          return isActive ? (
+            <g>
+              <title>{title}</title>
+              <circle cx={n.x} cy={n.y} r={r} fill="var(--accent)" />
+            </g>
+          ) : (
+            <a class="constellation-node" href={`/wiki/${n.id}/`}>
+              <title>{title}</title>
+              <circle cx={n.x} cy={n.y} r={r + 4} fill="transparent" />
+              <circle class="dot" cx={n.x} cy={n.y} r={r} fill="currentColor" opacity="0.55" />
+            </a>
+          );
+        })}
+      </svg>
+      <p class="caption">{local.nodes.length - 1} neighbors</p>
+    </div>
+  )
+}
+
+<style>
+  .constellation-local {
+    color: rgb(0 0 0 / 0.85);
+  }
+  :global(.dark) .constellation-local {
+    color: rgb(255 255 255 / 0.85);
+  }
+  .constellation-local .caption {
+    margin: 6px 0 0;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: rgb(0 0 0 / 0.55);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    line-height: 1;
+  }
+  :global(.dark) .constellation-local .caption {
+    color: rgb(255 255 255 / 0.55);
+  }
+  .constellation-local :global(.constellation-node) {
+    cursor: pointer;
+  }
+  .constellation-local :global(.constellation-node):hover .dot,
+  .constellation-local :global(.constellation-node):focus-visible .dot {
+    fill: var(--accent);
+    opacity: 1;
+  }
+</style>

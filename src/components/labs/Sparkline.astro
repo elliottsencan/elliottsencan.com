@@ -1,0 +1,75 @@
+---
+/**
+ * Sparkline — single-series line chart with optional annotation marker.
+ * SVG renders to a viewBox so it scales cleanly to any container width.
+ */
+type Annotation = { at: number; label: string };
+type Props = {
+  data: number[];
+  annotation?: Annotation;
+  height?: number;
+  width?: number;
+};
+
+const { data, annotation, height = 80, width = 600 } = Astro.props;
+
+const max = data.length > 0 ? Math.max(...data) : 0;
+const min = data.length > 0 ? Math.min(...data) : 0;
+const range = max - min || 1;
+const stepX = data.length > 1 ? width / (data.length - 1) : width;
+const points = data.map(
+  (v, i) => [i * stepX, height - ((v - min) / range) * (height - 16) - 8] as const,
+);
+const linePath = points
+  .map(([x, y], i) => `${i === 0 ? "M" : "L"} ${x.toFixed(1)} ${y.toFixed(1)}`)
+  .join(" ");
+const areaPath = `${linePath} L ${width} ${height} L 0 ${height} Z`;
+const annotationPoint = annotation ? points[annotation.at] : null;
+---
+
+<svg
+  width="100%"
+  height={height}
+  viewBox={`0 0 ${width} ${height}`}
+  preserveAspectRatio="none"
+  style="display: block;"
+  role="img"
+>
+  <path d={areaPath} fill="currentColor" opacity="0.06"></path>
+  <path d={linePath} fill="none" stroke="currentColor" stroke-width="1.4"></path>
+  {
+    points.map(([x, y], i) => (
+      <circle
+        cx={x}
+        cy={y}
+        r="1.6"
+        fill="currentColor"
+        opacity={annotation && i === annotation.at ? 1 : 0.4}
+      />
+    ))
+  }
+  {
+    annotation && annotationPoint && (
+      <g>
+        <line
+          x1={annotationPoint[0]}
+          y1={annotationPoint[1] - 4}
+          x2={annotationPoint[0]}
+          y2={8}
+          stroke="var(--accent)"
+          stroke-width="1"
+          stroke-dasharray="2 2"
+        />
+        <text
+          x={annotationPoint[0] + 6}
+          y={14}
+          font-family="var(--font-mono)"
+          font-size="10"
+          fill="var(--accent)"
+        >
+          {annotation.label}
+        </text>
+      </g>
+    )
+  }
+</svg>

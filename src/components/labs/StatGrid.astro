@@ -1,0 +1,32 @@
+---
+/**
+ * Stat grid — large headline numbers with mono labels above. Used for
+ * dashboard-style summaries.
+ */
+type Props = {
+  stats: { label: string; value: string }[];
+};
+
+const { stats } = Astro.props;
+---
+
+<div
+  class="grid gap-4"
+  style={`grid-template-columns: repeat(${stats.length}, minmax(0, 1fr));`}
+>
+  {
+    stats.map((s) => (
+      <div class="flex flex-col gap-1">
+        <span class="font-mono text-[10px] uppercase tracking-widest text-black/55 dark:text-white/55">
+          {s.label}
+        </span>
+        <span
+          class="font-heading text-3xl font-medium tracking-tight text-black dark:text-white"
+          style="font-variant-numeric: tabular-nums;"
+        >
+          {s.value}
+        </span>
+      </div>
+    ))
+  }
+</div>

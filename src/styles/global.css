@@ -157,6 +157,16 @@
   :root {
     --masthead-height: 5rem;
     --footer-height: 3.5rem;
+    /* Editorial accent — used sparingly: forward-link badges between
+       /reading and /wiki, the "compiled from N sources" chip on wiki
+       entries, the numbered citation supers in wiki prose, the rail
+       chip when a source is hovered. Brighter in dark for readability
+       at low surface contrast. */
+    --accent: oklch(0.5 0.09 35);
+  }
+
+  html.dark {
+    --accent: oklch(0.78 0.1 62);
   }
 
   @media (min-width: 768px) {

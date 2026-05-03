@@ -1,0 +1,141 @@
+---
+import { getCollection } from "astro:content";
+import Container from "@components/Container.astro";
+import EditorialRule from "@components/EditorialRule.astro";
+import LabeledRule from "@components/LabeledRule.astro";
+import Link from "@components/Link.astro";
+import CodeCell from "@components/labs/CodeCell.astro";
+import LabResult from "@components/labs/LabResult.astro";
+import Layout from "@layouts/Layout.astro";
+import { loadLabData } from "@lib/lab-data";
+import { SITE_TIMEZONE } from "@lib/utils";
+
+// /labs — Observable-style cells holding the data behind posts. Each cell
+// stamps "what was the question, what's the number, what does it mean."
+// The index lists every cell in reverse-chronological run order with a
+// compact preview of the result; the full code/result/commentary lives on
+// the per-slug page.
+const cells = (await getCollection("labs")).sort(
+  (a, b) => b.data.lastRunDate.valueOf() - a.data.lastRunDate.valueOf(),
+);
+
+const dataByCellId = new Map<string, unknown>();
+for (const cell of cells) {
+  const data = await loadLabData(cell.data.dataPath);
+  dataByCellId.set(cell.id, data);
+}
+
+const dateFormatter = new Intl.DateTimeFormat("en-US", {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+  timeZone: SITE_TIMEZONE,
+});
+
+const STATUS_LABELS: Record<string, string> = {
+  draft: "draft",
+  running: "running",
+  live: "live",
+  archived: "archived",
+};
+---
+
+<Layout
+  title="Labs"
+  description="Observable-style cells holding the data behind my writing — cost breakdowns, eval runs, telemetry."
+>
+  <Container>
+    <div
+      class="space-y-10"
+      data-pagefind-body
+      data-pagefind-filter="type:Labs"
+    >
+      <LabeledRule>Labs</LabeledRule>
+
+      <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
+        Where the data behind posts lives. Cost breakdowns, eval runs,
+        pipeline telemetry. Each cell is a small Observable-style block: the
+        code that produced a number, the number itself, and a line of
+        commentary. Posts in the <Link href="/">writing list</Link> link
+        forward to specific cells when the numbers matter.
+      </p>
+
+      {
+        cells.length > 0 ? (
+          <ul class="not-prose flex flex-col gap-10">
+            {cells.map((cell, i) => {
+              const data = dataByCellId.get(cell.id);
+              return (
+                <>
+                  <li class="space-y-3">
+                    {/* NB: bare <header> would inherit site-chrome
+                        position:fixed via global.css — CLAUDE.md flags this
+                        explicitly. <div> here. */}
+                    <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                      <Link
+                        href={`/labs/${cell.id}/`}
+                        class="font-heading text-lg font-medium tracking-tight text-black dark:text-white"
+                        underline={false}
+                      >
+                        {cell.data.title}
+                      </Link>
+                      <span class="font-mono text-[11px] uppercase tracking-wider text-black/55 dark:text-white/55">
+                        /{cell.id}
+                      </span>
+                      <span
+                        class="rounded-sm border border-black/10 px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest text-black/55 dark:border-white/15 dark:text-white/55"
+                        data-status={cell.data.status}
+                      >
+                        {STATUS_LABELS[cell.data.status] ?? cell.data.status}
+                      </span>
+                      <span class="ml-auto font-mono text-[11px] text-black/55 dark:text-white/55">
+                        updated {dateFormatter.format(cell.data.lastRunDate)}
+                      </span>
+                    </div>
+                    <p class="text-sm leading-relaxed text-black/75 dark:text-white/75">
+                      {cell.data.tldr}
+                    </p>
+                    <LabResult kind={cell.data.kind} data={data} size="compact" />
+                    <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1.5 text-xs">
+                      {cell.data.tags.map((t) => (
+                        <span class="rounded-sm bg-black/5 px-1.5 py-0.5 font-mono text-[11px] text-black/55 dark:bg-white/5 dark:text-white/55">
+                          #{t}
+                        </span>
+                      ))}
+                      {cell.data.blogPostSlug && (
+                        <span class="ml-auto font-mono text-[11px] text-black/55 dark:text-white/55">
+                          cited by{" "}
+                          <Link
+                            href={`/writing/${cell.data.blogPostSlug}/`}
+                            class="font-sans text-xs"
+                          >
+                            {cell.data.blogPostSlug}
+                          </Link>
+                        </span>
+                      )}
+                    </div>
+                  </li>
+                  {i < cells.length - 1 && <EditorialRule />}
+                </>
+              );
+            })}
+          </ul>
+        ) : (
+          <div class="space-y-6">
+            <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
+              Nothing here yet. The labs surface ships ahead of its first
+              populated cell so the IA is in place. Cells materialize when a
+              post needs receipts — cost numbers, eval runs, p95 by route —
+              and stay around so future posts can link forward to them.
+            </p>
+            <CodeCell lang="js">{`// the next cell will look something like this
+const { post, run } = await loadCell({
+  hypothesis: "Haiku 4.5 is good enough at link-summary",
+  data: "eval-haiku-vs-sonnet.json",
+});`}</CodeCell>
+          </div>
+        )
+      }
+    </div>
+  </Container>
+</Layout>

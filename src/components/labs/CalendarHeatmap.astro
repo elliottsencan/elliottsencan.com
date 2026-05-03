@@ -1,0 +1,56 @@
+---
+/**
+ * Calendar-cell heatmap — one cell per month over a 12-month span. Cell
+ * intensity scales linearly with the value. Empty months render as a
+ * soft inkwell.
+ */
+type Props = {
+  months: number[];
+  startLabel?: string;
+  endLabel?: string;
+};
+
+const { months, startLabel, endLabel } = Astro.props;
+const max = months.length > 0 ? Math.max(...months) : 1;
+---
+
+<div class="flex flex-col gap-1.5">
+  <div class="grid grid-cols-12 gap-1">
+    {
+      months.map((m) => {
+        const ratio = max > 0 ? m / max : 0;
+        const intensity = m === 0 ? 0 : 0.2 + ratio * 0.7;
+        const labelOnDark = ratio > 0.5;
+        return (
+          <div
+            class="relative aspect-square"
+            style={
+              m === 0
+                ? "background: rgb(0 0 0 / 0.06);"
+                : `background: rgb(0 0 0 / ${intensity});`
+            }
+          >
+            {m > 0 && (
+              <span
+                class="absolute inset-0 flex items-center justify-center font-mono text-[10px] font-medium"
+                style={
+                  labelOnDark ? "color: #f6f4ef;" : "color: rgb(0 0 0 / 0.85);"
+                }
+              >
+                {m}
+              </span>
+            )}
+          </div>
+        );
+      })
+    }
+  </div>
+  {
+    (startLabel || endLabel) && (
+      <div class="flex justify-between font-mono text-[10px] text-black/55 dark:text-white/55">
+        <span>{startLabel ?? ""}</span>
+        <span>{endLabel ?? ""}</span>
+      </div>
+    )
+  }
+</div>
