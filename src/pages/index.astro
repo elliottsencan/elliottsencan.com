@@ -26,6 +26,52 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
   month: "long",
   year: "numeric",
 });
+
+// Trails — three input/synthesis/data surfaces, surfaced from the home
+// page so the new IA is legible without bloating the nav. Counts and
+// "latest" lines are computed at build from the live collections so
+// they stay accurate as content lands.
+const reading = await getCollection("reading");
+const wiki = await getCollection("wiki");
+const labs = await getCollection("labs");
+
+const latestReading = [...reading].sort(
+  (a, b) => b.data.added.valueOf() - a.data.added.valueOf(),
+)[0];
+const latestWiki = [...wiki].sort(
+  (a, b) => b.data.compiled_at.valueOf() - a.data.compiled_at.valueOf(),
+)[0];
+const latestLab = [...labs].sort(
+  (a, b) => b.data.lastRunDate.valueOf() - a.data.lastRunDate.valueOf(),
+)[0];
+
+const totalSources = wiki.reduce((sum, concept) => sum + concept.data.sources.length, 0);
+
+const trails = [
+  {
+    key: "reading",
+    href: "/reading",
+    caption: `${reading.length} sources saved`,
+    blurb: "Per-source citation log. The raw input.",
+    latest: latestReading
+      ? { title: latestReading.data.title, href: `/reading/${latestReading.id}/` }
+      : null,
+  },
+  {
+    key: "wiki",
+    href: "/wiki",
+    caption: `${wiki.length} articles · ${totalSources} sources`,
+    blurb: "Synthesis. Concepts compiled across multiple sources.",
+    latest: latestWiki ? { title: latestWiki.data.title, href: `/wiki/${latestWiki.id}/` } : null,
+  },
+  {
+    key: "labs",
+    href: "/labs",
+    caption: labs.length > 0 ? `${labs.length} cells` : "data behind posts",
+    blurb: "Numbers behind the posts. Cost, evals, telemetry.",
+    latest: latestLab ? { title: latestLab.data.title, href: `/labs/${latestLab.id}/` } : null,
+  },
+];
 ---
 
 <Layout title={HOME.TITLE} description={HOME.DESCRIPTION}>
@@ -68,6 +114,53 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
           </>
         ) : null
       }
+
+      {/*
+        Trails — three input/synthesis/data surfaces in one row. Lets the new
+        IA show on the home page without bloating the nav.
+      */}
+      <LabeledRule as="h2">Trails</LabeledRule>
+      <section data-pagefind-ignore>
+        <ul class="not-prose flex flex-col text-sm">
+          {
+            trails.map((trail, i) => (
+              <li
+                class:list={[
+                  "grid grid-cols-[7.5rem_1fr] items-baseline gap-x-6 gap-y-1 py-4",
+                  i === 0 && "border-t border-black/10 dark:border-white/10",
+                  "border-b border-black/10 dark:border-white/10",
+                ]}
+              >
+                <div class="flex flex-col gap-1">
+                  <Link
+                    href={trail.href}
+                    underline={false}
+                    class="font-heading text-lg font-medium text-black dark:text-white"
+                  >
+                    /{trail.key}
+                  </Link>
+                  <span class="font-mono text-[11px] uppercase tracking-wider text-black/55 dark:text-white/55">
+                    {trail.caption}
+                  </span>
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  <p class="leading-relaxed text-black/75 dark:text-white/75">
+                    {trail.blurb}
+                  </p>
+                  {trail.latest && (
+                    <span class="font-mono text-[11px] text-black/55 dark:text-white/55">
+                      latest ·{" "}
+                      <Link href={trail.latest.href} class="font-sans text-xs">
+                        {trail.latest.title}
+                      </Link>
+                    </span>
+                  )}
+                </div>
+              </li>
+            ))
+          }
+        </ul>
+      </section>
     </div>
   </Container>
 </Layout>

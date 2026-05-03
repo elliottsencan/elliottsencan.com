@@ -1,18 +1,63 @@
 ---
 import { getCollection } from "astro:content";
-import Container from "@components/Container.astro";
 import LabeledRule from "@components/LabeledRule.astro";
 import Link from "@components/Link.astro";
+import ConstellationStrip from "@components/wiki/ConstellationStrip.astro";
 import Layout from "@layouts/Layout.astro";
+import { deriveWikiTopics, indexReadingById } from "@lib/wiki-topics";
 
-const concepts = (await getCollection("wiki")).sort((a, b) => a.id.localeCompare(b.id));
+// Wiki index — concept-indexed synthesis. Articles are clustered by topic
+// (derived from the union of contributing reading-entry topics) and weighted
+// by source count: bigger card = more sources behind it. The hero carries a
+// small constellation strip in the upper-right corner as a wayfinding accent
+// — content reads first, the graph is reference.
+const wiki = await getCollection("wiki");
+const reading = await getCollection("reading");
+const readingById = indexReadingById(reading);
+
+const conceptsWithTopics = wiki.map((concept) => ({
+  concept,
+  topics: deriveWikiTopics(concept, readingById),
+}));
+
+// Cluster by primary topic. "other" catches articles whose sources have no
+// topics yet (older entries pre-dating the topics field).
+const groups = new Map<string, typeof conceptsWithTopics>();
+for (const item of conceptsWithTopics) {
+  const key = item.topics[0] ?? "other";
+  const list = groups.get(key);
+  if (list) {
+    list.push(item);
+  } else {
+    groups.set(key, [item]);
+  }
+}
+const ordered = [...groups.entries()].sort(([, a], [, b]) => b.length - a.length);
+
+const maxSources = wiki.reduce((m, c) => Math.max(m, c.data.sources.length), 1);
+
+// Source-count → tertile weight; drives card title size and the dot row.
+function weightFor(n: number) {
+  const r = n / maxSources;
+  if (r < 0.34) {
+    return { titleClass: "text-base", dots: n };
+  }
+  if (r < 0.67) {
+    return { titleClass: "text-lg", dots: n };
+  }
+  return { titleClass: "text-xl", dots: n };
+}
+
+function topicLabel(slug: string): string {
+  return slug.replace(/-/g, " ");
+}
 ---
 
 <Layout
   title="Wiki"
   description="Concept-indexed synthesis articles compiled from my reading log."
 >
-  <Container>
+  <div class="mx-auto max-w-5xl px-6 md:px-8">
     <div
       class="space-y-10"
       data-pagefind-body
@@ -20,28 +65,78 @@ const concepts = (await getCollection("wiki")).sort((a, b) => a.id.localeCompare
     >
       <LabeledRule>Wiki</LabeledRule>
 
-      <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
-        Concept-indexed synthesis articles. Each article compiles across
-        multiple sources from the <Link href="/reading">reading log</Link>;
-        one article per concept that has at least two contributing sources.
-        Articles are AI-compiled and reviewed before merge.
-      </p>
+      {/*
+        Hero — copy on the left, constellation tucked into the upper-right
+        corner. Wayfinding, not centerpiece. The grid collapses to a single
+        column under 768px; the strip drops below the prose.
+      */}
+      <div class="grid items-start gap-8 md:grid-cols-[minmax(0,1fr)_auto] md:gap-10">
+        <p class="max-w-[62ch] text-base leading-relaxed text-black/85 dark:text-white/85">
+          Concept-indexed synthesis articles. Each article compiles across
+          multiple sources from the <Link href="/reading">reading log</Link>;
+          one article per concept that has at least two contributing
+          sources. Larger cards have more sources behind them.
+        </p>
+        {
+          wiki.length > 0 && (
+            <div class="flex flex-col gap-1.5">
+              <ConstellationStrip width={320} height={140} />
+              <p class="font-mono text-[10px] uppercase tracking-wider text-black/55 dark:text-white/55">
+                {wiki.length} concepts · hover to label, click to jump
+              </p>
+            </div>
+          )
+        }
+      </div>
 
       {
-        concepts.length > 0 ? (
-          <ul class="not-prose flex flex-col gap-8 text-sm">
-            {concepts.map((concept) => (
-              <li class="space-y-1">
-                <Link href={`/wiki/${concept.id}/`}>{concept.data.title}</Link>
-                <p class="text-sm leading-relaxed text-black/75 dark:text-white/75">
-                  {concept.data.summary}
-                </p>
-                <div class="font-mono text-[10px] uppercase tracking-widest text-black/50 dark:text-white/50">
-                  {concept.data.sources.length} source{concept.data.sources.length === 1 ? "" : "s"}
-                </div>
-              </li>
-            ))}
-          </ul>
+        wiki.length > 0 ? (
+          ordered.map(([group, list]) => (
+            <section class="space-y-5">
+              <LabeledRule>
+                {topicLabel(group)} · {list.length}
+              </LabeledRule>
+              <ul class="not-prose grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-x-6 gap-y-7">
+                {list
+                  .slice()
+                  .sort((a, b) => b.concept.data.sources.length - a.concept.data.sources.length)
+                  .map(({ concept }) => {
+                    const w = weightFor(concept.data.sources.length);
+                    return (
+                      <li class="flex flex-col gap-2 border-t border-black/10 pt-3.5 dark:border-white/10">
+                        <Link
+                          href={`/wiki/${concept.id}/`}
+                          underline={false}
+                          class:list={[
+                            "font-heading font-medium leading-tight tracking-tight text-black dark:text-white",
+                            w.titleClass,
+                          ]}
+                        >
+                          {concept.data.title}
+                        </Link>
+                        <p class="text-sm leading-relaxed text-black/75 dark:text-white/75">
+                          {concept.data.summary}
+                        </p>
+                        <div class="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-black/55 dark:text-white/55">
+                          <span class="flex gap-1" aria-hidden="true">
+                            {Array.from({ length: w.dots }).map((_, i) => (
+                              <span
+                                class="block h-1 w-1 rounded-full bg-[color:var(--accent)]"
+                                style={`opacity: ${0.55 + (i / w.dots) * 0.45};`}
+                              />
+                            ))}
+                          </span>
+                          <span>
+                            {concept.data.sources.length} source
+                            {concept.data.sources.length === 1 ? "" : "s"}
+                          </span>
+                        </div>
+                      </li>
+                    );
+                  })}
+              </ul>
+            </section>
+          ))
         ) : (
           <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
             Nothing here yet. Wiki articles materialise when at least two
@@ -50,5 +145,5 @@ const concepts = (await getCollection("wiki")).sort((a, b) => a.id.localeCompare
         )
       }
     </div>
-  </Container>
+  </div>
 </Layout>

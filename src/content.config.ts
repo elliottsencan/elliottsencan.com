@@ -3,6 +3,7 @@ import { glob } from "astro/loaders";
 import { z } from "astro/zod";
 import {
   BlogFrontmatterSchema,
+  LabFrontmatterSchema,
   NowArchiveFrontmatterSchema,
   NowFrontmatterSchema,
   ReadingFrontmatterSchema,
@@ -60,4 +61,11 @@ const wiki = defineCollection({
   schema: WikiFrontmatterSchema,
 });
 
-export const collections = { blog, projects, now, nowArchive, reading, wiki };
+// Non-recursive `*.md` so raw measurement JSON in
+// src/content/labs/data/ is not picked up by the markdown loader.
+const labs = defineCollection({
+  loader: glob({ pattern: "*.md", base: "./src/content/labs" }),
+  schema: LabFrontmatterSchema,
+});
+
+export const collections = { blog, projects, now, nowArchive, reading, wiki, labs };

@@ -228,8 +228,8 @@ describe("parseFrontmatter", () => {
     ].join("\n");
     const out = parseFrontmatter(md);
     expect(out).not.toBeNull();
-    expect(out!.frontmatter.added).toBeInstanceOf(Date);
-    expect(out!.frontmatter.added.toISOString()).toBe("2026-04-23T22:04:24.354Z");
+    expect(out?.frontmatter.added).toBeInstanceOf(Date);
+    expect(out?.frontmatter.added.toISOString()).toBe("2026-04-23T22:04:24.354Z");
   });
 
   it("returns null when frontmatter is missing required fields", () => {

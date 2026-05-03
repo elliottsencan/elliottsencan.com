@@ -1,0 +1,192 @@
+---
+import { type CollectionEntry, getCollection, render } from "astro:content";
+import Container from "@components/Container.astro";
+import LabeledRule from "@components/LabeledRule.astro";
+import Link from "@components/Link.astro";
+import CodeCell from "@components/labs/CodeCell.astro";
+import LabResult from "@components/labs/LabResult.astro";
+import Layout from "@layouts/Layout.astro";
+import { loadLabData } from "@lib/lab-data";
+import { SITE_TIMEZONE } from "@lib/utils";
+
+export async function getStaticPaths() {
+  const cells = await getCollection("labs");
+  return cells.map((cell) => ({
+    params: { slug: cell.id },
+    props: { cell },
+  }));
+}
+
+type Props = {
+  cell: CollectionEntry<"labs">;
+};
+
+const { cell } = Astro.props;
+const { Content } = await render(cell);
+const data = await loadLabData(cell.data.dataPath);
+
+const dateFormatter = new Intl.DateTimeFormat("en-US", {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+  timeZone: SITE_TIMEZONE,
+});
+
+const STATUS_LABELS: Record<string, string> = {
+  draft: "draft",
+  running: "running",
+  live: "live",
+  archived: "archived",
+};
+---
+
+<Layout title={`Labs: ${cell.data.title}`} description={cell.data.tldr}>
+  <Container>
+    <div
+      class="space-y-10"
+      data-pagefind-body
+      data-pagefind-filter="type:Labs"
+    >
+      <LabeledRule>
+        <Link href="/labs/">Labs</Link> / {cell.id}
+      </LabeledRule>
+
+      <div class="space-y-3">
+        <h1 class="font-heading text-2xl font-semibold tracking-tight text-black dark:text-white">
+          {cell.data.title}
+        </h1>
+        <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
+          {cell.data.tldr}
+        </p>
+        <div
+          class="flex flex-wrap items-baseline gap-x-4 gap-y-1 font-mono text-[11px] text-black/55 dark:text-white/55"
+        >
+          <span
+            class="rounded-sm border border-black/10 px-2 py-0.5 uppercase tracking-widest dark:border-white/15"
+          >
+            {STATUS_LABELS[cell.data.status] ?? cell.data.status}
+          </span>
+          <span>published {dateFormatter.format(cell.data.publishedDate)}</span>
+          <span aria-hidden="true">·</span>
+          <span>last run {dateFormatter.format(cell.data.lastRunDate)}</span>
+          {
+            cell.data.repoUrl && (
+              <>
+                <span aria-hidden="true">·</span>
+                <Link href={cell.data.repoUrl} external class="font-sans text-xs">
+                  repo
+                </Link>
+              </>
+            )
+          }
+          {
+            cell.data.blogPostSlug && (
+              <>
+                <span aria-hidden="true">·</span>
+                <span>
+                  cited by{" "}
+                  <Link
+                    href={`/writing/${cell.data.blogPostSlug}/`}
+                    class="font-sans text-xs"
+                  >
+                    {cell.data.blogPostSlug}
+                  </Link>
+                </span>
+              </>
+            )
+          }
+        </div>
+      </div>
+
+      <section class="space-y-3" data-pagefind-ignore>
+        <p
+          class="font-mono text-[11px] uppercase tracking-wider text-black/55 dark:text-white/55"
+        >
+          Hypothesis
+        </p>
+        <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
+          {cell.data.hypothesis}
+        </p>
+      </section>
+
+      <section class="space-y-3">
+        <p
+          class="font-mono text-[11px] uppercase tracking-wider text-black/55 dark:text-white/55"
+        >
+          Headline
+        </p>
+        <div class="flex items-baseline gap-4">
+          <span
+            class="font-heading text-3xl font-medium tracking-tight text-black dark:text-white"
+            style="font-variant-numeric: tabular-nums;"
+          >
+            {cell.data.headlineMetric.value}
+          </span>
+          <span class="font-mono text-[11px] uppercase tracking-widest text-black/55 dark:text-white/55">
+            {cell.data.headlineMetric.label}
+          </span>
+        </div>
+      </section>
+
+      {/*
+        Cell — code in (when set), data out (always). Body markdown
+        renders below as commentary. Both the cell wrapper and the
+        markdown commentary stay in the narrow column for readability.
+      */}
+      <div class="space-y-4">
+        {cell.data.pre && <CodeCell lang="js">{cell.data.pre}</CodeCell>}
+        <LabResult kind={cell.data.kind} data={data} size="full" />
+      </div>
+
+      <div class="lab-body space-y-4">
+        <Content />
+      </div>
+
+      {
+        cell.data.post && (
+          <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
+            {cell.data.post}
+          </p>
+        )
+      }
+
+      {
+        cell.data.tags.length > 0 && (
+          <div class="flex flex-wrap gap-2">
+            {cell.data.tags.map((t) => (
+              <span class="rounded-sm bg-black/5 px-2 py-0.5 font-mono text-[11px] text-black/55 dark:bg-white/5 dark:text-white/55">
+                #{t}
+              </span>
+            ))}
+          </div>
+        )
+      }
+    </div>
+  </Container>
+</Layout>
+
+<style is:global>
+  .lab-body {
+    font-family: var(--font-sans);
+    line-height: 1.7;
+    color: rgb(0 0 0 / 0.85);
+  }
+  .dark .lab-body {
+    color: rgb(255 255 255 / 0.85);
+  }
+  .lab-body p {
+    margin: 0;
+  }
+  .lab-body p + p {
+    margin-top: 1.1em;
+  }
+  .lab-body a {
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-color: rgb(0 0 0 / 0.25);
+    text-underline-offset: 4px;
+  }
+  .dark .lab-body a {
+    text-decoration-color: rgb(255 255 255 / 0.3);
+  }
+</style>

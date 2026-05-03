@@ -1,0 +1,34 @@
+---
+/**
+ * Horizontal bar chart — labeled rows with a millisecond value at the end.
+ * Used for routes-vs-p95 style breakdowns. Pure HTML; no SVG.
+ */
+type Props = {
+  bars: { route: string; ms: number }[];
+};
+
+const { bars } = Astro.props;
+const max = bars.length > 0 ? Math.max(...bars.map((b) => b.ms)) : 1;
+---
+
+<div class="flex flex-col gap-2 font-mono text-xs">
+  {
+    bars.map((b) => (
+      <div class="flex items-center gap-3">
+        <span class="w-32 shrink-0 text-right text-black/55 dark:text-white/55">{b.route}</span>
+        <div class="relative h-3.5 flex-1 bg-black/5 dark:bg-white/5">
+          <div
+            class="h-full bg-black/85 dark:bg-white/85"
+            style={`width: ${(b.ms / max) * 100}%;`}
+          />
+        </div>
+        <span
+          class="w-12 shrink-0 text-right text-black dark:text-white"
+          style="font-variant-numeric: tabular-nums;"
+        >
+          {b.ms} ms
+        </span>
+      </div>
+    ))
+  }
+</div>

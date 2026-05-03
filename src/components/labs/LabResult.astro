@@ -1,0 +1,122 @@
+---
+/**
+ * Result dispatcher — picks the viz primitive based on the cell's `kind`
+ * and the shape of the loaded JSON measurements. Falls back to a `<pre>`
+ * JSON dump when `kind` is unset or the data shape doesn't match (early-
+ * stage cells render their raw measurements unstyled, which is the right
+ * default for prose-only labs that haven't yet earned a chart).
+ */
+import Barchart from "./Barchart.astro";
+import CalendarHeatmap from "./CalendarHeatmap.astro";
+import LabTable from "./LabTable.astro";
+import ResultCell from "./ResultCell.astro";
+import Scatter from "./Scatter.astro";
+import Sparkline from "./Sparkline.astro";
+import StatGrid from "./StatGrid.astro";
+
+type Props = {
+  kind?: "chart" | "table" | "barchart" | "stat" | "calendar" | "scatter";
+  data: unknown;
+  /** Visualization detail level — controls heights for charts/scatters. */
+  size?: "compact" | "full";
+};
+
+const { kind, data, size = "full" } = Astro.props;
+
+const isObject = (v: unknown): v is Record<string, unknown> =>
+  typeof v === "object" && v !== null && !Array.isArray(v);
+
+const labelText = kind ?? "json";
+
+const chartData =
+  kind === "chart" && isObject(data) && Array.isArray(data.values)
+    ? {
+        values: data.values as number[],
+        annotation: isObject(data.annotation)
+          ? (data.annotation as { at: number; label: string })
+          : undefined,
+      }
+    : null;
+
+const tableData =
+  kind === "table" && isObject(data) && Array.isArray(data.headers) && Array.isArray(data.rows)
+    ? {
+        headers: data.headers as string[],
+        rows: data.rows as string[][],
+      }
+    : null;
+
+const barData =
+  kind === "barchart" && isObject(data) && Array.isArray(data.bars)
+    ? { bars: data.bars as { route: string; ms: number }[] }
+    : null;
+
+const statData =
+  kind === "stat" && isObject(data) && Array.isArray(data.stats)
+    ? { stats: data.stats as { label: string; value: string }[] }
+    : null;
+
+const calendarData =
+  kind === "calendar" && isObject(data) && Array.isArray(data.months)
+    ? {
+        months: data.months as number[],
+        startLabel: typeof data.startLabel === "string" ? data.startLabel : undefined,
+        endLabel: typeof data.endLabel === "string" ? data.endLabel : undefined,
+      }
+    : null;
+
+const scatterData =
+  kind === "scatter" && isObject(data) && Array.isArray(data.points)
+    ? {
+        points: data.points as { x: number; y: number }[],
+        xLabel: typeof data.xLabel === "string" ? data.xLabel : undefined,
+        yLabel: typeof data.yLabel === "string" ? data.yLabel : undefined,
+      }
+    : null;
+
+const matched = chartData ?? tableData ?? barData ?? statData ?? calendarData ?? scatterData;
+
+const sparkHeight = size === "compact" ? 60 : 120;
+const scatterHeight = size === "compact" ? 100 : 180;
+---
+
+<ResultCell label={labelText}>
+  {
+    chartData && (
+      <Sparkline
+        data={chartData.values}
+        annotation={chartData.annotation}
+        height={sparkHeight}
+      />
+    )
+  }
+  {tableData && <LabTable headers={tableData.headers} rows={tableData.rows} />}
+  {barData && <Barchart bars={barData.bars} />}
+  {statData && <StatGrid stats={statData.stats} />}
+  {
+    calendarData && (
+      <CalendarHeatmap
+        months={calendarData.months}
+        startLabel={calendarData.startLabel}
+        endLabel={calendarData.endLabel}
+      />
+    )
+  }
+  {
+    scatterData && (
+      <Scatter
+        points={scatterData.points}
+        xLabel={scatterData.xLabel}
+        yLabel={scatterData.yLabel}
+        height={scatterHeight}
+      />
+    )
+  }
+  {
+    !matched && (
+      <pre class="m-0 overflow-x-auto font-mono text-xs leading-relaxed text-black/85 dark:text-white/85">
+        {JSON.stringify(data, null, 2)}
+      </pre>
+    )
+  }
+</ResultCell>
