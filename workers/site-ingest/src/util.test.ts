@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
+import { type Sink, type StreamEvent, sinkContext } from "./stream.ts";
 import {
   dateKey,
   fileTimestamp,
   jsonResponse,
+  log,
   monthKey,
   readingSlugFromPath,
   requireBearer,
@@ -179,5 +181,59 @@ describe("response helpers", () => {
     expect(r.headers.get("Content-Type")).toBe("text/plain; charset=utf-8");
     expect(r.headers.get("Cache-Control")).toBe("no-store");
     await expect(r.text()).resolves.toBe("hello");
+  });
+});
+
+describe("log.* tee through sinkContext", () => {
+  it("does not throw when no sink is active", () => {
+    expect(() => log.info("test", "op", "no sink", { k: "v" })).not.toThrow();
+    expect(() => log.warn("test", "op", "no sink")).not.toThrow();
+    expect(() => log.error("test", "op", "no sink")).not.toThrow();
+  });
+
+  it("tees info/warn/error to an active sink", async () => {
+    const events: StreamEvent[] = [];
+    const sink: Sink = { emit: (e) => events.push(e) };
+    await sinkContext.run(sink, async () => {
+      log.info("test", "op", "msg1", { a: 1 });
+      log.warn("test", "op", "msg2");
+      log.error("test", "op", "msg3", { b: "x" });
+    });
+    expect(events).toHaveLength(3);
+    expect(events[0]).toEqual({
+      event: "log",
+      level: "info",
+      area: "test",
+      op: "op",
+      message: "msg1",
+      fields: { a: 1 },
+    });
+    expect(events[1]).toEqual({
+      event: "log",
+      level: "warn",
+      area: "test",
+      op: "op",
+      message: "msg2",
+      fields: undefined,
+    });
+    expect(events[2]).toEqual({
+      event: "log",
+      level: "error",
+      area: "test",
+      op: "op",
+      message: "msg3",
+      fields: { b: "x" },
+    });
+  });
+
+  it("does not leak the sink across context boundaries", async () => {
+    const events: StreamEvent[] = [];
+    const sink: Sink = { emit: (e) => events.push(e) };
+    await sinkContext.run(sink, async () => {
+      log.info("inside", "op", "msg");
+    });
+    log.info("outside", "op", "msg");
+    expect(events).toHaveLength(1);
+    expect(events[0]).toMatchObject({ area: "inside" });
   });
 });
