@@ -1,4 +1,7 @@
 {
-  "values": [0.08, 0.11, 0.09, 0.13, 0.14, 0.15, 0.12, 0.13, 0.16, 0.15, 0.14, 0.42],
-  "annotation": { "at": 11, "label": "wiki backfill recompile" }
+  "generated_at": "2026-05-03T03:01:18.197Z",
+  "source": "Aggregated from compile_cost in src/content/reading/**/*.md + src/content/wiki/*.md by scripts/labs-aggregate.mjs.",
+  "record_count": 0,
+  "weeks": [],
+  "values": []
 }
