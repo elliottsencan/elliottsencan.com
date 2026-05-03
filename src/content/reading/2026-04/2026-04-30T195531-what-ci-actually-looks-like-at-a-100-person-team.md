@@ -2,20 +2,35 @@
 title: What CI Actually Looks Like at a 100-Person Team
 url: 'https://www.mendral.com/blog/ci-at-scale'
 summary: >-
-  Mendral's AI agent diagnoses CI failures and quarantines flaky tests at scale,
-  illustrated by a week of PostHog's CI: 575,894 jobs, 33 million test
-  executions, and why log ingestion — not AI — is the hardest part.
+  Using PostHog's monorepo as a case study, Mendral's founders show how flaky
+  tests, log volume, and failure routing become compounding costs at scale, and
+  describe the AI agent they built to diagnose and fix CI failures autonomously.
 category: tech
 added: '2026-05-01T02:55:31.632Z'
 author: Sam Alba
 source: Mendral
 topics:
   - continuous-integration
-  - developer-tooling
-  - ai-agents
-  - monorepo
   - flaky-tests
-compiled_at: '2026-05-01T04:16:18.146Z'
+  - developer-tooling
+  - monorepo
+  - ai-agents
+compiled_at: '2026-05-03T03:24:29.604Z'
 compiled_with: claude-sonnet-4-6
+compile_cost:
+  usage:
+    input_tokens: 3080
+    output_tokens: 119
+    cache_creation_input_tokens: 0
+    cache_read_input_tokens: 0
+  model: claude-sonnet-4-6
+  pricing:
+    model: claude-sonnet-4-6
+    input_per_million: 3
+    output_per_million: 15
+    cache_read_per_million: 0.3
+    cache_write_5m_per_million: 3.75
+    priced_at: '2026-04-30'
+  cost_usd: 0.011025
 ---
 

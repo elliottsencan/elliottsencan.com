@@ -5,21 +5,34 @@ url: >-
 
   https://angular.dev/guide/forms/signals/model-design#translating-between-form-model-and-domain-model
 summary: >-
-  Angular's new Signal Forms guide covers best practices for designing form
-  models: use static structure, initialize all fields, match types to UI
-  controls, avoid undefined, and translate cleanly between form models and
-  domain models using linkedSignal.
+  Angular's Signal Forms guide explains how to design form models separately
+  from domain models, covering best practices like static structure, explicit
+  types, initialized fields, and when dynamic structure is acceptable.
 category: tech
 added: '2026-05-01T06:14:12.171Z'
 source: Angular
 topics:
-  - software-architecture
-  - api-design
-  - type-system-design
-  - developer-tools
-  - software-engineering
-compiled_at: '2026-05-01T06:14:12.171Z'
+  - angular
+  - signal-forms
+  - form-design
+  - frontend-architecture
+  - typescript
+compiled_at: '2026-05-03T03:25:08.763Z'
 compiled_with: claude-sonnet-4-6
-title_source: model
+compile_cost:
+  usage:
+    input_tokens: 5418
+    output_tokens: 82
+    cache_creation_input_tokens: 0
+    cache_read_input_tokens: 0
+  model: claude-sonnet-4-6
+  pricing:
+    model: claude-sonnet-4-6
+    input_per_million: 3
+    output_per_million: 15
+    cache_read_per_million: 0.3
+    cache_write_5m_per_million: 3.75
+    priced_at: '2026-04-30'
+  cost_usd: 0.017484
 ---
 
