@@ -37,6 +37,13 @@ import {
 } from "./pipeline.ts";
 import { LINK_SUMMARY_SYSTEM } from "./prompts.ts";
 import { makePipelineDeps } from "./synthesize.ts";
+import {
+  applyVocabulary,
+  buildVocabularyPromptBlock,
+  type CanonicalVocabulary,
+  EMPTY_VOCABULARY,
+  loadCanonicalVocabulary,
+} from "./topics.ts";
 import type { Env, LinkSummary, Result } from "./types.ts";
 import { jsonResponse, log } from "./util.ts";
 
@@ -111,11 +118,18 @@ export function makeRecompileStrategy(req: RecompileRequest): Strategy<Recompile
         cap: MAX_ENTRIES_PER_RUN,
       });
 
+      // Load the canonical vocabulary once per run rather than per entry.
+      // Each /link or /recompile call would otherwise hit /wiki.json N times
+      // for an N=100 batch, which the Cloudflare edge handles fine but is
+      // gratuitous. Fail-open: an empty vocabulary disables alias rewriting
+      // for this run, the recompiled entry validates either way.
+      const vocab: CanonicalVocabulary = await loadCanonicalVocabulary();
+
       const results: RecompileResultRow[] = [];
       const changed: Array<{ path: string; before: string; after: string }> = [];
       const costRecords: CostRecord[] = [];
       for (const entry of filtered) {
-        const outcome = await recompileOne(entry, env);
+        const outcome = await recompileOne(entry, env, vocab);
         if (outcome.ok) {
           changed.push({ path: entry.path, before: entry.body, after: outcome.data.content });
           results.push({ path: entry.path, status: "updated" });
@@ -428,7 +442,11 @@ type RecompileOutcome =
   | { ok: true; data: { path: string; content: string; cost: CostRecord } }
   | { ok: false; error: string; skipReason: SkipReason };
 
-async function recompileOne(entry: ParsedEntry, env: Env): Promise<RecompileOutcome> {
+async function recompileOne(
+  entry: ParsedEntry,
+  env: Env,
+  vocab: CanonicalVocabulary = EMPTY_VOCABULARY,
+): Promise<RecompileOutcome> {
   const { url, title, added } = entry.frontmatter;
 
   // Try the live URL first (closest to the original source /link saw at
@@ -465,16 +483,41 @@ async function recompileOne(entry: ParsedEntry, env: Env): Promise<RecompileOutc
     apiKey: env.ANTHROPIC_API_KEY,
     model: env.ANTHROPIC_MODEL,
     systemPrompt: LINK_SUMMARY_SYSTEM,
-    userMessage: buildRecompileUserMessage({ title, url, excerpt }),
+    userMessage: buildRecompileUserMessage({
+      title,
+      url,
+      excerpt,
+      vocabularyBlock: buildVocabularyPromptBlock(vocab),
+    }),
   });
   if (!summary.ok) {
     return { ok: false, error: `anthropic: ${summary.error}`, skipReason: "transient" };
   }
 
+  // Same alias-rewrite contract as /link: known aliases collapse to canonical
+  // before commit. Coined slugs (model invented something not in the
+  // vocabulary) pass through and surface in logs for review.
+  const applied = applyVocabulary(summary.data.topics, vocab);
+  if (applied.rewritten.length > 0 || applied.coined.length > 0) {
+    log.info("recompile", "topics", "post-process", {
+      path: entry.path,
+      committed: applied.committed.join(","),
+      rewritten: applied.rewritten.length
+        ? applied.rewritten.map((r) => `${r.from}->${r.to}`).join(",")
+        : undefined,
+      coined: applied.coined.length ? applied.coined.join(",") : undefined,
+      topic_rationale: summary.data.topic_rationale,
+    });
+  }
+  const summaryWithCanonicalTopics: LinkSummary = {
+    ...summary.data,
+    topics: applied.committed,
+  };
+
   const rebuilt = buildRecompiledMarkdown({
     title: summary.data.title || title || url,
     url,
-    summary: summary.data,
+    summary: summaryWithCanonicalTopics,
     added,
     compiledAt: new Date(),
   });
@@ -486,12 +529,16 @@ function buildRecompileUserMessage(args: {
   title?: string | undefined;
   url: string;
   excerpt?: string | undefined;
+  vocabularyBlock: string;
 }): string {
   const parts = [
     "Article data for re-summarization (from Internet Archive snapshot):",
     `Title: ${args.title ?? "(unknown)"}`,
     `URL: ${args.url}`,
   ];
+  if (args.vocabularyBlock) {
+    parts.push("", args.vocabularyBlock);
+  }
   if (args.excerpt) {
     parts.push("", "Excerpt:", args.excerpt);
   }

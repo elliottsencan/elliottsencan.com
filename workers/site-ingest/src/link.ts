@@ -22,6 +22,12 @@ import type { CostRecord } from "./cost.ts";
 import { type PlanResult, runPipeline, type Strategy } from "./pipeline.ts";
 import { LINK_SUMMARY_SYSTEM } from "./prompts.ts";
 import { makePipelineDeps } from "./synthesize.ts";
+import {
+  applyVocabulary,
+  buildVocabularyPromptBlock,
+  EMPTY_VOCABULARY,
+  loadCanonicalVocabulary,
+} from "./topics.ts";
 import type { Env, LinkRequest, LinkSummary, Result } from "./types.ts";
 import { fileTimestamp, jsonResponse, log, monthKey, slugify } from "./util.ts";
 
@@ -41,6 +47,10 @@ type LinkSummaryRow = {
   category: string;
   topics_context_loaded: boolean;
   title_source: TitleSource;
+  topics_committed: string[];
+  topics_rewritten: Array<{ from: string; to: string }>;
+  topics_coined: string[];
+  topic_rationale: string | undefined;
   cost: CostRecord;
 };
 
@@ -52,10 +62,10 @@ export function makeLinkStrategy(req: LinkRequest): Strategy<LinkSummaryRow> {
     branchPrefix: "link",
     plan: async ({ env }): Promise<PlanResult<LinkSummaryRow>> => {
       const resolvedTitle = req.title ?? (await fetchPageTitle(req.url));
-      // topic_priors=false short-circuits the existing-topics fetch so the
-      // model summarizes without seeing any in-use slugs. Used by the rigor-
+      // topic_priors=false short-circuits the canonical-vocabulary fetch so the
+      // model summarizes without seeing in-use slugs. Used by the rigor-
       // pass A/B run measuring topic-stability drift.
-      const topicsContext = req.topic_priors ? await loadExistingTopics() : EMPTY_TOPICS;
+      const vocab = req.topic_priors ? await loadCanonicalVocabulary() : EMPTY_VOCABULARY;
 
       const summaryResult = await summarizeLink({
         apiKey: env.ANTHROPIC_API_KEY,
@@ -65,13 +75,20 @@ export function makeLinkStrategy(req: LinkRequest): Strategy<LinkSummaryRow> {
           title: resolvedTitle,
           url: req.url,
           excerpt: req.excerpt,
-          existingTopics: topicsContext.topics,
+          vocabularyBlock: buildVocabularyPromptBlock(vocab),
         }),
       });
       if (!summaryResult.ok) {
         return { ok: false, status: 502, error: `summarize: ${summaryResult.error}` };
       }
       const summary = summaryResult.data;
+
+      // Post-process model topics: rewrite known aliases to their canonical,
+      // pass through coined slugs (schema is loose). The committed array is
+      // what lands in frontmatter; rewritten + coined are signal for the
+      // maintenance loop and the response payload.
+      const applied = applyVocabulary(summary.topics, vocab);
+      const summaryWithCanonicalTopics: LinkSummary = { ...summary, topics: applied.committed };
 
       const added = new Date();
       const cleanedTitle = summary.title?.trim();
@@ -91,15 +108,19 @@ export function makeLinkStrategy(req: LinkRequest): Strategy<LinkSummaryRow> {
         title: finalTitle,
         titleSource,
         url: req.url,
-        summary,
+        summary: summaryWithCanonicalTopics,
         added,
       });
       const path = buildEntryPath({ env, added, title: finalTitle });
       const summaryRow: LinkSummaryRow = {
         path,
         category: summary.category,
-        topics_context_loaded: topicsContext.loaded,
+        topics_context_loaded: vocab.loaded,
         title_source: titleSource,
+        topics_committed: applied.committed,
+        topics_rewritten: applied.rewritten,
+        topics_coined: applied.coined,
+        topic_rationale: summary.topic_rationale,
         cost: summary.cost,
       };
       return {
@@ -167,6 +188,13 @@ export async function handle(request: Request, env: Env, ctx: ExecutionContext):
     category: summary?.category,
     topics_context_loaded: summary?.topics_context_loaded,
     title_source: summary?.title_source,
+    // Arrays serialized inline so the structured log stays one line per ingest.
+    topics_committed: summary?.topics_committed.join(","),
+    topics_rewritten: summary?.topics_rewritten.length
+      ? summary.topics_rewritten.map((r) => `${r.from}->${r.to}`).join(",")
+      : undefined,
+    topics_coined: summary?.topics_coined.length ? summary.topics_coined.join(",") : undefined,
+    topic_rationale: summary?.topic_rationale,
     cost_usd: summary?.cost.cost_usd,
     input_tokens: summary?.cost.usage.input_tokens,
     output_tokens: summary?.cost.usage.output_tokens,
@@ -179,6 +207,10 @@ export async function handle(request: Request, env: Env, ctx: ExecutionContext):
       category: summary?.category,
       topics_context_loaded: summary?.topics_context_loaded ?? false,
       title_source: summary?.title_source,
+      topics_committed: summary?.topics_committed ?? [],
+      topics_rewritten: summary?.topics_rewritten ?? [],
+      topics_coined: summary?.topics_coined ?? [],
+      topic_rationale: summary?.topic_rationale,
       commit: result.commit_sha,
       cost: summary?.cost ?? null,
     },
@@ -230,66 +262,6 @@ export function validate(input: unknown): Result<LinkRequest> {
   const path = issue?.path?.join(".") ?? "body";
   const message = issue?.message ?? "invalid";
   return { ok: false, error: `${path}: ${message}` };
-}
-
-// ---------- existing topics ----------
-
-const READING_JSON_URL = "https://elliottsencan.com/reading.json";
-const TOPICS_FETCH_TIMEOUT_MS = 3000;
-const MAX_TOPICS_IN_PROMPT = 60;
-
-/**
- * Load the union of topic slugs already in use across the reading log.
- * Source is the public `reading.json` because it's a single Cloudflare-
- * edge-cached HTTP fetch — much cheaper than enumerating GitHub contents
- * per ingest. Best-effort: any failure returns an empty list.
- */
-const ReadingIndexSchema = z.object({
-  entries: z.array(z.object({ topics: z.array(z.string()).optional() })),
-});
-
-type TopicsContext = { topics: string[]; loaded: boolean };
-
-const EMPTY_TOPICS: TopicsContext = { topics: [], loaded: false };
-
-async function loadExistingTopics(): Promise<TopicsContext> {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), TOPICS_FETCH_TIMEOUT_MS);
-  try {
-    const res = await fetch(READING_JSON_URL, { signal: controller.signal });
-    if (!res.ok) {
-      log.warn("link", "topics", "reading.json fetch failed", { status: res.status });
-      return { topics: [], loaded: false };
-    }
-    const raw = await res.json();
-    const parsed = ReadingIndexSchema.safeParse(raw);
-    if (!parsed.success) {
-      log.error("link", "topics", "reading.json shape changed", {
-        issues: parsed.error.issues.length,
-        first: parsed.error.issues[0]?.path.join(".") ?? "(root)",
-      });
-      return { topics: [], loaded: false };
-    }
-    const seen = new Set<string>();
-    for (const entry of parsed.data.entries) {
-      for (const t of entry.topics ?? []) {
-        if (t.length > 0) {
-          seen.add(t);
-        }
-      }
-    }
-    return {
-      topics: [...seen].sort().slice(0, MAX_TOPICS_IN_PROMPT),
-      loaded: true,
-    };
-  } catch (err) {
-    log.warn("link", "topics", "reading.json fetch threw", {
-      msg: err instanceof Error ? err.message : "unknown",
-    });
-    return { topics: [], loaded: false };
-  } finally {
-    clearTimeout(timeout);
-  }
 }
 
 // ---------- page title fetch ----------
@@ -344,15 +316,15 @@ function buildLinkUserMessage(args: {
   title?: string | undefined;
   url: string;
   excerpt?: string | undefined;
-  existingTopics: string[];
+  vocabularyBlock: string;
 }): string {
   const parts = [
     "Article data for summarization:",
     `Title: ${args.title ?? "(unknown)"}`,
     `URL: ${args.url}`,
   ];
-  if (args.existingTopics.length > 0) {
-    parts.push("", `Existing topics in use: ${args.existingTopics.join(", ")}`);
+  if (args.vocabularyBlock) {
+    parts.push("", args.vocabularyBlock);
   }
   if (args.excerpt) {
     parts.push("", "Excerpt:", args.excerpt);

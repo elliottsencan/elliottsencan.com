@@ -227,4 +227,60 @@ describe("WikiArticleSchema", () => {
       expect(result.data).not.toHaveProperty("related_concepts");
     }
   });
+
+  it("accepts an optional aliases array of kebab-case slugs", () => {
+    const result = WikiArticleSchema.safeParse({
+      title: "MCP",
+      summary: "ok",
+      body: "ok",
+      aliases: ["model-context-protocol"],
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.aliases).toEqual(["model-context-protocol"]);
+    }
+  });
+
+  it("accepts a response with no aliases field at all", () => {
+    const result = WikiArticleSchema.safeParse({
+      title: "MCP",
+      summary: "ok",
+      body: "ok",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects non-kebab-case alias slugs", () => {
+    const result = WikiArticleSchema.safeParse({
+      title: "MCP",
+      summary: "ok",
+      body: "ok",
+      aliases: ["NotKebab"],
+    });
+    expect(result.success).toBe(false);
+  });
+});
+
+// ---------- buildArticleMarkdown with aliases ----------
+
+describe("buildArticleMarkdown (aliases)", () => {
+  it("writes a sorted aliases array into frontmatter when supplied", () => {
+    const { data } = parseEntry(
+      buildArticleMarkdown({
+        ...baseArgs,
+        aliases: ["zeta", "alpha", "mu"],
+      }),
+    );
+    expect(data.aliases).toEqual(["alpha", "mu", "zeta"]);
+  });
+
+  it("omits aliases entirely when the array is empty", () => {
+    const { data } = parseEntry(buildArticleMarkdown({ ...baseArgs, aliases: [] }));
+    expect(data).not.toHaveProperty("aliases");
+  });
+
+  it("omits aliases entirely when the field is undefined", () => {
+    const { data } = parseEntry(buildArticleMarkdown(baseArgs));
+    expect(data).not.toHaveProperty("aliases");
+  });
 });
