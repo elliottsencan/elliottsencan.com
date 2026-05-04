@@ -20,7 +20,7 @@ topics:
   - supply-chain-security
   - continuous-integration
   - developer-tooling
-  - ai-coding-assistants
+  - ai-assisted-coding
   - enterprise-software
 compiled_at: '2026-05-01T17:23:45.277Z'
 compiled_with: claude-sonnet-4-6

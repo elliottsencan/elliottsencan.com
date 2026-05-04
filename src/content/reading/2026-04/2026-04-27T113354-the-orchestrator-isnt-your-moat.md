@@ -11,7 +11,7 @@ added: '2026-04-27T18:33:54.406Z'
 author: Aiyan
 source: aiyan.io
 topics:
-  - llm-agents
+  - ai-agents
   - mcp
   - developer-tools
   - ai-infrastructure

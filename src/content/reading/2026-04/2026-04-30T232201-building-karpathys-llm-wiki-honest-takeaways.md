@@ -37,7 +37,7 @@ source: Reddit
 topics:
   - llm-engineering
   - retrieval-augmented-generation
-  - llm-agents
+  - ai-agents
   - context-engineering
   - software-architecture
 compiled_at: '2026-05-01T06:22:01.537Z'

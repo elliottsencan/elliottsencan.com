@@ -14,7 +14,7 @@ topics:
   - ai-assisted-coding
   - developer-productivity
   - cognitive-atrophy
-  - llm-agents
+  - ai-agents
   - software-engineering
 compiled_at: '2026-05-03T18:34:59.887Z'
 compiled_with: claude-sonnet-4-6

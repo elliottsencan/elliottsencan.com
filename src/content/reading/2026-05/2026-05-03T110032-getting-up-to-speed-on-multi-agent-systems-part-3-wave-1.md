@@ -14,7 +14,7 @@ added: '2026-05-03T18:00:32.273Z'
 author: Christopher Meiklejohn
 topics:
   - multi-agent-systems
-  - llm-agents
+  - ai-agents
   - distributed-systems
   - ai-coordination
   - software-engineering

@@ -16,9 +16,9 @@ author: Christopher Meiklejohn
 topics:
   - multi-agent-systems
   - benchmarking
-  - llm-agents
+  - ai-agents
   - evaluation-methodology
-  - agentic-coding
+  - ai-assisted-coding
 compiled_at: '2026-05-03T18:39:32.614Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:

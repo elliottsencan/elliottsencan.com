@@ -11,7 +11,7 @@ added: '2026-05-03T18:00:27.207Z'
 author: Christopher Meiklejohn
 topics:
   - multi-agent-systems
-  - llm-agents
+  - ai-agents
   - distributed-systems
   - ai-research
   - benchmarks

@@ -14,7 +14,7 @@ source: christophermeiklejohn.com
 topics:
   - multi-agent-systems
   - distributed-systems
-  - llm-agents
+  - ai-agents
   - fault-tolerance
   - coordination
 compiled_at: '2026-05-03T18:39:37.497Z'

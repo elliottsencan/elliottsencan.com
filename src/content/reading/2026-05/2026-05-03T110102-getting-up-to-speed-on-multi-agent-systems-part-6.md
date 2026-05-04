@@ -14,7 +14,7 @@ topics:
   - multi-agent-systems
   - ai-agents
   - software-verification
-  - agentic-coding
+  - ai-assisted-coding
   - llm-reliability
 compiled_at: '2026-05-03T18:39:28.509Z'
 compiled_with: claude-sonnet-4-6

@@ -16,7 +16,6 @@ topics:
   - llm-orchestration
   - ai-agents
   - ai-assisted-coding
-  - llm-agents
   - developer-tooling
 compiled_at: '2026-05-01T06:12:39.997Z'
 compiled_with: claude-sonnet-4-6
