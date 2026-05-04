@@ -104,10 +104,12 @@ export const WikiFrontmatterSchema = z.object({
   // Detected by the synthesize prompt's alias-detection step over the
   // corpus's active topic list. Read by the agent-surface emitters in
   // src/lib/topics.ts to rewrite reading-entry topics at build time.
+  // Optional (rather than `.default([])`) so existing wiki articles —
+  // and worker test fixtures — that don't carry the field validate
+  // without modification. Consumers handle `aliases ?? []`.
   aliases: z
     .array(z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "kebab-case slug required"))
-    .optional()
-    .default([]),
+    .optional(),
   /**
    * @deprecated Synthesize no longer emits this. The render layer unions
    *   graph-derived edges (from inline `[…](/wiki/<slug>)` links inserted by
