@@ -1,19 +1,20 @@
 ---
 title: Retrieval-augmented generation
 summary: >-
-  RAG grounds LLM outputs by fetching relevant context at query time, but
-  curated pre-compiled knowledge bases are emerging as a competitive alternative
-  for structured, high-recall research tasks.
+  RAG grounds LLM outputs in external documents at query time, but its
+  limitations around cross-document synthesis have pushed practitioners toward
+  alternatives like compiled knowledge bases that pre-synthesize information
+  into structured, queryable Markdown.
 sources:
   - 2026-04/2026-04-29t171532-vision-language-models-better-faster-stronger
   - 2026-04/2026-04-30t232052-how-to-implement-karpathys-llm-knowledge-base
   - 2026-04/2026-04-30t232201-building-karpathys-llm-wiki-honest-takeaways
-compiled_at: 2026-05-03T19:08:31.169Z
+compiled_at: '2026-05-04T03:38:56.661Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 1969
-    output_tokens: 558
+    input_tokens: 3029
+    output_tokens: 534
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -24,12 +25,10 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.014277
+  cost_usd: 0.017097
 ---
-Retrieval-augmented generation couples a language model with a retrieval step: at query time, relevant documents or passages are fetched from an index and injected into the prompt as grounding context. The approach addresses the fact that models cannot hold all relevant information in weights, and it keeps knowledge updatable without retraining.
+Retrieval-augmented generation (RAG) is the practice of embedding a query, retrieving semantically similar document chunks from a vector store, and supplying those chunks as context to an LLM before generation. The approach keeps a model's factual grounding updatable without retraining, and it scales reasonably well to large document collections. It has become standard enough that multimodal variants now exist: [the 2025 VLM landscape overview](/reading/2026-04/2026-04-29t171532-vision-language-models-better-faster-stronger) notes multimodal RAG as one of the notable developments in the vision-language model space, where retrieved content can include images and video alongside text.
 
-The multimodal frontier has extended RAG to images, video, and interleaved documents. [Vision Language Models (2025)](/reading/2026-04/2026-04-29t171532-vision-language-models-better-faster-stronger) notes that [multimodal RAG is now an active subfield](/wiki/multimodal-ai), pairing VLMs with retrieval pipelines that index visual as well as textual content. This matters because much real-world knowledge is encoded in figures, diagrams, and video frames that a text-only index would miss.
+Despite its prevalence, RAG has a structural weakness: it retrieves fragments, not synthesized understanding. For curated research corpora where relationships across many documents matter, per-query chunk retrieval often misses the connections between sources. [A developer who built Karpathy's LLM Wiki end-to-end](/reading/2026-04/2026-04-30t232201-building-karpathys-llm-wiki-honest-takeaways) found that pre-synthesized knowledge bases outperform RAG for this use case precisely because cross-document synthesis happens at ingest time rather than at query time. The tradeoff is unforgiving: hallucinations introduced during ingest are baked structurally into every downstream answer, which makes lint and validation steps non-negotiable.
 
-A different line of work questions whether runtime retrieval is always the right architecture. Andrej Karpathy's LLM-compiled wiki pattern pre-processes a document corpus into structured Markdown files during an ingest phase, so that queries are answered from a maintained knowledge base rather than by live retrieval. [The practical Reddit walkthrough](/reading/2026-04/2026-04-30t232052-how-to-implement-karpathys-llm-knowledge-base) describes this as querying at scale without RAG, emphasizing that the model synthesizes across documents once rather than repeatedly.
-
-[A developer who built the pattern end-to-end](/reading/2026-04/2026-04-30t232201-building-karpathys-llm-wiki-honest-takeaways) found that cross-document synthesis is genuinely stronger than RAG for curated research, because the model reasons over a coherent compiled structure rather than a ranked list of retrieved chunks. The tradeoff is error propagation: hallucinations baked in at ingest become structural, distributed across the compiled files, which makes a lint or health-check step non-negotiable. RAG, by contrast, surfaces source documents directly, so errors stay localized and auditable. Neither architecture is strictly dominant; the choice depends on how stable the corpus is and how much curation effort is sustainable.
+[The practical walkthrough of Karpathy's pattern](/reading/2026-04/2026-04-30t232052-how-to-implement-karpathys-llm-knowledge-base) describes an alternative architecture where the LLM builds and maintains structured Markdown files from raw documents, enabling direct querying at scale without a retrieval step at all. That approach trades RAG's freshness and modularity for synthesis quality, and it only works when the input corpus is curated enough that ingest-time errors can be caught and corrected.
