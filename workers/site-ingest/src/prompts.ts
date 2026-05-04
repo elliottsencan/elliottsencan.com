@@ -152,7 +152,16 @@ Return ONE JSON object with these exact fields:
 - title: short human-readable concept name. Title-case-ish but not a headline ("Responsive design", "LLM finetuning", "Festival operations"). Match the natural reading of the topic slug; do not include the word "concept" or "wiki" or "topic".
 - summary: ONE sentence, 240 characters or fewer, describing the concept itself and what the cited sources collectively say about it. No "this article" or "this wiki page" framings.
 - body: the synthesis article. 400 to 1500 characters. Markdown paragraphs. Inline citations to /reading/<slug> as described above. Do NOT emit any /wiki/<slug> links — wiki-to-wiki links are inserted by a downstream pipeline stage that validates against the actual compiled corpus.
-- aliases: kebab-case slugs from the supplied ACTIVE TOPIC SLUGS list that are unambiguously aliases or near-synonyms for THIS concept (the canonical slug supplied as "Concept" in the user message). Be conservative — only mark a slug as an alias if it clearly refers to the same concept (synonym, abbreviation, plural, narrower-than relationship). When in doubt, leave it out. Do NOT include the canonical itself. Do NOT include slugs that are genuinely separate concepts even if topically adjacent. Omit the field entirely when no alias applies. Aliases are written into the article's frontmatter and used by the site's emission layer to canonicalize reading-entry topics — a wrong alias merges two distinct concepts permanently until manually fixed, so err toward caution.
+- aliases: kebab-case slugs from the supplied ACTIVE TOPIC SLUGS list that are aliases for THIS concept (the canonical slug supplied as "Concept" in the user message). An alias is a slug that names the SAME concept as the canonical, only worded differently. Allowed alias kinds:
+  - synonym: same concept, different word ("ai-coding-assistants" → "ai-assisted-coding").
+  - abbreviation: same concept, expanded or contracted form ("model-context-protocol" → "mcp").
+  - plural / grammatical variant: same concept, different number or part of speech ("developer-tooling" → "developer-tools", "fluid-typographies" → "fluid-typography").
+  Do NOT mark a slug as an alias when it is any of:
+  - A NARROWER concept that lives under the canonical. "multi-agent-systems" is NOT an alias for "ai-agents" — multi-agent systems are a kind of agent system, deserving their own wiki article.
+  - A SUB-ASPECT or COMPONENT of the canonical. "agent-coordination" is NOT an alias for "ai-agents" — coordination is one aspect of agents, not the same concept.
+  - A RELATED but distinct concept. "llm-orchestration" is NOT an alias for "mcp" or for "ai-agents" — they are topically adjacent but not the same. "developer-productivity" is NOT an alias for "developer-tools".
+  - A BROADER concept that contains the canonical. "software-engineering" is NOT an alias for "continuous-integration".
+  When in doubt, leave it out. Do NOT include the canonical itself. Omit the field entirely when no alias applies. Most concepts have zero or one alias; if you find yourself proposing three or more aliases for a single canonical, you are almost certainly treating related concepts as synonyms — stop and reconsider. Aliases are written into the article's frontmatter and used by the site's emission layer to canonicalize reading-entry topics — a wrong alias merges two distinct concepts permanently until manually fixed, so err strongly toward caution.
 
 Return ONLY the JSON object. No preamble, no explanation, no code fence.
 
