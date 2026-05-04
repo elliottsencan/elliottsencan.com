@@ -55,7 +55,13 @@ import { type AliasFilterResult, filterProposedAliases, loadCorpusSlugList } fro
 import type { Env, Result, WikiArticle } from "./types.ts";
 import { jsonResponse, log, readingSlugFromPath } from "./util.ts";
 
-const MAX_CONCEPTS_PER_RUN = 20;
+// Per-run safety bound on number of concepts compiled. Was hand-picked at
+// 20 when the wiki had ~10 articles; with 39+ eligible topics it became a
+// structural bottleneck (operator had to manually batch + identify the
+// missed concepts after each call). 100 leaves multi-year headroom; cost
+// per fully-saturated run is bounded by Anthropic call cost × 100, which
+// at current pricing is ~$1-2 — acceptable for a personal-cadence trigger.
+const MAX_CONCEPTS_PER_RUN = 100;
 const WIKI_DIR = "src/content/wiki";
 
 const SynthesizeRequestSchema = z.object({
