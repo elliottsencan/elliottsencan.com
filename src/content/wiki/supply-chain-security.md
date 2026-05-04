@@ -10,8 +10,6 @@ sources:
     2026-04/2026-04-30t231634-supply-chain-attack-using-invisible-code-hits-github-and
   - >-
     2026-05/2026-05-01t102345-sap-related-npm-packages-compromised-in-credential-stealing
-aliases:
-  - software-security
 compiled_at: '2026-05-04T04:08:34.469Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:

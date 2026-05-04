@@ -13,7 +13,6 @@ sources:
     2026-05/2026-05-03t115608-how-to-choose-between-single-and-multi-agent-solutions
 aliases:
   - benchmarking
-  - evaluation-methodology
 compiled_at: 2026-05-04T04:10:03.644Z
 compiled_with: claude-sonnet-4-6
 compile_cost:

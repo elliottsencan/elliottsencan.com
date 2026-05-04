@@ -11,8 +11,6 @@ sources:
   - 2026-04/2026-04-30t231709-conductor
   - >-
     2026-04/2026-04-30t232001-a-better-way-to-build-angular-components-from-inputs-to
-aliases:
-  - sdk
 compiled_at: '2026-05-04T04:07:07.458Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:

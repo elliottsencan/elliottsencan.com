@@ -8,8 +8,6 @@ summary: >-
 sources:
   - 2026-04/2026-04-30t231931-50-best-font-combinations-for-graphic-design
   - 2026-05/2026-05-02t145719-micrographics-templates-design-layouts
-aliases:
-  - graphic-design
 compiled_at: '2026-05-04T04:08:43.943Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:

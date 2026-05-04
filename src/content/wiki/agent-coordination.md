@@ -14,7 +14,6 @@ sources:
   - 2026-05/2026-05-03t173528-lthoanggopenagentd
 aliases:
   - ai-coordination
-  - coordination
 compiled_at: 2026-05-04T04:10:14.743Z
 compiled_with: claude-sonnet-4-6
 compile_cost:
