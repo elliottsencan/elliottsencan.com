@@ -1,4 +1,5 @@
 import { buildReadingGraph, type ReadingInput, type WikiInput } from "@lib/reading-graph";
+import { buildVocabularyFromWiki } from "@lib/topics";
 import { describe, expect, it } from "vitest";
 
 // Minimal fixture builder — only the fields buildReadingGraph reads.
@@ -129,5 +130,39 @@ describe("buildReadingGraph", () => {
     const b = findEntry(payload.entries, "2026-04/b");
     expect(a.related.find((r) => r.slug === "2026-04/b")?.reason).toBe("category-month");
     expect(b.related.find((r) => r.slug === "2026-04/a")?.reason).toBe("category-month");
+  });
+
+  it("collapses synonym fragments via wiki-derived alias map", () => {
+    // Two entries tagged with synonyms of the same concept; without the
+    // vocabulary they wouldn't be linked by topic. The wiki article for
+    // ai-assisted-coding declares agentic-coding as an alias, so after
+    // canonicalization both entries share the canonical topic and link.
+    const entries = [
+      reading("2026-04/a", { topics: ["agentic-coding"] }),
+      reading("2026-04/b", { topics: ["ai-assisted-coding"] }),
+    ];
+    const wikis: WikiInput[] = [
+      { id: "ai-assisted-coding", data: { sources: ["2026-04/a", "2026-04/b"] } },
+    ];
+    const vocab = buildVocabularyFromWiki([
+      { id: "ai-assisted-coding", data: { aliases: ["agentic-coding"] } },
+    ]);
+    const { payload } = buildReadingGraph(entries, wikis, vocab);
+    const a = findEntry(payload.entries, "2026-04/a");
+    const b = findEntry(payload.entries, "2026-04/b");
+    expect(a.topics).toEqual(["ai-assisted-coding"]);
+    expect(b.topics).toEqual(["ai-assisted-coding"]);
+    expect(a.related.find((r) => r.slug === "2026-04/b")?.reason).toBe("topic");
+    expect(b.related.find((r) => r.slug === "2026-04/a")?.reason).toBe("topic");
+  });
+
+  it("emits canonicals in topics[] even when source markdown carries an alias", () => {
+    const entries = [reading("2026-04/a", { topics: ["model-context-protocol", "evals"] })];
+    const vocab = buildVocabularyFromWiki([
+      { id: "mcp", data: { aliases: ["model-context-protocol"] } },
+    ]);
+    const { payload } = buildReadingGraph(entries, [], vocab);
+    const a = findEntry(payload.entries, "2026-04/a");
+    expect(a.topics).toEqual(["mcp", "evals"]);
   });
 });

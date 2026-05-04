@@ -7,7 +7,14 @@
  * The most-frequent topic across the cluster becomes the article's primary
  * cluster key. This keeps the wiki schema tight and means clustering
  * self-corrects as new sources land.
+ *
+ * Topics are canonicalized through the wiki-derived alias map before
+ * counting, so synonym fragments collapse and clusters key on canonical
+ * slugs even when contributing reading entries still carry alias slugs in
+ * source markdown.
  */
+
+import { type CanonicalVocabulary, canonicalizeTopics, EMPTY_VOCABULARY } from "@lib/topics";
 
 export type WikiTopicInput = {
   id: string;
@@ -26,6 +33,7 @@ export type ReadingTopicInput = {
 export function deriveWikiTopics(
   concept: WikiTopicInput,
   readingById: ReadonlyMap<string, ReadingTopicInput>,
+  vocab: CanonicalVocabulary = EMPTY_VOCABULARY,
 ): string[] {
   const counts = new Map<string, number>();
   for (const sourceId of concept.data.sources) {
@@ -33,7 +41,7 @@ export function deriveWikiTopics(
     if (!entry) {
       continue;
     }
-    for (const topic of entry.data.topics ?? []) {
+    for (const topic of canonicalizeTopics(entry.data.topics ?? [], vocab)) {
       counts.set(topic, (counts.get(topic) ?? 0) + 1);
     }
   }
