@@ -1,19 +1,21 @@
 ---
 title: Agentic workflows
 summary: >-
-  Design choices in agentic AI systems, where single-vs-multi-agent tradeoffs
-  and tool-access patterns each carry hidden costs that compound as task
-  complexity grows.
+  Design patterns for AI agents acting across multi-step tasks, covering how
+  tool access, memory, orchestration topology, and coordination overhead shape
+  whether an agent system works in practice.
 sources:
   - 2026-04/2026-04-23t150424-your-agent-loves-mcp-as-much-as-you-love-guis
   - >-
     2026-05/2026-05-03t115608-how-to-choose-between-single-and-multi-agent-solutions
-compiled_at: '2026-05-03T19:05:46.757Z'
+  - 2026-05/2026-05-03t173422-vectorize-iohindsight
+  - 2026-05/2026-05-03t173528-lthoanggopenagentd
+compiled_at: '2026-05-04T03:36:22.698Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 1303
-    output_tokens: 459
+    input_tokens: 2645
+    output_tokens: 604
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -24,12 +26,14 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.010794
+  cost_usd: 0.016995
 ---
-Agentic workflows are AI systems where a model takes sequences of actions, calls tools, and produces outputs with minimal human intervention per step. The architectural decisions made at setup, which tools to expose and whether to use one agent or many, have costs that are easy to underestimate.
+Agentic workflows are pipelines in which an AI model takes sequences of actions, using tools, memory, and external services, to complete tasks that unfold over multiple steps. The design decisions made at each layer, tool access, memory architecture, orchestration topology, and observability, determine whether the system performs reliably or compounds failures.
 
-On the tool side, [MCP as a GUI for agents](/reading/2026-04/2026-04-23t150424-your-agent-loves-mcp-as-much-as-you-love-guis) argues that Model Context Protocol is to agents what a GUI is to humans: a constrained, discoverable interface that is not optimal for a capable operator. Loading MCP tool definitions into context each session is token-expensive and non-composable. Agents that can write and run code are better served by layered scripts and API skills built outside the context window, called only when needed. The GUI analogy is pointed: just as a power user reaches past the interface to the underlying system, a capable agent should reach past MCP to more efficient primitives.
+Tool access is not free. [Your Agent Loves MCP](/reading/2026-04/2026-04-23t150424-your-agent-loves-mcp-as-much-as-you-love-guis) argues that loading MCP tool definitions into context each session is expensive in tokens and non-composable, analogous to forcing a programmer to read a GUI manual before every task. Agents that can write code are better served by layered scripts and API skills that persist outside the context window.
 
-On the orchestration side, [research surveyed by Dickson](/reading/2026-05/2026-05-03t115608-how-to-choose-between-single-and-multi-agent-solutions) drawing on Stanford and Google/MIT work finds that multi-agent systems introduce a coordination tax that is rarely justified. Errors can amplify up to 17x across agent boundaries, and tool-handling efficiency drops 2 to 6x compared to single-agent setups. The recommendation is to treat single-agent systems as the default and only add orchestration when the task genuinely cannot be handled in one context.
+Orchestration topology carries a coordination tax that is easy to underestimate. [Research surveyed by Ben Dickson](/reading/2026-05/2026-05-03t115608-how-to-choose-between-single-and-multi-agent-solutions) drawing on Stanford and Google/MIT work shows that multi-agent setups can amplify errors up to 17x and cut tool-handling efficiency by 2 to 6x compared with single-agent baselines. Single-agent systems should be the default; multi-agent architectures are justified only when tasks genuinely decompose into parallel, independent subtasks.
 
-Together these sources point toward a conservative design principle: add complexity, whether in tool surface or in agent count, only when simpler structures demonstrably fail.
+Memory is a persistent design problem. The [hindsight library](/reading/2026-05/2026-05-03t173422-vectorize-iohindsight) addresses this with biomimetic data structures and multi-strategy retrieval, letting agents build mental models that survive across sessions rather than relying on conversation recall alone. The [openagentd project](/reading/2026-05/2026-05-03t173528-lthoanggopenagentd) takes a systems approach, pairing three-tier persistent memory with built-in OpenTelemetry observability so that agent behavior across a local multi-agent team can be traced and debugged like any other service.
+
+Taken together, the pattern across these sources is that agentic workflows fail at the seams: tool loading, inter-agent handoffs, and memory gaps. Engineering around those seams, rather than adding more agents or more tools, is where reliability is won.

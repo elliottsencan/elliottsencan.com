@@ -1,20 +1,35 @@
 ---
 title: LLM fine-tuning
 summary: >-
-  Adapting pretrained language models to specific tasks through continued
-  training, with recent tooling pushing toward local, low-resource workflows and
-  synthetic data pipelines that can outperform much larger models.
+  Adapting pre-trained language models to specific tasks or domains by
+  continuing training on curated data, with recent tooling focused on reducing
+  hardware cost and automating dataset creation.
 sources:
   - 2026-04/2026-04-24t093356-unsloth
   - >-
     2026-04/2026-04-28t140203-vibe-training-auto-train-a-small-language-model-for-your
-compiled_at: '2026-05-01T05:34:48.809Z'
+compiled_at: '2026-05-04T03:36:58.195Z'
 compiled_with: claude-sonnet-4-6
+compile_cost:
+  usage:
+    input_tokens: 2288
+    output_tokens: 421
+    cache_creation_input_tokens: 0
+    cache_read_input_tokens: 0
+  model: claude-sonnet-4-6
+  pricing:
+    model: claude-sonnet-4-6
+    input_per_million: 3
+    output_per_million: 15
+    cache_read_per_million: 0.3
+    cache_write_5m_per_million: 3.75
+    priced_at: '2026-04-30'
+  cost_usd: 0.013179
 ---
-Fine-tuning a pretrained LLM means continuing its training on task-specific data so its outputs align with a narrower objective. Two distinct problems dominate current practice: reducing the compute cost of training itself, and obtaining quality training data in the first place.
+Fine-tuning a large language model means continuing its training on a targeted dataset so it learns task-specific behavior without training from scratch. Two broad challenges define the practice: acquiring quality training data and keeping compute costs manageable.
 
-On the compute side, [Unsloth](/reading/2026-04/2026-04-24t093356-unsloth) addresses both memory and speed. It claims up to 30x faster training and 90% less memory compared to FlashAttention 2, achieved through hand-written GPU kernels rather than compiled abstractions. It supports LoRA (a technique that trains a small adapter rather than all model weights), vision, audio, and over 500 model variants, accessible either through open-source code or a no-code studio. The practical effect is that fine-tuning that previously required cloud GPU clusters can run on consumer hardware.
+[Unsloth](/reading/2026-04/2026-04-24t093356-unsloth) addresses the compute side directly. It offers local fine-tuning with up to 30x faster training and 90% less memory than FlashAttention 2, making runs feasible on consumer hardware. It also includes no-code dataset creation from PDFs, CSVs, and JSON files, compressing the pipeline from raw documents to a trained model.
 
-The data problem is addressed differently. [Vibe Training](/reading/2026-04/2026-04-28t140203-vibe-training-auto-train-a-small-language-model-for-your) describes BARRED, a framework from Plurai that generates synthetic training data through multi-agent debate, where agents argue over candidate examples until a verified set emerges. The target models are small classifiers, not large generalist systems. The reported outcome is that these fine-tuned small models outperform GPT-4.1 on custom policy guardrail tasks at substantially lower cost.
+The data quality problem gets a different treatment in [Vibe Training](/reading/2026-04/2026-04-28t140203-vibe-training-auto-train-a-small-language-model-for-your). Plurai's BARRED framework uses multi-agent debate to auto-generate and verify synthetic training data, removing the need for hand-labeled examples. The result is a 3B-parameter policy classifier that outperforms GPT-4.1 on its target task at a fraction of the inference cost. That cost gap matters: a fine-tuned small model running locally can be cheaper per query than calling a frontier API, which changes the economics of deployment.
 
-Together these sources point at the same pressure: fine-tuning is becoming accessible enough that the bottleneck shifts from raw GPU access to data quality and task definition. Cheaper training infrastructure and synthetic data generation are complementary responses to that shift.
+Together these sources point toward a pattern: fine-tuning is becoming accessible enough that teams can build specialized models without large infrastructure budgets or large annotation teams, provided they have a clear task definition and a method for generating reliable training signal.

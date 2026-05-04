@@ -1,18 +1,19 @@
 ---
 title: Multimodal AI
 summary: >-
-  AI systems that process and generate across multiple data types, from
-  image-text models to any-to-any architectures, now power applications ranging
-  from video editing pipelines to reasoning agents.
+  AI systems that process or generate across multiple modalities, including
+  text, images, audio, and video, with recent advances spanning any-to-any
+  architectures, vision-language models, video understanding, and generative
+  asset pipelines.
 sources:
   - 2026-04/2026-04-29t171532-vision-language-models-better-faster-stronger
   - 2026-04/2026-04-30t231206-poolday
-compiled_at: '2026-05-03T19:08:19.333Z'
+compiled_at: '2026-05-04T03:38:43.583Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 1223
-    output_tokens: 416
+    input_tokens: 2285
+    output_tokens: 445
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -23,10 +24,10 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.009909
+  cost_usd: 0.01353
 ---
-Multimodal AI covers systems that work across more than one data modality, typically combining vision, language, audio, or video in a single model or pipeline. The field has moved quickly: [the 2025 VLM landscape overview](/reading/2026-04/2026-04-29t171532-vision-language-models-better-faster-stronger) catalogs a wave of architectural changes since 2024, including any-to-any models that handle arbitrary input and output types, mixture-of-experts (MoE) designs that scale efficiently, and vision-language-action (VLA) models aimed at robotics and embodied tasks.
+Multimodal AI refers to models and systems that work across more than one data type, most commonly combining vision and language but increasingly extending to audio, video, and robotic action. The 2025 VLM landscape survey from Hugging Face [VLMs 2025](/reading/2026-04/2026-04-29t171532-vision-language-models-better-faster-stronger) maps the pace of this expansion: architectures have moved from single-modality specialists toward any-to-any models capable of accepting and producing arbitrary combinations of input and output types. The same survey documents parallel advances in mixture-of-experts (MoE) designs, vision-language-action (VLA) models for robotics, small multimodal models that run efficiently at reduced scale, multimodal RAG, and video understanding, all emerging in roughly a twelve-month window.
 
-Smaller models have become competitive with earlier large ones, multimodal RAG has emerged as a retrieval pattern that grounds model outputs in external documents or images, and video understanding has matured enough to treat temporal sequences as a native modality rather than an afterthought. Safety and alignment work specific to vision models has also grown, reflecting the distinct failure modes that arise when a model can interpret images.
+Safety and alignment are active concerns in this space. The Hugging Face survey calls out dedicated safety models and alignment techniques specific to multimodal contexts, where jailbreaks and misuse vectors differ from text-only systems.
 
-On the applied side, [Poolday's Creator-1](/reading/2026-04/2026-04-30t231206-poolday) illustrates what multimodal pipelines look like in production: a multi-agent system that orchestrates over 100 generative models to execute video edits end-to-end, producing fully editable project files rather than static exports. That architecture, where specialized models handle cutting, asset generation, and composition as discrete steps, reflects a broader pattern in the field where no single model handles everything but a coordinating layer routes tasks to the right specialist.
+On the applied side, Poolday's Creator-1 platform [Poolday](/reading/2026-04/2026-04-30t231206-poolday) illustrates what multimodal pipelines look like in production: a multi-agent system orchestrates more than a hundred generative models to execute video edits end-to-end, handling cutting, trimming, and AI asset generation, then outputting fully editable projects. This kind of orchestration treats multimodal generation as infrastructure rather than a research artifact, composing specialized models rather than relying on a single general one.
