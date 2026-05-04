@@ -1,5 +1,6 @@
 import { getCollection } from "astro:content";
 import { SITE } from "@consts";
+import { buildVocabularyFromWiki, canonicalizeTopics } from "@lib/topics";
 import { siteDate } from "@lib/utils";
 
 /**
@@ -9,6 +10,9 @@ import { siteDate } from "@lib/utils";
  * than follow the index in /llms.txt. Writing entries come through as their
  * full body; reading entries come through as structured summary blocks
  * (the source text itself is at the `url`, we don't re-host it).
+ *
+ * Reading-entry topics are canonicalized through wiki-derived aliases at
+ * emission, so synonym fragments don't reach agent consumers.
  */
 
 const SITE_URL = "https://elliottsencan.com";
@@ -20,6 +24,7 @@ export async function GET() {
     getCollection("reading"),
     getCollection("wiki"),
   ]);
+  const vocab = buildVocabularyFromWiki(wiki);
 
   const writing = blog
     .filter((post) => !post.data.draft)
@@ -67,7 +72,8 @@ export async function GET() {
   );
   for (const entry of readingEntries) {
     const meta = [entry.data.author, entry.data.source].filter(Boolean).join(", ");
-    const topics = entry.data.topics?.length ? `\nTopics: ${entry.data.topics.join(", ")}` : "";
+    const canonicalTopics = canonicalizeTopics(entry.data.topics ?? [], vocab);
+    const topics = canonicalTopics.length ? `\nTopics: ${canonicalTopics.join(", ")}` : "";
     const lines = [
       `### ${entry.data.title}`,
       `*${siteDate(entry.data.added)} — ${entry.data.category}${meta ? ` — ${meta}` : ""}*`,

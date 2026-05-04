@@ -1,4 +1,5 @@
 import type { CompileCost } from "@lib/schemas/content";
+import { type CanonicalVocabulary, canonicalizeTopics, EMPTY_VOCABULARY } from "@lib/topics";
 import { monthKey } from "@lib/utils";
 
 /**
@@ -8,6 +9,11 @@ import { monthKey } from "@lib/utils";
  * `related[]` is a cheap metadata-derived graph (shared author / source /
  * topic / category+month). `wiki_concepts[]` is the reverse index from
  * the wiki layer — every concept article that cites this entry.
+ *
+ * Topics are canonicalized (alias → canonical from wiki frontmatter) before
+ * any indexing or emission, so the byTopic graph collapses synonym fragments
+ * and the per-entry `topics[]` field on the surface is always canonical even
+ * when the source markdown carries a deprecated alias.
  *
  * Orphan citations (wiki sources pointing at a missing reading slug) are
  * collected and returned for the caller to log; this function does not
@@ -83,7 +89,17 @@ function pushTo<K, V>(map: Map<K, V[]>, key: K, value: V): void {
 export function buildReadingGraph(
   readingEntries: ReadingInput[],
   wikiEntries: WikiInput[],
+  vocab: CanonicalVocabulary = EMPTY_VOCABULARY,
 ): { payload: ReadingGraphPayload; orphanCitations: OrphanCitation[] } {
+  // Canonicalize topics up front so byTopic indexing and per-entry emission
+  // both run on canonical strings. Source markdown that still carries an
+  // alias (e.g. `agentic-coding`) appears on the surface as the canonical
+  // (`ai-assisted-coding`), and the related[] graph collapses fragments.
+  const canonicalTopicsBySlug = new Map<string, string[]>();
+  for (const entry of readingEntries) {
+    canonicalTopicsBySlug.set(entry.id, canonicalizeTopics(entry.data.topics ?? [], vocab));
+  }
+
   const entries = [...readingEntries].sort(
     (a, b) => b.data.added.valueOf() - a.data.added.valueOf(),
   );
@@ -113,7 +129,7 @@ export function buildReadingGraph(
     if (entry.data.source) {
       pushTo(bySource, entry.data.source.toLowerCase(), entry.id);
     }
-    for (const topic of entry.data.topics ?? []) {
+    for (const topic of canonicalTopicsBySlug.get(entry.id) ?? []) {
       pushTo(byTopic, topic.toLowerCase(), entry.id);
     }
     pushTo(byCategoryMonth, `${entry.data.category}:${monthKey(entry.id)}`, entry.id);
@@ -124,6 +140,7 @@ export function buildReadingGraph(
     count: entries.length,
     categories: [...new Set(entries.map((e) => e.data.category))].sort(),
     entries: entries.map((entry) => {
+      const canonicalTopics = canonicalTopicsBySlug.get(entry.id) ?? [];
       const related: Related[] = [];
       const seen = new Set<string>([entry.id]);
 
@@ -138,7 +155,7 @@ export function buildReadingGraph(
       };
 
       // Topic overlap is the strongest semantic signal, surface it first.
-      for (const topic of entry.data.topics ?? []) {
+      for (const topic of canonicalTopics) {
         pushRelated(byTopic.get(topic.toLowerCase()) ?? [], "topic");
       }
       if (entry.data.author) {
@@ -161,7 +178,7 @@ export function buildReadingGraph(
         added: entry.data.added.toISOString(),
         author: entry.data.author,
         source: entry.data.source,
-        topics: entry.data.topics ?? [],
+        topics: canonicalTopics,
         compiled_at: entry.data.compiled_at?.toISOString(),
         compiled_with: entry.data.compiled_with,
         compile_cost: entry.data.compile_cost,

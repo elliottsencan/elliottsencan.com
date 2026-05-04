@@ -4,6 +4,7 @@ import Container from "@components/Container.astro";
 import LabeledRule from "@components/LabeledRule.astro";
 import Link from "@components/Link.astro";
 import Layout from "@layouts/Layout.astro";
+import { buildVocabularyFromWiki, canonicalizeTopics } from "@lib/topics";
 import { monthKey, SITE_TIMEZONE } from "@lib/utils";
 
 export async function getStaticPaths() {
@@ -18,10 +19,14 @@ type Props = CollectionEntry<"reading">;
 const entry = Astro.props;
 
 const wiki = await getCollection("wiki");
+const vocab = buildVocabularyFromWiki(wiki);
 const citingConcepts = wiki.filter((c) => c.data.sources.includes(entry.id));
 
 const allEntries = (await getCollection("reading")).filter((e) => e.id !== entry.id);
-const myTopics = new Set((entry.data.topics ?? []).map((t) => t.toLowerCase()));
+// Canonicalize topics so source-file aliases resolve to canonicals before
+// the related-by-topic check and the on-page topic chip rendering.
+const myCanonicalTopics = canonicalizeTopics(entry.data.topics ?? [], vocab);
+const myTopicsSet = new Set(myCanonicalTopics.map((t) => t.toLowerCase()));
 const myCatMonth = `${entry.data.category}:${monthKey(entry.id)}`;
 
 type RelatedReason = "topic" | "author" | "source" | "category-month";
@@ -32,7 +37,8 @@ for (const e of allEntries) {
     continue;
   }
   let reason: RelatedReason | null = null;
-  if ((e.data.topics ?? []).some((t) => myTopics.has(t.toLowerCase()))) {
+  const otherCanonical = canonicalizeTopics(e.data.topics ?? [], vocab);
+  if (otherCanonical.some((t) => myTopicsSet.has(t.toLowerCase()))) {
     reason = "topic";
   } else if (entry.data.author && e.data.author === entry.data.author) {
     reason = "author";
@@ -96,13 +102,13 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
       </div>
 
       {
-        entry.data.topics && entry.data.topics.length > 0 && (
+        myCanonicalTopics.length > 0 && (
           <section class="space-y-3">
             <h2 class="font-mono text-xs uppercase tracking-wider text-black/50 dark:text-white/60">
               Topics
             </h2>
             <ul class="not-prose flex flex-wrap gap-2 text-sm">
-              {entry.data.topics.map((topic) => (
+              {myCanonicalTopics.map((topic) => (
                 <li class="rounded bg-black/5 px-2 py-1 font-mono text-xs dark:bg-white/10">
                   {topic}
                 </li>
