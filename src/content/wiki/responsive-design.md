@@ -12,7 +12,7 @@ sources:
   - 2026-05/2026-05-02t145719-micrographics-templates-design-layouts
 aliases:
   - css-layout
-compiled_at: '2026-05-04T03:36:37.485Z'
+compiled_at: 2026-05-04T03:36:37.485Z
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
@@ -34,7 +34,7 @@ Responsive design has traditionally meant adding media query breakpoints that re
 
 [Amit Sheen's breakdown of intrinsic CSS](/reading/2026-04/2026-04-24t085352-building-a-ui-without-breakpoints) makes the case that modern CSS primitives, specifically `grid` with `auto-fill`/`auto-fit`, `clamp()` for fluid sizing, container units, and container queries, should be the default responsive engine. Media queries get demoted to signaling device capability and user preference rather than controlling layout at size thresholds. The distinction matters: a component should respond to how much space its parent gives it, not to how wide the browser window happens to be.
 
-Fluid typography is one of the clearest wins from this shift. [Adrian Bece's guide to CSS clamp()](/reading/2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp) details how the function accepts a minimum, a preferred viewport-relative value, and a maximum, producing type that scales continuously rather than jumping at breakpoints. Bece also covers the accessibility fix: preferred values should be expressed in `rem` so that browser font-size preferences are respected, not overridden by viewport calculations.
+[Fluid typography](/wiki/fluid-typography) is one of the clearest wins from this shift. [Adrian Bece's guide to CSS clamp()](/reading/2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp) details how the function accepts a minimum, a preferred viewport-relative value, and a maximum, producing type that scales continuously rather than jumping at breakpoints. Bece also covers the accessibility fix: preferred values should be expressed in `rem` so that browser font-size preferences are respected, not overridden by viewport calculations.
 
 [Pavel Laptev's survey of modern CSS](/reading/2026-04/2026-04-30t231909-the-great-css-expansion) situates these layout primitives inside a broader platform expansion. Features like anchor positioning, view transitions, and scroll-driven animations now handle what JavaScript libraries previously required, reducing dependency weight while keeping the implementation in the same layer as the rest of responsive behavior.
 

@@ -14,7 +14,7 @@ sources:
 aliases:
   - developer-experience
   - developer-tooling
-compiled_at: '2026-05-04T03:38:23.447Z'
+compiled_at: 2026-05-04T03:38:23.447Z
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
@@ -36,6 +36,6 @@ Productivity for software engineers is not a single lever. The sources here each
 
 [Shell tricks](/reading/2026-04/2026-04-30t231815-shell-tricks-that-actually-make-life-easier-and-save-your) from Christian Hofstede-Kuhn represent the foundational layer: Readline bindings, history search, brace expansion, and script safety flags are small investments that compound across every session. This kind of fluency is non-AI, durable, and fully under a developer's control.
 
-Tooling that wraps workflows adds another layer. [TestDino](/reading/2026-04/2026-04-30t231348-testdino) centralizes Playwright test runs and auto-categorizes failures as bugs, flaky tests, or UI changes, claiming 6-8 hours of weekly savings per engineer. [Mintlify](/reading/2026-04/2026-04-30t231435-mintlify) targets the documentation gap, offering an AI-native platform that serves knowledge to both humans and LLMs, including support for llms.txt and MCP.
+Tooling that wraps workflows adds another layer. [TestDino](/reading/2026-04/2026-04-30t231348-testdino) centralizes Playwright test runs and auto-categorizes failures as bugs, flaky tests, or UI changes, claiming 6-8 hours of weekly savings per engineer. [Mintlify](/reading/2026-04/2026-04-30t231435-mintlify) targets the documentation gap, offering an AI-native platform that serves knowledge to both humans and LLMs, including support for llms.txt and [MCP](/wiki/mcp).
 
-The harder question is whether AI-first workflows increase or decrease net productivity over time. Lars Faye argues in [Agentic Coding is a Trap](/reading/2026-04/2026-04-27t145041-agentic-coding-is-a-trap) that full reliance on coding agents erodes the debugging and critical-thinking skills developers need to supervise those same agents. The short-term throughput gain can mask long-term skill decay and introduce vendor lock-in and unpredictable token costs. This tension sits unresolved across the sources: productivity tools that reduce cognitive load may simultaneously reduce the cognitive capacity needed to catch what those tools miss.
+The harder question is whether AI-first workflows increase or decrease net productivity over time. Lars Faye argues in [Agentic Coding is a Trap](/reading/2026-04/2026-04-27t145041-agentic-coding-is-a-trap) that full reliance on [coding agents](/wiki/agentic-workflows) erodes the debugging and critical-thinking skills developers need to supervise those same agents. The short-term throughput gain can mask long-term skill decay and introduce vendor lock-in and unpredictable token costs. This tension sits unresolved across the sources: productivity tools that reduce cognitive load may simultaneously reduce the cognitive capacity needed to catch what those tools miss.
