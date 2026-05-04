@@ -221,7 +221,7 @@ export const WikiArticleSchema = z.object({
   title: z.string().min(1),
   // Mirrors WikiFrontmatterSchema in @shared/schemas/content.ts so model
   // overruns fail at the worker tier instead of at next astro build.
-  summary: z.string().min(1).max(240),
+  summary: z.string().min(1).max(280),
   body: z.string().min(1),
   // Slugs the synthesis prompt's alias-detection step identified as
   // synonyms of THIS concept's canonical, drawn from the corpus's active
