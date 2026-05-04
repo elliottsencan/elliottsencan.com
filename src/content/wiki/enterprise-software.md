@@ -11,7 +11,7 @@ sources:
   - 2026-04/2026-04-30t231745-optimal-vs-usertesting
   - >-
     2026-05/2026-05-01t102345-sap-related-npm-packages-compromised-in-credential-stealing
-compiled_at: '2026-05-04T04:08:24.933Z'
+compiled_at: 2026-05-04T04:08:24.933Z
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
@@ -35,6 +35,6 @@ Enterprise software is distinguished less by feature count than by the organizat
 
 [Optimal Workshop](/reading/2026-04/2026-04-30t231745-optimal-vs-usertesting) makes enterprise compliance an explicit selling point against UserTesting, citing SOC 2, GDPR, and data residency options as reasons a procurement team would choose it. The comparison page frames enterprise trust signals as a distinct competitive dimension, not just a checkbox.
 
-The supply chain attack on SAP-ecosystem npm packages [reported by The Hacker News](/reading/2026-05/2026-05-01t102345-sap-related-npm-packages-compromised-in-credential-stealing) illustrates what happens when enterprise software dependencies enter open package registries. SAP's footprint in large organizations makes its ecosystem a high-value target; the attack harvested cloud credentials and browser passwords from developer machines, exploiting the trust that enterprise teams extend to familiar package namespaces.
+The [supply chain attack](/wiki/supply-chain-security) on SAP-ecosystem npm packages [reported by The Hacker News](/reading/2026-05/2026-05-01t102345-sap-related-npm-packages-compromised-in-credential-stealing) illustrates what happens when enterprise software dependencies enter open package registries. SAP's footprint in large organizations makes its ecosystem a high-value target; the attack harvested cloud credentials and browser passwords from developer machines, exploiting the trust that enterprise teams extend to familiar package namespaces.
 
 [Startups.RIP](/reading/2026-04/2026-04-30t231537-startupsrip) contributes a sideways angle: many of the 1,700+ failed YC startups in its catalog were enterprise plays, and the retrospectives suggest that enterprise sales cycles and integration complexity are recurring reasons ideas that seemed sound on paper never reached scale.

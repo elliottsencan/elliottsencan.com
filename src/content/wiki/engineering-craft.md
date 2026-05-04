@@ -13,7 +13,7 @@ sources:
     2026-04/2026-04-30t232001-a-better-way-to-build-angular-components-from-inputs-to
   - >-
     2026-05/2026-05-03t150555-what-happens-if-a-merge-queue-builds-on-the-wrong-commit
-compiled_at: '2026-05-04T04:07:42.371Z'
+compiled_at: 2026-05-04T04:07:42.371Z
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
@@ -39,4 +39,4 @@ At the shell level, [Shell Tricks That Actually Make Life Easier](/reading/2026-
 
 [A Better Way to Build Angular Components](/reading/2026-04/2026-04-30t232001-a-better-way-to-build-angular-components-from-inputs-to) applies the same principle to component architecture. Components bloated with dozens of inputs accrete because adding a flag is faster than refactoring, but the Composite Components pattern, moving features into directives and sub-components, keeps each concern encapsulated and the public API legible.
 
-Craft also means understanding the infrastructure you depend on. [What Happens If a Merge Queue Builds on the Wrong Commit](/reading/2026-05/2026-05-03t150555-what-happens-if-a-merge-queue-builds-on-the-wrong-commit) documents a GitHub merge queue bug that silently rewrote main by constructing temp branches from stale divergence points. The architectural lesson is concrete: never push temp branches to main, and design systems so failure modes are visible rather than quiet.
+Craft also means understanding the infrastructure you depend on. [What Happens If a Merge Queue Builds on the Wrong Commit](/reading/2026-05/2026-05-03t150555-what-happens-if-a-merge-queue-builds-on-the-wrong-commit) documents a GitHub merge queue bug that silently rewrote main by constructing temp branches from stale divergence points. The architectural lesson is concrete: never push temp branches to main, and design systems so [failure modes are visible rather than quiet](/wiki/observability).
