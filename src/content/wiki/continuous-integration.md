@@ -1,20 +1,22 @@
 ---
 title: Continuous integration
 summary: >-
-  CI pipelines at scale surface three compounding problems: test noise from
-  flaky failures, slow feedback loops, and supply-chain exposure in the
-  dependency graph that feeds every build.
+  The practice of merging and validating code changes continuously, where the
+  real challenges are flaky test management, merge queue correctness, and
+  securing the dependency supply chain that CI pipelines consume.
 sources:
   - 2026-04/2026-04-30t195531-what-ci-actually-looks-like-at-a-100-person-team
   - 2026-04/2026-04-30t231348-testdino
   - >-
     2026-05/2026-05-01t102345-sap-related-npm-packages-compromised-in-credential-stealing
-compiled_at: '2026-05-03T19:08:41.825Z'
+  - >-
+    2026-05/2026-05-03t150555-what-happens-if-a-merge-queue-builds-on-the-wrong-commit
+compiled_at: 2026-05-04T03:39:07.342Z
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 1468
-    output_tokens: 499
+    input_tokens: 2735
+    output_tokens: 610
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -25,10 +27,14 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.011889
+  cost_usd: 0.017355
 ---
-At a 100-person engineering team running a monorepo, the sheer volume of CI output becomes the primary problem. PostHog's pipeline, analyzed by Mendral's AI agent, processed 1.18 billion log lines and 33 million weekly test executions [What CI Actually Looks Like at a 100-Person Team](/reading/2026-04/2026-04-30t195531-what-ci-actually-looks-like-at-a-100-person-team). The finding was that log ingestion speed and alert routing mattered more than the sophistication of any diagnostic model. Fast, correctly-routed failure signals let engineers act; slow or misdirected ones produce alert fatigue and ignored pipelines.
+Continuous integration is the practice of automatically building and testing code as changes are proposed or merged. The concept is straightforward; the operational reality at scale is not.
 
-Flaky tests are the most common source of noise. They consume review time without representing real regressions. Tools like [TestDino](/reading/2026-04/2026-04-30t231348-testdino) address this by auto-categorizing failures as bugs, flaky tests, or UI changes, and centralizing run history across Playwright suites. The claimed savings of 6 to 8 engineer hours weekly reflect how much time currently goes to manual triage that categorization can absorb.
+At a team of roughly 100 engineers, CI infrastructure can process staggering volumes. Mendral's AI agent running on PostHog's monorepo handled 1.18 billion log lines and 33 million weekly test executions [What CI Actually Looks Like at a 100-Person Team](/reading/2026-04/2026-04-30t195531-what-ci-actually-looks-like-at-a-100-person-team). The lesson from that scale is that the bottleneck is rarely the diagnostic intelligence layered on top; log ingestion speed and alert routing matter more than the AI doing the diagnosing.
 
-A less discussed CI risk sits in the dependency graph itself. Every build that resolves npm packages is a potential ingestion point for malicious code. The TeamPCP attack poisoned four SAP-ecosystem npm packages with a payload that harvested cloud credentials and browser passwords, exfiltrating them via GitHub [SAP-Related npm Packages Compromised in Credential-Stealing Supply Chain Attack](/reading/2026-05/2026-05-01t102345-sap-related-npm-packages-compromised-in-credential-stealing). CI environments are high-value targets because they hold deployment credentials, cloud tokens, and often run with elevated permissions. Lockfiles, dependency pinning, and integrity verification are pipeline hygiene questions, not just developer-environment ones.
+[Flaky tests are a chronic CI problem](/wiki/flaky-tests). The Mendral piece describes auto-diagnosing and opening fix PRs for flaky tests, while TestDino approaches the same problem from a reporting angle, claiming to save 6 to 8 hours weekly by auto-categorizing failures as bugs, flaky tests, or UI changes [TestDino](/reading/2026-04/2026-04-30t231348-testdino). Both treat flakiness as a classification and routing problem rather than purely a code quality problem.
+
+Merge queues address a different failure mode: ensuring that what gets merged is actually what was tested. A GitHub merge queue bug silently rewrote main branches by building from stale divergence points instead of HEAD [What Happens If a Merge Queue Builds on the Wrong Commit](/reading/2026-05/2026-05-03t150555-what-happens-if-a-merge-queue-builds-on-the-wrong-commit). The architectural implication is that never pushing temporary branches to main is a meaningful safety property, not just a style preference.
+
+CI pipelines also expand the attack surface for supply chain compromises. The TeamPCP threat actor poisoned four SAP-ecosystem npm packages with a credential-stealing payload that exfiltrated cloud secrets via GitHub [SAP-Related npm Packages Compromised in Credential-Stealing Supply Chain Attack](/reading/2026-05/2026-05-01t102345-sap-related-npm-packages-compromised-in-credential-stealing). CI environments routinely install npm packages and hold cloud credentials, making them a high-value target for exactly this kind of attack.

@@ -1,22 +1,23 @@
 ---
 title: Responsive design
 summary: >-
-  Modern responsive design is moving away from viewport breakpoints toward
-  intrinsic CSS primitives — fluid sizing, container queries, and native
-  platform features — that let layouts and typography adapt without discrete
-  breakpoints.
+  Modern responsive design is moving away from viewport breakpoints toward CSS
+  intrinsic layout primitives, fluid sizing with clamp(), and container queries
+  that let components adapt to their own context rather than the viewport.
 sources:
   - 2026-04/2026-04-24t085352-building-a-ui-without-breakpoints
   - 2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp
   - 2026-04/2026-04-30t231909-the-great-css-expansion
   - 2026-04/2026-04-30t231931-50-best-font-combinations-for-graphic-design
   - 2026-05/2026-05-02t145719-micrographics-templates-design-layouts
-compiled_at: 2026-05-03T19:05:58.881Z
+aliases:
+  - css-layout
+compiled_at: 2026-05-04T03:36:37.485Z
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 1818
-    output_tokens: 551
+    input_tokens: 2882
+    output_tokens: 602
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -27,12 +28,14 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.013719
+  cost_usd: 0.017676
 ---
-The classic responsive-design approach relies on viewport breakpoints: pick a set of pixel widths, write different rules for each. Two recent sources argue that default should change. [Amit Sheen's piece on breakpoint-free UI](/reading/2026-04/2026-04-24t085352-building-a-ui-without-breakpoints) makes the case that CSS grid with `auto-fill`/`minmax`, `clamp()`, container units, and container queries handle the vast majority of layout adaptation intrinsically, leaving media queries for genuine device-capability or user-preference concerns like `prefers-reduced-motion` or `hover`. The shift is conceptual: instead of asking "how wide is the viewport," you ask "how much space does this component have."
+Responsive design has traditionally meant adding media query breakpoints that reorganize a layout when the viewport crosses defined thresholds. The approach works but couples layout logic to a global viewport measurement, which breaks down when components are reused in different containers at different sizes.
 
-Typography follows the same arc. [Adrian Bece's walkthrough of `clamp()`](/reading/2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp) covers the math behind setting minimum, preferred, and maximum font sizes in a single declaration. The accessibility wrinkle matters here: viewport-unit-based preferred values break when users increase their browser default font size, so rem-anchored calculations are necessary to keep [fluid type accessible](/wiki/fluid-typography).
+[Amit Sheen's breakdown of intrinsic CSS](/reading/2026-04/2026-04-24t085352-building-a-ui-without-breakpoints) makes the case that modern CSS primitives, specifically `grid` with `auto-fill`/`auto-fit`, `clamp()` for fluid sizing, container units, and container queries, should be the default responsive engine. Media queries get demoted to signaling device capability and user preference rather than controlling layout at size thresholds. The distinction matters: a component should respond to how much space its parent gives it, not to how wide the browser window happens to be.
 
-Both sources sit inside a broader CSS capability expansion. [Pavel Laptev's overview of modern CSS](/reading/2026-04/2026-04-30t231909-the-great-css-expansion) documents how anchor positioning, scroll-driven animations, and view transitions now arrive as platform primitives, reducing dependence on JavaScript libraries that previously patched layout and interaction gaps. Responsive design, in that framing, is one part of CSS reclaiming ground it historically ceded.
+[Fluid typography](/wiki/fluid-typography) is one of the clearest wins from this shift. [Adrian Bece's guide to CSS clamp()](/reading/2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp) details how the function accepts a minimum, a preferred viewport-relative value, and a maximum, producing type that scales continuously rather than jumping at breakpoints. Bece also covers the accessibility fix: preferred values should be expressed in `rem` so that browser font-size preferences are respected, not overridden by viewport calculations.
 
-The remaining sources here -- [font pairing references](/reading/2026-04/2026-04-30t231931-50-best-font-combinations-for-graphic-design) and [modular Figma layout templates](/reading/2026-05/2026-05-02t145719-micrographics-templates-design-layouts) -- touch adjacent design concerns around visual hierarchy and composition, but don't directly address responsive adaptation mechanics.
+[Pavel Laptev's survey of modern CSS](/reading/2026-04/2026-04-30t231909-the-great-css-expansion) situates these layout primitives inside a broader platform expansion. Features like anchor positioning, view transitions, and scroll-driven animations now handle what JavaScript libraries previously required, reducing dependency weight while keeping the implementation in the same layer as the rest of responsive behavior.
+
+Font choice and visual composition sit adjacent to layout adaptability. [Design Your Way's font pairing collection](/reading/2026-04/2026-04-30t231931-50-best-font-combinations-for-graphic-design) and [Zachary Winterton's micrographic layout templates](/reading/2026-05/2026-05-02t145719-micrographics-templates-design-layouts) address typographic and compositional decisions that apply across breakpoints regardless of the layout method chosen.

@@ -1,19 +1,23 @@
 ---
 title: AI infrastructure
 summary: >-
-  Where to place bets in the AI stack: whether to build orchestration harnesses
-  or composable tool layers, and when multi-agent coordination creates more
-  overhead than it resolves.
+  The tooling and architectural choices underlying AI agent deployments,
+  covering orchestration strategy, memory systems, observability, and the
+  tradeoffs between single- and multi-agent approaches.
 sources:
   - 2026-04/2026-04-27t113354-the-orchestrator-isnt-your-moat
   - >-
     2026-05/2026-05-03t115608-how-to-choose-between-single-and-multi-agent-solutions
-compiled_at: 2026-05-03T19:06:39.465Z
+  - 2026-05/2026-05-03t173422-vectorize-iohindsight
+  - 2026-05/2026-05-03t173528-lthoanggopenagentd
+aliases:
+  - infrastructure
+compiled_at: '2026-05-04T03:37:09.740Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 1281
-    output_tokens: 444
+    input_tokens: 2625
+    output_tokens: 581
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -24,12 +28,14 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.010503
+  cost_usd: 0.01659
 ---
-The recurring question in AI infrastructure is where durable value actually lives. Two failure modes are worth naming: over-investing in orchestration glue that model providers will eventually obsolete, and reaching for multi-agent complexity when a single agent would suffice.
+AI infrastructure refers to the layer of systems that makes AI agents operable in production: orchestration, memory, observability, and the primitives that connect models to real-world actions. The sources here collectively argue that these choices carry more long-term weight than model selection itself.
 
-On the first point, [The Orchestrator Isn't Your Moat](/reading/2026-04/2026-04-27t113354-the-orchestrator-isnt-your-moat) argues that custom LLM orchestration harnesses decay with each model upgrade, making the team that built them pay a reinvestment tax every time frontier capabilities improve. The alternative is to ship [MCP tool servers](/wiki/mcp) and agent skills that provide platform-specific context and actions. That layer compounds with model improvements rather than fighting them; a better Claude or GPT makes your tools more capable without requiring a rewrite of the scaffolding around them.
+[The Orchestrator Isn't Your Moat](/reading/2026-04/2026-04-27t113354-the-orchestrator-isnt-your-moat) makes the case that custom LLM orchestration harnesses are a liability. Each model upgrade can break bespoke wiring, turning model improvements into engineering debt. The recommended alternative is shipping MCP tool servers and agent skills that expose platform-specific context and actions directly to frontier agents, so that a better model is a free upgrade rather than a migration project.
 
-On the second point, [Ben Dickson at AlphaSignal](/reading/2026-05/2026-05-03t115608-how-to-choose-between-single-and-multi-agent-solutions) draws on Stanford and Google/MIT research to argue that multi-agent orchestration carries a coordination tax that is easy to underestimate. Errors can amplify up to 17x across agent handoffs, and tool-handling efficiency drops 2-6x compared to single-agent baselines. The practical implication is that [multi-agent architectures](/wiki/agentic-workflows) need a genuine justification, not just the appearance of modularity.
+Architectural complexity has a measurable cost. [Ben Dickson's analysis](/reading/2026-05/2026-05-03t115608-how-to-choose-between-single-and-multi-agent-solutions) draws on Stanford and Google/MIT research to show that multi-agent orchestration introduces a coordination tax: errors can amplify up to 17x across agent hops, and tool-handling efficiency drops 2 to 6x compared to single-agent setups. Single-agent systems should be the default until the task genuinely demands parallelism or specialization.
 
-Taken together, the picture is that AI infrastructure decisions should be made against a question of durability. Orchestration logic tied to a specific model version is a liability. Composable tool surfaces and lean agent topologies are assets that survive the next model release.
+Memory is a persistent gap in most agent infrastructure. [vectorize-io/hindsight](/reading/2026-05/2026-05-03t173422-vectorize-iohindsight) addresses this with biomimetic data structures and multi-strategy retrieval, achieving state-of-the-art scores on LongMemEval. The system goes beyond conversation history to let agents build and update mental models over time.
+
+For teams that want full ownership of the stack, [lthoangg/openagentd](/reading/2026-05/2026-05-03t173528-lthoanggopenagentd) packages multi-agent operation, persistent three-tier memory, scheduling, and built-in OpenTelemetry observability into a self-hosted agent OS with no cloud dependency. The inclusion of observability by default reflects a broader recognition that production AI systems need the same operational visibility as any other distributed service.

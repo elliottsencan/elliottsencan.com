@@ -1,19 +1,22 @@
 ---
 title: Platform strategy
 summary: >-
-  How platforms define their moat: through embedded context and integrations
-  that compound over time, not through the orchestration layer or feature
-  breadth alone.
+  How a product positions itself as infrastructure others build on top of,
+  whether by exposing tool interfaces for AI agents, offering end-to-end
+  capability suites to lock out point solutions, or outlasting competitors whose
+  ideas get recycled by later entrants.
 sources:
   - 2026-04/2026-04-27t113354-the-orchestrator-isnt-your-moat
   - 2026-04/2026-04-30t231537-startupsrip
   - 2026-04/2026-04-30t231745-optimal-vs-usertesting
-compiled_at: '2026-05-03T19:06:49.553Z'
+aliases:
+  - startup-ecosystem
+compiled_at: '2026-05-04T03:37:21.522Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 1398
-    output_tokens: 433
+    input_tokens: 2462
+    output_tokens: 543
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -24,10 +27,12 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.010689
+  cost_usd: 0.015531
 ---
-A platform's defensibility rarely comes from the layer that coordinates other tools. It comes from the accumulated context, integrations, and actions that make switching costly. [The Orchestrator Isn't Your Moat](/reading/2026-04/2026-04-27t113354-the-orchestrator-isnt-your-moat) makes this explicit in the AI context: building a custom LLM orchestration harness is a liability that decays with each model upgrade. The durable move is shipping MCP tool servers and agent skills that give frontier models platform-specific context, so model improvements compound in your favor rather than requiring constant rework.
+Platform strategy describes how a product or company positions itself as a substrate that others depend on, rather than a feature among competing features. The sources here illustrate three distinct angles on that idea.
 
-The same logic appears in how research platforms compete. [Optimal Workshop's comparison with UserTesting](/reading/2026-04/2026-04-30t231745-optimal-vs-usertesting) frames its platform advantage as end-to-end coverage: card sorting, tree testing, live-site testing, AI synthesis, and enterprise compliance in one place, versus a competitor narrowly focused on moderated usability sessions. The breadth argument only holds when the integrations between those tools actually reduce friction; otherwise it is just feature sprawl.
+[The Orchestrator Isn't Your Moat](/reading/2026-04/2026-04-27t113354-the-orchestrator-isnt-your-moat) argues that the durable platform position in the current AI moment belongs to teams that expose MCP tool servers and agent skills, not teams that build custom orchestration harnesses. The logic is straightforward: if your value lives in a fragile wrapper around a model, every model upgrade is a maintenance bill. If your value lives in platform-specific context and actions surfaced through a standard interface, model improvements compound in your favor. The platform layer here is the capability surface you expose to frontier agents, not the orchestration glue you write around them.
 
-The graveyard of failed attempts offers a corrective. [Startups.RIP](/reading/2026-04/2026-04-30t231537-startupsrip) catalogs over 1,700 dead YC startups and argues that the ideas outlive the companies. Many of those failures were platform bets that never achieved the network density or switching costs required for defensibility. The insight is that a platform thesis needs to clear two bars: useful enough to attract initial adoption, and sticky enough that the platform captures more value than it leaks to adjacent layers.
+[Optimal Workshop's comparison page](/reading/2026-04/2026-04-30t231745-optimal-vs-usertesting) shows platform strategy from a different angle: end-to-end suite versus point solution. Optimal Workshop claims its moat is breadth, covering card sorting, tree testing, live-site testing, AI synthesis, and enterprise compliance in one product. UserTesting's narrower focus on moderated usability sessions becomes a weakness under that framing. Whether breadth actually wins depends on buyer priorities, but the competitive argument is a classic platform-versus-tool positioning.
+
+[Startups.RIP](/reading/2026-04/2026-04-30t231745-optimal-vs-usertesting) surfaces a less-discussed platform dynamic: the gap between a good idea and the right moment or execution to turn it into a platform. Its catalog of 1,700+ dead YC startups paired with rebuild playbooks suggests that platform opportunities are often recycled, companies like Wit.ai and Squire.ai failed not because the category was wrong but because timing, distribution, or capitalization broke down. A later entrant with better infrastructure or distribution can pick up the same platform thesis and succeed.
