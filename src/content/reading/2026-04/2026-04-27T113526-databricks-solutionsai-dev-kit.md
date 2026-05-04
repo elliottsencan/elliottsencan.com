@@ -13,8 +13,8 @@ topics:
   - developer-tools
   - databricks
   - mcp-server
-  - ai-coding-assistants
-  - llm-agents
+  - ai-assisted-coding
+  - ai-agents
 compiled_at: '2026-05-03T18:34:44.668Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:

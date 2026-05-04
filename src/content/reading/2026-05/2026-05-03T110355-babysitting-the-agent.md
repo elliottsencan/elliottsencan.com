@@ -16,7 +16,7 @@ topics:
   - developer-experience
   - reliability
   - software-quality
-  - llm-agents
+  - ai-agents
 compiled_at: '2026-05-03T18:39:42.177Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:

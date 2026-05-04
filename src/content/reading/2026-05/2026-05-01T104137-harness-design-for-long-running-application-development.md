@@ -13,7 +13,7 @@ added: '2026-05-01T17:41:37.749Z'
 author: Prithvi Rajasekaran
 source: Anthropic
 topics:
-  - llm-agents
+  - ai-agents
   - ai-assisted-coding
   - llm-engineering
   - llm-orchestration
