@@ -116,7 +116,9 @@ Given an article title, URL, and optional excerpt or page text, produce ONE JSON
 - topics: an array of 3 to 5 lowercase kebab-case topic slugs that describe the substance of the piece. Topics drive concept clustering for the wiki layer — entries sharing a topic become candidates for a synthesis article. Rules:
   - kebab-case, lowercase, noun-phrase, no punctuation (e.g. "llm-inference", "fluid-typography", "festival-operations").
   - Prefer broad topics that will recur over hyper-specific ones ("type-system-design" over "zod-v4-upgrade").
-  - When a list of "Existing topics in use" is supplied below, strongly prefer slugs from that list. Propose a new topic only when no existing slug genuinely fits — topic stability matters because near-duplicates ("llm-inference" vs "inference-optimization") fragment the wiki.
+  - When a CANONICAL TOPIC LIST is supplied below, you MUST use slugs from it whenever a canonical genuinely fits the piece. Coining a near-duplicate of a canonical (e.g. "agentic-coding" when "ai-assisted-coding" is canonical) is a failure mode.
+  - Coin a new slug ONLY when no canonical fits and the concept is central to the piece. When you coin one, populate \`topic_rationale\` with one short sentence explaining why no canonical fit. If every slug is in the canonical list, omit \`topic_rationale\`.
+  - The KNOWN ALIASES section maps deprecated slugs to their canonical. Never emit a known alias.
   - Do not include the category (tech/design/music/essay/news/other) as a topic — categories and topics are different axes.
   - Do not include generic filler ("article", "essay", "blog-post", "read", "interesting").
   - Order from most to least central to the piece.
@@ -150,6 +152,7 @@ Return ONE JSON object with these exact fields:
 - title: short human-readable concept name. Title-case-ish but not a headline ("Responsive design", "LLM finetuning", "Festival operations"). Match the natural reading of the topic slug; do not include the word "concept" or "wiki" or "topic".
 - summary: ONE sentence, 240 characters or fewer, describing the concept itself and what the cited sources collectively say about it. No "this article" or "this wiki page" framings.
 - body: the synthesis article. 400 to 1500 characters. Markdown paragraphs. Inline citations to /reading/<slug> as described above. Do NOT emit any /wiki/<slug> links — wiki-to-wiki links are inserted by a downstream pipeline stage that validates against the actual compiled corpus.
+- aliases: kebab-case slugs from the supplied ACTIVE TOPIC SLUGS list that are unambiguously aliases or near-synonyms for THIS concept (the canonical slug supplied as "Concept" in the user message). Be conservative — only mark a slug as an alias if it clearly refers to the same concept (synonym, abbreviation, plural, narrower-than relationship). When in doubt, leave it out. Do NOT include the canonical itself. Do NOT include slugs that are genuinely separate concepts even if topically adjacent. Omit the field entirely when no alias applies. Aliases are written into the article's frontmatter and used by the site's emission layer to canonicalize reading-entry topics — a wrong alias merges two distinct concepts permanently until manually fixed, so err toward caution.
 
 Return ONLY the JSON object. No preamble, no explanation, no code fence.
 
