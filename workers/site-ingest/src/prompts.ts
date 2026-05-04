@@ -150,7 +150,7 @@ Citations:
 Return ONE JSON object with these exact fields:
 
 - title: short human-readable concept name. Title-case-ish but not a headline ("Responsive design", "LLM finetuning", "Festival operations"). Match the natural reading of the topic slug; do not include the word "concept" or "wiki" or "topic".
-- summary: ONE sentence, 240 characters or fewer, describing the concept itself and what the cited sources collectively say about it. No "this article" or "this wiki page" framings.
+- summary: ONE sentence, 280 characters or fewer, describing the concept itself and what the cited sources collectively say about it. No "this article" or "this wiki page" framings.
 - body: the synthesis article. 400 to 1500 characters. Markdown paragraphs. Inline citations to /reading/<slug> as described above. Do NOT emit any /wiki/<slug> links — wiki-to-wiki links are inserted by a downstream pipeline stage that validates against the actual compiled corpus.
 - aliases: kebab-case slugs from the supplied ACTIVE TOPIC SLUGS list that are aliases for THIS concept (the canonical slug supplied as "Concept" in the user message). An alias is a slug that names the SAME concept as the canonical, only worded differently. Allowed alias kinds:
   - synonym: same concept, different word ("ai-coding-assistants" → "ai-assisted-coding").

@@ -95,7 +95,7 @@ export const MIN_WIKI_SOURCES = 2;
 
 export const WikiFrontmatterSchema = z.object({
   title: z.string(),
-  summary: z.string().min(1).max(240),
+  summary: z.string().min(1).max(280),
   sources: z
     .array(z.string().regex(/^[a-z0-9-]+(\/[a-z0-9-]+)*$/, "kebab-case slug required"))
     .min(MIN_WIKI_SOURCES)
