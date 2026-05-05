@@ -1,6 +1,7 @@
 ---
 import LabeledRule from "@components/LabeledRule.astro";
 import { SITE } from "@consts";
+import EditorialRule from "./EditorialRule.astro";
 
 type Props = {
   standfirst?: string;
@@ -31,13 +32,13 @@ const location = SITE.LOCATION;
 -->
 <div>
   <h1 class="sr-only">{SITE.TITLE}</h1>
-  <LabeledRule as="p">
+  <LabeledRule as="h2">
     Currently in {location} &middot; {editionDate}
   </LabeledRule>
   {
     standfirst ? (
       <p
-        class="mt-2 font-sans text-base italic leading-relaxed text-black dark:text-white"
+        class="mt-8 font-sans text-base italic leading-relaxed text-black dark:text-white"
         data-pagefind-meta={`standfirst:${standfirst}`}
       >
         {standfirst}

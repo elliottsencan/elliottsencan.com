@@ -51,7 +51,7 @@ const trails = [
   {
     key: "reading",
     href: "/reading",
-    caption: `${reading.length} sources saved`,
+    caption: `${reading.length} sources`,
     blurb: "Per-source citation log. The raw input.",
     latest: latestReading
       ? { title: latestReading.data.title, href: `/reading/${latestReading.id}/` }
@@ -60,7 +60,7 @@ const trails = [
   {
     key: "wiki",
     href: "/wiki",
-    caption: `${wiki.length} articles · ${totalSources} sources`,
+    caption: `${wiki.length} articles`,
     blurb: "Synthesis. Concepts compiled across multiple sources.",
     latest: latestWiki ? { title: latestWiki.data.title, href: `/wiki/${latestWiki.id}/` } : null,
   },
@@ -125,7 +125,7 @@ const trails = [
           {
             trails.map((trail) => (
               <li class="flex items-baseline gap-4">
-                <span class="w-56 shrink-0 font-mono text-[11px] uppercase tracking-wider text-black/55 dark:text-white/55">
+                <span class="w-24 md:w-30 shrink-0 font-mono text-[11px] uppercase tracking-wider text-black/55 dark:text-white/55">
                   {trail.caption}
                 </span>
                 <div class="flex-1 space-y-1.5">
