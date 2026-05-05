@@ -12,13 +12,23 @@
  *    fetch of `<host>/robots.txt`, racing both against a 5s timeout. Inspects
  *    the response `X-Robots-Tag` header, the HTML `<meta name="robots">` and
  *    `<meta name="googlebot">` tags, and the robots.txt User-agent: *
- *    block for `Disallow:` rules matching the URL. Returns
- *    `{ ok: false, reason }` if any signal is found, `{ ok: true }` otherwise.
+ *    block for `Disallow:` rules matching the URL. Returns a discriminated
+ *    result:
+ *      - `{ kind: "block", reason }` for robots.txt Disallow (hard reject).
+ *      - `{ kind: "stub", reason, title }` for X-Robots-Tag / meta-robots
+ *        opt-out tokens — the caller writes a noindex stub entry, no
+ *        Anthropic call. `title` is whatever we managed to extract from
+ *        the fetched HTML (or undefined) so the caller can avoid a
+ *        redundant fetch.
+ *      - `{ kind: "allow", title }` when no signal fires; `title` is the
+ *        same title-extraction result, again to save the caller a refetch.
  *
  *  The robots.txt body is cached in a module-level Map for the lifetime of
  *  the Worker isolate (no KV — cache eviction happens naturally when the
  *  isolate recycles).
  */
+
+import { decode as decodeHtmlEntities } from "html-entities";
 
 const ROBOTS_FETCH_TIMEOUT_MS = 5000;
 const HTML_FETCH_TIMEOUT_MS = 5000;
@@ -27,7 +37,17 @@ const MAX_ROBOTS_BYTES = 64_000;
 
 const OPT_OUT_TOKENS = ["noai", "noindex", "noimageai"] as const;
 
-export type OptOutResult = { ok: true } | { ok: false; reason: string };
+/**
+ * Discriminated result of `checkOptOutSignals`. `block` signals a hard
+ * rejection (robots.txt). `stub` signals "ingest with stub" — the caller
+ * writes a noindex placeholder entry instead of summarizing. `allow` is
+ * the green path. The `title` field is best-effort extracted from the
+ * already-fetched HTML so callers don't have to re-fetch.
+ */
+export type OptOutResult =
+  | { kind: "block"; reason: string }
+  | { kind: "stub"; reason: string; title: string | undefined }
+  | { kind: "allow"; title: string | undefined };
 
 // ---------- host blocklist ----------
 
@@ -191,7 +211,20 @@ export function isBlockedByRobotsTxt(robotsTxt: string, urlPathname: string): bo
 
 /**
  * Inspects opt-out signals for `url` before /link summarizes the body.
- * Returns `{ ok: false, reason }` on the first matching signal.
+ *
+ * Tiered policy:
+ *  - robots.txt `Disallow:` matching the URL → `kind: "block"` (hard reject;
+ *    we treat publisher-level robots.txt as a request to skip the
+ *    archive entirely).
+ *  - X-Robots-Tag header containing `noai`/`noindex`/`noimageai`, OR
+ *    `<meta name="robots">` / `<meta name="googlebot">` containing the
+ *    same tokens → `kind: "stub"`. The caller writes a noindex placeholder
+ *    entry without summarizing — this preserves the personal-archive
+ *    breadcrumb without sending content to Anthropic.
+ *  - No signal → `kind: "allow"`.
+ *
+ * The HTML body fetched here doubles as the title source (caller passes
+ * back the returned `title` so /link doesn't re-fetch).
  */
 export async function checkOptOutSignals(args: { url: string }): Promise<OptOutResult> {
   const parsed = new URL(args.url);
@@ -203,24 +236,51 @@ export async function checkOptOutSignals(args: { url: string }): Promise<OptOutR
   const articlePromise = fetchHeadersAndBody(args.url, HTML_FETCH_TIMEOUT_MS, MAX_HTML_BYTES);
 
   const article = await articlePromise.catch(() => null);
+  const fetchedTitle = article ? extractTitle(article.body) : undefined;
+
+  // Stub-tier signals from the article response. We collect them in this
+  // pass so we can keep going to robots.txt (which is a hard block, and
+  // wins over a stub).
+  let stubReason: string | undefined;
   if (article) {
     const xRobots = article.headers.get("x-robots-tag");
     if (xRobots && containsOptOutToken(xRobots)) {
-      return { ok: false, reason: "site_opted_out: x-robots-tag" };
-    }
-    for (const content of metaRobotsContent(article.body)) {
-      if (containsOptOutToken(content)) {
-        return { ok: false, reason: "site_opted_out: meta robots" };
+      stubReason = "x-robots-tag";
+    } else {
+      for (const content of metaRobotsContent(article.body)) {
+        if (containsOptOutToken(content)) {
+          stubReason = "meta-robots";
+          break;
+        }
       }
     }
   }
 
   const robotsTxt = await robotsPromise.catch(() => "");
   if (robotsTxt && isBlockedByRobotsTxt(robotsTxt, parsed.pathname)) {
-    return { ok: false, reason: "site_opted_out: robots.txt" };
+    return { kind: "block", reason: "site_opted_out: robots.txt" };
   }
 
-  return { ok: true };
+  if (stubReason) {
+    return { kind: "stub", reason: stubReason, title: fetchedTitle };
+  }
+  return { kind: "allow", title: fetchedTitle };
+}
+
+// ---------- title extraction ----------
+
+/**
+ * Best-effort `<title>` extraction from the HTML body we already fetched.
+ * Returns undefined if no title tag is present. Mirrors the regex used in
+ * link.ts's `fetchPageTitle` so caller and signal-checker yield the same
+ * value when both run.
+ */
+function extractTitle(html: string): string | undefined {
+  const match = /<title[^>]*>([^<]+)<\/title>/i.exec(html);
+  if (!match?.[1]) {
+    return undefined;
+  }
+  return decodeHtmlEntities(match[1].trim()).slice(0, 200);
 }
 
 // ---------- low-level fetch helpers ----------

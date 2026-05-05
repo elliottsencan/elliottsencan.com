@@ -135,7 +135,10 @@ async function planSynthesis(
   req: SynthesizeRequest,
 ): Promise<PlanResult<SynthesizeSummary>> {
   const [sourcesResult, existingResult] = await Promise.all([
-    enumerateReading(env, gh),
+    enumerateReading(env.READING_DIR, {
+      listDir: (path) => listDir(path, "main", gh),
+      getFile: (path) => getFile(path, "main", gh),
+    }),
     enumerateWiki(gh),
   ]);
   if (!sourcesResult.ok) {
@@ -492,17 +495,43 @@ export function makePipelineDeps(env: Env): {
   return { github, runCrosslink };
 }
 
-async function enumerateReading(env: Env, gh: GitHubClient): Promise<Result<ReadingSource[]>> {
-  const months = await listDir(env.READING_DIR, "main", gh);
+/**
+ * Dependency-injection surface for `enumerateReading`. Production wires
+ * these to the GitHub-backed helpers; tests pass in-memory fakes (mirrors
+ * `EnumerateDeps` in enumerate.ts).
+ */
+export type EnumerateReadingDeps = {
+  listDir: (
+    path: string,
+  ) => Promise<Result<Array<{ type: "file" | "dir"; name: string; path: string }>>>;
+  getFile: (path: string) => Promise<Result<{ content: string }>>;
+};
+
+/**
+ * Walks the reading corpus and returns the sources that feed wiki
+ * synthesis. Filters out entries with `noindex: true` so publisher opt-
+ * outs don't bleed into compiled wiki articles. Exported (as opposed to
+ * being module-private) so the synthesize test can exercise the filter
+ * without standing up GitHub mocks.
+ */
+export async function enumerateReading(
+  readingDir: string,
+  deps: EnumerateReadingDeps,
+): Promise<Result<ReadingSource[]>> {
+  const months = await deps.listDir(readingDir);
   if (!months.ok) {
     return { ok: false, error: `list reading months: ${months.error}` };
   }
   const all: ReadingSource[] = [];
+  // Tracked separately so the operator can see, per /synthesize run, how
+  // many publisher-opt-out entries the wiki layer skipped over. Closes the
+  // earlier leak where noindex'd entries could still feed /synthesize.
+  let skippedNoindex = 0;
   for (const month of months.data) {
     if (month.type !== "dir") {
       continue;
     }
-    const files = await listDir(month.path, "main", gh);
+    const files = await deps.listDir(month.path);
     if (!files.ok) {
       log.warn("synthesize", "enum-reading", "month list failed", {
         month: month.path,
@@ -514,7 +543,7 @@ async function enumerateReading(env: Env, gh: GitHubClient): Promise<Result<Read
       if (file.type !== "file" || !file.name.endsWith(".md")) {
         continue;
       }
-      const loaded = await getFile(file.path, "main", gh);
+      const loaded = await deps.getFile(file.path);
       if (!loaded.ok) {
         log.warn("synthesize", "enum-reading", "file load failed", {
           path: file.path,
@@ -532,6 +561,13 @@ async function enumerateReading(env: Env, gh: GitHubClient): Promise<Result<Read
         continue;
       }
       const fm = validation.data;
+      // Publisher opt-out: a noindex entry must not feed the wiki layer.
+      // Stub entries (X-Robots-Tag/meta-robots opt-outs) and operator
+      // takedowns both land here.
+      if (fm.noindex === true) {
+        skippedNoindex++;
+        continue;
+      }
       all.push({
         slug: readingSlugFromPath(file.path),
         path: file.path,
@@ -545,6 +581,11 @@ async function enumerateReading(env: Env, gh: GitHubClient): Promise<Result<Read
         topics: fm.topics ?? [],
       });
     }
+  }
+  if (skippedNoindex > 0) {
+    log.info("synthesize", "enum-reading", "noindex entries skipped", {
+      count: skippedNoindex,
+    });
   }
   return { ok: true, data: all };
 }

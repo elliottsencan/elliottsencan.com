@@ -4,9 +4,13 @@
  * Two surfaces:
  *  - `isHostExcluded(host, blocklistCsv)`: pure string check; matches exact
  *    hostname or any parent-domain entry.
- *  - `checkOptOutSignals({ url, fetch })`: HTTP-side check that inspects
+ *  - `checkOptOutSignals({ url })`: HTTP-side check that inspects
  *    `X-Robots-Tag`, `<meta name="robots">`/`googlebot`, and `robots.txt`
- *    Disallow rules. Returns `{ ok: true }` or `{ ok: false, reason }`.
+ *    Disallow rules. Returns a discriminated result:
+ *      - `kind: "block"` for robots.txt Disallow (hard reject).
+ *      - `kind: "stub"` for X-Robots-Tag / meta-robots opt-out tokens
+ *        (caller writes a noindex stub entry, no Anthropic call).
+ *      - `kind: "allow"` when no signal fires.
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -73,7 +77,7 @@ describe("checkOptOutSignals", () => {
     );
   }
 
-  it("aborts when the article URL responds with X-Robots-Tag: noai", async () => {
+  it("returns kind=stub when X-Robots-Tag: noai is present (ingest-with-stub)", async () => {
     stubFetch((url) => {
       if (url.endsWith("/robots.txt")) {
         return new Response("", { status: 404 });
@@ -84,13 +88,14 @@ describe("checkOptOutSignals", () => {
       });
     });
     const result = await checkOptOutSignals({ url: "https://example.com/post" });
-    expect(result.ok).toBe(false);
-    if (!result.ok) {
-      expect(result.reason).toMatch(/x-robots-tag/i);
+    expect(result.kind).toBe("stub");
+    if (result.kind === "stub") {
+      expect(result.reason).toBe("x-robots-tag");
+      expect(result.title).toBe("Hi");
     }
   });
 
-  it("aborts when X-Robots-Tag contains noindex (case-insensitive, comma-tokenized)", async () => {
+  it("returns kind=stub when X-Robots-Tag contains noindex (case-insensitive, comma-tokenized)", async () => {
     stubFetch((url) => {
       if (url.endsWith("/robots.txt")) {
         return new Response("", { status: 404 });
@@ -101,7 +106,7 @@ describe("checkOptOutSignals", () => {
       });
     });
     const result = await checkOptOutSignals({ url: "https://example.com/post" });
-    expect(result.ok).toBe(false);
+    expect(result.kind).toBe("stub");
   });
 
   it("allows when X-Robots-Tag has unrelated tokens like 'index, follow'", async () => {
@@ -115,27 +120,31 @@ describe("checkOptOutSignals", () => {
       });
     });
     const result = await checkOptOutSignals({ url: "https://example.com/post" });
-    expect(result.ok).toBe(true);
+    expect(result.kind).toBe("allow");
+    if (result.kind === "allow") {
+      expect(result.title).toBe("Hi");
+    }
   });
 
-  it('aborts when <meta name="robots" content="noai"> appears in HTML body', async () => {
+  it('returns kind=stub with reason=meta-robots when <meta name="robots" content="noai">', async () => {
     stubFetch((url) => {
       if (url.endsWith("/robots.txt")) {
         return new Response("", { status: 404 });
       }
       return new Response(
-        '<html><head><meta name="robots" content="noai, follow"></head><body>x</body></html>',
+        '<html><head><title>X</title><meta name="robots" content="noai, follow"></head><body>x</body></html>',
         { status: 200 },
       );
     });
     const result = await checkOptOutSignals({ url: "https://example.com/post" });
-    expect(result.ok).toBe(false);
-    if (!result.ok) {
-      expect(result.reason).toMatch(/meta robots/i);
+    expect(result.kind).toBe("stub");
+    if (result.kind === "stub") {
+      expect(result.reason).toBe("meta-robots");
+      expect(result.title).toBe("X");
     }
   });
 
-  it('aborts when <meta name="googlebot" content="noindex"> appears', async () => {
+  it('returns kind=stub when <meta name="googlebot" content="noindex"> appears', async () => {
     stubFetch((url) => {
       if (url.endsWith("/robots.txt")) {
         return new Response("", { status: 404 });
@@ -145,10 +154,13 @@ describe("checkOptOutSignals", () => {
       });
     });
     const result = await checkOptOutSignals({ url: "https://example.com/post" });
-    expect(result.ok).toBe(false);
+    expect(result.kind).toBe("stub");
+    if (result.kind === "stub") {
+      expect(result.reason).toBe("meta-robots");
+    }
   });
 
-  it("aborts when robots.txt has User-agent: * with Disallow: /", async () => {
+  it("returns kind=block when robots.txt has User-agent: * with Disallow: / (hard reject)", async () => {
     stubFetch((url) => {
       if (url.endsWith("/robots.txt")) {
         return new Response("User-agent: *\nDisallow: /\n", { status: 200 });
@@ -156,13 +168,13 @@ describe("checkOptOutSignals", () => {
       return new Response("<html></html>", { status: 200 });
     });
     const result = await checkOptOutSignals({ url: "https://example.com/post" });
-    expect(result.ok).toBe(false);
-    if (!result.ok) {
+    expect(result.kind).toBe("block");
+    if (result.kind === "block") {
       expect(result.reason).toMatch(/robots\.txt/i);
     }
   });
 
-  it("aborts when robots.txt path-specific Disallow matches the URL", async () => {
+  it("returns kind=block when robots.txt path-specific Disallow matches the URL", async () => {
     stubFetch((url) => {
       if (url.endsWith("/robots.txt")) {
         return new Response("User-agent: *\nDisallow: /private\n", { status: 200 });
@@ -172,7 +184,24 @@ describe("checkOptOutSignals", () => {
     const result = await checkOptOutSignals({
       url: "https://example.com/private/page",
     });
-    expect(result.ok).toBe(false);
+    expect(result.kind).toBe("block");
+  });
+
+  it("robots.txt Disallow wins over an X-Robots-Tag stub signal on the same URL", async () => {
+    // If both signals fire, robots.txt is the higher-confidence (publisher-
+    // wide) opt-out, so the caller should hard-reject rather than write a
+    // stub. Lock in that precedence.
+    stubFetch((url) => {
+      if (url.endsWith("/robots.txt")) {
+        return new Response("User-agent: *\nDisallow: /\n", { status: 200 });
+      }
+      return new Response("<html></html>", {
+        status: 200,
+        headers: { "X-Robots-Tag": "noai" },
+      });
+    });
+    const result = await checkOptOutSignals({ url: "https://example.com/post" });
+    expect(result.kind).toBe("block");
   });
 
   it("allows when robots.txt Disallow path does not match the URL", async () => {
@@ -183,7 +212,7 @@ describe("checkOptOutSignals", () => {
       return new Response("<html><title>Hi</title></html>", { status: 200 });
     });
     const result = await checkOptOutSignals({ url: "https://example.com/public/page" });
-    expect(result.ok).toBe(true);
+    expect(result.kind).toBe("allow");
   });
 
   it("allows when robots.txt is missing (404)", async () => {
@@ -194,7 +223,7 @@ describe("checkOptOutSignals", () => {
       return new Response("<html><title>Hi</title></html>", { status: 200 });
     });
     const result = await checkOptOutSignals({ url: "https://example.com/post" });
-    expect(result.ok).toBe(true);
+    expect(result.kind).toBe("allow");
   });
 
   it("caches robots.txt per host across calls", async () => {
@@ -220,6 +249,20 @@ describe("checkOptOutSignals", () => {
       return new Response("<html><title>Hi</title></html>", { status: 200 });
     });
     const result = await checkOptOutSignals({ url: "https://example.com/post" });
-    expect(result.ok).toBe(true);
+    expect(result.kind).toBe("allow");
+  });
+
+  it("returns title=undefined when allow path can't extract a <title> tag", async () => {
+    stubFetch((url) => {
+      if (url.endsWith("/robots.txt")) {
+        return new Response("", { status: 404 });
+      }
+      return new Response("<html><body>no title here</body></html>", { status: 200 });
+    });
+    const result = await checkOptOutSignals({ url: "https://example.com/post" });
+    expect(result.kind).toBe("allow");
+    if (result.kind === "allow") {
+      expect(result.title).toBeUndefined();
+    }
   });
 });

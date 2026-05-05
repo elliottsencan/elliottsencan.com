@@ -1,7 +1,14 @@
 import matter from "gray-matter";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import * as anthropicModule from "./anthropic.ts";
 import { type LinkSummary, LinkSummarySchema } from "./anthropic.ts";
-import { buildEntryMarkdown, makeLinkStrategy, validate } from "./link.ts";
+import {
+  buildEntryMarkdown,
+  buildOptOutStubMarkdown,
+  makeLinkStrategy,
+  OPT_OUT_STUB_SUMMARY,
+  validate,
+} from "./link.ts";
 import { __resetRobotsCacheForTests } from "./optout.ts";
 import type { Env } from "./types.ts";
 
@@ -252,7 +259,7 @@ describe("makeLinkStrategy.plan — copyright-posture", () => {
     }
   });
 
-  it("aborts before Anthropic call when X-Robots-Tag: noai is present", async () => {
+  it("writes a noindex stub (no Anthropic call) when X-Robots-Tag: noai is present", async () => {
     stubFetch((url) => {
       if (url.endsWith("/robots.txt")) {
         return new Response("", { status: 404 });
@@ -262,26 +269,39 @@ describe("makeLinkStrategy.plan — copyright-posture", () => {
         headers: { "X-Robots-Tag": "noai" },
       });
     });
+    const summarizeSpy = vi.spyOn(anthropicModule, "summarizeLink");
     const strategy = makeLinkStrategy({
       url: "https://example.com/post",
       topic_priors: false,
     });
     const env = baseEnv();
     const result = await strategy.plan({ env }, env);
-    expect(result.ok).toBe(false);
+    expect(result.ok).toBe(true);
     if (!result.ok) {
-      expect(result.error).toMatch(/site_opted_out/);
-      expect(result.error).toMatch(/x-robots-tag/i);
+      return;
     }
+    expect(summarizeSpy).not.toHaveBeenCalled();
+    expect(result.data.mutation.added.length).toBe(1);
+    const written = result.data.mutation.added[0];
+    expect(written?.path).toMatch(/^src\/content\/reading\/.+\.md$/);
+    const fm = matter(written?.content ?? "").data as Record<string, unknown>;
+    expect(fm.noindex).toBe(true);
+    expect(fm.opted_out).toBe("x-robots-tag");
+    expect(fm.summary).toBe(OPT_OUT_STUB_SUMMARY);
+    expect(fm.category).toBe("other");
+    expect(fm.compiled_with).toBe("manual:opt-out-stub");
+    expect(result.data.summary?.opted_out).toBe("x-robots-tag");
+    summarizeSpy.mockRestore();
   });
 
-  it("aborts when robots.txt has User-agent: * and Disallow: /", async () => {
+  it("aborts (hard block) when robots.txt has User-agent: * and Disallow: /", async () => {
     stubFetch((url) => {
       if (url.endsWith("/robots.txt")) {
         return new Response("User-agent: *\nDisallow: /\n", { status: 200 });
       }
       return new Response("<html><title>Hi</title></html>", { status: 200 });
     });
+    const summarizeSpy = vi.spyOn(anthropicModule, "summarizeLink");
     const strategy = makeLinkStrategy({
       url: "https://example.com/post",
       topic_priors: false,
@@ -291,29 +311,95 @@ describe("makeLinkStrategy.plan — copyright-posture", () => {
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.error).toMatch(/robots\.txt/);
+      expect(result.status).toBe(451);
     }
+    expect(summarizeSpy).not.toHaveBeenCalled();
+    summarizeSpy.mockRestore();
   });
 
-  it('aborts when HTML body has <meta name="robots" content="noai">', async () => {
+  it('writes a noindex stub when HTML body has <meta name="robots" content="noai">', async () => {
     stubFetch((url) => {
       if (url.endsWith("/robots.txt")) {
         return new Response("", { status: 404 });
       }
       return new Response(
-        '<html><head><meta name="robots" content="noai"></head><body>x</body></html>',
+        '<html><head><title>Article</title><meta name="robots" content="noai"></head><body>x</body></html>',
         { status: 200 },
       );
     });
+    const summarizeSpy = vi.spyOn(anthropicModule, "summarizeLink");
     const strategy = makeLinkStrategy({
       url: "https://example.com/post",
       topic_priors: false,
     });
     const env = baseEnv();
     const result = await strategy.plan({ env }, env);
-    expect(result.ok).toBe(false);
+    expect(result.ok).toBe(true);
     if (!result.ok) {
-      expect(result.error).toMatch(/meta robots/i);
+      return;
     }
+    expect(summarizeSpy).not.toHaveBeenCalled();
+    const written = result.data.mutation.added[0];
+    const fm = matter(written?.content ?? "").data as Record<string, unknown>;
+    expect(fm.noindex).toBe(true);
+    expect(fm.opted_out).toBe("meta-robots");
+    expect(fm.title).toBe("Article");
+    expect(fm.title_source).toBe("fetched");
+    summarizeSpy.mockRestore();
+  });
+
+  it("writes a noindex stub when <meta name='googlebot' content='noindex'> is present", async () => {
+    stubFetch((url) => {
+      if (url.endsWith("/robots.txt")) {
+        return new Response("", { status: 404 });
+      }
+      return new Response('<html><head><meta name="googlebot" content="noindex"></head></html>', {
+        status: 200,
+      });
+    });
+    const summarizeSpy = vi.spyOn(anthropicModule, "summarizeLink");
+    const strategy = makeLinkStrategy({
+      url: "https://example.com/post",
+      topic_priors: false,
+    });
+    const env = baseEnv();
+    const result = await strategy.plan({ env }, env);
+    expect(result.ok).toBe(true);
+    if (!result.ok) {
+      return;
+    }
+    expect(summarizeSpy).not.toHaveBeenCalled();
+    const written = result.data.mutation.added[0];
+    const fm = matter(written?.content ?? "").data as Record<string, unknown>;
+    expect(fm.noindex).toBe(true);
+    expect(fm.opted_out).toBe("meta-robots");
+    summarizeSpy.mockRestore();
+  });
+
+  it("stub falls back to hostname when no <title> tag and no caller-supplied title", async () => {
+    stubFetch((url) => {
+      if (url.endsWith("/robots.txt")) {
+        return new Response("", { status: 404 });
+      }
+      return new Response("<html><body>x</body></html>", {
+        status: 200,
+        headers: { "X-Robots-Tag": "noai" },
+      });
+    });
+    const strategy = makeLinkStrategy({
+      url: "https://blog.example.com/post",
+      topic_priors: false,
+    });
+    const env = baseEnv();
+    const result = await strategy.plan({ env }, env);
+    expect(result.ok).toBe(true);
+    if (!result.ok) {
+      return;
+    }
+    const written = result.data.mutation.added[0];
+    const fm = matter(written?.content ?? "").data as Record<string, unknown>;
+    expect(fm.title).toBe("blog.example.com");
+    expect(fm.title_source).toBe("hostname");
   });
 
   // The fakeCtx import is only used to keep the test file structurally similar
@@ -321,5 +407,30 @@ describe("makeLinkStrategy.plan — copyright-posture", () => {
   it("(housekeeping) fakeCtx() returns a stub ExecutionContext", () => {
     const ctx = fakeCtx();
     expect(ctx.waitUntil).toBeDefined();
+  });
+});
+
+// ---------- buildOptOutStubMarkdown ----------
+
+describe("buildOptOutStubMarkdown", () => {
+  it("emits the canonical stub frontmatter shape", () => {
+    const md = buildOptOutStubMarkdown({
+      title: "Some Title",
+      titleSource: "fetched",
+      url: "https://example.com/post",
+      reason: "x-robots-tag",
+      added: new Date("2026-05-01T00:00:00.000Z"),
+    });
+    const fm = matter(md).data as Record<string, unknown>;
+    expect(fm.title).toBe("Some Title");
+    expect(fm.url).toBe("https://example.com/post");
+    expect(fm.summary).toBe(OPT_OUT_STUB_SUMMARY);
+    expect(fm.category).toBe("other");
+    expect(fm.noindex).toBe(true);
+    expect(fm.opted_out).toBe("x-robots-tag");
+    expect(fm.compiled_with).toBe("manual:opt-out-stub");
+    expect(fm.title_source).toBe("fetched");
+    // Body must be empty — reading entries are citations, not articles.
+    expect(matter(md).content.trim()).toBe("");
   });
 });

@@ -10,7 +10,13 @@
 import matter from "gray-matter";
 import { describe, expect, it } from "vitest";
 import { WikiArticleSchema } from "./anthropic.ts";
-import { buildArticleMarkdown, clusterByTopic, setEquals } from "./synthesize.ts";
+import {
+  buildArticleMarkdown,
+  clusterByTopic,
+  type EnumerateReadingDeps,
+  enumerateReading,
+  setEquals,
+} from "./synthesize.ts";
 import type { WikiArticle } from "./types.ts";
 
 // ---------- setEquals ----------
@@ -282,5 +288,122 @@ describe("buildArticleMarkdown (aliases)", () => {
   it("omits aliases entirely when the field is undefined", () => {
     const { data } = parseEntry(buildArticleMarkdown(baseArgs));
     expect(data).not.toHaveProperty("aliases");
+  });
+});
+
+// ---------- enumerateReading: noindex filter ----------
+
+/**
+ * In-memory fake of `EnumerateReadingDeps`. Mirrors the layout the production
+ * GitHub-backed listDir/getFile produce: a flat path keyspace where listDir
+ * returns entries one level beneath `path`. Mirrors the helper in
+ * enumerate.test.ts so the two tests stay shaped the same.
+ */
+function fakeReadingDeps(files: Record<string, string>): EnumerateReadingDeps {
+  return {
+    listDir: async (path: string) => {
+      const direct = Object.keys(files)
+        .filter((k) => k.startsWith(`${path}/`))
+        .map((k) => k.slice(path.length + 1));
+      const seen = new Set<string>();
+      const entries: Array<{ type: "file" | "dir"; name: string; path: string }> = [];
+      for (const tail of direct) {
+        const slash = tail.indexOf("/");
+        if (slash === -1) {
+          if (seen.has(tail)) {
+            continue;
+          }
+          seen.add(tail);
+          entries.push({ type: "file", name: tail, path: `${path}/${tail}` });
+        } else {
+          const dir = tail.slice(0, slash);
+          if (seen.has(dir)) {
+            continue;
+          }
+          seen.add(dir);
+          entries.push({ type: "dir", name: dir, path: `${path}/${dir}` });
+        }
+      }
+      if (entries.length === 0 && !Object.keys(files).some((k) => k.startsWith(`${path}/`))) {
+        return { ok: false, error: "404 not found" };
+      }
+      return { ok: true, data: entries };
+    },
+    getFile: async (path: string) => {
+      const content = files[path];
+      if (content == null) {
+        return { ok: false, error: "not-found" };
+      }
+      return { ok: true, data: { content } };
+    },
+  };
+}
+
+const validReadingFm = (extra: Record<string, unknown> = {}) => {
+  const fm: Record<string, unknown> = {
+    title: "X",
+    url: "https://example.com/x",
+    summary: "S.",
+    category: "tech",
+    added: "2026-04-01T00:00:00.000Z",
+    topics: ["foo"],
+    ...extra,
+  };
+  const lines = ["---"];
+  for (const [k, v] of Object.entries(fm)) {
+    if (Array.isArray(v)) {
+      lines.push(`${k}: [${v.map((s) => JSON.stringify(s)).join(", ")}]`);
+    } else if (typeof v === "boolean") {
+      lines.push(`${k}: ${v}`);
+    } else {
+      lines.push(`${k}: ${JSON.stringify(v)}`);
+    }
+  }
+  lines.push("---", "", "");
+  return lines.join("\n");
+};
+
+describe("enumerateReading: noindex filter", () => {
+  it("excludes entries with noindex: true so they don't feed the wiki layer", async () => {
+    const deps = fakeReadingDeps({
+      "src/content/reading/2026-04/a-public.md": validReadingFm({ title: "Public" }),
+      "src/content/reading/2026-04/b-optout.md": validReadingFm({
+        title: "Opt-out",
+        noindex: true,
+        opted_out: "x-robots-tag",
+      }),
+      "src/content/reading/2026-04/c-public.md": validReadingFm({ title: "Public 2" }),
+    });
+    const result = await enumerateReading("src/content/reading", deps);
+    expect(result.ok).toBe(true);
+    if (!result.ok) {
+      return;
+    }
+    const titles = result.data.map((s) => s.title).sort();
+    expect(titles).toEqual(["Public", "Public 2"]);
+  });
+
+  it("includes entries that explicitly set noindex: false", async () => {
+    const deps = fakeReadingDeps({
+      "src/content/reading/2026-04/a.md": validReadingFm({ noindex: false }),
+    });
+    const result = await enumerateReading("src/content/reading", deps);
+    expect(result.ok).toBe(true);
+    if (!result.ok) {
+      return;
+    }
+    expect(result.data).toHaveLength(1);
+  });
+
+  it("includes entries when noindex is omitted (default)", async () => {
+    const deps = fakeReadingDeps({
+      "src/content/reading/2026-04/a.md": validReadingFm({}),
+    });
+    const result = await enumerateReading("src/content/reading", deps);
+    expect(result.ok).toBe(true);
+    if (!result.ok) {
+      return;
+    }
+    expect(result.data).toHaveLength(1);
   });
 });
