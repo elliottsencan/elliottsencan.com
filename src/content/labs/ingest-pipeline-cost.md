@@ -1,13 +1,13 @@
 ---
 title: Ingest pipeline cost
 hypothesis: The site-ingest worker can run at under $0.50/month at current saving rates without re-summarizing on every recompile.
-status: draft
+status: live
 publishedDate: 2026-04-15T12:00:00-07:00
-lastRunDate: 2026-05-02T12:00:00-07:00
-tldr: Weekly Anthropic spend on /link, /recompile, and /synthesize, derived directly from `compile_cost` in the corpus. Awaiting the first `/recompile all` run to populate.
+lastRunDate: 2026-05-04T12:00:00-07:00
+tldr: Anthropic spend on /link, /recompile, and /synthesize, derived directly from `compile_cost` in the corpus. Updated on every build.
 headlineMetric:
-  label: Status
-  value: Awaiting first recompile
+  label: Spent so far
+  value: $1.24
 tags:
   - cost
   - infra
@@ -16,13 +16,16 @@ kind: chart
 dataPath: data/ingest-pipeline-cost.json
 pre: |
   // src/content/labs/data/ingest-pipeline-cost.json is regenerated on
-  // every build by scripts/labs-aggregate.mjs:
-  const cost = sum(corpus.flatMap(e => e.compile_cost?.cost_usd ?? []))
-  const weekly = bucketByISOWeek(corpus, e => e.compile_cost?.cost_usd)
-post: Until `compile_cost` lands across the corpus (PR #27 added the field; `/recompile all` is the first run that populates it for the existing 37 reading entries), the chart is empty. New `/link` calls and any future `/recompile` and `/synthesize` runs append data automatically.
+  // every build by scripts/labs-aggregate.mjs. Buckets are computed in
+  // Pacific time so a Pacific laptop and a UTC CI runner agree.
+  const records  = corpus.flatMap(e => e.compile_cost ?? [])
+  const total    = sum(records.map(r => r.cost_usd))
+  const byDay    = bucketByPacificDate(records)
+  const byModel  = bucketBy(records, r => r.model)
+post: The compile_cost field landed in PR #27 on 2026-05-01. The first /recompile-all run filled it in across the existing reading + wiki corpus on 2026-05-03 — the spike is that recompile, not steady-state spend. Subsequent /link, /recompile, and /synthesize runs append to the series automatically.
 ---
 
-The pipeline runs three priced calls that now carry their cost directly in
+The pipeline runs three priced calls that carry their cost directly in
 the resulting markdown's frontmatter:
 
 - `/link` — fetch + summarize a saved URL, write the reading entry.
@@ -33,12 +36,13 @@ the resulting markdown's frontmatter:
 
 Each call's `CostRecord` is snapshotted into the entry's `compile_cost`
 field, including the pricing table at the moment of the call so historical
-numbers stay reproducible across price-table updates. The cell above
-aggregates those records by ISO week of `compiled_at`.
+numbers stay reproducible across price-table updates. The aggregator
+buckets those records by Pacific date for the daily series above; the
+JSON also carries weekly and per-model breakdowns for any future cells
+that want a different cut.
 
-Why an empty chart right now: the `compile_cost` field landed in PR #27
-on 2026-05-01. None of the 37 existing reading entries or 11 wiki
-articles carry it yet — they were compiled before the field existed. The
-first `/recompile all` run will rewrite all 37 reading entries with their
-current cost, at which point the chart populates with real data and the
-status promotes from `draft` to `live`.
+Reading the chart: the headline number is total spent across every
+recorded compile so far, not a monthly run-rate. The hypothesis is about
+steady-state monthly cost — that's the line to watch as routine `/link`
+calls accumulate over weeks and the bulk-recompile spike fades into the
+background.
