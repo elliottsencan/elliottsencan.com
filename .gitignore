@@ -41,3 +41,4 @@ src/content/labs/data/ingest-pipeline-cost.json
 # constellation-layout.mjs. Same build-artifact treatment as the labs
 # data above — never tracked, always fresh on dev/build.
 src/data/constellation-layout.json
+commands.md
