@@ -149,7 +149,7 @@ function buildEdges(entries) {
 
 // ─── solvers ──────────────────────────────────────────────────────────────
 
-function solveStrip(entries, edges, width = 1024, height = 220) {
+function solveStrip(entries, edges, width = 800, height = 420) {
   const cx = width / 2;
   const cy = height / 2;
   const seeded = entries.map((e, i) => {
@@ -164,6 +164,11 @@ function solveStrip(entries, edges, width = 1024, height = 220) {
       weight: e.sources.length,
     };
   });
+  // Gravity is intentionally firm. With weaker pulls, weakly-connected
+  // concepts get punted to the canvas walls by repulsion and pin there,
+  // leaving a sparse central cluster surrounded by stranded outliers.
+  // A stronger center pull keeps the layout cohesive so the rendered
+  // box frames a single legible cluster.
   for (let it = 0; it < 280; it++) {
     step(seeded, edges, {
       width,
@@ -171,13 +176,9 @@ function solveStrip(entries, edges, width = 1024, height = 220) {
       repulse: 4200,
       springLen: 80,
       springK: 0.08,
-      gravity: 0.018,
+      gravity: 0.075,
       clusterPull: 0.005,
     });
-    // Squash vertically each iter so the layout favors a strip shape.
-    for (const n of seeded) {
-      n.y = cy + (n.y - cy) * 0.95;
-    }
   }
   return seeded.map((n) => ({
     id: n.id,
