@@ -47,8 +47,19 @@ import {
 import type { Env, LinkSummary, Result } from "./types.ts";
 import { jsonResponse, log } from "./util.ts";
 
-const MAX_ENTRIES_PER_RUN = 100;
+// Default per-run safety bound. Override via env.MAX_ENTRIES_PER_RUN
+// (string) without a code change.
+const DEFAULT_MAX_ENTRIES_PER_RUN = 100;
 const IA_FETCH_TIMEOUT_MS = 10_000;
+
+function resolveMaxEntries(env: Env): number {
+  const raw = env.MAX_ENTRIES_PER_RUN;
+  if (!raw) {
+    return DEFAULT_MAX_ENTRIES_PER_RUN;
+  }
+  const n = Number(raw);
+  return Number.isFinite(n) && n > 0 ? n : DEFAULT_MAX_ENTRIES_PER_RUN;
+}
 const IA_MAX_BYTES = 500_000;
 const IA_EXCERPT_LENGTH = 16_000;
 const LIVE_FETCH_TIMEOUT_MS = 8_000;
@@ -94,6 +105,12 @@ type RecompileSummary = {
   matched: number;
   results: RecompileResultRow[];
   scope: RecompileRequest["scope"];
+  /**
+   * Slugs dropped by the per-run cap after the compiled_at sort. Surfaces
+   * the long tail so operators can paste a follow-up curl rather than
+   * waiting for the next manual recompile run to silently re-drop them.
+   */
+  deferred: string[];
   /** Aggregated Anthropic cost across all per-entry recompile calls in this run. */
   run_cost: RunCost;
 };
@@ -109,13 +126,18 @@ export function makeRecompileStrategy(req: RecompileRequest): Strategy<Recompile
         return { ok: false, error: enumerated.error, status: 500 };
       }
       const { entries, invalidPaths } = enumerated.data;
-      const filtered = applyScope(entries, req.scope).slice(0, MAX_ENTRIES_PER_RUN);
+      const scoped = applyScope(entries, req.scope);
+      const prioritized = prioritizeByCompiledAt(scoped);
+      const maxEntries = resolveMaxEntries(env);
+      const filtered = prioritized.slice(0, maxEntries);
+      const deferred = prioritized.slice(maxEntries).map((e) => slugFromPath(e.path));
 
       log.info("recompile", "plan", "entries selected", {
         total: entries.length,
         matched: filtered.length,
         invalid: invalidPaths.length,
-        cap: MAX_ENTRIES_PER_RUN,
+        cap: maxEntries,
+        deferred: deferred.length,
       });
 
       // Load the canonical vocabulary once per run rather than per entry.
@@ -164,6 +186,7 @@ export function makeRecompileStrategy(req: RecompileRequest): Strategy<Recompile
         matched: filtered.length,
         results,
         scope: req.scope,
+        deferred,
         run_cost: runCost,
       };
       return {
@@ -172,8 +195,40 @@ export function makeRecompileStrategy(req: RecompileRequest): Strategy<Recompile
       };
     },
     prTitle: ({ mutation }) => `Recompile reading entries (${mutation.changed.length})`,
-    prBody: (plan, crosslink) => buildPrBody(plan, crosslink),
+    prBody: (plan, crosslink) => buildRecompilePrBody(plan, crosslink),
   };
+}
+
+// Exported for unit tests.
+//
+// Sort entries by `compiled_at` ascending so the oldest get refreshed
+// first when the per-run cap bites. Missing `compiled_at` (legacy entries
+// or freshly-imported pre-recompile content) sort first — they're the
+// stalest by definition. Tie-break alphabetically by basename slug for
+// deterministic dry-run output.
+export function prioritizeByCompiledAt<T extends ParsedEntry>(entries: readonly T[]): T[] {
+  const tsOf = (e: T): number => {
+    const ca = e.frontmatter.compiled_at;
+    return ca ? ca.getTime() : 0;
+  };
+  return [...entries].sort((a, b) => {
+    const ta = tsOf(a);
+    const tb = tsOf(b);
+    if (ta !== tb) {
+      return ta - tb;
+    }
+    return slugFromPath(a.path).localeCompare(slugFromPath(b.path));
+  });
+}
+
+// Exported for unit tests. Used in PR body and JSON response so operators
+// can paste a one-liner to catch up on entries dropped by the per-run cap.
+export function buildDeferredRecompileCurlHint(slugs: readonly string[]): string {
+  const payload = JSON.stringify({
+    scope: { kind: "slugs", slugs },
+    dry_run: false,
+  });
+  return `curl -X POST https://site-ingest.<your-subdomain>.workers.dev/recompile -H 'Authorization: Bearer $TOKEN' -d '${payload}'`;
 }
 
 // Exported for unit tests; in-file callers use it directly.
@@ -207,7 +262,11 @@ export function partitionSkips(results: RecompileResultRow[]): SkipPartition {
   return partition;
 }
 
-function buildPrBody(plan: PlanOutput<RecompileSummary>, crosslink?: CrosslinkResult): string {
+// Exported for unit tests. Strategy `prBody` callback wires through.
+export function buildRecompilePrBody(
+  plan: PlanOutput<RecompileSummary>,
+  crosslink?: CrosslinkResult,
+): string {
   if (!plan.summary) {
     return "Automated recompile run.";
   }
@@ -220,11 +279,13 @@ function buildPrBody(plan: PlanOutput<RecompileSummary>, crosslink?: CrosslinkRe
     runCost.records.length > 0
       ? `- Cost: $${runCost.total_usd.toFixed(4)} (${runCost.records.length} call${runCost.records.length === 1 ? "" : "s"}, ${runCost.total_usage.input_tokens} input + ${runCost.total_usage.output_tokens} output tokens)`
       : null;
+  const deferred = summary.deferred;
   const lines: string[] = [
     `Automated recompile run. Scope: \`${JSON.stringify(summary.scope)}\`.`,
     "",
     `- Updated: ${updated.length}`,
     `- Skipped: ${skips.total} (no_source=${skips.no_source}, transient=${skips.transient}, frontmatter_invalid=${skips.frontmatter_invalid}, other=${skips.other})`,
+    ...(deferred.length > 0 ? [`- Deferred (cap): ${deferred.length}`] : []),
     ...(costLine ? [costLine] : []),
     "",
     "### Updated",
@@ -235,6 +296,14 @@ function buildPrBody(plan: PlanOutput<RecompileSummary>, crosslink?: CrosslinkRe
     for (const r of skipped) {
       const tag = r.skip_reason ? `${r.skip_reason}: ` : "";
       lines.push(`- \`${r.path}\` — ${tag}${r.reason ?? "unknown"}`);
+    }
+  }
+  if (deferred.length > 0) {
+    lines.push("", "### Deferred");
+    lines.push("Entries dropped by the per-run cap after compiled_at sort. Catch up with:");
+    lines.push("", "```sh", buildDeferredRecompileCurlHint(deferred), "```", "");
+    for (const slug of deferred) {
+      lines.push(`- \`${slug}\``);
     }
   }
   if (crosslink && crosslink.applied.length > 0) {
@@ -286,6 +355,7 @@ export async function handle(request: Request, env: Env, ctx: ExecutionContext):
       processed: updated.length,
       skipped: partitionSkips(summary.results),
       results: summary.results,
+      deferred: summary.deferred,
       run_cost: summary.run_cost,
     });
   }
@@ -310,6 +380,7 @@ export async function handle(request: Request, env: Env, ctx: ExecutionContext):
     matched: summary?.matched ?? 0,
     committed: updated.length,
     skipped: partitionSkips(results),
+    deferred: summary?.deferred ?? [],
     run_cost: summary?.run_cost ?? null,
     branch: result.branch,
     pr: result.pr_number ? { number: result.pr_number, url: result.pr_url } : null,

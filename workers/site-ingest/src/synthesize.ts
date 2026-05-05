@@ -61,8 +61,18 @@ import { jsonResponse, log, readingSlugFromPath } from "./util.ts";
 // missed concepts after each call). 100 leaves multi-year headroom; cost
 // per fully-saturated run is bounded by Anthropic call cost × 100, which
 // at current pricing is ~$1-2 — acceptable for a personal-cadence trigger.
-const MAX_CONCEPTS_PER_RUN = 100;
+// Override via env.MAX_CONCEPTS_PER_RUN (string) without a code change.
+const DEFAULT_MAX_CONCEPTS_PER_RUN = 100;
 const WIKI_DIR = "src/content/wiki";
+
+function resolveMaxConcepts(env: Env): number {
+  const raw = env.MAX_CONCEPTS_PER_RUN;
+  if (!raw) {
+    return DEFAULT_MAX_CONCEPTS_PER_RUN;
+  }
+  const n = Number(raw);
+  return Number.isFinite(n) && n > 0 ? n : DEFAULT_MAX_CONCEPTS_PER_RUN;
+}
 
 const SynthesizeRequestSchema = z.object({
   topics: z.array(z.string()).optional(),
@@ -108,6 +118,12 @@ type SynthesizeSummary = {
   auto_repaired: Array<{ topic: string; dropped: DroppedLink[] }>;
   /** Aliases detected and written into wiki frontmatter, plus dropped proposals + reasons. */
   alias_outcomes: AliasOutcome[];
+  /**
+   * Topics dropped by the per-run cap after staleness sort. Surfaces the
+   * long tail so operators can paste a follow-up curl instead of waiting
+   * for the next scheduled run to silently re-drop them.
+   */
+  deferred: string[];
   /** Aggregated Anthropic cost across all per-topic compile calls in this run. */
   run_cost: RunCost;
 };
@@ -162,12 +178,16 @@ async function planSynthesis(
     }
     targets.push({ topic, sources, ...(existing ? { existing } : {}) });
   }
-  const capped = targets.slice(0, MAX_CONCEPTS_PER_RUN);
+  const maxConcepts = resolveMaxConcepts(env);
+  const prioritized = prioritizeByStaleness(targets);
+  const capped = prioritized.slice(0, maxConcepts);
+  const deferred = prioritized.slice(maxConcepts).map((t) => t.topic);
 
   log.info("synthesize", "plan", "concepts selected", {
     activeTopics: allActiveTopics.length,
     needsCompile: targets.length,
-    cap: MAX_CONCEPTS_PER_RUN,
+    cap: maxConcepts,
+    deferred: deferred.length,
   });
 
   const knownReadingSlugs = new Set(sourcesResult.data.map((s) => s.slug));
@@ -285,6 +305,7 @@ async function planSynthesis(
     skipped,
     auto_repaired: autoRepaired,
     alias_outcomes: aliasOutcomes,
+    deferred,
     run_cost: runCost,
   };
 
@@ -310,7 +331,11 @@ function droppedReasonLabel(reason: DroppedLinkReason): string {
   }
 }
 
-function buildPrBody(plan: PlanOutput<SynthesizeSummary>, crosslink?: CrosslinkResult): string {
+// Exported for unit tests. Strategy `prBody` callback wires through.
+export function buildPrBody(
+  plan: PlanOutput<SynthesizeSummary>,
+  crosslink?: CrosslinkResult,
+): string {
   const summary = plan.summary ?? {
     active_topics: [],
     compiled: 0,
@@ -318,13 +343,20 @@ function buildPrBody(plan: PlanOutput<SynthesizeSummary>, crosslink?: CrosslinkR
     skipped: [],
     auto_repaired: [],
     alias_outcomes: [],
+    deferred: [],
     run_cost: aggregateCost([]),
   };
   const writes = [
     ...plan.mutation.added.map((f) => f.path),
     ...plan.mutation.changed.map((f) => f.path),
   ];
-  const { skipped, failed, auto_repaired: autoRepaired, alias_outcomes: aliasOutcomes } = summary;
+  const {
+    skipped,
+    failed,
+    auto_repaired: autoRepaired,
+    alias_outcomes: aliasOutcomes,
+    deferred,
+  } = summary;
   const lines: string[] = [
     "Automated wiki synthesis run.",
     "",
@@ -333,6 +365,9 @@ function buildPrBody(plan: PlanOutput<SynthesizeSummary>, crosslink?: CrosslinkR
   ];
   if (failed.length > 0) {
     lines.push(`- Failed: ${failed.length}`);
+  }
+  if (deferred.length > 0) {
+    lines.push(`- Deferred (cap): ${deferred.length}`);
   }
   const { run_cost: runCost } = summary;
   if (runCost.records.length > 0) {
@@ -357,6 +392,14 @@ function buildPrBody(plan: PlanOutput<SynthesizeSummary>, crosslink?: CrosslinkR
     lines.push("", "### Skipped");
     for (const s of skipped) {
       lines.push(`- \`${s.topic}\` (${s.reason})`);
+    }
+  }
+  if (deferred.length > 0) {
+    lines.push("", "### Deferred");
+    lines.push("Topics dropped by the per-run cap after staleness sort. Catch up with:");
+    lines.push("", "```sh", buildDeferredCurlHint(deferred), "```", "");
+    for (const t of deferred) {
+      lines.push(`- \`${t}\``);
     }
   }
   if (autoRepaired.length > 0) {
@@ -433,6 +476,7 @@ export async function handle(request: Request, env: Env, ctx: ExecutionContext):
       failures: summary?.failed ?? [],
       skip_reasons: summary?.skipped ?? [],
       alias_outcomes: summary?.alias_outcomes ?? [],
+      deferred: summary?.deferred ?? [],
       run_cost: summary?.run_cost ?? null,
     });
   }
@@ -459,6 +503,7 @@ export async function handle(request: Request, env: Env, ctx: ExecutionContext):
     failures: summary?.failed ?? [],
     skip_reasons: summary?.skipped ?? [],
     alias_outcomes: summary?.alias_outcomes ?? [],
+    deferred: summary?.deferred ?? [],
     run_cost: summary?.run_cost ?? null,
     branch: result.branch,
     pr: result.pr_number ? { number: result.pr_number, url: result.pr_url } : null,
@@ -666,6 +711,56 @@ export function buildArticleMarkdown(args: {
 
 function isString(v: unknown): v is string {
   return typeof v === "string";
+}
+
+// Exported for unit tests.
+//
+// Staleness = size of the symmetric difference between an article's
+// existing sources[] and its current cluster's slugs. First-compile targets
+// (no existing article yet) sort highest so they're never starved by the
+// per-run cap. Tie-break alphabetically by topic slug so dry-run output is
+// stable across calls (B1 plan note).
+type StalenessTarget = {
+  topic: string;
+  sources: ReadingSource[];
+  existing?: ExistingWiki;
+};
+
+export function prioritizeByStaleness<T extends StalenessTarget>(targets: readonly T[]): T[] {
+  const stalenessOf = (t: T): number => {
+    if (!t.existing) {
+      return Number.POSITIVE_INFINITY;
+    }
+    const current = new Set(t.sources.map((s) => s.slug));
+    const existing = new Set(t.existing.sources);
+    let diff = 0;
+    for (const slug of current) {
+      if (!existing.has(slug)) {
+        diff++;
+      }
+    }
+    for (const slug of existing) {
+      if (!current.has(slug)) {
+        diff++;
+      }
+    }
+    return diff;
+  };
+  return [...targets].sort((a, b) => {
+    const sa = stalenessOf(a);
+    const sb = stalenessOf(b);
+    if (sa !== sb) {
+      return sb - sa;
+    }
+    return a.topic.localeCompare(b.topic);
+  });
+}
+
+// Exported for unit tests. Used in PR body and JSON response so operators
+// can paste a one-liner to catch up on the topics dropped by the per-run cap.
+export function buildDeferredCurlHint(topics: readonly string[]): string {
+  const payload = JSON.stringify({ topics, dry_run: false });
+  return `curl -X POST https://site-ingest.<your-subdomain>.workers.dev/synthesize -H 'Authorization: Bearer $TOKEN' -d '${payload}'`;
 }
 
 // Exported for unit tests.
