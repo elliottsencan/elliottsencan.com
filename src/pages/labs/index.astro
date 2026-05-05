@@ -62,7 +62,7 @@ const STATUS_LABELS: Record<string, string> = {
 
       {
         cells.length > 0 ? (
-          <ul class="not-prose flex flex-col gap-10">
+          <ul class="not-prose flex flex-col gap-6">
             {cells.map((cell, i) => {
               const data = dataByCellId.get(cell.id);
               return (
@@ -74,8 +74,7 @@ const STATUS_LABELS: Record<string, string> = {
                     <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                       <Link
                         href={`/labs/${cell.id}/`}
-                        class="font-heading text-lg font-medium tracking-tight text-black dark:text-white"
-                        underline={false}
+                        class="font-heading font-medium text-black dark:text-white"
                       >
                         {cell.data.title}
                       </Link>

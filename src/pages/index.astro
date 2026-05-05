@@ -89,7 +89,7 @@ const trails = [
                   <li class="flex items-baseline gap-4">
                     <time
                       datetime={post.data.date.toISOString()}
-                      class="shrink-0 font-sans text-xs text-black/50 dark:text-white/60"
+                      class="w-32 shrink-0 font-sans text-xs text-black/50 dark:text-white/60"
                     >
                       {dateFormatter.format(post.data.date)}
                     </time>
@@ -121,39 +121,30 @@ const trails = [
       */}
       <LabeledRule as="h2">Trails</LabeledRule>
       <section data-pagefind-ignore>
-        <ul class="not-prose flex flex-col text-sm">
+        <ul class="not-prose flex flex-col gap-6 text-sm">
           {
-            trails.map((trail, i) => (
-              <li
-                class:list={[
-                  "grid grid-cols-[7.5rem_1fr] items-baseline gap-x-6 gap-y-1 py-4",
-                  i === 0 && "border-t border-black/10 dark:border-white/10",
-                  "border-b border-black/10 dark:border-white/10",
-                ]}
-              >
-                <div class="flex flex-col gap-1">
+            trails.map((trail) => (
+              <li class="flex items-baseline gap-4">
+                <span class="w-56 shrink-0 font-mono text-[11px] uppercase tracking-wider text-black/55 dark:text-white/55">
+                  {trail.caption}
+                </span>
+                <div class="flex-1 space-y-1.5">
                   <Link
                     href={trail.href}
-                    underline={false}
-                    class="font-heading text-lg font-medium text-black dark:text-white"
+                    class="font-heading font-medium text-black dark:text-white"
                   >
                     /{trail.key}
                   </Link>
-                  <span class="font-mono text-[11px] uppercase tracking-wider text-black/55 dark:text-white/55">
-                    {trail.caption}
-                  </span>
-                </div>
-                <div class="flex flex-col gap-1.5">
                   <p class="leading-relaxed text-black/75 dark:text-white/75">
                     {trail.blurb}
                   </p>
                   {trail.latest && (
-                    <span class="font-mono text-[11px] text-black/55 dark:text-white/55">
+                    <p class="font-mono text-[11px] text-black/55 dark:text-white/55">
                       latest ·{" "}
                       <Link href={trail.latest.href} class="font-sans text-xs">
                         {trail.latest.title}
                       </Link>
-                    </span>
+                    </p>
                   )}
                 </div>
               </li>

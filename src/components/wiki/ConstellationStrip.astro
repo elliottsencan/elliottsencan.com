@@ -21,11 +21,16 @@ type Props = {
 
 const { width = 320, height = 140, activeSlug } = Astro.props;
 
-// Layout was solved against a 1024 × 220 canvas; the SVG scales to fit any
-// width via `viewBox` + `preserveAspectRatio="xMidYMid meet"` so we don't
-// have to re-solve at the consumer's dimensions.
-const VIEWBOX_W = 1024;
-const VIEWBOX_H = 220;
+// Layout was solved against a 1024 × 220 canvas, but actual nodes only
+// occupy x=362–639 and y=43–177 — the solver leaves generous padding.
+// Crop the viewBox to a working region with comfortable margin around
+// the cluster: enough horizontal padding (~160 viewBox units each side)
+// so hover labels for edge-side nodes don't crowd the bounds, but tight
+// enough that the constellation fills the rect at a sensible aspect.
+const VIEWBOX_X = 200;
+const VIEWBOX_Y = 30;
+const VIEWBOX_W = 624;
+const VIEWBOX_H = 160;
 
 type LayoutNode = { id: string; x: number; y: number; weight: number };
 type LayoutEdge = { a: string; b: string };
@@ -34,19 +39,39 @@ const nodes: LayoutNode[] = layout.global.nodes;
 const edges: LayoutEdge[] = layout.global.edges;
 const titles: Record<string, string> = layout.titles;
 const positionsById = new Map(nodes.map((n) => [n.id, n]));
-const maxWeight = nodes.reduce((m, n) => Math.max(m, n.weight), 1);
+
+// Uniform node radius — matches the local-neighborhood widget's treatment
+// instead of weighting by source count. Source-count signal lives on the
+// cards (dot row + count); the constellation is purely structural.
+//
+// At the cropped viewBox (624 wide rendered at 400 wide → scale 0.64),
+// NODE_R=4 viewBox units renders at ~2.6px screen, matching local's
+// r=2.4 at its 1:1 render scale. Edges below use
+// vector-effect="non-scaling-stroke" so stroke-width is in screen px,
+// matching local's stroke values directly.
+const NODE_R = 4;
 ---
 
 <div class="constellation-strip relative" style={`width: ${width}px; max-width: 100%;`}>
   <svg
-    viewBox={`0 0 ${VIEWBOX_W} ${VIEWBOX_H}`}
+    viewBox={`${VIEWBOX_X} ${VIEWBOX_Y} ${VIEWBOX_W} ${VIEWBOX_H}`}
     width={width}
     height={height}
     preserveAspectRatio="xMidYMid meet"
-    style="display: block; width: 100%; height: auto;"
+    style="display: block; max-width: 100%; overflow: visible;"
     role="img"
     aria-label={`Wiki concept graph: ${nodes.length} concepts`}
   >
+    <rect
+      x={VIEWBOX_X + 0.5}
+      y={VIEWBOX_Y + 0.5}
+      width={VIEWBOX_W - 1}
+      height={VIEWBOX_H - 1}
+      fill="none"
+      stroke="currentColor"
+      vector-effect="non-scaling-stroke"
+      opacity="0.12"
+    />
     {
       edges.map((e) => {
         const a = positionsById.get(e.a);
@@ -60,37 +85,38 @@ const maxWeight = nodes.reduce((m, n) => Math.max(m, n.weight), 1);
             x2={b.x}
             y2={b.y}
             stroke={isActive ? "var(--accent)" : "currentColor"}
-            stroke-width={isActive ? 0.8 : 0.5}
-            opacity={isActive ? 0.55 : 0.18}
+            stroke-width={isActive ? 0.7 : 0.4}
+            vector-effect="non-scaling-stroke"
+            opacity={isActive ? 0.5 : 0.16}
           />
         );
       })
     }
     {
       nodes.map((n) => {
-        const r = 2 + (n.weight / maxWeight) * 4;
         const isActive = n.id === activeSlug;
         const title = titles[n.id] ?? n.id;
         return (
           <a class="constellation-node" href={`/wiki/${n.id}/`}>
             <title>{title}</title>
-            {/* Bigger transparent hit-target */}
-            <circle cx={n.x} cy={n.y} r={r + 4} fill="transparent" />
+            {/* Bigger transparent hit-target — sized in viewBox units to
+                match the local widget's ~6px screen-px tap target. */}
+            <circle cx={n.x} cy={n.y} r={NODE_R + 10} fill="transparent" />
             <circle
               class="dot"
               cx={n.x}
               cy={n.y}
-              r={r}
+              r={NODE_R}
               fill={isActive ? "var(--accent)" : "currentColor"}
               opacity={isActive ? 1 : 0.55}
             />
             <text
               class="label"
               x={n.x}
-              y={n.y - r - 6}
+              y={n.y - NODE_R - 7}
               text-anchor="middle"
               font-family="var(--font-mono)"
-              font-size="10"
+              font-size="16"
               fill="currentColor"
             >
               {title}
@@ -109,11 +135,21 @@ const maxWeight = nodes.reduce((m, n) => Math.max(m, n.weight), 1);
   :global(.dark) .constellation-strip {
     color: rgb(255 255 255 / 0.85);
   }
-  /* Hover labels — pure CSS, no JS. */
+  /* Hover labels — pure CSS, no JS. The label uses paint-order so the
+     stroke is painted UNDER the fill, giving the text a page-bg halo
+     that reads as a tooltip lifting it off the constellation behind. */
   .constellation-strip :global(.constellation-node) .label {
     opacity: 0;
     pointer-events: none;
     transition: opacity 120ms ease-in-out;
+    paint-order: stroke fill;
+    stroke: #f6f4ef;
+    stroke-width: 5px;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+  }
+  :global(.dark) .constellation-strip :global(.constellation-node) .label {
+    stroke: #18161a;
   }
   .constellation-strip :global(.constellation-node):hover .label,
   .constellation-strip :global(.constellation-node):focus-visible .label {

@@ -44,7 +44,7 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
                 <li class="flex items-baseline gap-4">
                   <time
                     datetime={entry.data.archivedDate.toISOString()}
-                    class="shrink-0 font-sans text-xs text-black/55 dark:text-white/55"
+                    class="w-32 shrink-0 font-sans text-xs text-black/55 dark:text-white/55"
                   >
                     {dateFormatter.format(entry.data.archivedDate)}
                   </time>
