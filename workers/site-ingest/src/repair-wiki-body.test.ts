@@ -104,4 +104,56 @@ describe("repairWikiBodyLinks", () => {
     expect(out.body).toContain("/wiki/foo");
     expect(out.dropped).toEqual([]);
   });
+
+  it("normalizes a relative reading link with a known slug", () => {
+    const body = "See [foo](reading/2026-04/foo) for more.";
+    const out = repairWikiBodyLinks(body, known);
+    expect(out.body).toContain("[foo](/reading/2026-04/foo)");
+    expect(out.body).not.toContain("[foo](reading/");
+    expect(out.dropped).toEqual([]);
+  });
+
+  it("normalizes a relative reading link before applying unknown-slug repair, with normalized url in dropped record", () => {
+    const body = "Compare [foo](reading/2026-04/typo-slug) with bar.";
+    const out = repairWikiBodyLinks(body, known);
+    expect(out.body).toBe("Compare foo with bar.");
+    expect(out.dropped).toEqual([
+      { url: "/reading/2026-04/typo-slug", anchor: "foo", reason: "unknown-reading-slug" },
+    ]);
+  });
+
+  it("leaves non-reading relative links alone", () => {
+    const body = "See [thing](something/else) and [other](nope/path).";
+    const out = repairWikiBodyLinks(body, known);
+    expect(out.body).toBe(body);
+    expect(out.dropped).toEqual([]);
+  });
+
+  it("leaves an absolute /reading link unchanged (regression guard)", () => {
+    const body = "See [foo](/reading/2026-04/foo) for more.";
+    const out = repairWikiBodyLinks(body, known);
+    expect(out.body).toBe(body);
+    expect(out.dropped).toEqual([]);
+  });
+
+  it("does not normalize a relative reading-like string inside inline code", () => {
+    const body = "Use `reading/2026-04/foo` as the slug.";
+    const out = repairWikiBodyLinks(body, known);
+    expect(out.body).toBe(body);
+    expect(out.dropped).toEqual([]);
+  });
+
+  it("normalizes a relative reading link with a query string", () => {
+    const body = "See [foo](reading/2026-04/foo?ref=x) for more.";
+    const out = repairWikiBodyLinks(body, known);
+    expect(out.body).toContain("[foo](/reading/2026-04/foo?ref=x)");
+    expect(out.dropped).toEqual([]);
+  });
+
+  it("normalizes a relative reading link with a fragment", () => {
+    const body = "See [foo](reading/2026-04/foo#section) for more.";
+    const out = repairWikiBodyLinks(body, known);
+    expect(out.body).toContain("[foo](/reading/2026-04/foo#section)");
+    expect(out.dropped).toEqual([]);
+  });
 });
