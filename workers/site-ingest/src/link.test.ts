@@ -1,7 +1,9 @@
 import matter from "gray-matter";
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { type LinkSummary, LinkSummarySchema } from "./anthropic.ts";
-import { buildEntryMarkdown, validate } from "./link.ts";
+import { buildEntryMarkdown, makeLinkStrategy, validate } from "./link.ts";
+import { __resetRobotsCacheForTests } from "./optout.ts";
+import type { Env } from "./types.ts";
 
 describe("link.validate", () => {
   it("rejects non-object bodies", () => {
@@ -179,5 +181,145 @@ describe("LinkSummarySchema", () => {
       topic_rationale: 42,
     });
     expect(r.success).toBe(false);
+  });
+});
+
+// ---------- copyright-posture: opt-out + host blocklist in strategy.plan ----------
+
+const baseEnv = (overrides: Partial<Env> = {}) =>
+  ({
+    ANTHROPIC_API_KEY: "test",
+    ANTHROPIC_MODEL: "",
+    READING_DIR: "src/content/reading",
+    GITHUB_TOKEN: "test",
+    GITHUB_REPO: "owner/repo",
+    EXCLUDED_HOSTS: "",
+    ...overrides,
+  }) as unknown as Env;
+
+const fakeCtx = () => ({ waitUntil: vi.fn() }) as unknown as ExecutionContext;
+
+function stubFetch(handler: (url: string) => Response | Promise<Response>): void {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (input: RequestInfo | URL) => {
+      const url = typeof input === "string" ? input : input.toString();
+      return handler(url);
+    }),
+  );
+}
+
+describe("makeLinkStrategy.plan — copyright-posture", () => {
+  beforeEach(() => {
+    __resetRobotsCacheForTests();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    __resetRobotsCacheForTests();
+  });
+
+  it("rejects when host matches EXCLUDED_HOSTS exactly", async () => {
+    // No fetch should run — host blocklist short-circuits before any IO.
+    stubFetch(() => {
+      throw new Error("fetch should not be called for excluded host");
+    });
+    const strategy = makeLinkStrategy({
+      url: "https://nyt.com/article",
+      topic_priors: true,
+    });
+    const env = baseEnv({ EXCLUDED_HOSTS: "nyt.com" });
+    const result = await strategy.plan({ env }, env);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error).toMatch(/host_excluded/);
+    }
+  });
+
+  it("rejects when host is a subdomain of an EXCLUDED_HOSTS entry", async () => {
+    stubFetch(() => {
+      throw new Error("fetch should not be called");
+    });
+    const strategy = makeLinkStrategy({
+      url: "https://cooking.nyt.com/recipe/x",
+      topic_priors: true,
+    });
+    const env = baseEnv({ EXCLUDED_HOSTS: "nyt.com,washingtonpost.com" });
+    const result = await strategy.plan({ env }, env);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error).toMatch(/host_excluded.*cooking\.nyt\.com/);
+    }
+  });
+
+  it("aborts before Anthropic call when X-Robots-Tag: noai is present", async () => {
+    stubFetch((url) => {
+      if (url.endsWith("/robots.txt")) {
+        return new Response("", { status: 404 });
+      }
+      return new Response("<html><title>Hi</title></html>", {
+        status: 200,
+        headers: { "X-Robots-Tag": "noai" },
+      });
+    });
+    const strategy = makeLinkStrategy({
+      url: "https://example.com/post",
+      topic_priors: false,
+    });
+    const env = baseEnv();
+    const result = await strategy.plan({ env }, env);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error).toMatch(/site_opted_out/);
+      expect(result.error).toMatch(/x-robots-tag/i);
+    }
+  });
+
+  it("aborts when robots.txt has User-agent: * and Disallow: /", async () => {
+    stubFetch((url) => {
+      if (url.endsWith("/robots.txt")) {
+        return new Response("User-agent: *\nDisallow: /\n", { status: 200 });
+      }
+      return new Response("<html><title>Hi</title></html>", { status: 200 });
+    });
+    const strategy = makeLinkStrategy({
+      url: "https://example.com/post",
+      topic_priors: false,
+    });
+    const env = baseEnv();
+    const result = await strategy.plan({ env }, env);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error).toMatch(/robots\.txt/);
+    }
+  });
+
+  it('aborts when HTML body has <meta name="robots" content="noai">', async () => {
+    stubFetch((url) => {
+      if (url.endsWith("/robots.txt")) {
+        return new Response("", { status: 404 });
+      }
+      return new Response(
+        '<html><head><meta name="robots" content="noai"></head><body>x</body></html>',
+        { status: 200 },
+      );
+    });
+    const strategy = makeLinkStrategy({
+      url: "https://example.com/post",
+      topic_priors: false,
+    });
+    const env = baseEnv();
+    const result = await strategy.plan({ env }, env);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error).toMatch(/meta robots/i);
+    }
+  });
+
+  // The fakeCtx import is only used to keep the test file structurally similar
+  // to other strategy tests; reference it once so noUnusedVariables stays quiet.
+  it("(housekeeping) fakeCtx() returns a stub ExecutionContext", () => {
+    const ctx = fakeCtx();
+    expect(ctx.waitUntil).toBeDefined();
   });
 });

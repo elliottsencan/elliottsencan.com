@@ -19,6 +19,7 @@ import { decode as decodeHtmlEntities } from "html-entities";
 import { z } from "zod";
 import { summarizeLink } from "./anthropic.ts";
 import type { CostRecord } from "./cost.ts";
+import { checkOptOutSignals, isHostExcluded } from "./optout.ts";
 import { type PlanResult, runPipeline, type Strategy } from "./pipeline.ts";
 import { LINK_SUMMARY_SYSTEM } from "./prompts.ts";
 import { makePipelineDeps } from "./synthesize.ts";
@@ -61,6 +62,31 @@ export function makeLinkStrategy(req: LinkRequest): Strategy<LinkSummaryRow> {
     name: "link",
     branchPrefix: "link",
     plan: async ({ env }): Promise<PlanResult<LinkSummaryRow>> => {
+      // Copyright posture: cheap host-blocklist check first (no network IO).
+      // EXCLUDED_HOSTS is a comma-separated list of hostnames; matching the
+      // URL's host exactly OR any parent domain (e.g. "nyt.com" matches
+      // "www.nyt.com" and "cooking.nyt.com") rejects the request.
+      const requestHost = new URL(req.url).hostname;
+      if (isHostExcluded(requestHost, env.EXCLUDED_HOSTS)) {
+        log.info("link", "host-excluded", "rejected by EXCLUDED_HOSTS", {
+          host: requestHost,
+        });
+        return { ok: false, status: 403, error: `host_excluded: ${requestHost}` };
+      }
+
+      // Copyright posture: per-publisher opt-out signals. Inspects
+      // X-Robots-Tag, <meta name="robots">/<meta name="googlebot"> in the
+      // response body, and robots.txt. Each step has a 5s timeout; results
+      // for robots.txt are cached per-isolate.
+      const optOut = await checkOptOutSignals({ url: req.url });
+      if (!optOut.ok) {
+        log.info("link", "opt-out", "site opted out of ingest", {
+          host: requestHost,
+          reason: optOut.reason,
+        });
+        return { ok: false, status: 451, error: optOut.reason };
+      }
+
       const resolvedTitle = req.title ?? (await fetchPageTitle(req.url));
       // topic_priors=false short-circuits the canonical-vocabulary fetch so the
       // model summarizes without seeing in-use slugs. Used by the rigor-

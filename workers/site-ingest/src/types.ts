@@ -31,6 +31,13 @@ export interface Env {
   READING_CONTEXT_LIMIT: string;
   /** Optional override for the Anthropic model ID. Empty/unset = default. */
   ANTHROPIC_MODEL?: string;
+  /**
+   * Optional comma-separated host blocklist. /link rejects URLs whose
+   * hostname matches any entry exactly or as a parent domain (e.g.
+   * `nyt.com` rejects `www.nyt.com` and `cooking.nyt.com`).
+   * Empty/unset = no blocklist.
+   */
+  EXCLUDED_HOSTS?: string;
 
   // KV
   NOW_INPUTS: KVNamespace;

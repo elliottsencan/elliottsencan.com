@@ -67,6 +67,8 @@ export type ReadingInput = {
     compiled_at?: Date;
     compiled_with?: string;
     compile_cost?: CompileCost;
+    /** Takedown affordance: when true, exclude from the public dump. */
+    noindex?: boolean;
   };
 };
 
@@ -91,16 +93,21 @@ export function buildReadingGraph(
   wikiEntries: WikiInput[],
   vocab: CanonicalVocabulary = EMPTY_VOCABULARY,
 ): { payload: ReadingGraphPayload; orphanCitations: OrphanCitation[] } {
+  // Filter out entries flagged with `noindex: true` before any indexing.
+  // This is a takedown affordance for the agent surface; the file stays in
+  // the repo but never appears in the public JSON dump.
+  const visibleEntries = readingEntries.filter((e) => e.data.noindex !== true);
+
   // Canonicalize topics up front so byTopic indexing and per-entry emission
   // both run on canonical strings. Source markdown that still carries an
   // alias (e.g. `agentic-coding`) appears on the surface as the canonical
   // (`ai-assisted-coding`), and the related[] graph collapses fragments.
   const canonicalTopicsBySlug = new Map<string, string[]>();
-  for (const entry of readingEntries) {
+  for (const entry of visibleEntries) {
     canonicalTopicsBySlug.set(entry.id, canonicalizeTopics(entry.data.topics ?? [], vocab));
   }
 
-  const entries = [...readingEntries].sort(
+  const entries = [...visibleEntries].sort(
     (a, b) => b.data.added.valueOf() - a.data.added.valueOf(),
   );
 
