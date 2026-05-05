@@ -1,0 +1,80 @@
+---
+import { type CollectionEntry, getCollection } from "astro:content";
+import Container from "@components/Container.astro";
+import LabeledRule from "@components/LabeledRule.astro";
+import Link from "@components/Link.astro";
+import Layout from "@layouts/Layout.astro";
+
+export async function getStaticPaths() {
+  const all = (await getCollection("blog")).filter((p) => !p.data.draft);
+  const years = new Set(all.map((p) => p.data.date.getFullYear().toString()));
+  return [...years].map((year) => ({
+    params: { year },
+    props: {
+      year,
+      posts: all
+        .filter((p) => p.data.date.getFullYear().toString() === year)
+        .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf()),
+    },
+  }));
+}
+
+type Props = { year: string; posts: CollectionEntry<"blog">[] };
+const { year, posts } = Astro.props;
+
+const dateFormatter = new Intl.DateTimeFormat("en-US", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+});
+---
+
+<Layout
+  title={`Writing: ${year}`}
+  description={`Writing from ${year} — ${posts.length} post${posts.length === 1 ? "" : "s"}.`}
+>
+  <Container>
+    <div
+      class="space-y-10"
+      data-pagefind-body
+      data-pagefind-filter="type:Writing"
+    >
+      <LabeledRule>
+        <Link href="/writing/">Writing</Link> / {year}
+      </LabeledRule>
+
+      <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
+        {posts.length} post{posts.length === 1 ? "" : "s"} from {year}.
+      </p>
+
+      <ul class="not-prose flex flex-col gap-3 text-sm">
+        {
+          posts.map((post) => (
+            <li class="flex items-baseline gap-4">
+              <time
+                datetime={post.data.date.toISOString()}
+                class="w-32 shrink-0 font-sans text-xs text-black/50 dark:text-white/60"
+              >
+                {dateFormatter.format(post.data.date)}
+              </time>
+              <span>
+                <Link
+                  href={`/writing/${post.id}`}
+                  class="font-heading font-medium text-black dark:text-white"
+                >
+                  {post.data.title}
+                </Link>
+                {post.data.description && (
+                  <span class="text-black/60 dark:text-white/60">
+                    {" — "}
+                    {post.data.description}
+                  </span>
+                )}
+              </span>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </Container>
+</Layout>

@@ -1,0 +1,92 @@
+---
+import { getCollection } from "astro:content";
+import Container from "@components/Container.astro";
+import LabeledRule from "@components/LabeledRule.astro";
+import Link from "@components/Link.astro";
+import Layout from "@layouts/Layout.astro";
+
+const posts = (await getCollection("blog"))
+  .filter((p) => !p.data.draft)
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+
+const years = [...new Set(posts.map((p) => p.data.date.getFullYear().toString()))].sort((a, b) =>
+  b.localeCompare(a),
+);
+
+const dateFormatter = new Intl.DateTimeFormat("en-US", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+});
+---
+
+<Layout title="Writing" description="Essays, notes, and longer pieces.">
+  <Container>
+    <div
+      class="space-y-10"
+      data-pagefind-body
+      data-pagefind-filter="type:Writing"
+    >
+      <LabeledRule>Writing</LabeledRule>
+
+      <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
+        Essays, notes, and longer pieces. The home page also lists these — this
+        is the flat archive.
+      </p>
+
+      {
+        years.length > 1 && (
+          <nav
+            class="flex flex-wrap items-baseline gap-x-3 gap-y-1 font-mono text-[11px] uppercase tracking-wider text-black/55 dark:text-white/55"
+            aria-label="Archive by year"
+          >
+            <span>Archive:</span>
+            {years.map((y, i) => (
+              <>
+                <Link href={`/writing/${y}/`} class="font-sans text-xs">
+                  {y}
+                </Link>
+                {i < years.length - 1 && <span aria-hidden="true">·</span>}
+              </>
+            ))}
+          </nav>
+        )
+      }
+
+      {
+        posts.length > 0 ? (
+          <ul class="not-prose flex flex-col gap-3 text-sm">
+            {posts.map((post) => (
+              <li class="flex items-baseline gap-4">
+                <time
+                  datetime={post.data.date.toISOString()}
+                  class="w-32 shrink-0 font-sans text-xs text-black/50 dark:text-white/60"
+                >
+                  {dateFormatter.format(post.data.date)}
+                </time>
+                <span>
+                  <Link
+                    href={`/writing/${post.id}`}
+                    class="font-heading font-medium text-black dark:text-white"
+                  >
+                    {post.data.title}
+                  </Link>
+                  {post.data.description && (
+                    <span class="text-black/60 dark:text-white/60">
+                      {" — "}
+                      {post.data.description}
+                    </span>
+                  )}
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
+            No published posts yet.
+          </p>
+        )
+      }
+    </div>
+  </Container>
+</Layout>

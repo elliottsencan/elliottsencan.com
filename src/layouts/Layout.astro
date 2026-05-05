@@ -2,7 +2,6 @@
 import Footer from "@components/Footer.astro";
 import Head from "@components/Head.astro";
 import Header from "@components/Header.astro";
-import Pagefind from "@components/PageFind.astro";
 
 type Props = {
   title: string;
@@ -35,7 +34,41 @@ const { title, description, ...headProps } = Astro.props;
       <slot />
     </main>
     <Footer />
-    <Pagefind />
+    <script is:inline>
+      // Global search shortcut. Cmd/Ctrl+K and bare `/` jump to /search; on
+      // /search itself they refocus the input so the shortcut stays harmless.
+      // Editable targets keep `/` for typing — modifier keys are still active
+      // because Cmd+K should always work.
+      (function () {
+        function isEditable(target) {
+          if (!(target instanceof HTMLElement)) return false;
+          const tag = target.tagName;
+          return (
+            tag === "INPUT" || tag === "TEXTAREA" || target.isContentEditable
+          );
+        }
+        function focusSearchInput() {
+          const host = document.getElementById("search");
+          const input = host && host.querySelector("input");
+          if (input) {
+            input.focus();
+            return true;
+          }
+          return false;
+        }
+        document.addEventListener("keydown", function (e) {
+          const isCmdK = (e.metaKey || e.ctrlKey) && e.key === "k";
+          const isSlash = e.key === "/" && !isEditable(e.target);
+          if (!isCmdK && !isSlash) return;
+          e.preventDefault();
+          if (window.location.pathname === "/search") {
+            focusSearchInput();
+          } else {
+            window.location.href = "/search";
+          }
+        });
+      })();
+    </script>
     <script>
       // Cursor-following halo for every `.dot-rule` on the page.
       //

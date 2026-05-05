@@ -58,6 +58,10 @@ for (const entry of entries) {
   }
 }
 
+const years = [...new Set(entries.map((e) => monthKey(e.id).slice(0, 4)))].sort((a, b) =>
+  b.localeCompare(a),
+);
+
 // Format in the site's time zone — entry.data.added is the same instant
 // regardless of representation (UTC `Z` or Pacific offset), but rendering it
 // without `timeZone` falls back to the build container's TZ (UTC on
@@ -88,6 +92,25 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
         <Link href="/wiki">wiki</Link>, where any concept with two or more
         contributing sources gets a compiled article.
       </p>
+
+      {
+        years.length > 1 && (
+          <nav
+            class="flex flex-wrap items-baseline gap-x-3 gap-y-1 font-mono text-[11px] uppercase tracking-wider text-black/55 dark:text-white/55"
+            aria-label="Archive by year"
+          >
+            <span>Archive:</span>
+            {years.map((y, i) => (
+              <>
+                <Link href={`/reading/${y}/`} class="font-sans text-xs">
+                  {y}
+                </Link>
+                {i < years.length - 1 && <span aria-hidden="true">·</span>}
+              </>
+            ))}
+          </nav>
+        )
+      }
 
       {
         buckets.length > 0 ? (
