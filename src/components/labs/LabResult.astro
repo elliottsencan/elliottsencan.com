@@ -28,6 +28,15 @@ const isObject = (v: unknown): v is Record<string, unknown> =>
 
 const labelText = kind ?? "json";
 
+// Optional summary block lifted from the aggregator output. Shape:
+// `summary: { stats: [{label, value}] }`. Renders as a StatGrid above
+// the sparkline, lets the cell carry headline numbers without bespoke
+// markup. Generic — any chart-kind data file can include it.
+type SummaryStats = { stats: { label: string; value: string }[] };
+function isSummary(v: unknown): v is SummaryStats {
+  return isObject(v) && Array.isArray((v as { stats?: unknown }).stats);
+}
+
 const chartData =
   kind === "chart" && isObject(data) && Array.isArray(data.values)
     ? {
@@ -35,6 +44,7 @@ const chartData =
         annotation: isObject(data.annotation)
           ? (data.annotation as { at: number; label: string })
           : undefined,
+        summary: isSummary(data.summary) ? data.summary : null,
       }
     : null;
 
@@ -83,11 +93,16 @@ const scatterHeight = size === "compact" ? 100 : 180;
 <ResultCell label={labelText}>
   {
     chartData && (
-      <Sparkline
-        data={chartData.values}
-        annotation={chartData.annotation}
-        height={sparkHeight}
-      />
+      <div class="space-y-4">
+        {chartData.summary && size === "full" && (
+          <StatGrid stats={chartData.summary.stats} />
+        )}
+        <Sparkline
+          data={chartData.values}
+          annotation={chartData.annotation}
+          height={sparkHeight}
+        />
+      </div>
     )
   }
   {tableData && <LabTable headers={tableData.headers} rows={tableData.rows} />}
