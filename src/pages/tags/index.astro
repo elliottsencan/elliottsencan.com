@@ -1,6 +1,7 @@
 ---
 import { getCollection } from "astro:content";
 import Container from "@components/Container.astro";
+import LabeledRule from "@components/LabeledRule.astro";
 import Layout from "@layouts/Layout.astro";
 
 const posts = await getCollection("blog", ({ data }) => !data.draft);
@@ -10,17 +11,23 @@ const tags = [...new Set(posts.flatMap((post) => post.data.tags || []))].sort();
 <Layout title="Tags" description="List of tags used.">
   <Container>
     <div class="space-y-10" data-pagefind-ignore>
-      <h1 class="font-semibold">All Tags</h1>
+      <LabeledRule>Tags</LabeledRule>
+
+      <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
+        Tags drawn from blog post frontmatter. Click through to see all
+        posts under each tag.
+      </p>
+
       <div class="flex flex-wrap gap-2">
         {
           tags.map((tag) => (
             <a
               href={`/tags/${tag}`}
-              class="rounded-sm border border-black/15 px-2 py-1 text-sm transition-colors duration-300 ease-in-out hover:bg-black/5 hover:text-black focus-visible:bg-black/5 focus-visible:text-black dark:border-white/20 dark:hover:bg-white/5 dark:hover:text-white dark:focus-visible:bg-white/5 dark:focus-visible:text-white"
+              class="inline-flex items-center rounded-sm bg-black/5 px-2 py-0.5 text-xs text-black/65 transition-colors hover:bg-black/10 hover:text-black focus-visible:bg-black/10 focus-visible:text-black dark:bg-white/5 dark:text-white/65 dark:hover:bg-white/10 dark:hover:text-white dark:focus-visible:bg-white/10 dark:focus-visible:text-white"
             >
-              {tag}{" "}
-              <span class="text-sm text-gray-600">
-                ({posts.filter((post) => post.data.tags?.includes(tag)).length})
+              {tag}
+              <span class="ml-1.5 font-mono text-[11px] text-black/50 dark:text-white/50">
+                {posts.filter((post) => post.data.tags?.includes(tag)).length}
               </span>
             </a>
           ))
