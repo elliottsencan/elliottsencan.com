@@ -19,18 +19,7 @@ type Props = {
   activeSlug?: string;
 };
 
-const { width = 320, height = 140, activeSlug } = Astro.props;
-
-// Layout was solved against a 1024 × 220 canvas, but actual nodes only
-// occupy x=362–639 and y=43–177 — the solver leaves generous padding.
-// Crop the viewBox to a working region with comfortable margin around
-// the cluster: enough horizontal padding (~160 viewBox units each side)
-// so hover labels for edge-side nodes don't crowd the bounds, but tight
-// enough that the constellation fills the rect at a sensible aspect.
-const VIEWBOX_X = 200;
-const VIEWBOX_Y = 30;
-const VIEWBOX_W = 624;
-const VIEWBOX_H = 160;
+const { width = 320, height = 220, activeSlug } = Astro.props;
 
 type LayoutNode = { id: string; x: number; y: number; weight: number };
 type LayoutEdge = { a: string; b: string };
@@ -39,6 +28,27 @@ const nodes: LayoutNode[] = layout.global.nodes;
 const edges: LayoutEdge[] = layout.global.edges;
 const titles: Record<string, string> = layout.titles;
 const positionsById = new Map(nodes.map((n) => [n.id, n]));
+
+// Derive the viewBox from the actual node bounding box rather than
+// hardcoding it — `pnpm constellation` re-solves the layout on every
+// build and the bounds drift as the concept set grows. Pad horizontally
+// so hover labels for edge-side nodes don't crowd the bounds, and pad
+// extra at the top so labels (which sit above their node) have room.
+const xs = nodes.map((n) => n.x);
+const ys = nodes.map((n) => n.y);
+const minX = Math.min(...xs);
+const maxX = Math.max(...xs);
+const minY = Math.min(...ys);
+const maxY = Math.max(...ys);
+
+const PAD_X = 30;
+const PAD_Y_TOP = 28;
+const PAD_Y_BOTTOM = 16;
+
+const VIEWBOX_X = minX - PAD_X;
+const VIEWBOX_Y = minY - PAD_Y_TOP;
+const VIEWBOX_W = maxX - minX + PAD_X * 2;
+const VIEWBOX_H = maxY - minY + PAD_Y_TOP + PAD_Y_BOTTOM;
 
 // Uniform node radius — matches the local-neighborhood widget's treatment
 // instead of weighting by source count. Source-count signal lives on the

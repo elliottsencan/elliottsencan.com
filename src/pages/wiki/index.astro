@@ -40,7 +40,7 @@ const wiki = (await getCollection("wiki")).sort((a, b) => a.data.title.localeCom
         {
           wiki.length > 0 && (
             <div class="flex flex-col gap-1.5">
-              <ConstellationStrip width={400} height={102} />
+              <ConstellationStrip width={400} height={200} />
               <p class="font-mono text-[11px] uppercase tracking-wider text-black/55 dark:text-white/55">
                 {wiki.length} concepts · hover to label, click to jump
               </p>
