@@ -67,32 +67,30 @@ const STATUS_LABELS: Record<string, string> = {
             {STATUS_LABELS[cell.data.status] ?? cell.data.status}
           </span>
           <span>published {dateFormatter.format(cell.data.publishedDate)}</span>
-          <span aria-hidden="true">·</span>
-          <span>last run {dateFormatter.format(cell.data.lastRunDate)}</span>
+          <span>
+            <span aria-hidden="true">· </span>last run {dateFormatter.format(cell.data.lastRunDate)}
+          </span>
           {
             cell.data.repoUrl && (
-              <>
-                <span aria-hidden="true">·</span>
+              <span>
+                <span aria-hidden="true">· </span>
                 <Link href={cell.data.repoUrl} external class="font-sans text-xs">
                   repo
                 </Link>
-              </>
+              </span>
             )
           }
           {
             cell.data.blogPostSlug && (
-              <>
-                <span aria-hidden="true">·</span>
-                <span>
-                  cited by{" "}
-                  <Link
-                    href={`/writing/${cell.data.blogPostSlug}/`}
-                    class="font-sans text-xs"
-                  >
-                    {cell.data.blogPostSlug}
-                  </Link>
-                </span>
-              </>
+              <span>
+                <span aria-hidden="true">· </span>cited by{" "}
+                <Link
+                  href={`/writing/${cell.data.blogPostSlug}/`}
+                  class="font-sans text-xs"
+                >
+                  {cell.data.blogPostSlug}
+                </Link>
+              </span>
             )
           }
         </div>
@@ -117,7 +115,7 @@ const STATUS_LABELS: Record<string, string> = {
         </p>
         <div class="flex items-baseline gap-4">
           <span
-            class="font-heading text-3xl font-medium tracking-tight text-black dark:text-white"
+            class="font-heading text-2xl font-medium tracking-tight text-black md:text-3xl dark:text-white"
             style="font-variant-numeric: tabular-nums;"
           >
             {cell.data.headlineMetric.value}
