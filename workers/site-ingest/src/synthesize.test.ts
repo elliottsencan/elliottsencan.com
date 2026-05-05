@@ -10,7 +10,15 @@
 import matter from "gray-matter";
 import { describe, expect, it } from "vitest";
 import { WikiArticleSchema } from "./anthropic.ts";
-import { buildArticleMarkdown, clusterByTopic, setEquals } from "./synthesize.ts";
+import { aggregateCost } from "./cost.ts";
+import {
+  buildArticleMarkdown,
+  buildDeferredCurlHint,
+  buildPrBody,
+  clusterByTopic,
+  prioritizeByStaleness,
+  setEquals,
+} from "./synthesize.ts";
 import type { WikiArticle } from "./types.ts";
 
 // ---------- setEquals ----------
@@ -282,5 +290,124 @@ describe("buildArticleMarkdown (aliases)", () => {
   it("omits aliases entirely when the field is undefined", () => {
     const { data } = parseEntry(buildArticleMarkdown(baseArgs));
     expect(data).not.toHaveProperty("aliases");
+  });
+});
+
+// ---------- prioritizeByStaleness ----------
+
+type StaleTarget = Parameters<typeof prioritizeByStaleness>[0][number];
+
+function target(topic: string, sources: string[], existingSources?: string[]): StaleTarget {
+  return {
+    topic,
+    sources: sources.map((slug) => source(slug, [topic])),
+    ...(existingSources !== undefined
+      ? {
+          existing: {
+            topic,
+            path: `src/content/wiki/${topic}.md`,
+            sha: "deadbeef",
+            sources: existingSources,
+            compiled_with: "claude-sonnet-4-6",
+          },
+        }
+      : {}),
+  };
+}
+
+describe("prioritizeByStaleness", () => {
+  it("places first-compile targets (no existing) ahead of refreshes", () => {
+    const targets = [
+      // existing matches everything except one slug -> staleness = 1
+      target("alpha", ["a", "b"], ["a"]),
+      // no existing -> infinite staleness
+      target("beta", ["c", "d"]),
+    ];
+    const out = prioritizeByStaleness(targets);
+    expect(out.map((t) => t.topic)).toEqual(["beta", "alpha"]);
+  });
+
+  it("sorts refreshes by symmetric-difference size, largest first", () => {
+    const targets = [
+      // small drift: 1 added
+      target("a", ["x", "y"], ["x"]),
+      // larger drift: 1 added + 1 removed = 2
+      target("b", ["m", "n"], ["m", "z"]),
+      // largest: full replacement = 4
+      target("c", ["p", "q"], ["r", "s"]),
+    ];
+    const out = prioritizeByStaleness(targets);
+    expect(out.map((t) => t.topic)).toEqual(["c", "b", "a"]);
+  });
+
+  it("breaks ties alphabetically by topic slug for deterministic dry-run output", () => {
+    const targets = [
+      target("zeta", ["a", "b"], ["a"]),
+      target("alpha", ["a", "b"], ["a"]),
+      target("mu", ["a", "b"], ["a"]),
+    ];
+    const out = prioritizeByStaleness(targets);
+    expect(out.map((t) => t.topic)).toEqual(["alpha", "mu", "zeta"]);
+  });
+
+  it("breaks ties between first-compile targets alphabetically too", () => {
+    const targets = [target("zeta", ["a", "b"]), target("alpha", ["a", "b"])];
+    const out = prioritizeByStaleness(targets);
+    expect(out.map((t) => t.topic)).toEqual(["alpha", "zeta"]);
+  });
+
+  it("does not mutate the input array", () => {
+    const targets = [target("zeta", ["a", "b"], ["a"]), target("alpha", ["a", "b"], ["a"])];
+    const original = targets.map((t) => t.topic);
+    prioritizeByStaleness(targets);
+    expect(targets.map((t) => t.topic)).toEqual(original);
+  });
+});
+
+// ---------- buildDeferredCurlHint ----------
+
+describe("buildDeferredCurlHint", () => {
+  it("emits a copy-pasteable curl with the deferred topics as a JSON array", () => {
+    const out = buildDeferredCurlHint(["alpha", "beta", "gamma"]);
+    expect(out).toContain("/synthesize");
+    expect(out).toContain('"topics":["alpha","beta","gamma"]');
+    expect(out).toContain('"dry_run":false');
+  });
+});
+
+// ---------- buildPrBody (deferred section) ----------
+
+describe("buildPrBody (deferred section)", () => {
+  function emptySummary() {
+    return {
+      active_topics: [],
+      compiled: 0,
+      failed: [],
+      skipped: [],
+      auto_repaired: [],
+      alias_outcomes: [],
+      deferred: [] as string[],
+      run_cost: aggregateCost([]),
+    };
+  }
+
+  it("renders a Deferred heading and curl hint when topics are deferred", () => {
+    const body = buildPrBody({
+      mutation: { added: [], changed: [] },
+      summary: { ...emptySummary(), deferred: ["alpha", "beta"] },
+    });
+    expect(body).toContain("### Deferred");
+    expect(body).toContain("alpha");
+    expect(body).toContain("beta");
+    expect(body).toContain("/synthesize");
+    expect(body).toContain('"topics":["alpha","beta"]');
+  });
+
+  it("omits the Deferred heading when nothing was deferred", () => {
+    const body = buildPrBody({
+      mutation: { added: [], changed: [] },
+      summary: emptySummary(),
+    });
+    expect(body).not.toContain("### Deferred");
   });
 });

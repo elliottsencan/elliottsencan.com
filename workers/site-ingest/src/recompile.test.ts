@@ -13,11 +13,15 @@
 
 import matter from "gray-matter";
 import { describe, expect, it } from "vitest";
+import { aggregateCost } from "./cost.ts";
 import {
   applyScope,
+  buildDeferredRecompileCurlHint,
   buildRecompiledMarkdown,
+  buildRecompilePrBody,
   parseFrontmatter,
   partitionSkips,
+  prioritizeByCompiledAt,
 } from "./recompile.ts";
 import type { LinkSummary } from "./types.ts";
 
@@ -237,6 +241,115 @@ describe("parseFrontmatter", () => {
     // skip with a logged reason than commit garbage downstream.
     const md = ["---", 'title: "Just a title"', "---", ""].join("\n");
     expect(parseFrontmatter(md)).toBeNull();
+  });
+});
+
+// ---------- prioritizeByCompiledAt ----------
+
+type SortableEntry = Parameters<typeof prioritizeByCompiledAt>[0][number];
+
+function sortableEntry(path: string, compiledAt?: string | Date): SortableEntry {
+  return {
+    path,
+    sha: "deadbeef",
+    body: "",
+    frontmatter: {
+      title: "x",
+      url: "https://example.com/x",
+      summary: "x",
+      category: "tech",
+      added: new Date("2026-04-01T00:00:00.000Z"),
+      ...(compiledAt
+        ? { compiled_at: typeof compiledAt === "string" ? new Date(compiledAt) : compiledAt }
+        : {}),
+    },
+  };
+}
+
+describe("prioritizeByCompiledAt", () => {
+  it("places entries with no compiled_at first (treated as oldest)", () => {
+    const entries = [
+      sortableEntry("never.md"),
+      sortableEntry("recent.md", "2026-04-15T00:00:00.000Z"),
+    ];
+    const out = prioritizeByCompiledAt(entries);
+    expect(out.map((e) => e.path)).toEqual(["never.md", "recent.md"]);
+  });
+
+  it("sorts by compiled_at ascending (oldest first)", () => {
+    const entries = [
+      sortableEntry("new.md", "2026-04-15T00:00:00.000Z"),
+      sortableEntry("mid.md", "2026-03-15T00:00:00.000Z"),
+      sortableEntry("old.md", "2026-01-15T00:00:00.000Z"),
+    ];
+    const out = prioritizeByCompiledAt(entries);
+    expect(out.map((e) => e.path)).toEqual(["old.md", "mid.md", "new.md"]);
+  });
+
+  it("breaks ties alphabetically by slug (basename)", () => {
+    const entries = [
+      sortableEntry("src/content/reading/2026-04/zeta.md", "2026-04-01T00:00:00.000Z"),
+      sortableEntry("src/content/reading/2026-04/alpha.md", "2026-04-01T00:00:00.000Z"),
+    ];
+    const out = prioritizeByCompiledAt(entries);
+    expect(out.map((e) => e.path)).toEqual([
+      "src/content/reading/2026-04/alpha.md",
+      "src/content/reading/2026-04/zeta.md",
+    ]);
+  });
+
+  it("does not mutate the input array", () => {
+    const entries = [
+      sortableEntry("z.md", "2026-04-15T00:00:00.000Z"),
+      sortableEntry("a.md", "2026-01-15T00:00:00.000Z"),
+    ];
+    const original = entries.map((e) => e.path);
+    prioritizeByCompiledAt(entries);
+    expect(entries.map((e) => e.path)).toEqual(original);
+  });
+});
+
+// ---------- buildDeferredRecompileCurlHint ----------
+
+describe("buildDeferredRecompileCurlHint", () => {
+  it("emits a copy-pasteable curl with deferred slugs in scope.slugs", () => {
+    const out = buildDeferredRecompileCurlHint(["a", "b"]);
+    expect(out).toContain("/recompile");
+    expect(out).toContain('"scope":{"kind":"slugs","slugs":["a","b"]}');
+    expect(out).toContain('"dry_run":false');
+  });
+});
+
+// ---------- buildRecompilePrBody (deferred section) ----------
+
+describe("buildRecompilePrBody (deferred section)", () => {
+  function emptySummary() {
+    return {
+      matched: 0,
+      results: [] as Array<{ path: string; status: "updated" | "skipped" }>,
+      scope: { kind: "all" } as const,
+      deferred: [] as string[],
+      run_cost: aggregateCost([]),
+    };
+  }
+
+  it("renders a Deferred heading with the deferred slugs and curl hint", () => {
+    const body = buildRecompilePrBody({
+      mutation: { added: [], changed: [] },
+      summary: { ...emptySummary(), deferred: ["a", "b"] },
+    });
+    expect(body).toContain("### Deferred");
+    expect(body).toContain("a");
+    expect(body).toContain("b");
+    expect(body).toContain("/recompile");
+  });
+
+  it("omits the Deferred heading when nothing was deferred", () => {
+    const body = buildRecompilePrBody({
+      mutation: { added: [], changed: [] },
+      summary: emptySummary(),
+    });
+    expect(body).not.toContain("### Deferred");
   });
 });
 

@@ -31,6 +31,10 @@ export interface Env {
   READING_CONTEXT_LIMIT: string;
   /** Optional override for the Anthropic model ID. Empty/unset = default. */
   ANTHROPIC_MODEL?: string;
+  /** Optional override for /synthesize per-run topic cap. Defaults to 100. */
+  MAX_CONCEPTS_PER_RUN?: string;
+  /** Optional override for /recompile per-run entry cap. Defaults to 100. */
+  MAX_ENTRIES_PER_RUN?: string;
 
   // KV
   NOW_INPUTS: KVNamespace;
