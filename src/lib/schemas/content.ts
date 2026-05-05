@@ -84,6 +84,19 @@ export const ReadingFrontmatterSchema = z.object({
   // before this field landed) validate; populated organically as entries are
   // ingested or recompiled.
   compile_cost: CompileCostSchema.optional(),
+  // Copyright-posture takedown affordance: setting `noindex: true` on an
+  // entry's frontmatter excludes it from the public agent surfaces
+  // (/reading.json, /llms.txt, /llms-full.txt) without removing the file
+  // from the repo. The /reading/<slug> per-entry page may still render —
+  // the index pages and agent JSON are the public-facing concern.
+  noindex: z.boolean().optional(),
+  // Tracks which opt-out signal triggered ingest-with-stub (when /link
+  // detects a publisher-level X-Robots-Tag / meta-robots opt-out). Allowed
+  // values today: 'noai' | 'noindex' | 'noimageai' | 'meta-robots' | the
+  // family-name reason strings used by `optout.ts` (e.g. 'x-robots-tag',
+  // 'meta-robots'). Kept as a free-form string so future signals can land
+  // without a schema migration. Only set when `noindex: true`.
+  opted_out: z.string().optional(),
 });
 
 /**

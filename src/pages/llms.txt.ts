@@ -26,6 +26,8 @@ export async function GET() {
     .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 
   const recentReading = reading
+    // Honour the `noindex` takedown flag on individual reading entries.
+    .filter((entry) => entry.data.noindex !== true)
     .sort((a, b) => b.data.added.valueOf() - a.data.added.valueOf())
     .slice(0, 10);
 

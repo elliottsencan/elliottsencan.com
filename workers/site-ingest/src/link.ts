@@ -19,6 +19,7 @@ import { decode as decodeHtmlEntities } from "html-entities";
 import { z } from "zod";
 import { summarizeLink } from "./anthropic.ts";
 import type { CostRecord } from "./cost.ts";
+import { checkOptOutSignals, isHostExcluded } from "./optout.ts";
 import { type PlanResult, runPipeline, type Strategy } from "./pipeline.ts";
 import { LINK_SUMMARY_SYSTEM } from "./prompts.ts";
 import { makePipelineDeps } from "./synthesize.ts";
@@ -52,6 +53,12 @@ type LinkSummaryRow = {
   topics_coined: string[];
   topic_rationale: string | undefined;
   cost: CostRecord;
+  /**
+   * Set when the entry was written via the opt-out stub path
+   * (kind=stub from checkOptOutSignals). Surfaces back in the HTTP
+   * response so the caller can tell stub commits from normal ones.
+   */
+  opted_out?: string;
 };
 
 // ---------- strategy ----------
@@ -61,7 +68,51 @@ export function makeLinkStrategy(req: LinkRequest): Strategy<LinkSummaryRow> {
     name: "link",
     branchPrefix: "link",
     plan: async ({ env }): Promise<PlanResult<LinkSummaryRow>> => {
-      const resolvedTitle = req.title ?? (await fetchPageTitle(req.url));
+      // Copyright posture: cheap host-blocklist check first (no network IO).
+      // EXCLUDED_HOSTS is a comma-separated list of hostnames; matching the
+      // URL's host exactly OR any parent domain (e.g. "nyt.com" matches
+      // "www.nyt.com" and "cooking.nyt.com") rejects the request.
+      const requestHost = new URL(req.url).hostname;
+      if (isHostExcluded(requestHost, env.EXCLUDED_HOSTS)) {
+        log.info("link", "host-excluded", "rejected by EXCLUDED_HOSTS", {
+          host: requestHost,
+        });
+        return { ok: false, status: 403, error: `host_excluded: ${requestHost}` };
+      }
+
+      // Copyright posture: per-publisher opt-out signals. Inspects
+      // X-Robots-Tag, <meta name="robots">/<meta name="googlebot"> in the
+      // response body, and robots.txt. Each step has a 5s timeout; results
+      // for robots.txt are cached per-isolate. Tiered policy:
+      //  - kind=block (robots.txt Disallow): hard reject, 451.
+      //  - kind=stub (X-Robots-Tag / meta-robots opt-out tokens): write a
+      //    placeholder reading entry with noindex+opted_out, no Anthropic.
+      //  - kind=allow: proceed normally.
+      const optOut = await checkOptOutSignals({ url: req.url });
+      if (optOut.kind === "block") {
+        log.info("link", "opt-out", "site opted out of ingest (hard block)", {
+          host: requestHost,
+          reason: optOut.reason,
+        });
+        return { ok: false, status: 451, error: optOut.reason };
+      }
+      if (optOut.kind === "stub") {
+        log.info("link", "opt-out", "site opted out — writing noindex stub", {
+          host: requestHost,
+          reason: optOut.reason,
+        });
+        return planOptOutStub({
+          env,
+          url: req.url,
+          requestTitle: req.title,
+          fetchedTitle: optOut.title,
+          reason: optOut.reason,
+        });
+      }
+
+      // kind === "allow": reuse the title we already extracted in
+      // checkOptOutSignals so we don't re-fetch the article.
+      const resolvedTitle = req.title ?? optOut.title ?? (await fetchPageTitle(req.url));
       // topic_priors=false short-circuits the canonical-vocabulary fetch so the
       // model summarizes without seeing in-use slugs. Used by the rigor-
       // pass A/B run measuring topic-stability drift.
@@ -213,6 +264,7 @@ export async function handle(request: Request, env: Env, ctx: ExecutionContext):
       topic_rationale: summary?.topic_rationale,
       commit: result.commit_sha,
       cost: summary?.cost ?? null,
+      ...(summary?.opted_out ? { opted_out: summary.opted_out } : {}),
     },
     200,
   );
@@ -372,4 +424,111 @@ function buildEntryPath(args: { env: Env; added: Date; title: string }): string 
   const timestamp = fileTimestamp(args.added);
   const slug = slugify(args.title);
   return `${args.env.READING_DIR}/${month}/${timestamp}-${slug}.md`;
+}
+
+// ---------- opt-out stub ----------
+
+/**
+ * Fixed summary text used in stub entries. Single source of truth: the
+ * test asserts on this exact string.
+ */
+export const OPT_OUT_STUB_SUMMARY = "Publisher opted out of AI summarization.";
+
+/**
+ * Builds the planning result for an ingest-with-stub path. Used when
+ * `checkOptOutSignals` returns `kind: "stub"`. No Anthropic call is made;
+ * the entry's frontmatter records the signal that triggered the stub.
+ *
+ * Title precedence: caller-supplied `title` > title we fetched while
+ * inspecting opt-out signals > URL hostname. Categorized as `other`
+ * because we have no body to classify.
+ */
+function planOptOutStub(args: {
+  env: Env;
+  url: string;
+  requestTitle: string | undefined;
+  fetchedTitle: string | undefined;
+  reason: string;
+}): PlanResult<LinkSummaryRow> {
+  const added = new Date();
+  let finalTitle: string;
+  let titleSource: TitleSource;
+  if (args.requestTitle) {
+    finalTitle = args.requestTitle;
+    titleSource = "model";
+  } else if (args.fetchedTitle) {
+    finalTitle = args.fetchedTitle;
+    titleSource = "fetched";
+  } else {
+    finalTitle = new URL(args.url).hostname;
+    titleSource = "hostname";
+  }
+  const markdown = buildOptOutStubMarkdown({
+    title: finalTitle,
+    titleSource,
+    url: args.url,
+    reason: args.reason,
+    added,
+  });
+  const path = buildEntryPath({ env: args.env, added, title: finalTitle });
+  // Empty cost record — no Anthropic call. We surface this in the response
+  // so the caller can distinguish stub vs. normal commits.
+  const emptyCost: CostRecord = {
+    usage: {
+      input_tokens: 0,
+      output_tokens: 0,
+      cache_creation_input_tokens: 0,
+      cache_read_input_tokens: 0,
+    },
+    model: "manual:opt-out-stub",
+    pricing: null,
+    cost_usd: 0,
+  };
+  const summaryRow: LinkSummaryRow = {
+    path,
+    category: "other",
+    topics_context_loaded: false,
+    title_source: titleSource,
+    topics_committed: [],
+    topics_rewritten: [],
+    topics_coined: [],
+    topic_rationale: undefined,
+    cost: emptyCost,
+    opted_out: args.reason,
+  };
+  return {
+    ok: true,
+    data: {
+      mutation: { added: [{ path, content: markdown }], changed: [] },
+      summary: summaryRow,
+    },
+  };
+}
+
+/**
+ * Frontmatter writer for opt-out stub entries. Mirrors the shape of
+ * `buildEntryMarkdown` but omits the model topics (none) and stamps
+ * `noindex: true` plus `opted_out: <reason>`. Body is empty by reading-
+ * entry convention.
+ */
+export function buildOptOutStubMarkdown(args: {
+  title: string;
+  titleSource: TitleSource;
+  url: string;
+  reason: string;
+  added: Date;
+}): string {
+  const data: Record<string, unknown> = {
+    title: args.title,
+    url: args.url,
+    summary: OPT_OUT_STUB_SUMMARY,
+    category: "other",
+    added: args.added.toISOString(),
+    noindex: true,
+    opted_out: args.reason,
+    compiled_at: args.added.toISOString(),
+    compiled_with: "manual:opt-out-stub",
+    title_source: args.titleSource,
+  };
+  return matter.stringify("", data);
 }

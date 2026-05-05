@@ -125,6 +125,11 @@ export async function enumerateBlogWithBodies(deps: EnumerateDeps): Promise<Blog
  * Slug → topics[] for every reading entry. The wiki layer uses these to
  * inherit candidate-selection tags from its contributing sources, so that
  * wiki↔wiki proposals match by shared topic rather than just by slug.
+ *
+ * Filters out entries with `noindex: true`. The crosslink phase consumes
+ * this map to score candidate insertions; surfacing a publisher-opt-out
+ * entry through the crosslink layer would re-leak it into the wiki, so
+ * the filter is applied here at the source.
  */
 export async function enumerateReadingTopics(
   readingDir: string,
@@ -142,6 +147,7 @@ export async function enumerateReadingTopics(
     });
     return out;
   }
+  let skippedNoindex = 0;
   for (const month of months.data) {
     if (month.type !== "dir") {
       continue;
@@ -171,8 +177,17 @@ export async function enumerateReadingTopics(
       if (!fm.success) {
         continue;
       }
+      if (fm.data.noindex === true) {
+        skippedNoindex++;
+        continue;
+      }
       out.set(readingSlugFromPath(file.path), fm.data.topics ?? []);
     }
+  }
+  if (skippedNoindex > 0) {
+    log.info("enumerate", "reading-topics", "noindex entries skipped", {
+      count: skippedNoindex,
+    });
   }
   return out;
 }

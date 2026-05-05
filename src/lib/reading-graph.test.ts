@@ -23,6 +23,7 @@ function reading(
       topics: data.topics,
       compiled_at: data.compiled_at,
       compiled_with: data.compiled_with,
+      noindex: data.noindex,
     },
   };
 }
@@ -164,5 +165,18 @@ describe("buildReadingGraph", () => {
     const { payload } = buildReadingGraph(entries, [], vocab);
     const a = findEntry(payload.entries, "2026-04/a");
     expect(a.topics).toEqual(["mcp", "evals"]);
+  });
+
+  it("filters entries with noindex: true from the public dump and count", () => {
+    const entries = [
+      reading("2026-04/a"),
+      // The shape uses `data.noindex` since the schema treats it as optional
+      // boolean; the transform should drop it before counting.
+      reading("2026-04/b", { noindex: true }),
+      reading("2026-04/c"),
+    ];
+    const { payload } = buildReadingGraph(entries, []);
+    expect(payload.count).toBe(2);
+    expect(payload.entries.map((e) => e.slug).sort()).toEqual(["2026-04/a", "2026-04/c"]);
   });
 });

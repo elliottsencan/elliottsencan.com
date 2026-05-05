@@ -31,6 +31,13 @@ export interface Env {
   READING_CONTEXT_LIMIT: string;
   /** Optional override for the Anthropic model ID. Empty/unset = default. */
   ANTHROPIC_MODEL?: string;
+  /**
+   * Optional comma-separated host blocklist. /link rejects URLs whose
+   * hostname matches any entry exactly or as a parent domain (e.g.
+   * `nyt.com` rejects `www.nyt.com` and `cooking.nyt.com`).
+   * Empty/unset = no blocklist.
+   */
+  EXCLUDED_HOSTS?: string;
   /** Optional override for /synthesize per-run topic cap. Defaults to 100. */
   MAX_CONCEPTS_PER_RUN?: string;
   /** Optional override for /recompile per-run entry cap. Defaults to 100. */

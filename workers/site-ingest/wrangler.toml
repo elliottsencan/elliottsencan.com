@@ -28,6 +28,10 @@ READING_CONTEXT_LIMIT = "25"
 # Leave unset (or set to "") to use the default `claude-sonnet-4-6`. Set
 # to swap models without a redeploy.
 ANTHROPIC_MODEL = ""
+# Copyright posture: comma-separated list of hostnames that /link refuses to
+# ingest. Matches the URL's host exactly OR as a parent domain — e.g.
+# `nyt.com` rejects `www.nyt.com` and `cooking.nyt.com`. Default empty.
+# EXCLUDED_HOSTS = ""
 # Per-run safety bounds. Defaults (in code) are 100 each. Uncomment and
 # raise/lower to override without a code edit. Strings, parsed as numbers.
 # MAX_CONCEPTS_PER_RUN = "100"

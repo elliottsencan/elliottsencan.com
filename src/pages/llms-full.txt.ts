@@ -30,7 +30,10 @@ export async function GET() {
     .filter((post) => !post.data.draft)
     .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 
-  const readingEntries = reading.sort((a, b) => b.data.added.valueOf() - a.data.added.valueOf());
+  const readingEntries = reading
+    // Honour the `noindex` takedown flag on individual reading entries.
+    .filter((entry) => entry.data.noindex !== true)
+    .sort((a, b) => b.data.added.valueOf() - a.data.added.valueOf());
 
   const concepts = wiki.sort((a, b) => a.id.localeCompare(b.id));
 
