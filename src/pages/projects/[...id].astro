@@ -46,7 +46,7 @@ const statusColors: Record<string, string> = {
           </div>
         )}
       </div>
-      <h1 class="font-heading text-3xl font-medium tracking-tight text-black dark:text-white">
+      <h1 class="font-heading text-2xl font-medium tracking-tight text-black md:text-3xl dark:text-white">
         {project.data.title}
       </h1>
 
@@ -85,7 +85,7 @@ const statusColors: Record<string, string> = {
     </div>
 
     {project.data.impact && project.data.impact.length > 0 && (
-      <div class="mb-12 grid grid-cols-2 gap-4 sm:grid-cols-3">
+      <div class="mb-12 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 md:grid-cols-3">
         {project.data.impact.map((item) => (
           <div class="rounded-sm border border-black/10 p-3 dark:border-white/15">
             <div class="font-heading text-lg font-medium text-black dark:text-white">

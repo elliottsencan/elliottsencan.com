@@ -2,7 +2,7 @@
 const { prevPost, nextPost } = Astro.props;
 ---
 
-<div class="grid grid-cols-2 gap-1.5 sm:gap-3">
+<div class="grid grid-cols-1 gap-1.5 sm:grid-cols-2 sm:gap-3">
   {
     prevPost?.id ? (
       <a
@@ -29,7 +29,7 @@ const { prevPost, nextPost } = Astro.props;
         <div class="flex items-center text-sm">{prevPost?.data.title}</div>
       </a>
     ) : (
-      <div class="invisible" />
+      <div class="invisible hidden sm:block" />
     )
   }
 
@@ -59,7 +59,7 @@ const { prevPost, nextPost } = Astro.props;
         <div class="flex items-center text-sm">{nextPost?.data.title}</div>
       </a>
     ) : (
-      <div class="invisible" />
+      <div class="invisible hidden sm:block" />
     )
   }
 </div>
