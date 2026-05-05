@@ -1,6 +1,6 @@
 import matter from "gray-matter";
 import { describe, expect, it } from "vitest";
-import type { LinkSummary } from "./anthropic.ts";
+import { type LinkSummary, LinkSummarySchema } from "./anthropic.ts";
 import { buildEntryMarkdown, validate } from "./link.ts";
 
 describe("link.validate", () => {
@@ -144,5 +144,40 @@ describe("buildEntryMarkdown", () => {
       pricing: null,
       cost_usd: 0.001,
     });
+  });
+});
+
+// ---------- LinkSummarySchema ----------
+
+describe("LinkSummarySchema", () => {
+  const validBase = {
+    title: "Some Article",
+    summary: "Short summary.",
+    category: "tech" as const,
+    topics: ["mcp"],
+  };
+
+  it("accepts a payload without topic_rationale", () => {
+    const r = LinkSummarySchema.safeParse(validBase);
+    expect(r.success).toBe(true);
+  });
+
+  it("accepts a payload with topic_rationale populated", () => {
+    const r = LinkSummarySchema.safeParse({
+      ...validBase,
+      topic_rationale: "No canonical fit; concept is novel.",
+    });
+    expect(r.success).toBe(true);
+    if (r.success) {
+      expect(r.data.topic_rationale).toBe("No canonical fit; concept is novel.");
+    }
+  });
+
+  it("rejects topic_rationale that isn't a string", () => {
+    const r = LinkSummarySchema.safeParse({
+      ...validBase,
+      topic_rationale: 42,
+    });
+    expect(r.success).toBe(false);
   });
 });

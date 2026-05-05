@@ -63,6 +63,11 @@ export const LinkSummarySchema = z.object({
     .array(z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/))
     .min(1)
     .max(5),
+  // Populated when the model coined a slug not in the supplied canonical
+  // list. One short sentence explaining why no canonical fit. Logged so
+  // the maintenance loop can review whether a coined slug should be
+  // promoted to canonical or aliased to an existing one.
+  topic_rationale: z.string().optional(),
 });
 
 // `model` and `cost` are appended by the wrapper (resolveModel-derived /
@@ -216,8 +221,15 @@ export const WikiArticleSchema = z.object({
   title: z.string().min(1),
   // Mirrors WikiFrontmatterSchema in @shared/schemas/content.ts so model
   // overruns fail at the worker tier instead of at next astro build.
-  summary: z.string().min(1).max(240),
+  summary: z.string().min(1).max(280),
   body: z.string().min(1),
+  // Slugs the synthesis prompt's alias-detection step identified as
+  // synonyms of THIS concept's canonical, drawn from the corpus's active
+  // topic list. Filtered post-Anthropic by `filterProposedAliases` in
+  // topics.ts (drops self-aliases + wiki-collisions) before being written
+  // to the article's frontmatter. Optional so the field can be omitted
+  // when the model judges no aliases apply.
+  aliases: z.array(z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/)).optional(),
 });
 
 export type WikiArticle = z.infer<typeof WikiArticleSchema> & {

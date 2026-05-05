@@ -4,6 +4,7 @@ import LabeledRule from "@components/LabeledRule.astro";
 import Link from "@components/Link.astro";
 import ConstellationStrip from "@components/wiki/ConstellationStrip.astro";
 import Layout from "@layouts/Layout.astro";
+import { buildVocabularyFromWiki } from "@lib/topics";
 import { deriveWikiTopics, indexReadingById } from "@lib/wiki-topics";
 
 // Wiki index — concept-indexed synthesis. Articles are clustered by topic
@@ -14,10 +15,11 @@ import { deriveWikiTopics, indexReadingById } from "@lib/wiki-topics";
 const wiki = await getCollection("wiki");
 const reading = await getCollection("reading");
 const readingById = indexReadingById(reading);
+const vocab = buildVocabularyFromWiki(wiki);
 
 const conceptsWithTopics = wiki.map((concept) => ({
   concept,
-  topics: deriveWikiTopics(concept, readingById),
+  topics: deriveWikiTopics(concept, readingById, vocab),
 }));
 
 // Cluster by primary topic. "other" catches articles whose sources have no

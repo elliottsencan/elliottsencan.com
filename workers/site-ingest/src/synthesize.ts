@@ -51,10 +51,17 @@ import {
   type Strategy,
 } from "./pipeline.ts";
 import { WIKI_SYNTHESIS_SYSTEM } from "./prompts.ts";
+import { type AliasFilterResult, filterProposedAliases, loadCorpusSlugList } from "./topics.ts";
 import type { Env, Result, WikiArticle } from "./types.ts";
 import { jsonResponse, log, readingSlugFromPath } from "./util.ts";
 
-const MAX_CONCEPTS_PER_RUN = 20;
+// Per-run safety bound on number of concepts compiled. Was hand-picked at
+// 20 when the wiki had ~10 articles; with 39+ eligible topics it became a
+// structural bottleneck (operator had to manually batch + identify the
+// missed concepts after each call). 100 leaves multi-year headroom; cost
+// per fully-saturated run is bounded by Anthropic call cost × 100, which
+// at current pricing is ~$1-2 — acceptable for a personal-cadence trigger.
+const MAX_CONCEPTS_PER_RUN = 100;
 const WIKI_DIR = "src/content/wiki";
 
 const SynthesizeRequestSchema = z.object({
@@ -87,12 +94,20 @@ interface ExistingWiki {
   compiled_with: string;
 }
 
+type AliasOutcome = {
+  topic: string;
+  accepted: string[];
+  dropped: AliasFilterResult["dropped"];
+};
+
 type SynthesizeSummary = {
   active_topics: string[];
   compiled: number;
   failed: Array<{ path: string; topic: string; error: string }>;
   skipped: Array<{ topic: string; reason: string }>;
   auto_repaired: Array<{ topic: string; dropped: DroppedLink[] }>;
+  /** Aliases detected and written into wiki frontmatter, plus dropped proposals + reasons. */
+  alias_outcomes: AliasOutcome[];
   /** Aggregated Anthropic cost across all per-topic compile calls in this run. */
   run_cost: RunCost;
 };
@@ -156,13 +171,30 @@ async function planSynthesis(
   });
 
   const knownReadingSlugs = new Set(sourcesResult.data.map((s) => s.slug));
+  // Wiki article slugs (existing AND queued-to-compile). Used by the alias-
+  // safety filter so a proposal that names another concept's slug as an
+  // alias is dropped — real concepts can't be aliased to each other
+  // automatically.
+  const wikiArticleSlugs = new Set<string>([
+    ...existingResult.data.map((e) => e.topic),
+    ...capped.map((t) => t.topic),
+  ]);
+  // Corpus slug list for the alias-detection prompt. Pulled once per run
+  // from the public /reading.json (edge-cached). Empty array on fetch
+  // failure — alias detection still runs but the model has nothing to
+  // propose, which is the correct fail-open behavior.
+  const corpusSlugs = await loadCorpusSlugList();
   const added: Mutation["added"] = [];
   const changed: Mutation["changed"] = [];
   const failed: SynthesizeSummary["failed"] = [];
   const skipped: SynthesizeSummary["skipped"] = [];
   const autoRepaired: SynthesizeSummary["auto_repaired"] = [];
+  const aliasOutcomes: SynthesizeSummary["alias_outcomes"] = [];
   const costRecords: CostRecord[] = [];
   for (const target of capped) {
+    // Don't show the model the slug it's synthesizing in the alias candidate
+    // list — that would just bait a self-alias.
+    const aliasCandidates = corpusSlugs.filter((s) => s !== target.topic);
     const article = await compileWikiArticle({
       apiKey: env.ANTHROPIC_API_KEY,
       model: env.ANTHROPIC_MODEL,
@@ -170,6 +202,7 @@ async function planSynthesis(
       userMessage: buildUserMessage({
         topic: target.topic,
         sources: target.sources,
+        aliasCandidates,
       }),
     });
     if (!article.ok) {
@@ -205,9 +238,27 @@ async function planSynthesis(
       });
       continue;
     }
+    // Filter the model's alias proposals through the safety net: drop self-
+    // aliases (model named its own canonical) and wiki-collisions (model
+    // claimed another real concept as an alias). Surviving aliases land on
+    // the article's frontmatter; dropped proposals surface in the PR body
+    // for review.
+    const aliasFilter = filterProposedAliases(
+      article.data.aliases ?? [],
+      target.topic,
+      wikiArticleSlugs,
+    );
+    if (aliasFilter.accepted.length > 0 || aliasFilter.dropped.length > 0) {
+      aliasOutcomes.push({
+        topic: target.topic,
+        accepted: aliasFilter.accepted,
+        dropped: aliasFilter.dropped,
+      });
+    }
     const markdown = buildArticleMarkdown({
       article: { ...article.data, body: repaired.body },
       sources: target.sources.map((s) => s.slug),
+      aliases: aliasFilter.accepted,
       compiledAt: new Date(),
     });
     const path = `${WIKI_DIR}/${target.topic}.md`;
@@ -233,6 +284,7 @@ async function planSynthesis(
     failed,
     skipped,
     auto_repaired: autoRepaired,
+    alias_outcomes: aliasOutcomes,
     run_cost: runCost,
   };
 
@@ -265,13 +317,14 @@ function buildPrBody(plan: PlanOutput<SynthesizeSummary>, crosslink?: CrosslinkR
     failed: [],
     skipped: [],
     auto_repaired: [],
+    alias_outcomes: [],
     run_cost: aggregateCost([]),
   };
   const writes = [
     ...plan.mutation.added.map((f) => f.path),
     ...plan.mutation.changed.map((f) => f.path),
   ];
-  const { skipped, failed, auto_repaired: autoRepaired } = summary;
+  const { skipped, failed, auto_repaired: autoRepaired, alias_outcomes: aliasOutcomes } = summary;
   const lines: string[] = [
     "Automated wiki synthesis run.",
     "",
@@ -312,6 +365,21 @@ function buildPrBody(plan: PlanOutput<SynthesizeSummary>, crosslink?: CrosslinkR
       for (const d of r.dropped) {
         lines.push(`- \`${r.topic}\` — ${droppedReasonLabel(d.reason)}: \`${d.url}\``);
       }
+    }
+  }
+  if (aliasOutcomes.length > 0) {
+    lines.push("", "### Aliases detected");
+    for (const o of aliasOutcomes) {
+      if (o.accepted.length > 0) {
+        lines.push(`- \`${o.topic}\` ← ${o.accepted.map((a) => `\`${a}\``).join(", ")}`);
+      }
+    }
+    const droppedRows = aliasOutcomes.flatMap((o) =>
+      o.dropped.map((d) => `- \`${o.topic}\` — dropped \`${d.alias}\` (${d.reason})`),
+    );
+    if (droppedRows.length > 0) {
+      lines.push("", "#### Dropped alias proposals");
+      lines.push(...droppedRows);
     }
   }
   if (crosslink && crosslink.applied.length > 0) {
@@ -364,6 +432,7 @@ export async function handle(request: Request, env: Env, ctx: ExecutionContext):
       ],
       failures: summary?.failed ?? [],
       skip_reasons: summary?.skipped ?? [],
+      alias_outcomes: summary?.alias_outcomes ?? [],
       run_cost: summary?.run_cost ?? null,
     });
   }
@@ -389,6 +458,7 @@ export async function handle(request: Request, env: Env, ctx: ExecutionContext):
     skipped: summary?.skipped.length ?? 0,
     failures: summary?.failed ?? [],
     skip_reasons: summary?.skipped ?? [],
+    alias_outcomes: summary?.alias_outcomes ?? [],
     run_cost: summary?.run_cost ?? null,
     branch: result.branch,
     pr: result.pr_number ? { number: result.pr_number, url: result.pr_url } : null,
@@ -540,7 +610,11 @@ export function clusterByTopic(
   return byTopic;
 }
 
-function buildUserMessage(args: { topic: string; sources: ReadingSource[] }): string {
+function buildUserMessage(args: {
+  topic: string;
+  sources: ReadingSource[];
+  aliasCandidates: readonly string[];
+}): string {
   const parts = [
     `Concept: ${args.topic}`,
     "",
@@ -559,6 +633,13 @@ function buildUserMessage(args: { topic: string; sources: ReadingSource[] }): st
       `  summary: ${source.summary}`,
     );
   }
+  if (args.aliasCandidates.length > 0) {
+    parts.push(
+      "",
+      "ACTIVE TOPIC SLUGS (consider these for alias detection — see system prompt):",
+      args.aliasCandidates.join(", "),
+    );
+  }
   return parts.filter((line) => line !== "").join("\n");
 }
 
@@ -566,16 +647,20 @@ function buildUserMessage(args: { topic: string; sources: ReadingSource[] }): st
 export function buildArticleMarkdown(args: {
   article: WikiArticle;
   sources: string[];
+  aliases?: readonly string[];
   compiledAt: Date;
 }): string {
   const data: Record<string, unknown> = {
     title: args.article.title,
     summary: args.article.summary,
     sources: [...args.sources].sort(),
-    compiled_at: args.compiledAt.toISOString(),
-    compiled_with: args.article.model,
-    compile_cost: args.article.cost,
   };
+  if (args.aliases && args.aliases.length > 0) {
+    data.aliases = [...args.aliases].sort();
+  }
+  data.compiled_at = args.compiledAt.toISOString();
+  data.compiled_with = args.article.model;
+  data.compile_cost = args.article.cost;
   return matter.stringify(args.article.body.trim(), data);
 }
 

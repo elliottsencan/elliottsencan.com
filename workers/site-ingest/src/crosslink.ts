@@ -23,6 +23,7 @@ import { type CORPORA, type CorpusName, MAX_CROSSLINK_CALLS_PER_RUN } from "./cr
 import {
   type CrosslinkPhaseResult,
   type CrosslinkProposal,
+  isAlreadyLinked,
   type Piece,
   runCrosslinkPhase,
   selectCandidates,
@@ -213,11 +214,20 @@ async function runScopedPhase(
     forwardSources.push({ piece, body: row.body, candidates });
   }
 
+  // Pre-filter candidates that already link to the target. Wiki articles
+  // synthesized with link-graph awareness already cite the reading sources
+  // they used, so a backward proposal from them would either get rejected
+  // by validateProposal (anchor sits inside an existing <link> node) or
+  // dropped by applyInsertion's already-linked guard. Either way the
+  // Anthropic call is wasted spend (~$0.28 in the 2026-05-03 recompile run
+  // produced 17 backward proposals → 0 applied). Filtering here moves the
+  // detection before the API call.
   const backwardTargets: Array<{ piece: Piece; candidates: Piece[] }> = pieces
     .map((piece) => ({
       piece,
       candidates: rows
         .filter((r) => !(r.piece.corpus === piece.corpus && r.piece.slug === piece.slug))
+        .filter((r) => !isAlreadyLinked(r.body, piece.url))
         .map((r) => r.piece),
     }))
     .filter((t) => t.candidates.length > 0);

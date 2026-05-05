@@ -1,23 +1,44 @@
 ---
 title: LLM inference
 summary: >-
-  Running LLMs locally or via API involves hard constraints around VRAM,
-  quantization, and throughput that shape every architectural decision, from
-  tool design to agent scaling to privacy-sensitive deployments.
+  LLM inference covers the runtime execution of language models, from hardware
+  constraints and quantization tradeoffs to latency optimization in production
+  agent systems, with sources collectively surfacing cost, speed, and VRAM as
+  the central pressure points.
 sources:
   - 2026-04/2026-04-23t150424-your-agent-loves-mcp-as-much-as-you-love-guis
   - >-
     2026-04/2026-04-27t114138-scaling-managed-agents-decoupling-the-brain-from-the-hands
+  - 2026-04/2026-04-29t171532-vision-language-models-better-faster-stronger
   - >-
     2026-04/2026-04-29t172018-how-to-build-scalable-web-apps-with-openais-privacy-filter
   - 2026-04/2026-04-29t173553-canitrun-can-my-gpu-run-this-llm
-compiled_at: '2026-05-01T05:34:27.690Z'
+aliases:
+  - inference-optimization
+compiled_at: '2026-05-04T03:36:11.217Z'
 compiled_with: claude-sonnet-4-6
+compile_cost:
+  usage:
+    input_tokens: 2844
+    output_tokens: 634
+    cache_creation_input_tokens: 0
+    cache_read_input_tokens: 0
+  model: claude-sonnet-4-6
+  pricing:
+    model: claude-sonnet-4-6
+    input_per_million: 3
+    output_per_million: 15
+    cache_read_per_million: 0.3
+    cache_write_5m_per_million: 3.75
+    priced_at: '2026-04-30'
+  cost_usd: 0.018042
 ---
-LLM inference sits at the intersection of hardware limits and software architecture. The most concrete expression of those limits is VRAM: a given GPU can only hold so many model weights, and the quantization level you choose trades quality for fit. [CanItRun](https://canitrun.dev/) ([2026-04/2026-04-29t173553-canitrun-can-my-gpu-run-this-llm](/reading/2026-04/2026-04-29t173553-canitrun-can-my-gpu-run-this-llm)) makes this tangible by mapping open-weight models to GPU specs and projecting tokens-per-second benchmarks, which turns an abstract constraint into a planning tool.
+Inference is the phase where a trained model produces outputs given inputs. Unlike training, which happens once, inference runs continuously in production and carries ongoing compute costs that scale with every token generated.
 
-Once inference is running, the way you expose it to calling code matters. Mohan argues in [Mad About Code](https://www.madaboutcode.com/mcp-as-a-gui-for-ai-agents.html) ([2026-04/2026-04-23t150424-your-agent-loves-mcp-as-much-as-you-love-guis](/reading/2026-04/2026-04-23t150424-your-agent-loves-mcp-as-much-as-you-love-guis)) that MCP tool wrappers around inference calls impose the same kind of overhead that GUIs impose on developers: discoverability at the cost of composability. Agents capable of writing code are better served by direct API calls or layered scripts than by the abstraction layer MCP adds.
+Hardware fit is the most immediate constraint. [CanItRun](/reading/2026-04/2026-04-29t173553-canitrun-can-my-gpu-run-this-llm) addresses this directly: given a GPU's VRAM, the tool calculates which open-weight models fit, at what quantization level, and at what throughput in tokens per second. Quantization is the central lever, trading precision for memory footprint so larger models become runnable on consumer or mid-tier hardware.
 
-At larger scale, inference becomes a resource to allocate across concurrent sessions. Anthropic's Managed Agents design ([2026-04/2026-04-27t114138-scaling-managed-agents-decoupling-the-brain-from-the-hands](/reading/2026-04/2026-04-27t114138-scaling-managed-agents-decoupling-the-brain-from-the-hands)) separates the model harness, the execution sandbox, and the session log into independent interfaces, so the inference-calling layer can evolve as models improve without breaking state or replaying work.
+At the other end of the scale, production agent infrastructure treats inference latency as a first-class engineering concern. Anthropic's Managed Agents work [decouples the agent harness, session log, and sandbox](/reading/2026-04/2026-04-27t114138-scaling-managed-agents-decoupling-the-brain-from-the-hands) into independent interfaces, achieving roughly a 60% reduction in p50 time-to-first-token and over 90% reduction at p95. That result comes less from model-level changes and more from how inference calls are scheduled and what state travels with them.
 
-Inference also carries data-handling obligations when input contains sensitive content. The Hugging Face walkthrough of OpenAI's Privacy Filter ([2026-04/2026-04-29t172018-how-to-build-scalable-web-apps-with-openais-privacy-filter](/reading/2026-04/2026-04-29t172018-how-to-build-scalable-web-apps-with-openais-privacy-filter)) shows PII detection and image redaction built on queued API endpoints, treating the model as a filter in a processing pipeline rather than a generative endpoint. That framing, inference as a transformation step with defined input and output contracts, generalizes well beyond privacy use cases.
+Context size is a related pressure. [The MCP-as-GUI critique](/reading/2026-04/2026-04-23t150424-your-agent-loves-mcp-as-much-as-you-love-guis) notes that loading tool definitions into context each session is token-expensive, framing context consumption as a direct inference cost that compounds across agentic workflows.
+
+On the model side, [the 2025 VLM survey](/reading/2026-04/2026-04-29t171532-vision-language-models-better-faster-stronger) documents how mixture-of-experts architectures and small-model advances are reshaping inference tradeoffs for multimodal workloads, with smaller models closing the capability gap while remaining cheaper to serve. Separately, [the OpenAI Privacy Filter walkthrough](/reading/2026-04/2026-04-29t172018-how-to-build-scalable-web-apps-with-openais-privacy-filter) shows queued GPU endpoints behind a Gradio server as a practical pattern for managing inference throughput in web-facing applications.

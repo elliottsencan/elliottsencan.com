@@ -40,8 +40,12 @@ export async function GET() {
     lines.push(`## Concepts (${concepts.length})`);
     lines.push("");
     for (const concept of concepts) {
+      const aliases = concept.data.aliases ?? [];
+      const meta = aliases.length
+        ? ` _(sources: ${concept.data.sources.length} · aka: ${aliases.join(", ")})_`
+        : ` _(sources: ${concept.data.sources.length})_`;
       lines.push(
-        `- [${concept.data.title}](${SITE_URL}/wiki/${concept.id}/): ${concept.data.summary} _(sources: ${concept.data.sources.length})_`,
+        `- [${concept.data.title}](${SITE_URL}/wiki/${concept.id}/): ${concept.data.summary}${meta}`,
       );
     }
     lines.push("");

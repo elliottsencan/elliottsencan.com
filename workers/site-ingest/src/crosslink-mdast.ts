@@ -315,6 +315,7 @@ export function repairWikiBodyLinks(
 ): { body: string; dropped: DroppedLink[] } {
   const root = parseMarkdown(body);
   const dropped: DroppedLink[] = [];
+  let normalizedCount = 0;
   const toUnwrap: Array<{ parent: Parent; index: number; link: Link; reason: DroppedLinkReason }> =
     [];
 
@@ -326,6 +327,9 @@ export function repairWikiBodyLinks(
     parent.children.forEach((child, index) => {
       if ((child as Nodes).type === "link") {
         const link = child as Link;
+        if (normalizeRelativeReadingLink(link)) {
+          normalizedCount++;
+        }
         const slug = readingSlugFromInternalUrl(link.url);
         if (slug !== null) {
           if (!knownReadingSlugs.has(slug)) {
@@ -362,7 +366,7 @@ export function repairWikiBodyLinks(
     }
   }
 
-  if (dropped.length === 0) {
+  if (dropped.length === 0 && normalizedCount === 0) {
     return { body, dropped };
   }
   const out = stringifyMarkdown(root);
@@ -370,6 +374,14 @@ export function repairWikiBodyLinks(
     body: body.endsWith("\n") ? out : out.replace(/\n$/, ""),
     dropped,
   };
+}
+
+function normalizeRelativeReadingLink(link: Link): boolean {
+  if (!/^reading\//.test(link.url)) {
+    return false;
+  }
+  link.url = `/${link.url}`;
+  return true;
 }
 
 function readingSlugFromInternalUrl(url: string): string | null {

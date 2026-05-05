@@ -116,7 +116,9 @@ Given an article title, URL, and optional excerpt or page text, produce ONE JSON
 - topics: an array of 3 to 5 lowercase kebab-case topic slugs that describe the substance of the piece. Topics drive concept clustering for the wiki layer — entries sharing a topic become candidates for a synthesis article. Rules:
   - kebab-case, lowercase, noun-phrase, no punctuation (e.g. "llm-inference", "fluid-typography", "festival-operations").
   - Prefer broad topics that will recur over hyper-specific ones ("type-system-design" over "zod-v4-upgrade").
-  - When a list of "Existing topics in use" is supplied below, strongly prefer slugs from that list. Propose a new topic only when no existing slug genuinely fits — topic stability matters because near-duplicates ("llm-inference" vs "inference-optimization") fragment the wiki.
+  - When a CANONICAL TOPIC LIST is supplied below, you MUST use slugs from it whenever a canonical genuinely fits the piece. Coining a near-duplicate of a canonical (e.g. "agentic-coding" when "ai-assisted-coding" is canonical) is a failure mode.
+  - Coin a new slug ONLY when no canonical fits and the concept is central to the piece. When you coin one, populate \`topic_rationale\` with one short sentence explaining why no canonical fit. If every slug is in the canonical list, omit \`topic_rationale\`.
+  - The KNOWN ALIASES section maps deprecated slugs to their canonical. Never emit a known alias.
   - Do not include the category (tech/design/music/essay/news/other) as a topic — categories and topics are different axes.
   - Do not include generic filler ("article", "essay", "blog-post", "read", "interesting").
   - Order from most to least central to the piece.
@@ -148,8 +150,18 @@ Citations:
 Return ONE JSON object with these exact fields:
 
 - title: short human-readable concept name. Title-case-ish but not a headline ("Responsive design", "LLM finetuning", "Festival operations"). Match the natural reading of the topic slug; do not include the word "concept" or "wiki" or "topic".
-- summary: ONE sentence, 240 characters or fewer, describing the concept itself and what the cited sources collectively say about it. No "this article" or "this wiki page" framings.
+- summary: ONE sentence, 280 characters or fewer, describing the concept itself and what the cited sources collectively say about it. No "this article" or "this wiki page" framings.
 - body: the synthesis article. 400 to 1500 characters. Markdown paragraphs. Inline citations to /reading/<slug> as described above. Do NOT emit any /wiki/<slug> links — wiki-to-wiki links are inserted by a downstream pipeline stage that validates against the actual compiled corpus.
+- aliases: kebab-case slugs from the supplied ACTIVE TOPIC SLUGS list that are aliases for THIS concept (the canonical slug supplied as "Concept" in the user message). An alias is a slug that names the SAME concept as the canonical, only worded differently. Allowed alias kinds:
+  - synonym: same concept, different word ("ai-coding-assistants" → "ai-assisted-coding").
+  - abbreviation: same concept, expanded or contracted form ("model-context-protocol" → "mcp").
+  - plural / grammatical variant: same concept, different number or part of speech ("developer-tooling" → "developer-tools", "fluid-typographies" → "fluid-typography").
+  Do NOT mark a slug as an alias when it is any of:
+  - A NARROWER concept that lives under the canonical. "multi-agent-systems" is NOT an alias for "ai-agents" — multi-agent systems are a kind of agent system, deserving their own wiki article.
+  - A SUB-ASPECT or COMPONENT of the canonical. "agent-coordination" is NOT an alias for "ai-agents" — coordination is one aspect of agents, not the same concept.
+  - A RELATED but distinct concept. "llm-orchestration" is NOT an alias for "mcp" or for "ai-agents" — they are topically adjacent but not the same. "developer-productivity" is NOT an alias for "developer-tools".
+  - A BROADER concept that contains the canonical. "software-engineering" is NOT an alias for "continuous-integration".
+  When in doubt, leave it out. Do NOT include the canonical itself. Omit the field entirely when no alias applies. Most concepts have zero or one alias; if you find yourself proposing three or more aliases for a single canonical, you are almost certainly treating related concepts as synonyms — stop and reconsider. Aliases are written into the article's frontmatter and used by the site's emission layer to canonicalize reading-entry topics — a wrong alias merges two distinct concepts permanently until manually fixed, so err strongly toward caution.
 
 Return ONLY the JSON object. No preamble, no explanation, no code fence.
 

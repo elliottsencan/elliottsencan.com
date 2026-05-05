@@ -41,6 +41,7 @@ export async function GET() {
         title: concept.data.title,
         summary: concept.data.summary,
         sources: concept.data.sources,
+        aliases: concept.data.aliases ?? [],
         related_concepts: resolved.related,
         compiled_at: concept.data.compiled_at.toISOString(),
         compiled_with: concept.data.compiled_with,
