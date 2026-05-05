@@ -1,6 +1,5 @@
 ---
 import "../styles/global.css";
-import { ClientRouter } from "astro:transitions";
 import { PERSON, SITE } from "@consts";
 
 interface Props {
@@ -128,18 +127,15 @@ const articleSchema =
 <link rel="canonical" href={canonicalURL} />
 
 <!-- Intro animations (signature draw, contributions rail reveal): play
-     once per fresh page load. Hard load / reload / new tab gets a fresh
-     window, so the animations play. ClientRouter soft navigation would
-     otherwise re-trigger them (html attrs are swapped), so we mark the
-     incoming <html> before each swap. -->
+     once per browser session. First page in a tab plays them; subsequent
+     navigations within the same tab skip via the sessionStorage flag. New
+     tab / reload / fresh window starts a new session and replays. -->
 <script is:inline>
-  if (window.__introPlayed) {
+  if (sessionStorage.getItem("introPlayed")) {
     document.documentElement.classList.add("intro-played");
+  } else {
+    sessionStorage.setItem("introPlayed", "1");
   }
-  window.__introPlayed = true;
-  document.addEventListener("astro:before-swap", (e) => {
-    e.newDocument.documentElement.classList.add("intro-played");
-  });
 </script>
 
 <!-- Primary Meta Tags.
@@ -189,8 +185,6 @@ const articleSchema =
 <!-- PageFind -->
 <link href="/pagefind/pagefind-ui.css" rel="stylesheet" />
 <script is:inline src="/pagefind/pagefind-ui.js"></script>
-
-<ClientRouter />
 
 <script is:inline>
   function init() {
@@ -313,10 +307,9 @@ const articleSchema =
     }
   }
 
-  // Pre-paint (initial load) and post-swap (Astro ClientRouter): we must
-  // apply the theme instantly to avoid a flash from the SSR default.
-  // Inject a transient rule that kills all transitions, flip the class,
-  // force a reflow, then remove the rule.
+  // Pre-paint: apply the theme instantly to avoid a flash from the SSR
+  // default. Inject a transient rule that kills all transitions, flip the
+  // class, force a reflow, then remove the rule.
   function preloadTheme() {
     const css = document.createElement("style");
     css.appendChild(
@@ -338,7 +331,6 @@ const articleSchema =
   }
 
   document.addEventListener("DOMContentLoaded", () => init());
-  document.addEventListener("astro:after-swap", () => init());
   preloadTheme();
 </script>
 

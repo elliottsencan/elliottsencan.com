@@ -334,7 +334,7 @@ const longDateFormatter = new Intl.DateTimeFormat("en-US", {
         // Pass 2 — bind bidirectional hover sync across every data-src node.
         document.querySelectorAll("[data-src]").forEach(bindSync);
       }
-      document.addEventListener("astro:page-load", run);
+      run();
     })();
   </script>
 </Layout>
