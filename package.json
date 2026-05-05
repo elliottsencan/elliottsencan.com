@@ -13,6 +13,7 @@
     "lint": "biome lint --write",
     "favicons": "node scripts/build-favicons.mjs",
     "reading": "node scripts/reading.mjs",
+    "worker": "node scripts/worker.mjs",
     "constellation": "node scripts/build-constellation-layout.mjs",
     "labs:aggregate": "node scripts/labs-aggregate.mjs",
     "test": "vitest run",
