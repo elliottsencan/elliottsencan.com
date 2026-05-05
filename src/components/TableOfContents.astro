@@ -73,7 +73,6 @@ function buildToc(headings: Heading[]) {
 <script>
   // Active-section tracking: observe every heading the TOC references, and
   // mark the TOC link whose target is furthest into the viewport as active.
-  // Re-runs on Astro soft-nav via astro:page-load.
   function initToc() {
     const toc = document.querySelector(".toc");
     if (!toc) return;
@@ -148,5 +147,5 @@ function buildToc(headings: Heading[]) {
     for (const target of targets) observer.observe(target);
   }
 
-  document.addEventListener("astro:page-load", initToc);
+  initToc();
 </script>

@@ -52,9 +52,8 @@ const { title, description, ...headProps } = Astro.props;
       // rather than snapping offscreen. The next mouseenter's first
       // mousemove overwrites it within a frame.
       //
-      // Uses astro:page-load so handlers re-bind after client-side nav
-      // (view transitions are site-wide). Reduced-motion users never see
-      // the overlay because global.css sets `display: none` on ::after.
+      // Reduced-motion users never see the overlay because global.css
+      // sets `display: none` on ::after.
       function initDotRule(el: Element) {
         const host = el as HTMLElement;
         let frame = 0;
@@ -96,7 +95,7 @@ const { title, description, ...headProps } = Astro.props;
         document.querySelectorAll(".dot-rule").forEach(initDotRule);
       }
 
-      document.addEventListener("astro:page-load", setup);
+      setup();
     </script>
   </body>
 </html>

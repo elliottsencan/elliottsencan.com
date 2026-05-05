@@ -120,8 +120,9 @@ const formattedTotal = new Intl.NumberFormat("en-US").format(data.total);
      `forwards` fill: once the animation ends the element reverts to inline
      style (opacity: var(--rest-opacity); transition: transform ...), which is
      exactly the rest state the hover-magnification JS expects. The
-     html.intro-played suppression rule in global.css gates this to fresh
-     page loads only — soft ClientRouter nav shows dots at rest instantly. */
+     html.intro-played suppression rule in global.css gates this to the
+     first page load per session — subsequent navigations within the same
+     tab show dots at rest instantly. */
   /* Simple opacity ramp with a left-to-right stagger — no crest, no scale
      peak. The rail wakes up right after the signature finishes drawing
      (stroke-2 ends at 2.0s), so the two reveals read as a handoff:
@@ -210,9 +211,6 @@ const formattedTotal = new Intl.NumberFormat("en-US").format(data.total);
   //     above the dot with translateX
   //   - cx is read from getBoundingClientRect once per layout (not per event);
   //     cached centers are resampled on resize
-  //
-  // Uses astro:page-load so handlers re-bind after client-side nav
-  // (view transitions are enabled site-wide).
 
   const INFLUENCE = 60; // pixels — wider halo than the old SVG-unit radius
   const MAX_SCALE = 3.4;
@@ -422,5 +420,5 @@ const formattedTotal = new Intl.NumberFormat("en-US").format(data.total);
     document.querySelectorAll(".rail-root").forEach(initRail);
   }
 
-  document.addEventListener("astro:page-load", setup);
+  setup();
 </script>

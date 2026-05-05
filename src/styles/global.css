@@ -247,9 +247,18 @@ html.theme-transition::view-transition-new(root) {
   animation-timing-function: ease-in-out;
 }
 
-/* Route view transitions (Astro ClientRouter).
+/* Cross-document view transitions for site navigation.
 
-   The browser's default crossfade runs ~250ms linear, which reads as a
+   Native browser API — opts every same-origin top-level navigation into
+   a snapshot/crossfade between the outgoing and incoming documents. No
+   client-side router, no soft DOM swap; the browser handles it entirely
+   at the platform layer. Browsers without support fall back to a normal
+   hard navigation with no transition. */
+@view-transition {
+  navigation: auto;
+}
+
+/* The browser's default crossfade runs ~250ms linear, which reads as a
    cut more than a transition. Lengthen and ease it so navigation
    registers as a considered moment — still subtle, not showy. Symmetric
    timing on both sides keeps the crossfade as a single graceful gesture.
