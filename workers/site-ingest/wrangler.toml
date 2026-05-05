@@ -32,6 +32,10 @@ ANTHROPIC_MODEL = ""
 # ingest. Matches the URL's host exactly OR as a parent domain — e.g.
 # `nyt.com` rejects `www.nyt.com` and `cooking.nyt.com`. Default empty.
 # EXCLUDED_HOSTS = ""
+# Per-run safety bounds. Defaults (in code) are 100 each. Uncomment and
+# raise/lower to override without a code edit. Strings, parsed as numbers.
+# MAX_CONCEPTS_PER_RUN = "100"
+# MAX_ENTRIES_PER_RUN = "100"
 
 [[kv_namespaces]]
 binding = "NOW_INPUTS"

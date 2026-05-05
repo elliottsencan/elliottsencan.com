@@ -42,6 +42,13 @@ export interface LintReport {
   }>;
   hallucinated_related: Array<{ wiki_slug: string; missing_related: string }>;
   untagged_readings: string[];
+  /**
+   * Topics that appear on exactly one reading entry AND have no wiki
+   * article. These contribute nothing to the wiki layer until a peer
+   * arrives — operator can either retag (collapse to an existing topic)
+   * or accept the singleton.
+   */
+  under_clustered_topics: Array<{ topic: string; reading_slug: string }>;
   unparseable_files: string[];
 }
 
@@ -83,11 +90,39 @@ export function computeLintReport(
 
   const untagged_readings = reading.filter((r) => r.topics.length === 0).map((r) => r.slug);
 
+  // Single-source orphan topics: tally each topic's contributing readings,
+  // then surface (topic, reading_slug) when count is exactly 1 AND no wiki
+  // article exists. Dedupe within a single reading's topics[] (a reading
+  // that lists the same topic twice still counts once).
+  const topicCounts = new Map<string, string[]>();
+  for (const r of reading) {
+    const seen = new Set<string>();
+    for (const topic of r.topics) {
+      if (seen.has(topic)) {
+        continue;
+      }
+      seen.add(topic);
+      const list = topicCounts.get(topic);
+      if (list) {
+        list.push(r.slug);
+      } else {
+        topicCounts.set(topic, [r.slug]);
+      }
+    }
+  }
+  const under_clustered_topics: LintReport["under_clustered_topics"] = [];
+  for (const [topic, slugs] of topicCounts) {
+    if (slugs.length === 1 && !wikiSlugs.has(topic)) {
+      under_clustered_topics.push({ topic, reading_slug: slugs[0] as string });
+    }
+  }
+
   const total_issues =
     orphan_citations.length +
     sub_threshold_concepts.length +
     hallucinated_related.length +
     untagged_readings.length +
+    under_clustered_topics.length +
     unparseable.length;
 
   return {
@@ -100,6 +135,7 @@ export function computeLintReport(
     sub_threshold_concepts,
     hallucinated_related,
     untagged_readings,
+    under_clustered_topics,
     unparseable_files: [...unparseable].sort(),
   };
 }
@@ -155,6 +191,12 @@ export async function handle(_request: Request, env: Env): Promise<Response> {
         description: "Reading entries with empty topics[]; cannot contribute to wiki clustering.",
         count: report.untagged_readings.length,
         items: report.untagged_readings,
+      },
+      under_clustered_topics: {
+        description:
+          "Topics with exactly one contributing reading entry and no wiki article. Retag or accept.",
+        count: report.under_clustered_topics.length,
+        items: report.under_clustered_topics,
       },
       unparseable_files: {
         description:

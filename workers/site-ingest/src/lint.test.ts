@@ -75,8 +75,9 @@ describe("computeLintReport", () => {
     const r = [reading("2026-04/a", []), reading("2026-04/b", ["t"])];
     const w = [wiki("topic-x", ["2026-04/a", "2026-04/missing"], ["ghost"])];
     const report = computeLintReport(r, w);
-    // 1 orphan + 1 sub-threshold + 1 hallucinated + 1 untagged = 4
-    expect(report.counts.total_issues).toBe(4);
+    // 1 orphan + 1 sub-threshold + 1 hallucinated + 1 untagged + 1 under_clustered = 5
+    // (topic "t" on 2026-04/b is a singleton with no wiki article)
+    expect(report.counts.total_issues).toBe(5);
     expect(report.counts.reading_entries).toBe(2);
     expect(report.counts.wiki_articles).toBe(1);
   });
@@ -88,5 +89,50 @@ describe("computeLintReport", () => {
       wiki_articles: 0,
       total_issues: 0,
     });
+  });
+});
+
+describe("computeLintReport > under_clustered_topics", () => {
+  it("flags topics that appear on exactly one reading entry and no wiki article", () => {
+    const r = [
+      reading("2026-04/a", ["solo-topic"]),
+      reading("2026-04/b", ["shared", "shared"]),
+      reading("2026-04/c", ["shared"]),
+    ];
+    const w: WikiMeta[] = [];
+    const report = computeLintReport(r, w);
+    expect(report.under_clustered_topics).toEqual([
+      { topic: "solo-topic", reading_slug: "2026-04/a" },
+    ]);
+  });
+
+  it("does not flag a singleton topic when a wiki article exists for it", () => {
+    const r = [reading("2026-04/a", ["covered"])];
+    const w = [wiki("covered", ["2026-04/a"])];
+    const report = computeLintReport(r, w);
+    expect(report.under_clustered_topics).toEqual([]);
+  });
+
+  it("does not flag topics that appear on multiple reading entries", () => {
+    const r = [reading("2026-04/a", ["paired"]), reading("2026-04/b", ["paired"])];
+    const report = computeLintReport(r, []);
+    expect(report.under_clustered_topics).toEqual([]);
+  });
+
+  it("returns the reading_slug of the single contributing entry", () => {
+    const r = [reading("2026-04/zeta", ["t1"]), reading("2026-04/alpha", ["t2"])];
+    const report = computeLintReport(r, []);
+    expect(report.under_clustered_topics).toEqual([
+      { topic: "t1", reading_slug: "2026-04/zeta" },
+      { topic: "t2", reading_slug: "2026-04/alpha" },
+    ]);
+  });
+
+  it("counts under_clustered_topics in total_issues", () => {
+    const r = [reading("2026-04/a", ["solo"])];
+    const report = computeLintReport(r, []);
+    expect(report.under_clustered_topics).toHaveLength(1);
+    // 1 under_clustered = 1 total_issue (no other checks fire here)
+    expect(report.counts.total_issues).toBe(1);
   });
 });
