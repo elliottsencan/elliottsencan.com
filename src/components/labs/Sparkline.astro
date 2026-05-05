@@ -1,7 +1,13 @@
 ---
 /**
  * Sparkline — single-series line chart with optional annotation marker.
- * SVG renders to a viewBox so it scales cleanly to any container width.
+ *
+ * Sparse-data handling: the chart kind feeds whatever bucket array the
+ * aggregator emits (often very few points early on). With 0 points the
+ * SVG renders an "awaiting data" hairline; with 1 point a centered dot;
+ * with 2+ points a normal line + area + dotted markers. Dot radius
+ * scales inversely with point count so a 4-point series reads as a
+ * sequence of stations rather than dust.
  */
 type Annotation = { at: number; label: string };
 type Props = {
@@ -13,18 +19,33 @@ type Props = {
 
 const { data, annotation, height = 80, width = 600 } = Astro.props;
 
-const max = data.length > 0 ? Math.max(...data) : 0;
-const min = data.length > 0 ? Math.min(...data) : 0;
+const n = data.length;
+const max = n > 0 ? Math.max(...data) : 0;
+const min = n > 0 ? Math.min(...data) : 0;
 const range = max - min || 1;
-const stepX = data.length > 1 ? width / (data.length - 1) : width;
-const points = data.map(
-  (v, i) => [i * stepX, height - ((v - min) / range) * (height - 16) - 8] as const,
-);
+const yFor = (v: number) => height - ((v - min) / range) * (height - 16) - 8;
+
+// 1-point case: pin the lone dot to horizontal center so it reads as a
+// "single observation" rather than a stray pixel at the left edge.
+const xFor = (i: number) => {
+  if (n <= 1) {
+    return width / 2;
+  }
+  return (i * width) / (n - 1);
+};
+
+const points = data.map((v, i) => [xFor(i), yFor(v)] as const);
 const linePath = points
   .map(([x, y], i) => `${i === 0 ? "M" : "L"} ${x.toFixed(1)} ${y.toFixed(1)}`)
   .join(" ");
-const areaPath = `${linePath} L ${width} ${height} L 0 ${height} Z`;
+// Only draw the area fill when there's actually a span — a 1-point area
+// degenerates into a triangular wedge that reads as a glitch.
+const areaPath = n >= 2 ? `${linePath} L ${width} ${height} L 0 ${height} Z` : null;
 const annotationPoint = annotation ? points[annotation.at] : null;
+
+// Dot radius scales inversely with density so sparse series read as
+// distinct observations and dense series stay restrained.
+const dotR = n === 1 ? 4 : n <= 4 ? 2.6 : n <= 12 ? 2 : 1.6;
 ---
 
 <svg
@@ -35,16 +56,30 @@ const annotationPoint = annotation ? points[annotation.at] : null;
   style="display: block;"
   role="img"
 >
-  <path d={areaPath} fill="currentColor" opacity="0.06"></path>
-  <path d={linePath} fill="none" stroke="currentColor" stroke-width="1.4"></path>
+  {n === 0 && (
+    <line
+      x1="0"
+      y1={height / 2}
+      x2={width}
+      y2={height / 2}
+      stroke="currentColor"
+      stroke-width="0.6"
+      stroke-dasharray="4 4"
+      opacity="0.25"
+    />
+  )}
+  {areaPath && <path d={areaPath} fill="currentColor" opacity="0.06" />}
+  {n >= 2 && (
+    <path d={linePath} fill="none" stroke="currentColor" stroke-width="1.4" />
+  )}
   {
     points.map(([x, y], i) => (
       <circle
         cx={x}
         cy={y}
-        r="1.6"
+        r={dotR}
         fill="currentColor"
-        opacity={annotation && i === annotation.at ? 1 : 0.4}
+        opacity={annotation && i === annotation.at ? 1 : n <= 4 ? 0.9 : 0.4}
       />
     ))
   }

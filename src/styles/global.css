@@ -183,6 +183,12 @@
     padding-bottom: calc(var(--footer-height) + 4rem);
   }
 
+  @media (max-width: 767px) {
+    main {
+      @apply pt-30;
+    }
+  }
+
   footer {
     @apply fixed bottom-0 left-0 right-0 z-40 py-3 text-sm;
     @apply bg-[#f6f4ef]/75 dark:bg-[#18161a]/75;

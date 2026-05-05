@@ -5,7 +5,7 @@ import EditorialRule from "@components/EditorialRule.astro";
 import LabeledRule from "@components/LabeledRule.astro";
 import Link from "@components/Link.astro";
 import CodeCell from "@components/labs/CodeCell.astro";
-import LabResult from "@components/labs/LabResult.astro";
+import Sparkline from "@components/labs/Sparkline.astro";
 import Layout from "@layouts/Layout.astro";
 import { loadLabData } from "@lib/lab-data";
 import { SITE_TIMEZONE } from "@lib/utils";
@@ -62,39 +62,65 @@ const STATUS_LABELS: Record<string, string> = {
 
       {
         cells.length > 0 ? (
-          <ul class="not-prose flex flex-col gap-6">
+          <ul class="not-prose flex flex-col gap-10">
             {cells.map((cell, i) => {
               const data = dataByCellId.get(cell.id);
               return (
                 <>
-                  <li class="space-y-3">
+                  <li class="space-y-5">
                     {/* NB: bare <header> would inherit site-chrome
                         position:fixed via global.css — CLAUDE.md flags this
                         explicitly. <div> here. */}
                     <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                       <Link
                         href={`/labs/${cell.id}/`}
-                        class="font-heading font-medium text-black dark:text-white"
+                        class="font-heading text-lg font-medium text-black dark:text-white"
                       >
                         {cell.data.title}
                       </Link>
                       <span class="font-mono text-[11px] uppercase tracking-wider text-black/55 dark:text-white/55">
                         /{cell.id}
                       </span>
-                      <span
-                        class="rounded-sm border border-black/10 px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest text-black/55 dark:border-white/15 dark:text-white/55"
-                        data-status={cell.data.status}
-                      >
-                        {STATUS_LABELS[cell.data.status] ?? cell.data.status}
-                      </span>
-                      <span class="ml-auto font-mono text-[11px] text-black/55 dark:text-white/55">
-                        updated {dateFormatter.format(cell.data.lastRunDate)}
+                      <span class="flex items-baseline gap-3 font-mono text-[11px] text-black/55 md:ml-auto dark:text-white/55">
+                        <span data-status={cell.data.status} class="uppercase tracking-widest">
+                          {STATUS_LABELS[cell.data.status] ?? cell.data.status}
+                        </span>
+                        <span aria-hidden="true">·</span>
+                        <span>last run {dateFormatter.format(cell.data.lastRunDate)}</span>
                       </span>
                     </div>
-                    <p class="text-sm leading-relaxed text-black/75 dark:text-white/75">
+                    <p class="max-w-[68ch] text-base leading-relaxed text-black/85 dark:text-white/85">
                       {cell.data.tldr}
                     </p>
-                    <LabResult kind={cell.data.kind} data={data} size="compact" />
+                    <Link
+                      href={`/labs/${cell.id}/`}
+                      class="block no-underline"
+                    >
+                      <div class="grid items-end gap-6 rounded-sm border border-black/10 bg-[#f6f4ef] p-5 transition-colors hover:border-black/20 dark:border-white/10 dark:bg-[#18161a] dark:hover:border-white/20 md:grid-cols-[auto_minmax(0,1fr)]">
+                        <div class="flex flex-col gap-1">
+                          <span class="font-mono text-[10px] uppercase tracking-widest text-black/55 dark:text-white/55">
+                            {cell.data.headlineMetric.label}
+                          </span>
+                          <span
+                            class="font-heading text-3xl font-medium tracking-tight text-black md:text-4xl dark:text-white"
+                            style="font-variant-numeric: tabular-nums;"
+                          >
+                            {cell.data.headlineMetric.value}
+                          </span>
+                        </div>
+                        {cell.data.kind === "chart" &&
+                          typeof data === "object" &&
+                          data !== null &&
+                          Array.isArray((data as { values?: unknown }).values) && (
+                            <div class="text-black/75 dark:text-white/75">
+                              <Sparkline
+                                data={(data as { values: number[] }).values}
+                                height={56}
+                              />
+                            </div>
+                          )}
+                      </div>
+                    </Link>
                     <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1.5 text-xs">
                       {cell.data.tags.map((t) => (
                         <span class="rounded-sm bg-black/5 px-1.5 py-0.5 font-mono text-[11px] text-black/55 dark:bg-white/5 dark:text-white/55">
@@ -102,7 +128,7 @@ const STATUS_LABELS: Record<string, string> = {
                         </span>
                       ))}
                       {cell.data.blogPostSlug && (
-                        <span class="ml-auto font-mono text-[11px] text-black/55 dark:text-white/55">
+                        <span class="font-mono text-[11px] text-black/55 md:ml-auto dark:text-white/55">
                           cited by{" "}
                           <Link
                             href={`/writing/${cell.data.blogPostSlug}/`}

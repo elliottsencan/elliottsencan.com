@@ -103,7 +103,7 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
                   <li class="flex items-baseline gap-4">
                     <time
                       datetime={entry.data.added.toISOString()}
-                      class="w-32 shrink-0 font-sans text-xs text-black/50 dark:text-white/60"
+                      class="w-20 shrink-0 font-sans text-xs text-black/50 md:w-32 dark:text-white/60"
                     >
                       {dateFormatter.format(entry.data.added)}
                     </time>
