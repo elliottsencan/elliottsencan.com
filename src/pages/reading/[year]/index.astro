@@ -1,0 +1,147 @@
+---
+import { type CollectionEntry, getCollection } from "astro:content";
+import Container from "@components/Container.astro";
+import EditorialRule from "@components/EditorialRule.astro";
+import LabeledRule from "@components/LabeledRule.astro";
+import Link from "@components/Link.astro";
+import Layout from "@layouts/Layout.astro";
+import { monthKey, SITE_TIMEZONE } from "@lib/utils";
+
+export async function getStaticPaths() {
+  const all = await getCollection("reading");
+  const years = new Set(all.map((e) => monthKey(e.id).slice(0, 4)));
+  return [...years].map((year) => ({
+    params: { year },
+    props: {
+      year,
+      entries: all
+        .filter((e) => monthKey(e.id).startsWith(year))
+        .sort((a, b) => b.data.added.valueOf() - a.data.added.valueOf()),
+    },
+  }));
+}
+
+type Props = { year: string; entries: CollectionEntry<"reading">[] };
+const { year, entries } = Astro.props;
+
+// Forward-link from reading → wiki, same as the /reading index, so the
+// citations-to-synthesis through-line is visible from year pages too.
+const wikiCitations = await getCollection("wiki");
+const citingByEntry = new Map<string, { id: string; title: string }[]>();
+for (const concept of wikiCitations) {
+  for (const source of concept.data.sources) {
+    const list = citingByEntry.get(source);
+    const ref = { id: concept.id, title: concept.data.title };
+    if (list) {
+      list.push(ref);
+    } else {
+      citingByEntry.set(source, [ref]);
+    }
+  }
+}
+
+function monthLabel(key: string): string {
+  const [y, m] = key.split("-").map(Number);
+  const date = new Date(Date.UTC(y, m - 1, 1, 12));
+  return `${date.toLocaleString("en-US", { month: "long", timeZone: "UTC" })} ${y}`;
+}
+
+type Entry = CollectionEntry<"reading">;
+type Bucket = { key: string; label: string; entries: Entry[] };
+const buckets: Bucket[] = [];
+for (const entry of entries) {
+  const key = monthKey(entry.id);
+  const last = buckets[buckets.length - 1];
+  if (last && last.key === key) {
+    last.entries.push(entry);
+  } else {
+    buckets.push({ key, label: monthLabel(key), entries: [entry] });
+  }
+}
+
+const dateFormatter = new Intl.DateTimeFormat("en-US", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+  timeZone: SITE_TIMEZONE,
+});
+---
+
+<Layout
+  title={`Reading: ${year}`}
+  description={`Reading log for ${year} — ${entries.length} entr${entries.length === 1 ? "y" : "ies"}.`}
+>
+  <Container>
+    <div
+      class="space-y-10"
+      data-pagefind-body
+      data-pagefind-filter="type:Reading"
+    >
+      <LabeledRule>
+        <Link href="/reading/">Reading</Link> / {year}
+      </LabeledRule>
+
+      <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
+        {entries.length} entr{entries.length === 1 ? "y" : "ies"} from {year}.
+      </p>
+
+      {
+        buckets.map((bucket, bucketIndex) => (
+          <section class="space-y-6">
+            <h2 class="font-heading text-sm font-medium text-black/65 dark:text-white/65">
+              {bucket.label}
+            </h2>
+            <ul class="not-prose flex flex-col gap-6 text-sm">
+              {bucket.entries.map((entry) => (
+                <li class="flex items-baseline gap-4">
+                  <time
+                    datetime={entry.data.added.toISOString()}
+                    class="w-20 shrink-0 font-sans text-xs text-black/50 md:w-32 dark:text-white/60"
+                  >
+                    {dateFormatter.format(entry.data.added)}
+                  </time>
+                  <div class="flex-1 space-y-1.5">
+                    <Link
+                      href={entry.data.url}
+                      external
+                      class="font-heading font-medium text-black dark:text-white"
+                    >
+                      {entry.data.title}
+                    </Link>
+                    {(entry.data.author || entry.data.source) && (
+                      <p class="text-xs text-black/55 dark:text-white/60">
+                        {[entry.data.author, entry.data.source]
+                          .filter(Boolean)
+                          .join(", ")}
+                      </p>
+                    )}
+                    <p class="leading-relaxed text-black/75 dark:text-white/75">
+                      {entry.data.summary}
+                    </p>
+                    <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5 pt-1">
+                      <span class="inline-flex items-center rounded-sm bg-black/5 px-2 py-0.5 text-xs capitalize text-black/65 dark:bg-white/5 dark:text-white/65">
+                        {entry.data.category}
+                      </span>
+                      {(citingByEntry.get(entry.id) ?? []).map((ref) => (
+                        <span class="inline-flex items-baseline gap-1 font-mono text-[11px] text-[color:var(--accent)]">
+                          <span aria-hidden="true">→</span>
+                          <a
+                            href={`/wiki/${ref.id}/`}
+                            class="font-sans text-xs underline decoration-[color:var(--accent)]/40 underline-offset-[3px] hover:decoration-[color:var(--accent)]"
+                          >
+                            cited in /wiki/{ref.id}
+                          </a>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+            {bucketIndex < buckets.length - 1 && <EditorialRule />}
+          </section>
+        ))
+      }
+    </div>
+  </Container>
+</Layout>

@@ -1,0 +1,354 @@
+---
+import { getCollection } from "astro:content";
+import Container from "@components/Container.astro";
+import LabeledRule from "@components/LabeledRule.astro";
+import Link from "@components/Link.astro";
+import Layout from "@layouts/Layout.astro";
+import { monthKey } from "@lib/utils";
+
+// Browse-by surfaces for the empty state — recompute years from the live
+// collections so the rail tracks new content automatically.
+const reading = await getCollection("reading");
+const blog = (await getCollection("blog")).filter((p) => !p.data.draft);
+
+const readingYears = [...new Set(reading.map((e) => monthKey(e.id).slice(0, 4)))].sort((a, b) =>
+  b.localeCompare(a),
+);
+const writingYears = [...new Set(blog.map((p) => p.data.date.getFullYear().toString()))].sort(
+  (a, b) => b.localeCompare(a),
+);
+
+// Scope chips. The order shows the three-layer knowledge stack (citations →
+// synthesis → experiments) followed by writing/projects. Each chip is its
+// own URL so the active scope is shareable; selection is read client-side
+// from `?type=…` and folded into Pagefind's mergeFilter on mount.
+const scopes = [
+  { label: "All", value: null, href: "/search" },
+  { label: "Writing", value: "Writing", href: "/search?type=Writing" },
+  { label: "Reading", value: "Reading", href: "/search?type=Reading" },
+  { label: "Wiki", value: "Wiki", href: "/search?type=Wiki" },
+  { label: "Projects", value: "Projects", href: "/search?type=Projects" },
+  { label: "Labs", value: "Labs", href: "/search?type=Labs" },
+];
+---
+
+<Layout
+  title="Search"
+  description="Search across writing, reading, wiki, projects, and labs."
+>
+  <Container>
+    <div class="space-y-10" data-pagefind-ignore>
+      <LabeledRule>Search</LabeledRule>
+
+      <div id="pagefind-host" class="space-y-4">
+        <nav
+          class="scope-chips flex flex-wrap gap-1.5"
+          aria-label="Filter by surface"
+        >
+          {
+            scopes.map((s) => (
+              <a
+                href={s.href}
+                class="scope-chip"
+                data-scope={s.value ?? "all"}
+              >
+                {s.label}
+              </a>
+            ))
+          }
+        </nav>
+
+        <div id="search"></div>
+      </div>
+
+      <section id="empty-state" class="space-y-8">
+        {
+          readingYears.length > 0 && (
+            <div class="space-y-3">
+              <h2 class="font-mono text-xs uppercase tracking-wider text-black/55 dark:text-white/55">
+                Reading by year
+              </h2>
+              <ul class="not-prose flex flex-wrap gap-x-4 gap-y-2 text-sm">
+                {readingYears.map((y) => (
+                  <li>
+                    <Link href={`/reading/${y}/`}>{y}</Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )
+        }
+
+        {
+          writingYears.length > 0 && (
+            <div class="space-y-3">
+              <h2 class="font-mono text-xs uppercase tracking-wider text-black/55 dark:text-white/55">
+                Writing by year
+              </h2>
+              <ul class="not-prose flex flex-wrap gap-x-4 gap-y-2 text-sm">
+                {writingYears.map((y) => (
+                  <li>
+                    <Link href={`/writing/${y}/`}>{y}</Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )
+        }
+
+        <div class="space-y-3">
+          <h2
+            class="font-mono text-xs uppercase tracking-wider text-black/55 dark:text-white/55"
+          >
+            Other surfaces
+          </h2>
+          <ul class="not-prose flex flex-wrap gap-x-6 gap-y-2 text-sm">
+            <li><Link href="/tags">tags</Link></li>
+            <li><Link href="/now">now</Link></li>
+            <li><Link href="/about">about</Link></li>
+          </ul>
+        </div>
+      </section>
+    </div>
+  </Container>
+
+  <link rel="stylesheet" href="/pagefind/pagefind-ui.css" />
+  <script is:inline src="/pagefind/pagefind-ui.js"></script>
+
+  <script is:inline>
+    (function () {
+      // Each scope chip is its own URL (`/search?type=Writing`, etc.) so the
+      // active scope is shareable. Read it on mount, mark the active chip,
+      // and fold it into Pagefind's mergeFilter so every search is scoped.
+      const params = new URLSearchParams(window.location.search);
+      const initialQuery = params.get("q") || "";
+      const typeFilter = params.get("type");
+
+      document.querySelectorAll(".scope-chip").forEach((el) => {
+        const scope = el.getAttribute("data-scope");
+        const isActive =
+          (scope === "all" && !typeFilter) || scope === typeFilter;
+        if (isActive) el.classList.add("is-active");
+        // Preserve `?q=` when switching scopes so the user doesn't lose
+        // their query.
+        if (initialQuery) {
+          const url = new URL(el.href, window.location.origin);
+          url.searchParams.set("q", initialQuery);
+          el.href = url.toString();
+        }
+      });
+
+      function syncEmptyState(value) {
+        const empty = document.getElementById("empty-state");
+        if (!empty) return;
+        empty.style.display = value && value.length > 0 ? "none" : "";
+      }
+
+      function syncUrl(value) {
+        const url = new URL(window.location.href);
+        if (value) url.searchParams.set("q", value);
+        else url.searchParams.delete("q");
+        window.history.replaceState(null, "", url.toString());
+      }
+
+      function mount() {
+        if (typeof window.PagefindUI !== "function") {
+          setTimeout(mount, 50);
+          return;
+        }
+        new window.PagefindUI({
+          element: "#search",
+          bundlePath: "/pagefind/",
+          showImages: false,
+          showSubResults: true,
+          excerptLength: 120,
+          resetStyles: false,
+          mergeFilter: typeFilter ? { type: [typeFilter] } : undefined,
+          translations: {
+            placeholder: "Search…",
+            zero_results: "No matches. Try a different keyword.",
+          },
+        });
+
+        // Wait for the input to land in the DOM before priming/focusing it.
+        let attempts = 0;
+        const tick = setInterval(() => {
+          attempts += 1;
+          const host = document.getElementById("search");
+          const input = host && host.querySelector("input");
+          if (input) {
+            input.addEventListener("input", () => {
+              syncEmptyState(input.value);
+              syncUrl(input.value);
+            });
+            if (initialQuery) {
+              input.value = initialQuery;
+              input.dispatchEvent(new Event("input", { bubbles: true }));
+            }
+            input.focus();
+            const len = input.value.length;
+            if (input.setSelectionRange) input.setSelectionRange(len, len);
+            syncEmptyState(input.value);
+            clearInterval(tick);
+          } else if (attempts > 40) {
+            clearInterval(tick);
+          }
+        }, 50);
+      }
+      mount();
+    })();
+  </script>
+
+  <style is:global>
+    :root {
+      --pagefind-ui-scale: 0.9;
+      --pagefind-ui-border-width: 0;
+      --pagefind-ui-border-radius: 8px;
+      --pagefind-ui-font: "Satoshi", sans-serif;
+      --pagefind-ui-primary: #111827;
+      --pagefind-ui-text: #374151;
+      --pagefind-ui-background: transparent;
+      --pagefind-ui-border: transparent;
+      --pagefind-ui-tag: #f3f4f6;
+    }
+
+    .dark {
+      --pagefind-ui-primary: #d4d4d4;
+      --pagefind-ui-text: #d4d4d4;
+      --pagefind-ui-background: transparent;
+      --pagefind-ui-border: transparent;
+    }
+
+    /* Scope chips: hairline pills above the input. Active state inverts the
+       palette to make the current scope unambiguous. Each chip is a real
+       link so the URL stays shareable. */
+    .scope-chips .scope-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.25rem 0.625rem;
+      border: 1px solid rgba(0, 0, 0, 0.15);
+      border-radius: 999px;
+      font-family: var(--font-mono);
+      font-size: 0.6875rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: rgba(0, 0, 0, 0.7);
+      text-decoration: none;
+      transition:
+        border-color 160ms ease,
+        background-color 160ms ease,
+        color 160ms ease;
+    }
+    .scope-chips .scope-chip:hover {
+      border-color: rgba(0, 0, 0, 0.4);
+      color: rgba(0, 0, 0, 0.95);
+    }
+    .scope-chips .scope-chip.is-active {
+      background: rgba(0, 0, 0, 0.85);
+      border-color: rgba(0, 0, 0, 0.85);
+      color: var(--paper, #f6f4ef);
+    }
+    .dark .scope-chips .scope-chip {
+      border-color: rgba(255, 255, 255, 0.2);
+      color: rgba(255, 255, 255, 0.7);
+    }
+    .dark .scope-chips .scope-chip:hover {
+      border-color: rgba(255, 255, 255, 0.45);
+      color: rgba(255, 255, 255, 0.95);
+    }
+    .dark .scope-chips .scope-chip.is-active {
+      background: rgba(255, 255, 255, 0.92);
+      border-color: rgba(255, 255, 255, 0.92);
+      color: #18161a;
+    }
+
+    /* Editorial input — large type, hairline rule, no card chrome. */
+    #search .pagefind-ui__search-input {
+      font-family: "Neue Montreal", "Satoshi", ui-sans-serif, system-ui, sans-serif;
+      font-weight: 500;
+      height: 4rem;
+      padding-left: 3rem;
+      background-color: transparent;
+      border: none;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+      border-radius: 0;
+      outline: none;
+      font-size: 1.375rem;
+    }
+
+    .dark #search .pagefind-ui__search-input {
+      border-bottom-color: rgba(255, 255, 255, 0.15);
+    }
+
+    /* Clear button — anchored to the top-right of the input row. Pagefind
+       UI 1.5 puts the input, clear, and entire drawer (results) inside the
+       same form, so vertical-center positioning lands midway through the
+       results. Anchor to top-0 with height matching the input instead.
+       Suppressed (display:none-equivalent via opacity) when input is empty. */
+    #search .pagefind-ui__search-clear {
+      position: absolute;
+      top: 0;
+      right: 0.5rem;
+      height: 4rem;
+      padding: 0 0.625rem;
+      display: inline-flex;
+      align-items: center;
+      background: transparent;
+      border: none;
+      border-radius: 0;
+      font-family: var(--font-mono);
+      font-size: 0.6875rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: rgba(0, 0, 0, 0.55);
+      cursor: pointer;
+      transition: color 160ms ease;
+    }
+    #search .pagefind-ui__search-clear:hover {
+      color: rgba(0, 0, 0, 0.95);
+    }
+    .dark #search .pagefind-ui__search-clear {
+      color: rgba(255, 255, 255, 0.55);
+    }
+    .dark #search .pagefind-ui__search-clear:hover {
+      color: rgba(255, 255, 255, 0.95);
+    }
+
+    #search .pagefind-ui__form::before {
+      top: calc(2rem - 9px);
+      left: 1rem;
+      opacity: 0.4;
+    }
+
+    /* Hide Pagefind's default filter accordion — we render scope chips
+       above the input instead and pass the selection in via mergeFilter. */
+    #search .pagefind-ui__filter-panel {
+      display: none;
+    }
+
+    #search .pagefind-ui__results-area {
+      padding: 1rem 0 0;
+    }
+
+    #search p {
+      font-weight: normal;
+    }
+
+    #search .pagefind-ui__result-title {
+      font-weight: 600;
+    }
+
+    #search .pagefind-ui__message {
+      padding: 0.75rem 0;
+    }
+
+    #search .pagefind-ui__result {
+      padding: 0.75rem 0;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .dark #search .pagefind-ui__result {
+      border-bottom-color: rgba(255, 255, 255, 0.08);
+    }
+  </style>
+</Layout>
