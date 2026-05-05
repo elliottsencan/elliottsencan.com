@@ -2,14 +2,12 @@
 title: "Now"
 description: "What I'm working on right now."
 updated: 2026-05-03
-standfirst: "Festival season is ramping up, with the platform build and lineup week running in parallel and the portfolio rounding into shape on the side"
+standfirst: "Grupblox and a public Karpathy LLM wiki"
 ---
 
 ## Building
 
-SSBD Platform v2.0 is the main thing. It's a full festival operations platform for Same Same But Different, built backend-first, with a hard ship date of August 24. The current milestone covers maps, push notifications, and general festival readiness. This week is lineup drop week, so there's a lot happening on the festival side in parallel with the build.
-
-The personal portfolio is also in flight. The goal is a principal-level site that signals architectural judgment and product thinking through writing and case studies, not just a project list. It's weeks out from the outreach milestone.
+I've been spending time outside of work trying to combine a Karpathy LLM wiki with the reading list ingestion pipeline I've been working on. The work in progress is at the wiki link above
 
 ## Reading / Listening
 
@@ -17,10 +15,6 @@ Working through Chip Huyen's *AI Engineering: Building Applications with Foundat
 
 Nine Inch Nails' new record is an album-of-the-year contender. Heavy rotation.
 
-## Currently
-
-Couchella weekend. Love Coachella, love watching it from the couch even more. The livestream keeps getting better.
-
 ## Making
 
-Lineup drop week at Same Same But Different. The festival runs about 7,500 people and the build-up to announcement week is its own kind of sprint.
+Lineup drop week at Same Same But Different.
