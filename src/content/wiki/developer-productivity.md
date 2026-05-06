@@ -1,25 +1,25 @@
 ---
 title: Developer productivity
 summary: >-
-  Developer productivity spans tooling, workflows, and practices that reduce
-  friction and preserve engineering capacity, with recent sources examining how
-  AI assistance, test analytics, documentation platforms, and shell fluency each
-  pull on that goal differently.
+  A cluster of practices, tools, and warnings around how developers actually
+  spend their time: from shell fluency and test maintainability to AI tooling
+  that may cost as much in cognitive overhead as it saves.
 sources:
   - 2026-04/2026-04-27t145041-agentic-coding-is-a-trap
   - 2026-04/2026-04-30t231348-testdino
   - 2026-04/2026-04-30t231435-mintlify
   - >-
     2026-04/2026-04-30t231815-shell-tricks-that-actually-make-life-easier-and-save-your
-aliases:
-  - developer-experience
-  - developer-tooling
-compiled_at: 2026-05-04T03:38:23.447Z
+  - 2026-05/2026-05-05t091632-building-websites-with-llms
+  - >-
+    2026-05/2026-05-05t135218-designing-playwright-tests-that-survive-ui-refactors
+  - 2026-05/2026-05-05t135637-reddit-rdevops
+compiled_at: '2026-05-06T04:33:00.690Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 2671
-    output_tokens: 513
+    input_tokens: 3195
+    output_tokens: 582
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -30,12 +30,12 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.015708
+  cost_usd: 0.018315
 ---
-Productivity for software engineers is not a single lever. The sources here each address a different surface: how developers interact with AI, how they manage test feedback, how they maintain documentation, and how they move efficiently at the command line.
+Productivity for developers splits roughly into two categories: reducing friction in existing workflows and adopting new capabilities that promise to compress work. Both carry costs that are easy to undercount.
 
-[Shell tricks](/reading/2026-04/2026-04-30t231815-shell-tricks-that-actually-make-life-easier-and-save-your) from Christian Hofstede-Kuhn represent the foundational layer: Readline bindings, history search, brace expansion, and script safety flags are small investments that compound across every session. This kind of fluency is non-AI, durable, and fully under a developer's control.
+On the friction-reduction side, [Shell Tricks](/reading/2026-04/2026-04-30t231815-shell-tricks-that-actually-make-life-easier-and-save-your) covers underused primitives, Readline bindings, history search, and script safety flags that speed up the terminal work most engineers do daily. [Designing Playwright Tests That Survive UI Refactors](/reading/2026-05/2026-05-05t135218-designing-playwright-tests-that-survive-ui-refactors) addresses a common time sink: test suites that break on every UI change not because refactors are risky but because tests couple to CSS classes and DOM structure rather than semantic roles. Fixing the selector strategy once prevents recurring triage cycles. [TestDino](/reading/2026-04/2026-04-30t231348-testdino) sits adjacent, offering AI-powered categorization of test failures to distinguish bugs, flakiness, and UI drift, claiming 6-8 hours of weekly savings per engineer.
 
-Tooling that wraps workflows adds another layer. [TestDino](/reading/2026-04/2026-04-30t231348-testdino) centralizes Playwright test runs and auto-categorizes failures as bugs, flaky tests, or UI changes, claiming 6-8 hours of weekly savings per engineer. [Mintlify](/reading/2026-04/2026-04-30t231435-mintlify) targets the documentation gap, offering an AI-native platform that serves knowledge to both humans and LLMs, including support for llms.txt and [MCP](/wiki/mcp).
+Documentation is another productivity lever that often gets deferred. [Mintlify](/reading/2026-04/2026-04-30t231435-mintlify) positions itself as an AI-native layer for writing and maintaining docs, including support for llms.txt and MCP so that agents can consume the same knowledge base that humans do.
 
-The harder question is whether AI-first workflows increase or decrease net productivity over time. Lars Faye argues in [Agentic Coding is a Trap](/reading/2026-04/2026-04-27t145041-agentic-coding-is-a-trap) that full reliance on [coding agents](/wiki/agentic-workflows) erodes the debugging and critical-thinking skills developers need to supervise those same agents. The short-term throughput gain can mask long-term skill decay and introduce vendor lock-in and unpredictable token costs. This tension sits unresolved across the sources: productivity tools that reduce cognitive load may simultaneously reduce the cognitive capacity needed to catch what those tools miss.
+The more contested terrain is AI-assisted development itself. [Agentic Coding is a Trap](/reading/2026-04/2026-04-27t145041-agentic-coding-is-a-trap) argues that full reliance on coding agents erodes the debugging and critical thinking skills required to supervise those same agents, creating a compounding dependency alongside vendor lock-in and unpredictable token costs. Productivity gains that depend on skills you are simultaneously losing are not sustainable. This sits in tension with tools like TestDino and Mintlify that use AI as a reporting or authoring layer rather than a code-generation replacement, a distinction worth keeping in mind when evaluating any AI productivity claim.
