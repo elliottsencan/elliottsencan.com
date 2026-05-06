@@ -17,7 +17,7 @@ sources:
   - 2026-05/2026-05-04t231343-ai-likes-deep-modules
 aliases:
   - ai-coding-assistants
-compiled_at: '2026-05-06T02:24:39.064Z'
+compiled_at: 2026-05-06T02:24:39.064Z
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
@@ -41,8 +41,8 @@ On the tooling side, projects like [Databricks AI Dev Kit](/reading/2026-04/2026
 
 Architectural choices inside the codebase matter for how well these tools perform. [AI Likes Deep Modules](/reading/2026-05/2026-05-04t231343-ai-likes-deep-modules) argues that LLMs struggle when abstractions are shallow and leaky, forcing the model to reason across many layers simultaneously; deep modules with narrow interfaces concentrate complexity where the model can handle it.
 
-The reliability of autonomous sessions is an active research problem. Anthropic's harness design [work](/reading/2026-05/2026-05-01t104137-harness-design-for-long-running-application-development) addresses context anxiety and self-evaluation bias in multi-hour coding runs using a GAN-inspired planner-generator-evaluator loop. Meiklejohn's verification series adds that same-modality self-checks are structurally weak; [modality shift](/reading/2026-05/2026-05-03t110102-getting-up-to-speed-on-multi-agent-systems-part-6) is what separates superficial review from genuine correctness gates. Benchmark results for multi-agent coding systems are also suspect: [Part 7](/reading/2026-05/2026-05-03t110114-getting-up-to-speed-on-multi-agent-systems-part-7) notes that most benchmarks were designed for single agents and cannot measure coordination overhead, making headline numbers from papers like ChatDev and MetaGPT hard to interpret.
+The reliability of autonomous sessions is an active research problem. Anthropic's harness design [work](/reading/2026-05/2026-05-01t104137-harness-design-for-long-running-application-development) addresses context anxiety and self-evaluation bias in multi-hour coding runs using a GAN-inspired planner-generator-evaluator loop. Meiklejohn's verification series adds that same-modality self-checks are structurally weak; [modality shift](/reading/2026-05/2026-05-03t110102-getting-up-to-speed-on-multi-agent-systems-part-6) is what separates superficial review from genuine correctness gates. Benchmark results for multi-agent coding systems are also suspect: [Part 7](/reading/2026-05/2026-05-03t110114-getting-up-to-speed-on-multi-agent-systems-part-7) notes that [most benchmarks were designed for single agents and cannot measure coordination overhead](/wiki/benchmarks), making headline numbers from papers like ChatDev and MetaGPT hard to interpret.
 
 Lars Faye's [critique](/reading/2026-04/2026-04-27t145041-agentic-coding-is-a-trap) cuts at a subtler risk: delegating too much to agents erodes the debugging and critical-thinking skills a developer needs to supervise those same agents, creating a feedback loop that compounds over time alongside vendor lock-in and unpredictable token costs.
 
-Security is a live concern as well. The supply-chain attack on SAP-related npm packages [used Claude Code and VS Code configurations as persistence vectors](/reading/2026-05/2026-05-01t102345-sap-related-npm-packages-compromised-in-credential-stealing), illustrating that the same tool integrations that make assistants powerful also expand the attack surface.
+Security is a live concern as well. The supply-chain attack on SAP-related npm packages [used Claude Code and VS Code configurations as persistence vectors](/reading/2026-05/2026-05-01t102345-sap-related-npm-packages-compromised-in-credential-stealing), illustrating that the same tool integrations that make assistants powerful also expand the [attack surface](/wiki/supply-chain-security).
