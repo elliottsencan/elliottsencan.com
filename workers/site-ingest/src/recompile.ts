@@ -12,7 +12,10 @@
  *        c. Rebuild the entry markdown with updated fields + `compiled_at`
  *           and `compiled_with` set to the recompile run.
  *   5. Hand the per-entry mutations to runPipeline; substrate owns branch
- *      + commit + PR + the inline cross-link phase.
+ *      + commit + PR. The cross-link phase runs as a follow-up
+ *      (ctx.waitUntil → separate PR) so the synchronous response fits
+ *      inside Cloudflare's 30s wall time even when the wiki corpus is
+ *      large; mirrors the /link and /synthesize pattern.
  *
  * Cost: one Anthropic call per entry; IA fetches are free. Capped per run
  * to keep Worker CPU budget under control — operators can split larger
@@ -361,9 +364,16 @@ export async function handle(request: Request, env: Env, ctx: ExecutionContext):
   }
 
   const deps = makePipelineDeps(env);
+  // /recompile uses crosslink: "followup" so the synchronous response returns
+  // as soon as the rebuild commit lands, and the crosslink phase runs in
+  // ctx.waitUntil after. With a 38+ article wiki, the inline crosslink phase
+  // alone can push the request past Cloudflare's 30s wall time. Tradeoff: the
+  // rebuild and crosslinks land as separate PRs (one for recompiled entries,
+  // one for anchor-phrase insertions) instead of a single PR with two commits.
+  // Mirrors the proven /link and /synthesize pattern.
   const result = await runPipeline(
     strategy,
-    { commitTarget: "pr", crosslink: "inline" },
+    { commitTarget: "pr", crosslink: "followup" },
     env,
     ctx,
     deps,
