@@ -698,6 +698,9 @@ describe("makeLinkStrategy.plan — wiki sources[] patch", () => {
     expect(Array.isArray(data.sources)).toBe(true);
     expect((data.sources as string[]).length).toBe(3);
     expect(data.last_source_added).toBeDefined();
+    // wiki_patched surfaces in the summary so the operator sees the
+    // cascading effect without inspecting the commit.
+    expect(result.data.summary?.wiki_patched).toEqual(["ai-assisted-coding"]);
   });
 
   it("leaves mutation.changed empty when the topic does not match any wiki article", async () => {
