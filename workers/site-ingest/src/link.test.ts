@@ -6,12 +6,18 @@ import * as githubModule from "./github.ts";
 import {
   buildEntryMarkdown,
   buildOptOutStubMarkdown,
+  countExistingTopicEntries,
+  handle,
   makeLinkStrategy,
   OPT_OUT_STUB_SUMMARY,
   patchExistingWikiSources,
+  selectThresholdTriggers,
+  spawnThresholdSynthesis,
   validate,
+  type WikiPatchOutcome,
 } from "./link.ts";
 import { __resetRobotsCacheForTests } from "./optout.ts";
+import * as pipelineModule from "./pipeline.ts";
 import type { Env, Result } from "./types.ts";
 
 describe("link.validate", () => {
@@ -473,7 +479,7 @@ describe("patchExistingWikiSources", () => {
     const files = {
       "src/content/wiki/ai-assisted-coding.md": baseWikiArticle(),
     };
-    const changed = await patchExistingWikiSources({
+    const { changed, outcomes } = await patchExistingWikiSources({
       topics: ["ai-assisted-coding"],
       readingSlug: "2026-05/2026-05-05t120000-new-entry",
       added: ADDED_AT,
@@ -481,6 +487,7 @@ describe("patchExistingWikiSources", () => {
       max: 5,
     });
     expect(changed).toHaveLength(1);
+    expect(outcomes.get("ai-assisted-coding")).toBe("patched");
     const file = changed[0];
     expect(file?.path).toBe("src/content/wiki/ai-assisted-coding.md");
     const parsed = matter(file?.after ?? "");
@@ -496,7 +503,7 @@ describe("patchExistingWikiSources", () => {
   });
 
   it("returns no changes when no topic matches an existing wiki article", async () => {
-    const changed = await patchExistingWikiSources({
+    const { changed, outcomes } = await patchExistingWikiSources({
       topics: ["topic-with-no-article"],
       readingSlug: "2026-05/2026-05-05t120000-x",
       added: ADDED_AT,
@@ -504,6 +511,7 @@ describe("patchExistingWikiSources", () => {
       max: 5,
     });
     expect(changed).toHaveLength(0);
+    expect(outcomes.get("topic-with-no-article")).toBe("missing");
   });
 
   it("is idempotent: a slug already in sources[] produces no change", async () => {
@@ -513,7 +521,7 @@ describe("patchExistingWikiSources", () => {
         sources: ["2026-04/2026-04-01t000000-some-source", slug],
       }),
     };
-    const changed = await patchExistingWikiSources({
+    const { changed, outcomes } = await patchExistingWikiSources({
       topics: ["ai-assisted-coding"],
       readingSlug: slug,
       added: ADDED_AT,
@@ -521,11 +529,12 @@ describe("patchExistingWikiSources", () => {
       max: 5,
     });
     expect(changed).toHaveLength(0);
+    expect(outcomes.get("ai-assisted-coding")).toBe("unchanged");
   });
 
   it("treats 404 as a no-op (no error, no throw)", async () => {
     const failingGetFile = async () => ({ ok: false as const, error: "HTTP 404: Not Found" });
-    const changed = await patchExistingWikiSources({
+    const { changed, outcomes } = await patchExistingWikiSources({
       topics: ["nonexistent-topic"],
       readingSlug: "2026-05/2026-05-05t120000-x",
       added: ADDED_AT,
@@ -533,6 +542,7 @@ describe("patchExistingWikiSources", () => {
       max: 5,
     });
     expect(changed).toHaveLength(0);
+    expect(outcomes.get("nonexistent-topic")).toBe("missing");
   });
 
   it("logs and skips a wiki article whose YAML frontmatter is malformed; later topics still patch", async () => {
@@ -542,7 +552,7 @@ describe("patchExistingWikiSources", () => {
       "src/content/wiki/broken-topic.md": "---\ntitle: [unterminated\n---\nbody",
       "src/content/wiki/good-topic.md": baseWikiArticle(),
     };
-    const changed = await patchExistingWikiSources({
+    const { changed, outcomes } = await patchExistingWikiSources({
       topics: ["broken-topic", "good-topic"],
       readingSlug: "2026-05/2026-05-05t120000-x",
       added: ADDED_AT,
@@ -551,11 +561,13 @@ describe("patchExistingWikiSources", () => {
     });
     // The good one still gets patched.
     expect(changed.map((c) => c.path)).toEqual(["src/content/wiki/good-topic.md"]);
+    expect(outcomes.get("broken-topic")).toBe("error");
+    expect(outcomes.get("good-topic")).toBe("patched");
   });
 
   it("treats other (non-404) GitHub errors as skip-this-article, not throw", async () => {
     const flakyGetFile = async () => ({ ok: false as const, error: "HTTP 500: Server Error" });
-    const changed = await patchExistingWikiSources({
+    const { changed, outcomes } = await patchExistingWikiSources({
       topics: ["some-topic"],
       readingSlug: "2026-05/2026-05-05t120000-x",
       added: ADDED_AT,
@@ -563,6 +575,7 @@ describe("patchExistingWikiSources", () => {
       max: 5,
     });
     expect(changed).toHaveLength(0);
+    expect(outcomes.get("some-topic")).toBe("error");
   });
 
   it("caps the number of wiki articles inspected per call (max=N)", async () => {
@@ -573,7 +586,7 @@ describe("patchExistingWikiSources", () => {
       topics.push(t);
       files[`src/content/wiki/${t}.md`] = baseWikiArticle();
     }
-    const changed = await patchExistingWikiSources({
+    const { changed, outcomes } = await patchExistingWikiSources({
       topics,
       readingSlug: "2026-05/2026-05-05t120000-x",
       added: ADDED_AT,
@@ -587,6 +600,9 @@ describe("patchExistingWikiSources", () => {
       "src/content/wiki/topic-1.md",
       "src/content/wiki/topic-2.md",
     ]);
+    // Topics over the cap are absent from the outcomes map (never inspected).
+    expect(outcomes.has("topic-3")).toBe(false);
+    expect(outcomes.get("topic-0")).toBe("patched");
   });
 
   it("preserves existing frontmatter fields untouched (only sources[] and last_source_added change)", async () => {
@@ -596,7 +612,7 @@ describe("patchExistingWikiSources", () => {
         compile_cost: { foo: "bar" },
       }),
     };
-    const changed = await patchExistingWikiSources({
+    const { changed } = await patchExistingWikiSources({
       topics: ["ai-assisted-coding"],
       readingSlug: "2026-05/2026-05-05t120000-new",
       added: ADDED_AT,
@@ -798,5 +814,552 @@ describe("makeLinkStrategy.plan — wiki sources[] patch", () => {
     expect(calledPaths).not.toContain("src/content/wiki/ai-coding-assistants.md");
     expect(result.data.mutation.changed).toHaveLength(1);
     expect(result.data.mutation.changed[0]?.path).toBe("src/content/wiki/ai-assisted-coding.md");
+  });
+});
+
+// ---------- A2: threshold trigger ----------
+
+/**
+ * Reading-corpus listDir helper used by the A2 tests. Reading content is
+ * two levels deep (year-month/file.md), so we walk one level — same shape
+ * the real GitHub-backed listDir produces and what `enumerateReadingTopics`
+ * expects.
+ */
+function thresholdReadingListDir(files: Record<string, string>) {
+  return async (path: string) => {
+    const direct = Object.keys(files)
+      .filter((k) => k.startsWith(`${path}/`))
+      .map((k) => k.slice(path.length + 1));
+    const seen = new Set<string>();
+    const entries: Array<{ type: "file" | "dir"; name: string; path: string; sha: string }> = [];
+    for (const tail of direct) {
+      const slash = tail.indexOf("/");
+      if (slash === -1) {
+        if (seen.has(tail)) {
+          continue;
+        }
+        seen.add(tail);
+        entries.push({ type: "file", name: tail, path: `${path}/${tail}`, sha: "x" });
+      } else {
+        const dir = tail.slice(0, slash);
+        if (seen.has(dir)) {
+          continue;
+        }
+        seen.add(dir);
+        entries.push({ type: "dir", name: dir, path: `${path}/${dir}`, sha: "x" });
+      }
+    }
+    if (entries.length === 0 && !Object.keys(files).some((k) => k.startsWith(`${path}/`))) {
+      return { ok: false as const, error: "404 not found" };
+    }
+    return { ok: true as const, data: entries };
+  };
+}
+
+/**
+ * Reading-entry frontmatter generator for the threshold-trigger tests.
+ * Mirrors the worker's actual frontmatter shape so ReadingFrontmatterSchema
+ * accepts it (otherwise enumerateReadingTopics drops the entry as invalid
+ * and the count shows 0).
+ */
+const readingEntryWithTopics = (topics: string[], extra: Record<string, unknown> = {}): string => {
+  const fm: Record<string, unknown> = {
+    title: "Some Title",
+    url: "https://example.com/x",
+    summary: "S.",
+    category: "tech",
+    added: "2026-04-01T00:00:00.000Z",
+    topics,
+    ...extra,
+  };
+  const lines = ["---"];
+  for (const [k, v] of Object.entries(fm)) {
+    if (Array.isArray(v)) {
+      lines.push(`${k}: [${v.map((s) => JSON.stringify(s)).join(", ")}]`);
+    } else if (typeof v === "boolean") {
+      lines.push(`${k}: ${v}`);
+    } else {
+      lines.push(`${k}: ${JSON.stringify(v)}`);
+    }
+  }
+  lines.push("---", "", "");
+  return lines.join("\n");
+};
+
+/**
+ * A fake GitHubClient — `selectThresholdTriggers` only consumes it via
+ * `listDir`/`getFile` from the github module (which we spy on), so the
+ * client is never deeply unwrapped. Any object reference works as long
+ * as the spies don't introspect it.
+ */
+const fakeGh = {} as unknown as ReturnType<typeof githubModule.createGitHubClient>;
+
+describe("countExistingTopicEntries", () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("counts only the requested topics across the reading corpus", async () => {
+    const files: Record<string, string> = {
+      "src/content/reading/2026-04/2026-04-01t000000-a.md": readingEntryWithTopics(["foo", "bar"]),
+      "src/content/reading/2026-04/2026-04-02t000000-b.md": readingEntryWithTopics(["foo"]),
+      "src/content/reading/2026-04/2026-04-03t000000-c.md": readingEntryWithTopics(["baz"]),
+    };
+    vi.spyOn(githubModule, "listDir").mockImplementation(thresholdReadingListDir(files));
+    vi.spyOn(githubModule, "getFile").mockImplementation(async (path: string) => {
+      const content = files[path];
+      if (content === undefined) {
+        return { ok: false as const, error: "HTTP 404: Not Found" };
+      }
+      return { ok: true as const, data: { content, sha: "x" } };
+    });
+    const env = baseEnv();
+    const counts = await countExistingTopicEntries({
+      env,
+      gh: fakeGh,
+      topics: ["foo", "bar"],
+    });
+    expect(counts.get("foo")).toBe(2);
+    expect(counts.get("bar")).toBe(1);
+    expect(counts.has("baz")).toBe(false);
+  });
+
+  it("returns an empty map when topics is empty (no IO)", async () => {
+    const listDirSpy = vi.spyOn(githubModule, "listDir");
+    const env = baseEnv();
+    const counts = await countExistingTopicEntries({ env, gh: fakeGh, topics: [] });
+    expect(counts.size).toBe(0);
+    expect(listDirSpy).not.toHaveBeenCalled();
+  });
+
+  it("excludes noindex'd entries (delegates to enumerateReadingTopics filter)", async () => {
+    const files: Record<string, string> = {
+      "src/content/reading/2026-04/2026-04-01t000000-public.md": readingEntryWithTopics(["foo"]),
+      "src/content/reading/2026-04/2026-04-02t000000-private.md": readingEntryWithTopics(["foo"], {
+        noindex: true,
+        opted_out: "x-robots-tag",
+      }),
+    };
+    vi.spyOn(githubModule, "listDir").mockImplementation(thresholdReadingListDir(files));
+    vi.spyOn(githubModule, "getFile").mockImplementation(async (path: string) => {
+      const content = files[path];
+      if (content === undefined) {
+        return { ok: false as const, error: "HTTP 404: Not Found" };
+      }
+      return { ok: true as const, data: { content, sha: "x" } };
+    });
+    const env = baseEnv();
+    const counts = await countExistingTopicEntries({ env, gh: fakeGh, topics: ["foo"] });
+    expect(counts.get("foo")).toBe(1);
+  });
+});
+
+describe("selectThresholdTriggers", () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  /**
+   * Helper: stage a reading corpus that gives `topic` exactly `count`
+   * existing entries. Returns the spies for ergonomics in negative-path
+   * tests. Each entry is ascii-named so the readingFrontmatter schema
+   * accepts it.
+   */
+  const stageReadingCorpus = (entries: Array<{ slug: string; topics: string[] }>) => {
+    const files: Record<string, string> = {};
+    for (const e of entries) {
+      files[`src/content/reading/2026-04/${e.slug}.md`] = readingEntryWithTopics(e.topics);
+    }
+    vi.spyOn(githubModule, "listDir").mockImplementation(thresholdReadingListDir(files));
+    vi.spyOn(githubModule, "getFile").mockImplementation(async (path: string) => {
+      const content = files[path];
+      if (content === undefined) {
+        return { ok: false as const, error: "HTTP 404: Not Found" };
+      }
+      return { ok: true as const, data: { content, sha: "x" } };
+    });
+  };
+
+  it("returns empty when the topic is below threshold (1 existing + 1 new = 1, MIN=2)", async () => {
+    // Zero existing entries; +1 for the new entry = 1; below MIN_WIKI_SOURCES=2.
+    stageReadingCorpus([]);
+    const outcomes = new Map<string, WikiPatchOutcome>([["lonely-topic", "missing"]]);
+    const env = baseEnv();
+    const out = await selectThresholdTriggers({
+      env,
+      gh: fakeGh,
+      canonicalTopics: ["lonely-topic"],
+      wikiOutcomes: outcomes,
+    });
+    expect(out).toEqual([]);
+  });
+
+  it("spawns when this entry brings the topic to MIN_WIKI_SOURCES with no existing wiki article", async () => {
+    // 1 existing entry tagged with the topic; +1 for this entry = 2 = MIN_WIKI_SOURCES.
+    stageReadingCorpus([{ slug: "2026-04-01t000000-a", topics: ["new-topic"] }]);
+    const outcomes = new Map<string, WikiPatchOutcome>([["new-topic", "missing"]]);
+    const env = baseEnv();
+    const out = await selectThresholdTriggers({
+      env,
+      gh: fakeGh,
+      canonicalTopics: ["new-topic"],
+      wikiOutcomes: outcomes,
+    });
+    expect(out).toEqual(["new-topic"]);
+  });
+
+  it("does NOT spawn when an existing wiki article already covers the topic (handled by patch)", async () => {
+    // Threshold is met (2 existing + 1 new = 3) but the wiki article exists,
+    // so patchExistingWikiSources updates sources[] and the threshold trigger
+    // stays out of the way.
+    stageReadingCorpus([
+      { slug: "2026-04-01t000000-a", topics: ["existing-topic"] },
+      { slug: "2026-04-02t000000-b", topics: ["existing-topic"] },
+    ]);
+    const outcomes = new Map<string, WikiPatchOutcome>([["existing-topic", "patched"]]);
+    const env = baseEnv();
+    const out = await selectThresholdTriggers({
+      env,
+      gh: fakeGh,
+      canonicalTopics: ["existing-topic"],
+      wikiOutcomes: outcomes,
+    });
+    expect(out).toEqual([]);
+  });
+
+  it("batches multiple crossings into a single combined spawn list", async () => {
+    // Two distinct topics, each at threshold-1 with this entry pushing them
+    // both to MIN_WIKI_SOURCES, no wiki articles for either.
+    stageReadingCorpus([
+      { slug: "2026-04-01t000000-a", topics: ["alpha"] },
+      { slug: "2026-04-02t000000-b", topics: ["bravo"] },
+    ]);
+    const outcomes = new Map<string, WikiPatchOutcome>([
+      ["alpha", "missing"],
+      ["bravo", "missing"],
+    ]);
+    const env = baseEnv();
+    const out = await selectThresholdTriggers({
+      env,
+      gh: fakeGh,
+      canonicalTopics: ["alpha", "bravo"],
+      wikiOutcomes: outcomes,
+    });
+    expect(out).toEqual(["alpha", "bravo"]);
+  });
+
+  it("caps four simultaneous crossings to MAX_THRESHOLD_TRIGGERS_PER_LINK=3 and skips the rest", async () => {
+    // Each of t1..t4 has 1 existing entry tagged; the new entry adds 1 each,
+    // crossing all four to MIN_WIKI_SOURCES. With the cap at 3, only the
+    // first three are returned.
+    stageReadingCorpus([
+      { slug: "2026-04-01t000000-a", topics: ["t1"] },
+      { slug: "2026-04-02t000000-b", topics: ["t2"] },
+      { slug: "2026-04-03t000000-c", topics: ["t3"] },
+      { slug: "2026-04-04t000000-d", topics: ["t4"] },
+    ]);
+    const outcomes = new Map<string, WikiPatchOutcome>([
+      ["t1", "missing"],
+      ["t2", "missing"],
+      ["t3", "missing"],
+      ["t4", "missing"],
+    ]);
+    const env = baseEnv();
+    const out = await selectThresholdTriggers({
+      env,
+      gh: fakeGh,
+      canonicalTopics: ["t1", "t2", "t3", "t4"],
+      wikiOutcomes: outcomes,
+    });
+    expect(out).toEqual(["t1", "t2", "t3"]);
+  });
+
+  it("skips topics with outcome=error (transient flake — don't risk a duplicate spawn)", async () => {
+    stageReadingCorpus([{ slug: "2026-04-01t000000-a", topics: ["t-error"] }]);
+    const outcomes = new Map<string, WikiPatchOutcome>([["t-error", "error"]]);
+    const env = baseEnv();
+    const out = await selectThresholdTriggers({
+      env,
+      gh: fakeGh,
+      canonicalTopics: ["t-error"],
+      wikiOutcomes: outcomes,
+    });
+    expect(out).toEqual([]);
+  });
+});
+
+// ---------- A2: integration via makeLinkStrategy.plan ----------
+
+describe("makeLinkStrategy.plan — threshold trigger surfaces in summary", () => {
+  beforeEach(() => {
+    __resetRobotsCacheForTests();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+    __resetRobotsCacheForTests();
+  });
+
+  it("populates summary.triggered_synthesis when the new entry crosses MIN_WIKI_SOURCES", async () => {
+    stubFetch((url) => {
+      if (url.endsWith("/robots.txt")) {
+        return new Response("", { status: 404 });
+      }
+      return new Response("<html><title>T</title></html>", { status: 200 });
+    });
+    vi.spyOn(anthropicModule, "summarizeLink").mockResolvedValue({
+      ok: true,
+      data: {
+        title: "Article",
+        summary: "x.",
+        category: "tech",
+        topics: ["new-concept"],
+        model: "claude-sonnet-4-6",
+        cost: {
+          usage: {
+            input_tokens: 0,
+            output_tokens: 0,
+            cache_creation_input_tokens: 0,
+            cache_read_input_tokens: 0,
+          },
+          model: "claude-sonnet-4-6",
+          pricing: null,
+          cost_usd: 0,
+        },
+      },
+    });
+    const corpusFiles: Record<string, string> = {
+      // One existing reading entry with the topic — this new ingest pushes
+      // count to 2 = MIN_WIKI_SOURCES.
+      "src/content/reading/2026-04/2026-04-01t000000-prior.md": readingEntryWithTopics([
+        "new-concept",
+      ]),
+    };
+    vi.spyOn(githubModule, "listDir").mockImplementation(thresholdReadingListDir(corpusFiles));
+    vi.spyOn(githubModule, "getFile").mockImplementation(async (path: string) => {
+      // No wiki article exists for the new topic.
+      if (path.startsWith("src/content/wiki/")) {
+        return { ok: false as const, error: "HTTP 404: Not Found" };
+      }
+      const content = corpusFiles[path];
+      if (content === undefined) {
+        return { ok: false as const, error: "HTTP 404: Not Found" };
+      }
+      return { ok: true as const, data: { content, sha: "x" } };
+    });
+    const strategy = makeLinkStrategy({
+      url: "https://example.com/post",
+      topic_priors: false,
+    });
+    const env = baseEnv();
+    const result = await strategy.plan({ env }, env);
+    expect(result.ok).toBe(true);
+    if (!result.ok) {
+      return;
+    }
+    expect(result.data.summary?.triggered_synthesis).toEqual(["new-concept"]);
+  });
+
+  it("leaves triggered_synthesis empty when the wiki article for the topic already exists", async () => {
+    stubFetch((url) => {
+      if (url.endsWith("/robots.txt")) {
+        return new Response("", { status: 404 });
+      }
+      return new Response("<html><title>T</title></html>", { status: 200 });
+    });
+    vi.spyOn(anthropicModule, "summarizeLink").mockResolvedValue({
+      ok: true,
+      data: {
+        title: "Article",
+        summary: "x.",
+        category: "tech",
+        topics: ["existing-concept"],
+        model: "claude-sonnet-4-6",
+        cost: {
+          usage: {
+            input_tokens: 0,
+            output_tokens: 0,
+            cache_creation_input_tokens: 0,
+            cache_read_input_tokens: 0,
+          },
+          model: "claude-sonnet-4-6",
+          pricing: null,
+          cost_usd: 0,
+        },
+      },
+    });
+    const corpusFiles: Record<string, string> = {
+      "src/content/reading/2026-04/2026-04-01t000000-a.md": readingEntryWithTopics([
+        "existing-concept",
+      ]),
+      "src/content/reading/2026-04/2026-04-02t000000-b.md": readingEntryWithTopics([
+        "existing-concept",
+      ]),
+    };
+    vi.spyOn(githubModule, "listDir").mockImplementation(thresholdReadingListDir(corpusFiles));
+    const wikiBody = baseWikiArticle();
+    vi.spyOn(githubModule, "getFile").mockImplementation(async (path: string) => {
+      if (path === "src/content/wiki/existing-concept.md") {
+        return { ok: true as const, data: { content: wikiBody, sha: "x" } };
+      }
+      const content = corpusFiles[path];
+      if (content === undefined) {
+        return { ok: false as const, error: "HTTP 404: Not Found" };
+      }
+      return { ok: true as const, data: { content, sha: "x" } };
+    });
+    const strategy = makeLinkStrategy({
+      url: "https://example.com/post",
+      topic_priors: false,
+    });
+    const env = baseEnv();
+    const result = await strategy.plan({ env }, env);
+    expect(result.ok).toBe(true);
+    if (!result.ok) {
+      return;
+    }
+    expect(result.data.summary?.triggered_synthesis).toEqual([]);
+    // patchExistingWikiSources still ran and updated the article.
+    expect(result.data.mutation.changed).toHaveLength(1);
+  });
+});
+
+// ---------- A2: spawn integration via handle() and ctx.waitUntil ----------
+
+describe("link.handle — threshold trigger spawn", () => {
+  beforeEach(() => {
+    __resetRobotsCacheForTests();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+    __resetRobotsCacheForTests();
+  });
+
+  /**
+   * Stages handle()'s pipeline run so the link mutation returns a
+   * successful summary carrying `triggered`. We don't introspect what
+   * the synthesis spawn was called with — only that ctx.waitUntil fired
+   * — because runPipeline is mocked out and tracking topics through the
+   * Strategy<S> type via the spy adds noise without coverage gain.
+   */
+  const stagePipeline = (triggered: string[]) => {
+    vi.spyOn(pipelineModule, "runPipeline").mockImplementation(
+      async (strategy: { name: string }) => {
+        if (strategy.name === "link") {
+          return {
+            ok: true,
+            commit_sha: "abc123",
+            summary: {
+              path: "src/content/reading/2026-05/2026-05-05t120000-x.md",
+              category: "tech",
+              topics_context_loaded: false,
+              title_source: "model",
+              topics_committed: triggered,
+              topics_rewritten: [],
+              topics_coined: [],
+              topic_rationale: undefined,
+              cost: {
+                usage: {
+                  input_tokens: 0,
+                  output_tokens: 0,
+                  cache_creation_input_tokens: 0,
+                  cache_read_input_tokens: 0,
+                },
+                model: "claude-sonnet-4-6",
+                pricing: null,
+                cost_usd: 0,
+              },
+              triggered_synthesis: triggered,
+            },
+            // The Strategy generic is erased by the mock — cast at the
+            // call site is the cleanest way to satisfy `RunResult<S>`.
+          } as never;
+        }
+        // The synthesis spawn — pretend the PR opened so the spawn
+        // resolves cleanly and ctx.waitUntil's promise settles.
+        return { ok: true, pr_number: 42, pr_url: "https://example.com/pr/42" } as never;
+      },
+    );
+  };
+
+  it("calls ctx.waitUntil with a synthesis spawn when summary.triggered_synthesis is non-empty", async () => {
+    stagePipeline(["new-concept"]);
+    const env = baseEnv();
+    const ctx = { waitUntil: vi.fn() } as unknown as ExecutionContext;
+    const req = new Request("https://w.example.com/link", {
+      method: "POST",
+      body: JSON.stringify({ url: "https://example.com/post" }),
+    });
+    const res = await handle(req, env, ctx);
+    expect(res.status).toBe(200);
+    expect((ctx.waitUntil as unknown as ReturnType<typeof vi.fn>).mock.calls).toHaveLength(1);
+    const body = (await res.json()) as { triggered_synthesis?: string[] };
+    expect(body.triggered_synthesis).toEqual(["new-concept"]);
+  });
+
+  it("does NOT call ctx.waitUntil and omits triggered_synthesis when none triggered", async () => {
+    stagePipeline([]);
+    const env = baseEnv();
+    const ctx = { waitUntil: vi.fn() } as unknown as ExecutionContext;
+    const req = new Request("https://w.example.com/link", {
+      method: "POST",
+      body: JSON.stringify({ url: "https://example.com/post" }),
+    });
+    const res = await handle(req, env, ctx);
+    expect(res.status).toBe(200);
+    expect((ctx.waitUntil as unknown as ReturnType<typeof vi.fn>).mock.calls).toHaveLength(0);
+    const body = (await res.json()) as Record<string, unknown>;
+    expect("triggered_synthesis" in body).toBe(false);
+  });
+});
+
+// ---------- A2: spawnThresholdSynthesis silent-failure logging ----------
+
+describe("spawnThresholdSynthesis — silent-failure surfacing", () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("logs a structured error with op=link:threshold-trigger when runPipeline rejects", async () => {
+    vi.spyOn(pipelineModule, "runPipeline").mockRejectedValue(new Error("anthropic rate-limited"));
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const env = baseEnv();
+    const ctx = { waitUntil: vi.fn() } as unknown as ExecutionContext;
+    // The function MUST resolve (never reject) — that's the whole point of
+    // wrapping it. If it rejected, /link's handler would propagate the
+    // rejection through ctx.waitUntil and the silent-failure risk noted in
+    // the plan would be live.
+    await expect(
+      spawnThresholdSynthesis({ topics: ["foo", "bar"], env, ctx }),
+    ).resolves.toBeUndefined();
+    // Find the log line: format is `[link:threshold-trigger] <message> ...`.
+    const calls = errorSpy.mock.calls.flat().map(String);
+    const line = calls.find((c) => c.includes("[link:threshold-trigger]"));
+    expect(line).toBeDefined();
+    expect(line).toContain("topics=foo,bar");
+    expect(line).toContain("error_message=anthropic rate-limited");
+  });
+
+  it("logs an error with op=link:threshold-trigger when runPipeline returns ok=false", async () => {
+    vi.spyOn(pipelineModule, "runPipeline").mockResolvedValue({
+      ok: false,
+      status: 502,
+      error: "github 502",
+    });
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const env = baseEnv();
+    const ctx = { waitUntil: vi.fn() } as unknown as ExecutionContext;
+    await spawnThresholdSynthesis({ topics: ["alpha"], env, ctx });
+    const calls = errorSpy.mock.calls.flat().map(String);
+    const line = calls.find((c) => c.includes("[link:threshold-trigger]"));
+    expect(line).toBeDefined();
+    expect(line).toContain("error_message=github 502");
   });
 });
