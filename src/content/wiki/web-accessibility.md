@@ -1,22 +1,23 @@
 ---
 title: Web accessibility
 summary: >-
-  Web accessibility concerns making interfaces usable by people with varying
-  abilities; the sources tagged here touch on it only obliquely, through CSS
-  capabilities and typography choices that affect readability and interaction.
+  Web accessibility appears as a secondary concern across sources on CSS,
+  testing, and typography — surfacing in selector strategy, semantic HTML, and
+  readable type scales rather than as a dedicated subject.
 sources:
   - 2026-04/2026-04-30t230919-dmytro-mezhenskyi-udmezhenskyi-on-reddit
   - 2026-04/2026-04-30t231909-the-great-css-expansion
   - 2026-04/2026-04-30t231931-50-best-font-combinations-for-graphic-design
+  - 2026-05/2026-05-05t091632-building-websites-with-llms
+  - >-
+    2026-05/2026-05-05t135218-designing-playwright-tests-that-survive-ui-refactors
   - 2026-05/2026-05-05t183935-type-scale-graphs
-aliases:
-  - accessibility
-compiled_at: '2026-05-04T04:07:30.528Z'
+compiled_at: '2026-05-06T16:19:47.802Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 2719
-    output_tokens: 447
+    input_tokens: 3247
+    output_tokens: 523
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -27,13 +28,14 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.014862
-last_source_added: '2026-05-06T01:39:35.789Z'
+  cost_usd: 0.017586
 ---
-Web accessibility is the practice of building interfaces that work for users regardless of ability, device, or assistive technology. Neither of the two substantive sources tagged here addresses accessibility as a primary concern, but each touches on it in ways worth noting.
+Accessibility shows up obliquely across several sources rather than as a central topic, but the pattern is consistent: semantic structure and human-readable labels matter as much for machines and assistive technology as for any other consumer of a page.
 
-The Great CSS Expansion is the more directly relevant: native CSS features like the popover API, modal dialogs, and custom selects carry built-in semantics and keyboard interaction patterns that JavaScript-built equivalents often lack or handle inconsistently. Replacing libraries like Floating UI or react-select with platform primitives means inheriting browser-managed focus trapping, ARIA roles, and keyboard navigation at no extra cost. That is a meaningful accessibility gain, even if [Laptev's piece](/reading/2026-04/2026-04-30t231909-the-great-css-expansion) frames it primarily as a performance and dependency story.
+[Designing Playwright Tests That Survive UI Refactors](/reading/2026-05/2026-05-05t135218-designing-playwright-tests-that-survive-ui-refactors) makes the clearest case. Its tiered selector hierarchy puts ARIA roles, labels, and explicit test attributes above CSS classes or DOM structure precisely because those attributes are stable across refactors. A test that targets a button by its accessible label rather than its class name is also a test that implicitly validates the accessible label exists. The argument for resilient tests and the argument for accessible markup converge on the same practice.
 
-Typography choices documented in [50 Best Font Combinations for Graphic Design](/reading/2026-04/2026-04-30t231931-50-best-font-combinations-for-graphic-design) intersect with readability, which is a component of accessibility. Contrast, x-height, and letter spacing all affect legibility for users with low vision or dyslexia, though the source focuses on aesthetic pairing rather than accessibility compliance.
+[The Great CSS Expansion](/reading/2026-04/2026-04-30t231909-the-great-css-expansion) adds a structural note: replacing JavaScript-powered popovers, modals, and custom selects with native CSS and HTML primitives tends to preserve the accessibility semantics browsers and screen readers already understand, where custom JS implementations often discard them.
 
-The [Dmytro Mezhenskyi Reddit profile](/reading/2026-04/2026-04-30t230919-dmytro-mezhenskyi-udmezhenskyi-on-reddit) contributes nothing to this topic; its tag here appears incidental.
+[Building Websites With LLMS](/reading/2026-05/2026-05-05t091632-building-websites-with-llms) points in a similar direction. Separate linked HTML pages with CSS view transitions are inherently more navigable than JavaScript-rendered single-page flows, and that navigability benefits both search indexing and assistive technology.
+
+On the typographic side, [Type Scale Graphs](/reading/2026-05/2026-05-05t183935-type-scale-graphs) and [50 Best Font Combinations](/reading/2026-04/2026-04-30t231931-50-best-font-combinations-for-graphic-design) address legibility and hierarchy indirectly. Readable type scales and well-paired fonts reduce cognitive load for all users, including those with reading difficulties, though neither source frames accessibility as a primary concern.
