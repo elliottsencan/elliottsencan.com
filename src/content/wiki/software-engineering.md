@@ -1,9 +1,10 @@
 ---
 title: Software engineering
 summary: >-
-  Craft, tooling, and architectural discipline across the stack: from shell
-  scripting and CSS primitives to component design, interpreter implementation,
-  and the emerging reliability challenges of AI-assisted development.
+  A broad discipline covering architecture, tooling, testing, and craft
+  decisions that determine how software is built, maintained, and extended — a
+  theme connecting sources on agent reliability, CSS platform primitives,
+  component design, shell scripting, and more.
 sources:
   - 2026-04/2026-04-27t114426-dont-prompt-your-agent-for-reliability-engineer-it
   - 2026-04/2026-04-27t145041-agentic-coding-is-a-trap
@@ -17,12 +18,21 @@ sources:
   - 2026-05/2026-05-03t103944-the-lobster-in-the-hot-pot
   - >-
     2026-05/2026-05-03t110032-getting-up-to-speed-on-multi-agent-systems-part-3-wave-1
-compiled_at: '2026-05-04T03:38:10.472Z'
+  - 2026-05/2026-05-04t231343-ai-likes-deep-modules
+  - >-
+    2026-05/2026-05-04t231548-using-ssh-keys-to-make-connectivity-simpler-and-secure
+  - >-
+    2026-05/2026-05-04t231858-how-container-filesystem-works-building-a-docker-like
+  - 2026-05/2026-05-05t091632-building-websites-with-llms
+  - >-
+    2026-05/2026-05-05t135218-designing-playwright-tests-that-survive-ui-refactors
+  - 2026-05/2026-05-05t135637-reddit-rdevops
+compiled_at: '2026-05-06T16:17:24.293Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 3835
-    output_tokens: 678
+    input_tokens: 4855
+    output_tokens: 1038
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -33,12 +43,16 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.021675
+  cost_usd: 0.030135
 ---
-Software engineering as a practice spans low-level tooling fluency, architectural decisions, and the evolving question of how much of the work should be delegated to automated agents.
+Software engineering as a discipline shows up in these sources less as a unified theory and more as a collection of recurring pressures: how to structure systems so they stay maintainable, how to choose tools that don't create new dependencies, and how to preserve the human judgment that holds everything together.
 
-At the tooling layer, shell literacy remains a concrete productivity multiplier. [Hofstede-Kuhn's guide](/reading/2026-04/2026-04-30t231815-shell-tricks-that-actually-make-life-easier-and-save-your) covers Readline bindings, history search, brace expansion, and script safety flags, treating shell fluency as a foundation rather than an optional skill. Similarly, [Pavel Laptev's survey of modern CSS](/reading/2026-04/2026-04-30t231909-the-great-css-expansion) shows how over 300 kB of JavaScript dependencies for popovers, scroll animations, and anchor positioning can be replaced by platform primitives now native to CSS, reducing complexity at the dependency and runtime layers simultaneously.
+On architecture, the lesson that emerges is that explicit structure beats implicit cleverness. A data engineering agent built across three architectures demonstrated that atomic, well-scoped tools outperform prompt engineering when reliability is the goal [Don't Prompt Your Agent for Reliability](/reading/2026-04/2026-04-27t114426-dont-prompt-your-agent-for-reliability-engineer-it). The same principle appears in component design: Angular components bloated with inputs collapse under their own surface area, and the fix is splitting responsibilities into directives and sub-components so each piece has a clean contract [A Better Way to Build Angular Components](/reading/2026-04/2026-04-30t232001-a-better-way-to-build-angular-components-from-inputs-to). At the LLM tooling layer, codebases with deep modules — interfaces that hide implementation details — make it easier for AI coding tools to reason accurately, because shallow abstractions force models to traverse too many layers at once [AI Likes Deep Modules](/reading/2026-05/2026-05-04t231343-ai-likes-deep-modules).
 
-At the component level, [Kobi Hari's piece on Angular composition](/reading/2026-04/2026-04-30t232001-a-better-way-to-build-angular-components-from-inputs-to) argues that components bloated with dozens of inputs should be decomposed into directives and sub-components, keeping each concern encapsulated and APIs clean. Robert Nystrom's [Crafting Interpreters repository](/reading/2026-04/2026-04-30t231027-munificentcraftinginterpreters) represents the other end of the discipline spectrum: a full dual-implementation language project where understanding the machine is the point.
+On tooling and platform choices, several sources argue for preferring platform primitives over library dependencies. Modern CSS now handles anchor positioning, scroll animations, and view transitions natively, replacing hundreds of kilobytes of JavaScript [The Great CSS Expansion](/reading/2026-04/2026-04-30t231909-the-great-css-expansion). Jim Nielsen makes a similar case for web architecture: linked HTML pages with CSS transitions are simpler to build and maintain than JavaScript-driven interactions [Building Websites With LLMS](/reading/2026-05/2026-05-05t091632-building-websites-with-llms). Shell fluency — Readline bindings, brace expansion, script safety flags — follows the same logic; knowing what the environment already gives you reduces the need to layer on abstractions [Shell Tricks That Actually Make Life Easier](/reading/2026-04/2026-04-30t231815-shell-tricks-that-actually-make-life-easier-and-save-your).
 
-The sharpest debate in recent sources concerns AI-assisted development. [Lars Faye](/reading/2026-04/2026-04-27t145041-agentic-coding-is-a-trap) argues that full reliance on coding agents erodes the debugging and critical thinking skills required to supervise those same agents, compounding vendor lock-in and unpredictable token costs into a long-term liability. [Aiyan's engineering post](/reading/2026-04/2026-04-27t114426-dont-prompt-your-agent-for-reliability-engineer-it) takes a different angle: reliability in agent systems comes from environment design and atomic tools, not from prompt engineering. Both sources agree that naive delegation is risky; they differ on whether the solution is restraint or better system architecture. [Christoph Spörk](/reading/2026-05/2026-05-03t103944-the-lobster-in-the-hot-pot) extends the concern further, arguing that institutional knowledge erodes gradually as teams offload cognitive work to LLMs, with cost exposure as a trailing consequence.
+Testing surfaces a related concern about coupling. Playwright suites that target CSS classes and DOM structure break on every refactor; suites that target semantic roles and explicit test attributes survive because they're coupled to behavior rather than implementation [Designing Playwright Tests That Survive UI Refactors](/reading/2026-05/2026-05-05t135218-designing-playwright-tests-that-survive-ui-refactors).
+
+The human-skill dimension runs through several pieces. Lars Faye argues that full reliance on AI coding agents erodes the debugging and critical thinking skills developers need to supervise those same agents — a paradox that compounds over time [Agentic Coding is a Trap](/reading/2026-04/2026-04-27t145041-agentic-coding-is-a-trap). Christoph Spörk extends this to institutional knowledge: gradual AI dependency quietly hollows out the expertise that organizations need to course-correct when systems fail [The Lobster in the Hot Pot](/reading/2026-05/2026-05-03t103944-the-lobster-in-the-hot-pot). Robert Nystrom's interpreter book points in the opposite direction — toward building deep understanding from first principles [Crafting Interpreters](/reading/2026-04/2026-04-30t231027-munificentcraftinginterpreters), as does the container filesystem tutorial that reconstructs Docker-style isolation from raw Linux primitives [How Container Filesystem Works](/reading/2026-05/2026-05-04t231858-how-container-filesystem-works-building-a-docker-like).
+
+Across these sources, engineering craft is less about any single practice and more about the discipline of knowing which layer a problem belongs to and resisting solutions that shift complexity somewhere harder to see.
