@@ -248,8 +248,10 @@ export async function compileWikiArticle(args: {
     const response = await withRetries("compile-wiki", () =>
       client(args.apiKey).messages.parse({
         model,
-        // Wiki articles are 400–1500 chars markdown; 2500 leaves headroom.
-        max_tokens: 2500,
+        // Wiki article body is budgeted per call (up to 4000 chars markdown
+        // ≈ ~1500 tokens at typical English density); 5000 leaves headroom
+        // for the JSON wrapper, title, summary, and aliases.
+        max_tokens: 5000,
         system: args.systemPrompt,
         messages: [{ role: "user", content: args.userMessage }],
         output_config: { format: zodOutputFormat(WikiArticleSchema) },

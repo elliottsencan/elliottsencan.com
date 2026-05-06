@@ -696,11 +696,25 @@ export function clusterByTopic(
   return byTopic;
 }
 
-function buildUserMessage(args: {
+// Body-length budget scales with source count: more sources warrant more
+// prose to actually cite and synthesize across them. Floor at 400 chars
+// (matches the prior fixed lower bound), step 80 chars per source, hard
+// ceiling at 4000 chars so long-tail topics don't drift into essay length.
+// See PR feat/synthesis-budget-scaling for rationale.
+const BODY_BUDGET_BASE_CHARS = 400;
+const BODY_BUDGET_PER_SOURCE_CHARS = 80;
+const BODY_BUDGET_MAX_CHARS = 4000;
+
+// Exported for unit tests.
+export function buildUserMessage(args: {
   topic: string;
   sources: ReadingSource[];
   aliasCandidates: readonly string[];
 }): string {
+  const bodyBudgetChars = Math.min(
+    BODY_BUDGET_MAX_CHARS,
+    BODY_BUDGET_BASE_CHARS + BODY_BUDGET_PER_SOURCE_CHARS * args.sources.length,
+  );
   const parts = [
     `Concept: ${args.topic}`,
     "",
@@ -726,6 +740,10 @@ function buildUserMessage(args: {
       args.aliasCandidates.join(", "),
     );
   }
+  parts.push(
+    "",
+    `Aim for roughly ${bodyBudgetChars} characters of body. Go longer when more sources warrant deeper synthesis. Do not exceed ${BODY_BUDGET_MAX_CHARS} characters.`,
+  );
   return parts.filter((line) => line !== "").join("\n");
 }
 

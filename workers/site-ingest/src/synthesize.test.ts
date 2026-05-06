@@ -15,6 +15,7 @@ import {
   buildArticleMarkdown,
   buildDeferredCurlHint,
   buildPrBody,
+  buildUserMessage,
   clusterByTopic,
   type EnumerateReadingDeps,
   enumerateReading,
@@ -528,5 +529,59 @@ describe("buildPrBody (deferred section)", () => {
       summary: emptySummary(),
     });
     expect(body).not.toContain("### Deferred");
+  });
+});
+
+// ---------- buildUserMessage (body budget scaling) ----------
+
+describe("buildUserMessage: body budget scaling", () => {
+  function makeSources(n: number): Parameters<typeof buildUserMessage>[0]["sources"] {
+    return Array.from({ length: n }, (_, i) => ({
+      slug: `s${i}`,
+      path: `src/content/reading/2026-04/s${i}.md`,
+      title: `Title ${i}`,
+      url: `https://example.com/${i}`,
+      summary: "Summary.",
+      category: "tech" as const,
+      added: "2026-04-01T00:00:00.000Z",
+      topics: ["x"],
+    }));
+  }
+
+  it("targets ~560 chars for 2 sources", () => {
+    const message = buildUserMessage({
+      topic: "x",
+      sources: makeSources(2),
+      aliasCandidates: [],
+    });
+    expect(message).toContain("Aim for roughly 560 characters of body");
+  });
+
+  it("targets ~1600 chars for 15 sources", () => {
+    const message = buildUserMessage({
+      topic: "x",
+      sources: makeSources(15),
+      aliasCandidates: [],
+    });
+    expect(message).toContain("Aim for roughly 1600 characters of body");
+  });
+
+  it("caps the budget at 4000 chars for very high source counts", () => {
+    const message = buildUserMessage({
+      topic: "x",
+      sources: makeSources(100),
+      aliasCandidates: [],
+    });
+    expect(message).toContain("Aim for roughly 4000 characters of body");
+    expect(message).not.toContain("Aim for roughly 8400");
+  });
+
+  it("includes the do-not-exceed ceiling guidance", () => {
+    const message = buildUserMessage({
+      topic: "x",
+      sources: makeSources(5),
+      aliasCandidates: [],
+    });
+    expect(message).toContain("Do not exceed 4000 characters.");
   });
 });
