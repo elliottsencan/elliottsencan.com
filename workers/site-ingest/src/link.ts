@@ -19,8 +19,9 @@ import { decode as decodeHtmlEntities } from "html-entities";
 import { z } from "zod";
 import { summarizeLink } from "./anthropic.ts";
 import type { CostRecord } from "./cost.ts";
+import { createGitHubClient, getFile } from "./github.ts";
 import { checkOptOutSignals, isHostExcluded } from "./optout.ts";
-import { type PlanResult, runPipeline, type Strategy } from "./pipeline.ts";
+import { type Mutation, type PlanResult, runPipeline, type Strategy } from "./pipeline.ts";
 import { LINK_SUMMARY_SYSTEM } from "./prompts.ts";
 import { makePipelineDeps } from "./synthesize.ts";
 import {
@@ -30,7 +31,15 @@ import {
   loadCanonicalVocabulary,
 } from "./topics.ts";
 import type { Env, LinkRequest, LinkSummary, Result } from "./types.ts";
-import { fileTimestamp, jsonResponse, log, monthKey, slugify } from "./util.ts";
+import {
+  fileTimestamp,
+  isNotFoundError,
+  jsonResponse,
+  log,
+  monthKey,
+  readingSlugFromPath,
+  slugify,
+} from "./util.ts";
 
 // iOS Safari share sheet can pass whole article text as `excerpt` when the
 // user hasn't selected anything. 100 KB caps adversarial payloads and
@@ -40,6 +49,16 @@ const MAX_BODY_BYTES = 100_000;
 const MAX_EXCERPT_LENGTH = 16_000;
 const MAX_PAGE_FETCH_BYTES = 200_000;
 const PAGE_FETCH_TIMEOUT_MS = 5000;
+
+/**
+ * Cap on the number of wiki articles a single /link call will patch in its
+ * mutation. A reading entry could theoretically carry up to 5 topics
+ * (LinkSummarySchema) and each could match an existing wiki article; any
+ * extras over this cap are skipped with a log so a runaway entry can't
+ * fan out into many GitHub reads.
+ */
+const MAX_WIKI_PATCHES_PER_LINK = 5;
+const WIKI_DIR = "src/content/wiki";
 
 type TitleSource = "model" | "fetched" | "hostname";
 
@@ -163,6 +182,20 @@ export function makeLinkStrategy(req: LinkRequest): Strategy<LinkSummaryRow> {
         added,
       });
       const path = buildEntryPath({ env, added, title: finalTitle });
+      // A1 + A3: incremental wiki sources[] patch. For every canonical topic
+      // on the new entry that already has a wiki article, append the new
+      // reading slug to that article's `sources[]` and bump
+      // `last_source_added`. Body stays untouched. Best-effort: a missing
+      // file is a no-op, a malformed one is logged + skipped, and the
+      // reading entry MUST still commit either way.
+      const newReadingSlug = readingSlugFromPath(path);
+      const wikiPatches = await patchExistingWikiSources({
+        topics: applied.committed,
+        readingSlug: newReadingSlug,
+        added,
+        getFile: (p) => getFile(p, "main", createGitHubClient(env.GITHUB_TOKEN, env.GITHUB_REPO)),
+        max: MAX_WIKI_PATCHES_PER_LINK,
+      });
       const summaryRow: LinkSummaryRow = {
         path,
         category: summary.category,
@@ -177,7 +210,7 @@ export function makeLinkStrategy(req: LinkRequest): Strategy<LinkSummaryRow> {
       return {
         ok: true,
         data: {
-          mutation: { added: [{ path, content: markdown }], changed: [] },
+          mutation: { added: [{ path, content: markdown }], changed: wikiPatches },
           summary: summaryRow,
         },
       };
@@ -424,6 +457,119 @@ function buildEntryPath(args: { env: Env; added: Date; title: string }): string 
   const timestamp = fileTimestamp(args.added);
   const slug = slugify(args.title);
   return `${args.env.READING_DIR}/${month}/${timestamp}-${slug}.md`;
+}
+
+// ---------- A1 + A3: incremental wiki sources[] patch ----------
+
+/**
+ * Dependency-injection surface for `patchExistingWikiSources`. Production
+ * wires this to the GitHub-backed `getFile`; tests pass an in-memory map
+ * so the strategy's planning step can be exercised without standing up a
+ * real GitHub mock.
+ */
+export type WikiPatchDeps = {
+  getFile: (path: string) => Promise<Result<{ content: string; sha: string }>>;
+};
+
+/**
+ * For each canonical topic on a new reading entry, fetch any existing
+ * wiki article whose filename slug matches and append the new reading
+ * slug to its `sources[]` frontmatter (sorted, deduped). Also bumps
+ * `last_source_added` so freshness drift between full re-syntheses is
+ * auditable.
+ *
+ * Body intentionally untouched — this is the cheap incremental path. The
+ * full re-synthesis (PR 5's threshold trigger and the manual /synthesize
+ * call) owns body regeneration.
+ *
+ * Robustness contract:
+ *  - 404 (no wiki article for that topic) is a no-op, not an error.
+ *  - Any other failure (parse error, transient 5xx) is logged via
+ *    `link:wiki-patch` and that one wiki article is skipped — the new
+ *    reading entry must still commit even if a single wiki file is
+ *    malformed.
+ *  - At most `args.max` wiki articles are touched per call; extras are
+ *    logged and skipped so a many-topic entry can't fan out indefinitely.
+ *  - If the new reading slug is already in the article's `sources[]`,
+ *    the article is left unchanged (idempotent).
+ *
+ * Exported for unit tests.
+ */
+export async function patchExistingWikiSources(args: {
+  topics: readonly string[];
+  readingSlug: string;
+  added: Date;
+  getFile: WikiPatchDeps["getFile"];
+  max: number;
+}): Promise<Mutation["changed"]> {
+  const changed: Mutation["changed"] = [];
+  let inspected = 0;
+  for (const topic of args.topics) {
+    if (inspected >= args.max) {
+      log.info("link", "wiki-patch", "reached per-call cap; skipping extras", {
+        cap: args.max,
+        skipped_topic: topic,
+      });
+      continue;
+    }
+    inspected++;
+    const path = `${WIKI_DIR}/${topic}.md`;
+    const fetched = await args.getFile(path);
+    if (!fetched.ok) {
+      if (isNotFoundError(fetched.error)) {
+        // No wiki article exists for this topic yet — the threshold
+        // trigger (PR 5) handles brand-new articles, not this code path.
+        continue;
+      }
+      log.warn("link", "wiki-patch", "wiki getFile failed; skipping", {
+        path,
+        error: fetched.error,
+      });
+      continue;
+    }
+    let parsed: ReturnType<typeof matter>;
+    try {
+      parsed = matter(fetched.data.content);
+    } catch (err) {
+      log.warn("link", "wiki-patch", "wiki parse failed; skipping", {
+        path,
+        msg: err instanceof Error ? err.message : "unknown",
+      });
+      continue;
+    }
+    const data = parsed.data as Record<string, unknown>;
+    const existingSources = Array.isArray(data.sources)
+      ? data.sources.filter((s): s is string => typeof s === "string")
+      : [];
+    if (existingSources.includes(args.readingSlug)) {
+      // Idempotent — repeat /link with the same slug is a no-op for this article.
+      continue;
+    }
+    const nextSources = [...new Set([...existingSources, args.readingSlug])].sort();
+    const nextData: Record<string, unknown> = {
+      ...data,
+      sources: nextSources,
+      last_source_added: args.added.toISOString(),
+    };
+    let after: string;
+    try {
+      after = matter.stringify(parsed.content, nextData);
+    } catch (err) {
+      log.warn("link", "wiki-patch", "wiki stringify failed; skipping", {
+        path,
+        msg: err instanceof Error ? err.message : "unknown",
+      });
+      continue;
+    }
+    log.info("link", "wiki-patch", "appended source to wiki article", {
+      path,
+      reading_slug: args.readingSlug,
+      sources_before: existingSources.length,
+      sources_after: nextSources.length,
+    });
+    changed.push({ path, before: fetched.data.content, after });
+  }
+  return changed;
 }
 
 // ---------- opt-out stub ----------
