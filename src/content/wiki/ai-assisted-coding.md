@@ -1,10 +1,9 @@
 ---
 title: AI-assisted coding
 summary: >-
-  AI coding assistants range from context-aware autocomplete to autonomous
-  multi-agent pipelines; the tooling ecosystem is maturing rapidly while critics
-  warn that full delegation erodes the developer skills needed to supervise the
-  same agents.
+  AI coding assistants accelerate development but introduce tradeoffs around
+  skill atrophy, codebase design, verification, and security that shape how much
+  value they actually deliver.
 sources:
   - 2026-04/2026-04-27t113526-databricks-solutionsai-dev-kit
   - 2026-04/2026-04-27t145041-agentic-coding-is-a-trap
@@ -15,14 +14,15 @@ sources:
     2026-05/2026-05-01t104137-harness-design-for-long-running-application-development
   - 2026-05/2026-05-03t110102-getting-up-to-speed-on-multi-agent-systems-part-6
   - 2026-05/2026-05-03t110114-getting-up-to-speed-on-multi-agent-systems-part-7
+  - 2026-05/2026-05-04t231343-ai-likes-deep-modules
 aliases:
-  - ai-coding-agents
-compiled_at: '2026-05-04T03:37:33.176Z'
+  - ai-coding-assistants
+compiled_at: 2026-05-06T04:00:39.071Z
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 3307
-    output_tokens: 704
+    input_tokens: 3515
+    output_tokens: 744
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -33,12 +33,12 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.020481
+  cost_usd: 0.021705
 ---
-AI-assisted coding now spans a wide spectrum. At one end sit tools like the [Databricks AI Dev Kit](/reading/2026-04/2026-04-27t113526-databricks-solutionsai-dev-kit), which equips assistants such as Claude Code, Cursor, and Windsurf with platform-specific patterns and over 50 executable tools so they can generate correct Spark pipelines and Databricks jobs without hallucinating APIs. At the other end, projects like [orchestrator-supaconductor](/reading/2026-04/2026-04-30t231239-ibrahim-3dorchestrator-supaconductor) turn a single natural-language prompt into a fully automated multi-agent pipeline that handles planning, parallel execution, evaluation, and architectural review with no human checkpoints.
+AI coding assistants, ranging from inline completers to fully autonomous agents, are now capable of planning, generating, and evaluating code across multi-hour sessions. Anthropic's own engineering describes a GAN-inspired planner-generator-evaluator architecture that sustains coherent full-stack work without collapsing under context pressure [harness design](/reading/2026-05/2026-05-01t104137-harness-design-for-long-running-application-development). Tools like Claude Code and Cursor have accumulated enough adoption that purpose-built extension layers now exist: Databricks ships an MCP server and skill pack that grounds these assistants in verified Spark and Databricks patterns [ai-dev-kit](/reading/2026-04/2026-04-27t113526-databricks-solutionsai-dev-kit), and community plugins can turn a single prompt into a multi-agent pipeline with parallel execution and architectural review boards [orchestrator-supaconductor](/reading/2026-04/2026-04-30t231239-ibrahim-3dorchestrator-supaconductor).
 
-Anthropicʼs own engineering practice sits in between: a [GAN-inspired planner-generator-evaluator architecture](/reading/2026-05/2026-05-01t104137-harness-design-for-long-running-application-development) designed to sustain multi-hour autonomous coding sessions while countering context anxiety and self-evaluation bias. The evaluator role is a recurring theme. Christopher Meiklejohn argues that [modality shift](/reading/2026-05/2026-05-03t110102-getting-up-to-speed-on-multi-agent-systems-part-6), checking generated work in a different representation than it was produced in, is the key variable separating weak self-verification from structurally sound quality gates.
+The capability gains come with costs. Lars Faye argues that leaning on agents for execution erodes exactly the critical-thinking and debugging skills a developer needs to supervise those agents, creating a compounding liability alongside vendor lock-in and unpredictable token costs [agentic coding trap](/reading/2026-04/2026-04-27t145041-agentic-coding-is-a-trap). Codebase structure also matters: AI tools perform worse against shallow, leaky abstractions because they force the model to reason across too many layers simultaneously, while [deep modules with narrow interfaces](/wiki/api-design) keep reasoning tractable [deep modules](/reading/2026-05/2026-05-04t231343-ai-likes-deep-modules).
 
-The picture is not uniformly positive. Lars Faye contends that [full reliance on agentic coding is a trap](/reading/2026-04/2026-04-27t145041-agentic-coding-is-a-trap): the critical-thinking and debugging skills a developer needs to supervise an agent are exactly the skills eroded by delegating to one. Vendor lock-in and unpredictable token costs compound the risk. Meiklejohn adds that [current benchmarks were designed for single agents](/reading/2026-05/2026-05-03t110114-getting-up-to-speed-on-multi-agent-systems-part-7) and cannot measure coordination quality or failure recovery, making capability claims hard to verify independently.
+Verification is an open problem. Multi-agent systems research finds that modality shift, checking output in a different representation than it was produced in, separates meaningful structural gates from weak self-evaluation [verification patterns](/reading/2026-05/2026-05-03t110102-getting-up-to-speed-on-multi-agent-systems-part-6). Benchmarks used to evaluate these systems were mostly designed for single agents and fail to measure [coordination overhead or failure recovery](/wiki/agent-coordination), making published results from frameworks like ChatDev and MetaGPT difficult to compare [benchmarks](/reading/2026-05/2026-05-03t110114-getting-up-to-speed-on-multi-agent-systems-part-7).
 
-Security is an emerging concern specific to this tooling layer. A [supply-chain attack on SAP-ecosystem npm packages](/reading/2026-05/2026-05-01t102345-sap-related-npm-packages-compromised-in-credential-stealing) used Claude Code and VS Code configuration files as persistence vectors, illustrating that AI coding tools introduce new attack surfaces by virtue of their deep integration with local environments and credentials.
+Security is an emerging surface. The TeamPCP [supply-chain attack](/wiki/supply-chain-security) poisoned SAP-ecosystem npm packages with a payload that specifically abused Claude Code and VS Code configuration as persistence vectors, illustrating that the tooling layer around AI assistants is now a target [npm supply chain](/reading/2026-05/2026-05-01t102345-sap-related-npm-packages-compromised-in-credential-stealing).
