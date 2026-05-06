@@ -10,6 +10,7 @@ sources:
   - 2026-04/2026-04-30t231931-50-best-font-combinations-for-graphic-design
   - 2026-05/2026-05-02t145719-micrographics-templates-design-layouts
   - 2026-05/2026-05-05t183935-type-scale-graphs
+  - 2026-05/2026-05-06t163329-multi-stroke-text-effect-in-css
 aliases:
   - css-clamp
 compiled_at: '2026-05-04T03:36:48.803Z'
@@ -29,7 +30,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.015033
-last_source_added: '2026-05-06T01:39:35.789Z'
+last_source_added: '2026-05-06T23:33:29.365Z'
 ---
 Fluid typography is the practice of letting font sizes scale proportionally with the viewport rather than jumping between fixed values at media query breakpoints. The core tool is CSS `clamp()`, which takes a minimum, a preferred, and a maximum value; the preferred value is typically a viewport-width expression that interpolates smoothly between the two bounds.
 

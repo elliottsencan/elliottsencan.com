@@ -9,6 +9,7 @@ sources:
   - 2026-04/2026-04-30t231931-50-best-font-combinations-for-graphic-design
   - 2026-05/2026-05-02t145719-micrographics-templates-design-layouts
   - 2026-05/2026-05-05t183935-type-scale-graphs
+  - 2026-05/2026-05-06t163329-multi-stroke-text-effect-in-css
 aliases:
   - graphic-design
 compiled_at: '2026-05-04T04:08:43.943Z'
@@ -28,7 +29,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.013623
-last_source_added: '2026-05-06T01:39:35.789Z'
+last_source_added: '2026-05-06T23:33:29.365Z'
 ---
 Font pairing is the selection of two or more typefaces that work together without competing. The goal is contrast that still coheres: a display face that sets tone, a body face that sustains readability, and enough structural difference between them to signal hierarchy.
 

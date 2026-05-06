@@ -12,6 +12,7 @@ sources:
   - 2026-05/2026-05-02t145719-micrographics-templates-design-layouts
   - 2026-05/2026-05-05t091632-building-websites-with-llms
   - 2026-05/2026-05-05t183935-type-scale-graphs
+  - 2026-05/2026-05-06t163329-multi-stroke-text-effect-in-css
 aliases:
   - container-queries
 compiled_at: '2026-05-06T16:15:56.223Z'
@@ -31,6 +32,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.019572
+last_source_added: '2026-05-06T23:33:29.365Z'
 ---
 The traditional responsive design model relied on viewport breakpoints to switch layouts at specific widths. Two complementary arguments have recently pushed against that model in favor of CSS-native solutions that respond to content rather than arbitrary viewport thresholds.
 

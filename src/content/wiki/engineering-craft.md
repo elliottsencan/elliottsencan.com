@@ -13,6 +13,7 @@ sources:
     2026-04/2026-04-30t232001-a-better-way-to-build-angular-components-from-inputs-to
   - >-
     2026-05/2026-05-03t150555-what-happens-if-a-merge-queue-builds-on-the-wrong-commit
+  - 2026-05/2026-05-06t163329-multi-stroke-text-effect-in-css
 compiled_at: 2026-05-04T04:07:42.371Z
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -30,6 +31,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.017049
+last_source_added: '2026-05-06T23:33:29.365Z'
 ---
 Engineering craft covers the habits, patterns, and safeguards that separate code that works from code that holds up. The sources here approach it from four distinct angles, but share a common thread: precision in design pays forward.
 
