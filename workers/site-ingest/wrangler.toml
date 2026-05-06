@@ -6,6 +6,22 @@ compatibility_date = "2024-12-01"
 # stable Workers flag that polyfills node:* modules.
 compatibility_flags = ["nodejs_compat"]
 
+# Keep the *.workers.dev URL enabled (used as the default SITE_INGEST_BASE_URL
+# in scripts/worker.mjs) and preview URLs on for unreleased deploys. Both
+# default to false in wrangler 4 if omitted, so declare them explicitly to
+# stop deploys from stripping them.
+workers_dev = true
+preview_urls = true
+
+# Production worker is bound to ingest.elliottsencan.com via Cloudflare's
+# Custom Domains feature. Declared here so `wrangler deploy` doesn't strip
+# it as drift on each deploy — wrangler 4 syncs the full route set, so any
+# route present in prod but missing from this file would be removed.
+[[routes]]
+pattern = "ingest.elliottsencan.com"
+zone_name = "elliottsencan.com"
+custom_domain = true
+
 # Weekly draft of /now: Mon 17:00 UTC = Mon 10:00 Pacific standard / 09:00
 # Pacific daylight. Picks up the week's KV inputs and opens a PR Monday morning PT.
 [triggers]
