@@ -9,7 +9,10 @@
  * Plumbed through `runPipeline` (pipeline.ts): strategy.plan() handles
  * the existence check (409 if the article exists and !force), markdown
  * compilation, and returns the Mutation. Substrate owns branch + commit
- * + PR + the inline cross-link phase.
+ * + PR. The cross-link phase runs as a follow-up (ctx.waitUntil →
+ * separate PR) so the synchronous response fits inside Cloudflare's 30s
+ * wall time even when the wiki corpus is large; mirrors the /link and
+ * /synthesize pattern.
  */
 
 import { MIN_WIKI_SOURCES } from "@shared/schemas/content.ts";
@@ -159,9 +162,16 @@ export async function handle(request: Request, env: Env, ctx: ExecutionContext):
   }
 
   const deps = makePipelineDeps(env);
+  // /contribute uses crosslink: "followup" so the synchronous response returns
+  // as soon as the contribution commit lands, and the crosslink phase runs in
+  // ctx.waitUntil after. Defensive parity with /link, /synthesize, and
+  // /recompile: even a single new piece running crosslink against a 38+
+  // article corpus eventually risks the 30s wall time. Tradeoff: contribution
+  // and crosslinks land as separate PRs (one for the new article, one for
+  // anchor-phrase insertions) instead of a single PR with two commits.
   const result = await runPipeline(
     strategy,
-    { commitTarget: "pr", crosslink: "inline" },
+    { commitTarget: "pr", crosslink: "followup" },
     env,
     ctx,
     deps,
