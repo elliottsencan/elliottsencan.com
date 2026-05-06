@@ -14,16 +14,19 @@
  * Auth + rate limiting already enforced upstream in index.ts.
  */
 
+import { MIN_WIKI_SOURCES } from "@shared/schemas/content.ts";
 import matter from "gray-matter";
 import { decode as decodeHtmlEntities } from "html-entities";
 import { z } from "zod";
 import { summarizeLink } from "./anthropic.ts";
 import type { CostRecord } from "./cost.ts";
-import { createGitHubClient, getFile } from "./github.ts";
+import { enumerateReadingTopics } from "./enumerate.ts";
+import { createGitHubClient, type GitHubClient, getFile, listDir } from "./github.ts";
 import { checkOptOutSignals, isHostExcluded } from "./optout.ts";
-import { type Mutation, type PlanResult, runPipeline, type Strategy } from "./pipeline.ts";
+import type { Mutation, PlanResult, Strategy } from "./pipeline.ts";
+import * as pipelineModule from "./pipeline.ts";
 import { LINK_SUMMARY_SYSTEM } from "./prompts.ts";
-import { makePipelineDeps } from "./synthesize.ts";
+import { makePipelineDeps, makeSynthesizeStrategy } from "./synthesize.ts";
 import {
   applyVocabulary,
   buildVocabularyPromptBlock,
@@ -58,6 +61,14 @@ const PAGE_FETCH_TIMEOUT_MS = 5000;
  * fan out into many GitHub reads.
  */
 const MAX_WIKI_PATCHES_PER_LINK = 5;
+/**
+ * Cap on the number of single-topic /synthesize spawns a single /link call
+ * will fire via ctx.waitUntil. With ≤5 topics per entry the spawn count is
+ * already bounded, but a runaway threshold-cross would still produce one
+ * Anthropic call per topic; capping at 3 keeps cost bounded per ingest and
+ * leaves the long tail to be picked up by the next manual /synthesize.
+ */
+const MAX_THRESHOLD_TRIGGERS_PER_LINK = 3;
 const WIKI_DIR = "src/content/wiki";
 
 type TitleSource = "model" | "fetched" | "hostname";
@@ -78,6 +89,14 @@ type LinkSummaryRow = {
    * response so the caller can tell stub commits from normal ones.
    */
   opted_out?: string;
+  /**
+   * Topics whose count just crossed `MIN_WIKI_SOURCES` with this ingest
+   * AND have no existing wiki article. The handler fires a single
+   * /synthesize spawn over this list via ctx.waitUntil — no spawn when
+   * empty. Surfaces back in the HTTP response so the operator can see at
+   * a glance whether a follow-up wiki-article PR is pending.
+   */
+  triggered_synthesis: string[];
 };
 
 // ---------- strategy ----------
@@ -182,6 +201,11 @@ export function makeLinkStrategy(req: LinkRequest): Strategy<LinkSummaryRow> {
         added,
       });
       const path = buildEntryPath({ env, added, title: finalTitle });
+      // Hoisted: a single GitHub client shared by patchExistingWikiSources
+      // (PR 4) and the threshold-trigger reading enumeration below (PR 5).
+      // Reusing the client keeps connection pooling/coalescing tidy and
+      // makes it cheap for tests to spy on `getFile` once.
+      const gh = createGitHubClient(env.GITHUB_TOKEN, env.GITHUB_REPO);
       // A1 + A3: incremental wiki sources[] patch. For every canonical topic
       // on the new entry that already has a wiki article, append the new
       // reading slug to that article's `sources[]` and bump
@@ -189,12 +213,27 @@ export function makeLinkStrategy(req: LinkRequest): Strategy<LinkSummaryRow> {
       // file is a no-op, a malformed one is logged + skipped, and the
       // reading entry MUST still commit either way.
       const newReadingSlug = readingSlugFromPath(path);
-      const wikiPatches = await patchExistingWikiSources({
+      const { changed: wikiPatches, outcomes: wikiOutcomes } = await patchExistingWikiSources({
         topics: applied.committed,
         readingSlug: newReadingSlug,
         added,
-        getFile: (p) => getFile(p, "main", createGitHubClient(env.GITHUB_TOKEN, env.GITHUB_REPO)),
+        getFile: (p) => getFile(p, "main", gh),
         max: MAX_WIKI_PATCHES_PER_LINK,
+      });
+      // A2: threshold trigger candidate selection. For each canonical topic
+      // on the new entry that has no existing wiki article (outcome=missing),
+      // count how many reading entries are already tagged with that topic;
+      // if (existing + this entry) ≥ MIN_WIKI_SOURCES the topic crosses the
+      // threshold and gets queued for a single-topic /synthesize spawn.
+      // Topics whose wiki article already exists are handled by the patch
+      // step above; topics where we couldn't tell (outcome=error) are
+      // conservatively skipped here so a transient GitHub flake can't cause
+      // a duplicate spawn.
+      const triggeredSynthesis = await selectThresholdTriggers({
+        env,
+        gh,
+        canonicalTopics: applied.committed,
+        wikiOutcomes,
       });
       const summaryRow: LinkSummaryRow = {
         path,
@@ -206,6 +245,7 @@ export function makeLinkStrategy(req: LinkRequest): Strategy<LinkSummaryRow> {
         topics_coined: applied.coined,
         topic_rationale: summary.topic_rationale,
         cost: summary.cost,
+        triggered_synthesis: triggeredSynthesis,
       };
       return {
         ok: true,
@@ -256,7 +296,7 @@ export async function handle(request: Request, env: Env, ctx: ExecutionContext):
   const strategy = makeLinkStrategy(validation.data);
 
   const deps = makePipelineDeps(env);
-  const result = await runPipeline(
+  const result = await pipelineModule.runPipeline(
     strategy,
     { commitTarget: "main", crosslink: "followup" },
     env,
@@ -283,7 +323,18 @@ export async function handle(request: Request, env: Env, ctx: ExecutionContext):
     input_tokens: summary?.cost.usage.input_tokens,
     output_tokens: summary?.cost.usage.output_tokens,
     model: summary?.cost.model,
+    triggered_synthesis: summary?.triggered_synthesis.length
+      ? summary.triggered_synthesis.join(",")
+      : undefined,
   });
+  // A2: fire the threshold-trigger spawn after the synchronous response
+  // is committed. waitUntil keeps the Worker alive until the synthesis
+  // round-trip completes so the spawn-PR actually opens; failures inside
+  // the spawn are logged via op=link:threshold-trigger.
+  const triggered = summary?.triggered_synthesis ?? [];
+  if (triggered.length > 0) {
+    ctx.waitUntil(spawnThresholdSynthesis({ topics: triggered, env, ctx }));
+  }
   return jsonResponse(
     {
       ok: true,
@@ -298,6 +349,7 @@ export async function handle(request: Request, env: Env, ctx: ExecutionContext):
       commit: result.commit_sha,
       cost: summary?.cost ?? null,
       ...(summary?.opted_out ? { opted_out: summary.opted_out } : {}),
+      ...(triggered.length > 0 ? { triggered_synthesis: triggered } : {}),
     },
     200,
   );
@@ -472,6 +524,22 @@ export type WikiPatchDeps = {
 };
 
 /**
+ * Per-topic outcome of `patchExistingWikiSources`. PR 5's threshold
+ * trigger needs to know which inspected topics had no wiki article
+ * (404 → "missing") versus which had one already (whether or not we
+ * actually patched it — `present`). Topics over the per-call cap aren't
+ * inspected at all and are absent from the map entirely.
+ *
+ *  - `patched`: article existed, sources[] was extended, `last_source_added` bumped.
+ *  - `unchanged`: article existed but reading slug was already in sources[] (idempotent).
+ *  - `missing`: article does not exist (getFile 404). Threshold trigger candidate.
+ *  - `error`: getFile/parse/stringify failed for a non-404 reason. Treated as
+ *      neither present nor missing — the threshold trigger skips it because
+ *      we can't safely conclude the article is absent.
+ */
+export type WikiPatchOutcome = "patched" | "unchanged" | "missing" | "error";
+
+/**
  * For each canonical topic on a new reading entry, fetch any existing
  * wiki article whose filename slug matches and append the new reading
  * slug to its `sources[]` frontmatter (sorted, deduped). Also bumps
@@ -493,6 +561,10 @@ export type WikiPatchDeps = {
  *  - If the new reading slug is already in the article's `sources[]`,
  *    the article is left unchanged (idempotent).
  *
+ * Returns `changed` (the mutation files) plus per-topic `outcomes`. PR 5's
+ * threshold trigger reads `outcomes` to determine which topics are
+ * candidates for a brand-new wiki article (outcome === "missing").
+ *
  * Exported for unit tests.
  */
 export async function patchExistingWikiSources(args: {
@@ -501,8 +573,9 @@ export async function patchExistingWikiSources(args: {
   added: Date;
   getFile: WikiPatchDeps["getFile"];
   max: number;
-}): Promise<Mutation["changed"]> {
+}): Promise<{ changed: Mutation["changed"]; outcomes: Map<string, WikiPatchOutcome> }> {
   const changed: Mutation["changed"] = [];
+  const outcomes = new Map<string, WikiPatchOutcome>();
   let inspected = 0;
   for (const topic of args.topics) {
     if (inspected >= args.max) {
@@ -518,13 +591,16 @@ export async function patchExistingWikiSources(args: {
     if (!fetched.ok) {
       if (isNotFoundError(fetched.error)) {
         // No wiki article exists for this topic yet — the threshold
-        // trigger (PR 5) handles brand-new articles, not this code path.
+        // trigger uses this signal to decide whether to spawn a
+        // single-topic /synthesize.
+        outcomes.set(topic, "missing");
         continue;
       }
       log.warn("link", "wiki-patch", "wiki getFile failed; skipping", {
         path,
         error: fetched.error,
       });
+      outcomes.set(topic, "error");
       continue;
     }
     let parsed: ReturnType<typeof matter>;
@@ -535,6 +611,7 @@ export async function patchExistingWikiSources(args: {
         path,
         msg: err instanceof Error ? err.message : "unknown",
       });
+      outcomes.set(topic, "error");
       continue;
     }
     const data = parsed.data as Record<string, unknown>;
@@ -543,6 +620,7 @@ export async function patchExistingWikiSources(args: {
       : [];
     if (existingSources.includes(args.readingSlug)) {
       // Idempotent — repeat /link with the same slug is a no-op for this article.
+      outcomes.set(topic, "unchanged");
       continue;
     }
     const nextSources = [...new Set([...existingSources, args.readingSlug])].sort();
@@ -559,6 +637,7 @@ export async function patchExistingWikiSources(args: {
         path,
         msg: err instanceof Error ? err.message : "unknown",
       });
+      outcomes.set(topic, "error");
       continue;
     }
     log.info("link", "wiki-patch", "appended source to wiki article", {
@@ -568,8 +647,164 @@ export async function patchExistingWikiSources(args: {
       sources_after: nextSources.length,
     });
     changed.push({ path, before: fetched.data.content, after });
+    outcomes.set(topic, "patched");
   }
-  return changed;
+  return { changed, outcomes };
+}
+
+// ---------- A2: threshold trigger ----------
+
+/**
+ * Counts how many existing reading entries are tagged with each canonical
+ * topic on the new entry. Reuses `enumerateReadingTopics` (which also
+ * filters out `noindex` entries) so the count matches what /synthesize
+ * would actually cluster on. Map values are the count BEFORE the new entry
+ * is added — caller adds 1 for the new entry when comparing to the
+ * threshold.
+ *
+ * Exported for unit tests.
+ */
+export async function countExistingTopicEntries(args: {
+  env: Env;
+  gh: GitHubClient;
+  topics: readonly string[];
+}): Promise<Map<string, number>> {
+  const counts = new Map<string, number>();
+  if (args.topics.length === 0) {
+    return counts;
+  }
+  // Same shape as the crosslink-phase usage in crosslink-phase.ts:429.
+  const ghDeps = {
+    listDir: (path: string, ref?: string) => listDir(path, ref ?? "main", args.gh),
+    getFile: (path: string, ref?: string) => getFile(path, ref ?? "main", args.gh),
+  };
+  const slugToTopics = await enumerateReadingTopics(args.env.READING_DIR, ghDeps);
+  const wanted = new Set(args.topics);
+  for (const topics of slugToTopics.values()) {
+    for (const t of topics) {
+      if (wanted.has(t)) {
+        counts.set(t, (counts.get(t) ?? 0) + 1);
+      }
+    }
+  }
+  return counts;
+}
+
+/**
+ * Determines which canonical topics on the new entry should fire a
+ * single-topic /synthesize spawn. A topic crosses the threshold when:
+ *
+ *  - the wiki article does NOT already exist (`outcome === "missing"`),
+ *    AND
+ *  - the count of reading entries tagged with that topic, INCLUDING the
+ *    new entry being written this run, is ≥ MIN_WIKI_SOURCES.
+ *
+ * Topics whose wiki article already exists are handled by
+ * patchExistingWikiSources (sources[] gets the new slug appended). Topics
+ * whose existence couldn't be determined (outcome = "error") are
+ * conservatively skipped — re-firing on a transient flake would just
+ * duplicate work.
+ *
+ * Capped at `MAX_THRESHOLD_TRIGGERS_PER_LINK` to bound cost. Excess
+ * topics are logged so the operator can run a manual /synthesize to
+ * catch up.
+ *
+ * Exported for unit tests.
+ */
+export async function selectThresholdTriggers(args: {
+  env: Env;
+  gh: GitHubClient;
+  canonicalTopics: readonly string[];
+  wikiOutcomes: Map<string, WikiPatchOutcome>;
+}): Promise<string[]> {
+  // Only topics whose wiki article is confirmed missing are candidates.
+  // Iterate in canonicalTopics order so the cap selects deterministically
+  // (preserves frontmatter order and keeps the spawn list reproducible).
+  const candidates = args.canonicalTopics.filter((t) => args.wikiOutcomes.get(t) === "missing");
+  if (candidates.length === 0) {
+    return [];
+  }
+  const existingCounts = await countExistingTopicEntries({
+    env: args.env,
+    gh: args.gh,
+    topics: candidates,
+  });
+  const crossed: string[] = [];
+  for (const topic of candidates) {
+    // +1 for the entry being written this run. The reading entry isn't on
+    // disk yet, so existingCounts wouldn't include it.
+    const total = (existingCounts.get(topic) ?? 0) + 1;
+    if (total >= MIN_WIKI_SOURCES) {
+      crossed.push(topic);
+    }
+  }
+  if (crossed.length === 0) {
+    return [];
+  }
+  if (crossed.length <= MAX_THRESHOLD_TRIGGERS_PER_LINK) {
+    return crossed;
+  }
+  const selected = crossed.slice(0, MAX_THRESHOLD_TRIGGERS_PER_LINK);
+  const skipped = crossed.slice(MAX_THRESHOLD_TRIGGERS_PER_LINK);
+  log.info("link", "threshold-trigger", "cap reached; deferring extras", {
+    cap: MAX_THRESHOLD_TRIGGERS_PER_LINK,
+    selected: selected.join(","),
+    skipped: skipped.join(","),
+  });
+  return selected;
+}
+
+/**
+ * Fires a single-topic (or batched multi-topic) /synthesize spawn for the
+ * topics that just crossed `MIN_WIKI_SOURCES`. Runs via `ctx.waitUntil`
+ * after the synchronous /link response returns, so an Anthropic outage
+ * or GitHub rate-limit can't block the operator's share-sheet flow.
+ *
+ * Critical: any error here is the only reason a threshold-cross might
+ * silently fail to land a wiki article PR. The catch wraps every step and
+ * emits `log.error` op=`link:threshold-trigger` so failures surface in
+ * `wrangler tail`.
+ *
+ * Exported (separate from `handle`) so tests can spy on the spawn path
+ * without standing up `runPipeline`.
+ */
+export async function spawnThresholdSynthesis(args: {
+  topics: string[];
+  env: Env;
+  ctx: ExecutionContext;
+}): Promise<void> {
+  try {
+    const strategy = makeSynthesizeStrategy({
+      topics: args.topics,
+      force: false,
+      dry_run: false,
+    });
+    const deps = makePipelineDeps(args.env);
+    const result = await pipelineModule.runPipeline(
+      strategy,
+      { commitTarget: "pr", crosslink: "inline" },
+      args.env,
+      args.ctx,
+      deps,
+    );
+    if (!result.ok) {
+      log.error("link", "threshold-trigger", "synthesis spawn returned error", {
+        topics: args.topics.join(","),
+        error_message: result.error,
+      });
+      return;
+    }
+    log.info("link", "threshold-trigger", "synthesis spawn opened pr", {
+      topics: args.topics.join(","),
+      pr: result.pr_number,
+      url: result.pr_url,
+    });
+  } catch (err) {
+    log.error("link", "threshold-trigger", "synthesis spawn threw", {
+      topics: args.topics.join(","),
+      error_message: err instanceof Error ? err.message : String(err),
+    });
+  }
 }
 
 // ---------- opt-out stub ----------
@@ -641,6 +876,10 @@ function planOptOutStub(args: {
     topic_rationale: undefined,
     cost: emptyCost,
     opted_out: args.reason,
+    // Opt-out stubs land with no model topics, so there's nothing to
+    // threshold-trigger. Emitting an explicit empty list keeps the
+    // summary shape consistent with the normal path.
+    triggered_synthesis: [],
   };
   return {
     ok: true,
