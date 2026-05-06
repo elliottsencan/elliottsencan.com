@@ -77,7 +77,14 @@ function resolveMaxConcepts(env: Env): number {
 const SynthesizeRequestSchema = z.object({
   topics: z.array(z.string()).optional(),
   force: z.boolean().optional().default(false),
-  /** Defaults to true; flip to false to actually open a PR. */
+  /**
+   * Defaults to true. When true, planSynthesis short-circuits before the
+   * Anthropic compile loop and reports the would-compile shape only
+   * (active_topics, the count of selected concepts, the deferred list).
+   * No commits, no PR. When false, runs the full pipeline: per-concept
+   * Anthropic call, repair, alias filter, mutation, then commit + PR via
+   * the substrate.
+   */
   dry_run: z.boolean().optional().default(true),
 });
 
@@ -192,6 +199,32 @@ async function planSynthesis(
     cap: maxConcepts,
     deferred: deferred.length,
   });
+
+  // Dry-run short-circuit: report the planned compile shape without
+  // actually calling Anthropic. The serial per-concept loop below blows
+  // the Cloudflare Worker 30s timeout once `capped.length` × per-call
+  // latency exceeds it, and dry-run is supposed to be a cheap pre-flight
+  // — running the full $-and-time-spending pipeline just to skip the
+  // commit-and-PR step at the very end was a footgun.
+  if (req.dry_run) {
+    const summary: SynthesizeSummary = {
+      active_topics: allActiveTopics,
+      compiled: capped.length,
+      failed: [],
+      skipped: [],
+      auto_repaired: [],
+      alias_outcomes: [],
+      deferred,
+      run_cost: aggregateCost([]),
+    };
+    return {
+      ok: true,
+      data: {
+        mutation: { added: [], changed: [] },
+        summary,
+      },
+    };
+  }
 
   const knownReadingSlugs = new Set(sourcesResult.data.map((s) => s.slug));
   // Wiki article slugs (existing AND queued-to-compile). Used by the alias-
