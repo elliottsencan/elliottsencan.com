@@ -1,22 +1,23 @@
 ---
 title: Flaky tests
 summary: >-
-  Tests that pass or fail non-deterministically, flaky tests create false signal
-  in CI pipelines and consume disproportionate engineering time to diagnose and
-  fix.
+  Tests that pass and fail non-deterministically, caused by timing issues,
+  environmental coupling, or brittle selectors; tooling and architecture choices
+  at every layer of the CI stack affect how teams detect, categorize, and fix
+  them.
 sources:
   - 2026-04/2026-04-30t195531-what-ci-actually-looks-like-at-a-100-person-team
   - 2026-04/2026-04-30t231348-testdino
   - >-
     2026-05/2026-05-03t150555-what-happens-if-a-merge-queue-builds-on-the-wrong-commit
-aliases:
-  - software-quality
-compiled_at: '2026-05-04T03:39:16.652Z'
+  - >-
+    2026-05/2026-05-05t135218-designing-playwright-tests-that-survive-ui-refactors
+compiled_at: '2026-05-06T16:09:50.608Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 2495
-    output_tokens: 469
+    input_tokens: 2749
+    output_tokens: 611
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -27,14 +28,14 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.01452
+  cost_usd: 0.017412
 ---
-A flaky test is one that produces inconsistent results across runs without any change to the code under test. The cost is not just the failed build; it is the engineering time spent determining whether a failure signals a real regression or noise.
+A flaky test is one whose result cannot be trusted because it passes or fails for reasons unrelated to the code under test. The sources here approach the problem from three angles: automated diagnosis at scale, tooling that classifies failures, and selector discipline that prevents flakiness in the first place.
 
-At scale, the problem compounds quickly. [Mendral's CI agent](/reading/2026-04/2026-04-30t195531-what-ci-actually-looks-like-at-a-100-person-team) processed 33 million weekly test executions on PostHog's monorepo and found that auto-diagnosing flaky tests, opening fix PRs, and routing alerts intelligently was more valuable than the AI diagnosis layer itself. The bottleneck was log ingestion speed and smart routing, not clever inference.
+At PostHog's scale, Mendral's AI agent processed 33 million weekly test executions and auto-diagnosed flaky tests, opened fix PRs, and routed alerts [What CI Actually Looks Like at a 100-Person Team](/reading/2026-04/2026-04-30t195531-what-ci-actually-looks-like-at-a-100-person-team). The finding there is that log ingestion speed and routing matter more than the AI diagnosis itself; flaky tests are a volume problem before they are an intelligence problem.
 
-[TestDino](/reading/2026-04/2026-04-30t231348-testdino) takes a reporting-layer approach for Playwright users: centralizing runs and auto-categorizing failures into bugs, flaky tests, or UI changes. The claimed payoff is 6-8 hours saved per engineer per week, though that figure comes from the vendor.
+TestDino targets Playwright users with an analytics layer that auto-categorizes failures as bugs, flaky tests, or UI changes [TestDino](/reading/2026-04/2026-04-30t231348-testdino). The categorization matters because flaky failures and genuine bugs demand different responses, and conflating them wastes triage time.
 
-Flaky tests also interact badly with merge queue architectures. [Trunk's post-mortem on a GitHub merge queue bug](/reading/2026-05/2026-05-03t150555-what-happens-if-a-merge-queue-builds-on-the-wrong-commit) illustrates how unreliable test signal can mask deeper infrastructure failures; when the queue builds on a stale divergence point, a flaky pass becomes indistinguishable from a legitimate one, silently corrupting the branch.
+The Currents.dev piece on Playwright selector strategy addresses the root cause most within a team's direct control [Designing Playwright Tests That Survive UI Refactors](/reading/2026-05/2026-05-05t135218-designing-playwright-tests-that-survive-ui-refactors). Tests coupled to CSS classes, DOM structure, or unstable text content fail during refactors not because of flakiness in the probabilistic sense but because the coupling makes them structurally fragile. A tiered selector hierarchy favoring semantic roles, ARIA labels, and explicit test attributes reduces that brittleness.
 
-The pattern across all three sources is the same: flaky tests degrade trust in CI, and the fix is categorization and routing before it is eradication.
+The merge-queue piece is adjacent: a GitHub bug that silently constructed temp branches from stale divergence points rather than HEAD [What Happens If a Merge Queue Builds on the Wrong Commit](/reading/2026-05/2026-05-03t150555-what-happens-if-a-merge-queue-builds-on-the-wrong-commit) is not flakiness in the test sense, but it produces the same symptom: a CI result that does not reflect the actual code state. Infrastructure correctness and test determinism are both prerequisites for a trustworthy signal.
