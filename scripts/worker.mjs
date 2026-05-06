@@ -221,6 +221,15 @@ function printLink(body) {
   if (body.cost?.cost_usd !== undefined) {
     lines.push(`cost:      $${Number(body.cost.cost_usd).toFixed(4)}`);
   }
+  if (body.opted_out) {
+    lines.push(`opted_out: ${body.opted_out}`);
+  }
+  if (Array.isArray(body.wiki_patched) && body.wiki_patched.length > 0) {
+    lines.push(`wiki_patched: ${body.wiki_patched.join(", ")}`);
+  }
+  if (Array.isArray(body.triggered_synthesis) && body.triggered_synthesis.length > 0) {
+    lines.push(`triggered_synthesis: ${body.triggered_synthesis.join(", ")}`);
+  }
   if (body.commit) {
     lines.push(`commit:    ${body.commit}`);
   }
@@ -416,6 +425,14 @@ Flags:
 Env:
   SITE_INGEST_API_TOKEN      required; loaded from .env if not exported
   SITE_INGEST_BASE_URL       optional; defaults to deployed worker
+
+Piping note:
+  pnpm prints a "> pkg@ver script ..." header to stdout for every script run,
+  which trips downstream parsers (jq, etc). Place --silent BEFORE the
+  subcommand to suppress it:
+    pnpm --silent worker lint --json | jq ...
+  Or invoke node directly:
+    node scripts/worker.mjs lint --json | jq ...
 `;
 
 async function main() {

@@ -97,6 +97,14 @@ type LinkSummaryRow = {
    * a glance whether a follow-up wiki-article PR is pending.
    */
   triggered_synthesis: string[];
+  /**
+   * Topics whose existing wiki article got its `sources[]` appended (and
+   * `last_source_added` bumped) in the same atomic commit as the reading
+   * entry. Empty when no canonical topic on this entry mapped to an
+   * existing wiki article. Surfaces in the HTTP response so the operator
+   * can see the cascading effect of /link without inspecting the commit.
+   */
+  wiki_patched: string[];
 };
 
 // ---------- strategy ----------
@@ -235,6 +243,10 @@ export function makeLinkStrategy(req: LinkRequest): Strategy<LinkSummaryRow> {
         canonicalTopics: applied.committed,
         wikiOutcomes,
       });
+      const wikiPatchedTopics = [...wikiOutcomes.entries()]
+        .filter(([, outcome]) => outcome === "patched")
+        .map(([topic]) => topic)
+        .sort();
       const summaryRow: LinkSummaryRow = {
         path,
         category: summary.category,
@@ -246,6 +258,7 @@ export function makeLinkStrategy(req: LinkRequest): Strategy<LinkSummaryRow> {
         topic_rationale: summary.topic_rationale,
         cost: summary.cost,
         triggered_synthesis: triggeredSynthesis,
+        wiki_patched: wikiPatchedTopics,
       };
       return {
         ok: true,
@@ -350,6 +363,9 @@ export async function handle(request: Request, env: Env, ctx: ExecutionContext):
       cost: summary?.cost ?? null,
       ...(summary?.opted_out ? { opted_out: summary.opted_out } : {}),
       ...(triggered.length > 0 ? { triggered_synthesis: triggered } : {}),
+      ...(summary?.wiki_patched && summary.wiki_patched.length > 0
+        ? { wiki_patched: summary.wiki_patched }
+        : {}),
     },
     200,
   );
@@ -877,9 +893,10 @@ function planOptOutStub(args: {
     cost: emptyCost,
     opted_out: args.reason,
     // Opt-out stubs land with no model topics, so there's nothing to
-    // threshold-trigger. Emitting an explicit empty list keeps the
-    // summary shape consistent with the normal path.
+    // threshold-trigger or wiki-patch. Emitting explicit empty lists
+    // keeps the summary shape consistent with the normal path.
     triggered_synthesis: [],
+    wiki_patched: [],
   };
   return {
     ok: true,
