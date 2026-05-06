@@ -1,19 +1,24 @@
 ---
 title: LLM fine-tuning
 summary: >-
-  Adapting pre-trained language models to specific tasks or domains by
-  continuing training on curated data, with recent tooling focused on reducing
-  hardware cost and automating dataset creation.
+  Adapting pre-trained large language models to specific tasks through
+  additional training, with recent tooling focused on reducing the memory,
+  compute, and data-labeling costs that made the practice prohibitive outside
+  large teams.
 sources:
   - 2026-04/2026-04-24t093356-unsloth
   - >-
     2026-04/2026-04-28t140203-vibe-training-auto-train-a-small-language-model-for-your
-compiled_at: '2026-05-04T03:36:58.195Z'
+  - 2026-05/2026-05-05t071908-oobaboogatextgen
+aliases:
+  - lora
+  - model-training
+compiled_at: '2026-05-06T16:11:00.965Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 2288
-    output_tokens: 421
+    input_tokens: 2485
+    output_tokens: 459
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -24,12 +29,10 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.013179
+  cost_usd: 0.01434
 ---
-Fine-tuning a large language model means continuing its training on a targeted dataset so it learns task-specific behavior without training from scratch. Two broad challenges define the practice: acquiring quality training data and keeping compute costs manageable.
+Fine-tuning a pre-trained model on task-specific data lets teams replace expensive general-purpose inference with a smaller, cheaper, more accurate model for a defined workload. The friction has traditionally been hardware cost and the difficulty of assembling quality training data.
 
-[Unsloth](/reading/2026-04/2026-04-24t093356-unsloth) addresses the compute side directly. It offers local fine-tuning with up to 30x faster training and 90% less memory than FlashAttention 2, making runs feasible on consumer hardware. It also includes no-code dataset creation from PDFs, CSVs, and JSON files, compressing the pipeline from raw documents to a trained model.
+[Unsloth](/reading/2026-04/2026-04-24t093356-unsloth) addresses the compute side directly: it claims up to 30x faster training and 90% less memory than FlashAttention 2, making local fine-tuning viable on consumer hardware. It also includes no-code dataset creation from PDFs, CSVs, and JSON files, flattening the data-preparation step. [oobabooga/textgen](/reading/2026-05/2026-05-05t071908-oobaboogatextgen) takes a broader local-inference approach but includes LoRA fine-tuning support alongside its model-running features, positioning fine-tuning as one capability in a fully offline, no-telemetry toolkit.
 
-The data quality problem gets a different treatment in [Vibe Training](/reading/2026-04/2026-04-28t140203-vibe-training-auto-train-a-small-language-model-for-your). Plurai's BARRED framework uses multi-agent debate to auto-generate and verify synthetic training data, removing the need for hand-labeled examples. The result is a 3B-parameter policy classifier that outperforms GPT-4.1 on its target task at a fraction of the inference cost. That cost gap matters: a fine-tuned small model running locally can be cheaper per query than calling a frontier API, which changes the economics of deployment.
-
-Together these sources point toward a pattern: fine-tuning is becoming accessible enough that teams can build specialized models without large infrastructure budgets or large annotation teams, provided they have a clear task definition and a method for generating reliable training signal.
+The data-quality problem gets a different treatment in [Vibe Training](/reading/2026-04/2026-04-28t140203-vibe-training-auto-train-a-small-language-model-for-your). Plurai's BARRED framework uses multi-agent debate to auto-generate verified synthetic training data, then uses it to fine-tune a 3B-parameter policy classifier that outperforms GPT-4.1 at a fraction of the inference cost. That result points to a pattern: a well-fine-tuned small model frequently beats a larger general model on a narrow task, and the economics of inference make the gap matter at scale.
