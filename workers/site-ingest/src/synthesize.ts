@@ -131,6 +131,13 @@ type SynthesizeSummary = {
    * for the next scheduled run to silently re-drop them.
    */
   deferred: string[];
+  /**
+   * Topics that would be compiled in this run after staleness sort and
+   * cap. Same as the post-cap target list. Surfaced so dry-run operators
+   * can chunk a large backlog into multiple `--topics=A,B,C` calls
+   * without reverse-engineering which subset of `active_topics` is stale.
+   */
+  would_compile: string[];
   /** Aggregated Anthropic cost across all per-topic compile calls in this run. */
   run_cost: RunCost;
 };
@@ -206,6 +213,7 @@ async function planSynthesis(
   // latency exceeds it, and dry-run is supposed to be a cheap pre-flight
   // — running the full $-and-time-spending pipeline just to skip the
   // commit-and-PR step at the very end was a footgun.
+  const wouldCompile = capped.map((t) => t.topic).sort();
   if (req.dry_run) {
     const summary: SynthesizeSummary = {
       active_topics: allActiveTopics,
@@ -215,6 +223,7 @@ async function planSynthesis(
       auto_repaired: [],
       alias_outcomes: [],
       deferred,
+      would_compile: wouldCompile,
       run_cost: aggregateCost([]),
     };
     return {
@@ -342,6 +351,7 @@ async function planSynthesis(
     auto_repaired: autoRepaired,
     alias_outcomes: aliasOutcomes,
     deferred,
+    would_compile: wouldCompile,
     run_cost: runCost,
   };
 
@@ -380,6 +390,7 @@ export function buildPrBody(
     auto_repaired: [],
     alias_outcomes: [],
     deferred: [],
+    would_compile: [],
     run_cost: aggregateCost([]),
   };
   const writes = [
@@ -513,6 +524,7 @@ export async function handle(request: Request, env: Env, ctx: ExecutionContext):
       skip_reasons: summary?.skipped ?? [],
       alias_outcomes: summary?.alias_outcomes ?? [],
       deferred: summary?.deferred ?? [],
+      would_compile: summary?.would_compile ?? [],
       run_cost: summary?.run_cost ?? null,
     });
   }
@@ -540,6 +552,7 @@ export async function handle(request: Request, env: Env, ctx: ExecutionContext):
     skip_reasons: summary?.skipped ?? [],
     alias_outcomes: summary?.alias_outcomes ?? [],
     deferred: summary?.deferred ?? [],
+    would_compile: summary?.would_compile ?? [],
     run_cost: summary?.run_cost ?? null,
     branch: result.branch,
     pr: result.pr_number ? { number: result.pr_number, url: result.pr_url } : null,
