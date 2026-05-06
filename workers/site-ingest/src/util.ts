@@ -5,6 +5,7 @@
 
 import { formatInTimeZone } from "date-fns-tz";
 import slugifyLib from "slugify";
+import { sinkContext } from "./stream.ts";
 
 // ---------- logging ----------
 
@@ -27,15 +28,45 @@ function format(area: string, op: string, message: string, fields?: LogFields): 
   return pairs ? `${base} ${pairs}` : base;
 }
 
+/**
+ * If a streaming sink is active in the AsyncLocalStorage context (set by
+ * `withStream` in stream.ts), tee the structured event there as well so
+ * NDJSON-streaming callers see per-event progress in the response body.
+ * Same fields go to console and sink — no extra leak surface.
+ */
+function teeToSink(
+  level: "info" | "warn" | "error",
+  area: string,
+  op: string,
+  message: string,
+  fields?: LogFields,
+): void {
+  const sink = sinkContext.getStore();
+  if (!sink) {
+    return;
+  }
+  sink.emit({
+    event: "log",
+    level,
+    area,
+    op,
+    message,
+    fields: fields as Record<string, unknown> | undefined,
+  });
+}
+
 export const log = {
   info(area: string, op: string, message: string, fields?: LogFields): void {
     console.log(format(area, op, message, fields));
+    teeToSink("info", area, op, message, fields);
   },
   warn(area: string, op: string, message: string, fields?: LogFields): void {
     console.warn(format(area, op, message, fields));
+    teeToSink("warn", area, op, message, fields);
   },
   error(area: string, op: string, message: string, fields?: LogFields): void {
     console.error(format(area, op, message, fields));
+    teeToSink("error", area, op, message, fields);
   },
 };
 
