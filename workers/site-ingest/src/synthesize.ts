@@ -16,7 +16,10 @@
  *
  * Plumbed through `runPipeline` (pipeline.ts): the strategy below owns
  * planning (enumerate + cluster + per-topic compile), and the substrate
- * owns branch + commit + PR + the inline cross-link phase.
+ * owns branch + commit + PR. The cross-link phase runs as a follow-up
+ * (ctx.waitUntil → separate PR) so the synchronous response fits inside
+ * Cloudflare's 30s wall time even when the wiki corpus is large; mirrors
+ * the /link pattern.
  */
 
 import { MIN_WIKI_SOURCES, ReadingFrontmatterSchema } from "@shared/schemas/content.ts";
@@ -530,9 +533,16 @@ export async function handle(request: Request, env: Env, ctx: ExecutionContext):
   }
 
   const deps = makePipelineDeps(env);
+  // /synthesize uses crosslink: "followup" so the synchronous response returns
+  // as soon as the synthesis commit lands, and the crosslink phase runs in
+  // ctx.waitUntil after. With a 38+ article wiki, the inline crosslink phase
+  // consistently blew the Cloudflare 30s wall time. Tradeoff: synthesis and
+  // crosslinks land as separate PRs (one for compiled concepts, one for
+  // anchor-phrase insertions) instead of a single PR with two commits. Mirrors
+  // the proven /link pattern.
   const result = await runPipeline(
     strategy,
-    { commitTarget: "pr", crosslink: "inline" },
+    { commitTarget: "pr", crosslink: "followup" },
     env,
     ctx,
     deps,
