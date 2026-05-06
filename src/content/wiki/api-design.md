@@ -1,24 +1,23 @@
 ---
 title: API design
 summary: >-
-  The shape of an API boundary matters as much as the logic behind it: sources
-  cover runtime schema validation for HTTP responses, typed SDK abstraction over
-  legacy protocols, and component input APIs that stay narrow through
-  composition.
+  Good API design hides complexity behind clean interfaces; sources here address
+  runtime contract validation, typed abstraction over legacy protocols,
+  component surface minimization, and how deep modules aid AI-assisted
+  development.
 sources:
   - >-
     2026-04/2026-04-30t230851-from-flaky-to-flawless-angular-api-response-management-with
   - 2026-04/2026-04-30t231709-conductor
   - >-
     2026-04/2026-04-30t232001-a-better-way-to-build-angular-components-from-inputs-to
-aliases:
-  - sdk
-compiled_at: '2026-05-04T04:07:07.458Z'
+  - 2026-05/2026-05-04t231343-ai-likes-deep-modules
+compiled_at: '2026-05-06T03:45:13.271Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 2549
-    output_tokens: 471
+    input_tokens: 2757
+    output_tokens: 630
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -29,12 +28,14 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.014712
+  cost_usd: 0.017721
 ---
-API design spans the contract between a producer and its consumers, and three angles emerge across these sources: validating what arrives over the wire, abstracting ugly protocols behind clean interfaces, and keeping component-level input surfaces from bloating.
+API design concerns the shape and contract of any interface between software components, whether a REST endpoint, a component's input surface, or a module boundary. The sources collected here approach that concern from several directions.
 
-On the validation side, [Angular API response management with Zod](/reading/2026-04/2026-04-30t230851-from-flaky-to-flawless-angular-api-response-management-with) argues that trusting backend responses at runtime is a mistake. Even when types look correct at compile time, a backend shape change silently breaks the app. The fix is pairing Zod schemas with a custom RxJS operator so unexpected response shapes surface at development time rather than in production.
+Runtime validation is one underappreciated axis. Even a well-documented API contract drifts; backends silently change response shapes and frontend code breaks in confusing ways. Using Zod schemas with a custom RxJS operator in Angular, as described in [From Flaky to Flawless](/reading/2026-04/2026-04-30t230851-from-flaky-to-flawless-angular-api-response-management-with), surfaces those contract violations at development time rather than in production, turning a vague runtime error into a precise schema mismatch.
 
-[Conductor](/reading/2026-04/2026-04-30t231709-conductor) takes a different angle: the API being designed is an abstraction over QuickBooks Desktop, a system that communicates via qbXML and SOAP. Conductor exposes 130+ QuickBooks objects through a fully-typed Python, Node.js, and REST surface, hiding the Web Connector entirely. The design decision here is that the consumer should never have to know the underlying protocol exists.
+Abstraction quality is another axis. [Conductor](/reading/2026-04/2026-04-30t232001-a-better-way-to-build-angular-components-from-inputs-to) — wait, to be precise: [Conductor](/reading/2026-04/2026-04-30t231709-conductor) wraps QuickBooks Desktop's qbXML and SOAP protocols behind a fully-typed REST and SDK surface. The old protocol is not simplified; it is hidden. Callers get 130+ object types without ever touching the Web Connector. That is the core value proposition of a deep interface: complexity absorbed by the implementer, not pushed onto the consumer.
 
-At the component level, [Kobi Hari's piece on Angular composition](/reading/2026-04/2026-04-30t232001-a-better-way-to-build-angular-components-from-inputs-to) applies the same principle inward: a component with dozens of inputs is a leaky, hard-to-maintain API. The Composite Components pattern moves features into directives and sub-components so each concern is encapsulated and the public input surface stays narrow. A good component API, like a good HTTP API, exposes only what callers actually need.
+The same principle applies at the component level. [Kobi Hari's argument](/reading/2026-04/2026-04-30t232001-a-better-way-to-build-angular-components-from-inputs-to) against Angular components with dozens of inputs is structurally identical: a wide input surface signals that complexity has leaked outward. The Composite Components pattern moves behavior into directives and sub-components, shrinking the public API and keeping each concern encapsulated.
+
+[AI Likes Deep Modules](/reading/2026-05/2026-05-04t231343-ai-likes-deep-modules) adds a newer consideration: LLM coding tools perform better when APIs are deep. Shallow, leaky abstractions force a model to reason across many layers to understand what a function does or how to call it correctly. Deep modules, which hide implementation behind narrow interfaces, reduce the context a model must hold, making AI-assisted work more reliable. Good API design was already a human concern; it turns out to be a machine concern too.

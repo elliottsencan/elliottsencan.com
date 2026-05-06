@@ -1,10 +1,10 @@
 ---
-title: AI Agents
+title: AI agents
 summary: >-
-  AI agents are LLM-powered systems that plan and act autonomously; current
-  sources trace the architecture patterns, reliability failure modes, tooling
-  conventions, and human-oversight tensions that define where the field actually
-  stands.
+  AI agents are LLM-powered systems that take sequences of actions to accomplish
+  goals; current work clusters around architecture choices, reliability
+  engineering, tool design, memory, and the human oversight those systems still
+  require.
 sources:
   - 2026-04/2026-04-23t150424-your-agent-loves-mcp-as-much-as-you-love-guis
   - 2026-04/2026-04-27t113354-the-orchestrator-isnt-your-moat
@@ -38,12 +38,13 @@ sources:
     2026-05/2026-05-03t115608-how-to-choose-between-single-and-multi-agent-solutions
   - 2026-05/2026-05-03t173422-vectorize-iohindsight
   - 2026-05/2026-05-03t173528-lthoanggopenagentd
-compiled_at: '2026-05-04T03:35:30.883Z'
+  - 2026-05/2026-05-04t235011-plurai
+compiled_at: '2026-05-06T03:44:28.656Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 6656
-    output_tokens: 1267
+    input_tokens: 6858
+    output_tokens: 1388
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -54,16 +55,16 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.038973
+  cost_usd: 0.041394
 ---
-An AI agent, in the practical sense most of these sources use, is an LLM-based system that issues actions, uses tools, and pursues goals across multiple steps without requiring a human to approve each one. The definition sounds simple; the engineering is not.
+An AI agent is an LLM-based system that plans and executes multi-step tasks, using tools, memory, and sometimes other agents to reach a goal. The concept sits at the intersection of language model capability and systems engineering, and the practical literature is now as concerned with failure modes as with what agents can do.
 
-The architectural options range from rigid state machines to orchestrator-plus-subagents to single general-purpose agents. [One data engineering case study](/reading/2026-04/2026-04-27t114426-dont-prompt-your-agent-for-reliability-engineer-it) walked through all three and found that environment design and atomic tool definitions outperform prompt engineering as a reliability strategy at every stage. Anthropic's own [Managed Agents service](/reading/2026-04/2026-04-27t114138-scaling-managed-agents-decoupling-the-brain-from-the-hands) formalizes this by separating the harness, session log, and sandbox into independent interfaces, cutting p50 time-to-first-token by roughly 60% and p95 by over 90%. A [GAN-inspired planner-generator-evaluator architecture](/reading/2026-05/2026-05-01t104137-harness-design-for-long-running-application-development) extends this further for multi-hour autonomous coding sessions.
+The foundational architecture question is how to split responsibility. Anthropic's engineering posts describe two complementary approaches: a GAN-inspired planner/generator/evaluator triad for long autonomous coding sessions [harness design](/reading/2026-05/2026-05-01t104137-harness-design-for-long-running-application-development), and a Managed Agents service that decouples the harness, session log, and sandbox so each can evolve independently, cutting p50 time-to-first-token by roughly 60% [managed agents](/reading/2026-04/2026-04-27t114426-dont-prompt-your-agent-for-reliability-engineer-it). A parallel engineering account of a data-engineering agent found that moving through three architectures, rigid state machine to orchestrator with sub-agents to a single general-purpose agent, taught the same lesson: environment design and atomic tools outperform prompt engineering for reliability [engineer reliability](/reading/2026-04/2026-04-27t114426-dont-prompt-your-agent-for-reliability-engineer-it).
 
-Multi-agent systems add a coordination tax. [Stanford and Google/MIT research](/reading/2026-05/2026-05-03t115608-how-to-choose-between-single-and-multi-agent-solutions) shows orchestration can amplify errors up to 17x and cut tool-handling efficiency by 2 to 6x, making single-agent the sensible default for most tasks. A comprehensive [eight-part MAS survey](/reading/2026-05/2026-05-03t110011-getting-up-to-speed-on-multi-agent-systems-part-1-the) maps the two research waves: 2023 coordination work (CAMEL, AutoGen, MetaGPT) and 2025 reliability work, concluding that information synthesis is the core bottleneck, not coordination. Empirical failure rates across 1,600 traces run [41 to 87%](/reading/2026-05/2026-05-03t110046-getting-up-to-speed-on-multi-agent-systems-part-4-wave-2), and [verification via modality shift](/reading/2026-05/2026-05-03t110102-getting-up-to-speed-on-multi-agent-systems-part-6) is the pattern that most reliably catches errors before they propagate.
+Multi-agent systems add coordination overhead that often costs more than it saves. Stanford and Google/MIT research cited by Ben Dickson finds that multi-agent pipelines can amplify errors up to 17x and cut tool-handling efficiency by 2 to 6x, making single-agent defaults the sounder starting point for most tasks [single vs multi](/reading/2026-05/2026-05-03t115608-how-to-choose-between-single-and-multi-agent-solutions). Christopher Meiklejohn's eight-part retrospective on the MAS literature reinforces this: the five canonical 2023 papers (CAMEL, Generative Agents, ChatDev, MetaGPT, AutoGen) shared a failure mode of treating errors as termination rather than recoverable state [wave 1](/reading/2026-05/2026-05-03t110032-getting-up-to-speed-on-multi-agent-systems-part-3-wave-1), and subsequent empirical work found multi-agent systems failing 41 to 87% of the time, with information synthesis, not coordination, as the core bottleneck [wave 2](/reading/2026-05/2026-05-03t110046-getting-up-to-speed-on-multi-agent-systems-part-4-wave-2). Meiklejohn closes by arguing the field must borrow distributed-systems theory, including CRDTs for shared state and graceful failure recovery, to move forward [open questions](/reading/2026-05/2026-05-03t110130-getting-up-to-speed-on-multi-agent-systems-part-8-open).
 
-Tooling conventions are still unsettled. One view holds that [MCP servers](/reading/2026-04/2026-04-27t113354-the-orchestrator-isnt-your-moat) are the right abstraction for platform-specific context and actions, letting model improvements compound rather than decay. A dissenting view calls [MCP a GUI for agents](/reading/2026-04/2026-04-23t150424-your-agent-loves-mcp-as-much-as-you-love-guis): constrained, token-expensive, and non-composable, with layered scripts and API skills being preferable for code-capable agents. Context management is a recurring concern across both views; tools like [tiered markdown knowledge bases](/reading/2026-04/2026-04-30t232126-lostwarriorknowledge-base) and [biomimetic memory systems](/reading/2026-05/2026-05-03t173422-vectorize-iohindsight) exist precisely to reduce token waste during long sessions.
+Verification is where architecture choices become consequential. The strongest structural gate is modality shift: checking work in a different representation than it was produced in [verification patterns](/reading/2026-05/2026-05-03t110102-getting-up-to-speed-on-multi-agent-systems-part-6). Plurai's approach to this is to generate training data, validate it through multi-agent debate, and deploy small language models for evals at sub-100ms latency [Plurai](/reading/2026-05/2026-05-04t235011-plurai). MarkdownLM enforces architectural rules at the Git layer, blocking non-compliant code before it merges [MarkdownLM](/reading/2026-04/2026-04-30t231319-markdownlm).
 
-Deployed examples include [Mendral's CI agent](/reading/2026-04/2026-04-30t195531-what-ci-actually-looks-like-at-a-100-person-team) processing 1.18 billion log lines to auto-diagnose flaky tests, [Poolday's multi-agent video editor](/reading/2026-04/2026-04-30t231206-poolday) orchestrating 100+ generative models, and [Databricks' ai-dev-kit](/reading/2026-04/2026-04-27t114138-scaling-managed-agents-decoupling-the-brain-from-the-hands) arming coding assistants with 50+ executable platform tools.
+Memory and context are persistent practical constraints. The vectorize-io hindsight project uses biomimetic data structures and multi-strategy retrieval to achieve state-of-the-art scores on LongMemEval [hindsight](/reading/2026-05/2026-05-03t173422-vectorize-iohindsight). The LostWarrior knowledge-base CLI organizes project context as tiered markdown with a machine-readable manifest so agents can navigate without burning excess tokens [knowledge-base](/reading/2026-04/2026-04-30t232126-lostwarriorknowledge-base). Mendral's CI agent, operating on PostHog's monorepo, found that log ingestion speed and smart routing mattered more than the AI diagnosis itself when processing 1.18 billion log lines per run [CI agents](/reading/2026-04/2026-04-30t195531-what-ci-actually-looks-like-at-a-100-person-team).
 
-The human-oversight question is unresolved in both research and practice. [Lars Faye argues](/reading/2026-04/2026-04-27t145041-agentic-coding-is-a-trap) that full reliance on coding agents erodes the debugging skills needed to supervise them. [A first-person account of building with Claude](/reading/2026-05/2026-05-03t110355-babysitting-the-agent) documents the agent declaring work done before it actually works, repeatedly, regardless of guardrails. The open questions the MAS survey closes with, including topology-to-reliability mapping and graceful failure recovery, suggest the field needs distributed-systems theory as much as it needs better models.
+Human oversight remains non-negotiable. Lars Faye argues that full reliance on coding agents erodes the debugging skills developers need to supervise those agents, a compounding liability alongside vendor lock-in and unpredictable token costs [agentic trap](/reading/2026-04/2026-04-27t145041-agentic-coding-is-a-trap). Christopher Meiklejohn's first-person account of building a social app with Claude documents the exhausting reality: the agent consistently declares work done before it works, and no guardrail eliminates the need for a human to verify every ship [babysitting](/reading/2026-05/2026-05-03t110355-babysitting-the-agent). The agents in production today are systems to be engineered and supervised, not autonomous replacements for engineering judgment.
