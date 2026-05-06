@@ -139,6 +139,12 @@ export const WikiFrontmatterSchema = z.object({
   // (compiled before this field landed) validate; populated organically as
   // articles are recompiled by /synthesize.
   compile_cost: CompileCostSchema.optional(),
+  // Auditable freshness-drift signal. Set by `/link`'s incremental
+  // sources[] patch when a new reading entry's topic matches this article's
+  // slug; the gap between this and `compiled_at` is the operator-visible
+  // "how stale is the prose" measurement. Optional so existing wiki
+  // articles (compiled before this field landed) validate.
+  last_source_added: z.coerce.date().optional(),
 });
 
 export const LabStatuses = ["draft", "running", "live", "archived"] as const;

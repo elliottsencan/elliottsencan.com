@@ -2,15 +2,17 @@ import matter from "gray-matter";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as anthropicModule from "./anthropic.ts";
 import { type LinkSummary, LinkSummarySchema } from "./anthropic.ts";
+import * as githubModule from "./github.ts";
 import {
   buildEntryMarkdown,
   buildOptOutStubMarkdown,
   makeLinkStrategy,
   OPT_OUT_STUB_SUMMARY,
+  patchExistingWikiSources,
   validate,
 } from "./link.ts";
 import { __resetRobotsCacheForTests } from "./optout.ts";
-import type { Env } from "./types.ts";
+import type { Env, Result } from "./types.ts";
 
 describe("link.validate", () => {
   it("rejects non-object bodies", () => {
@@ -432,5 +434,369 @@ describe("buildOptOutStubMarkdown", () => {
     expect(fm.title_source).toBe("fetched");
     // Body must be empty — reading entries are citations, not articles.
     expect(matter(md).content.trim()).toBe("");
+  });
+});
+
+// ---------- A1 + A3: patchExistingWikiSources ----------
+
+/**
+ * Build a fake getFile from an in-memory map of path → file content. Any
+ * path not in the map returns a 404-shaped error so the helper's
+ * "no wiki article exists" branch is exercised.
+ */
+function fakeGetFile(
+  files: Record<string, string>,
+): (path: string) => Promise<Result<{ content: string; sha: string }>> {
+  return async (path: string) => {
+    const content = files[path];
+    if (content === undefined) {
+      return { ok: false, error: "HTTP 404: Not Found" };
+    }
+    return { ok: true, data: { content, sha: "deadbeef" } };
+  };
+}
+
+const ADDED_AT = new Date("2026-05-05T12:00:00.000Z");
+
+const baseWikiArticle = (overrides: Record<string, unknown> = {}) =>
+  matter.stringify("Body content unchanged.", {
+    title: "AI-assisted coding",
+    summary: "A brief summary.",
+    sources: ["2026-04/2026-04-01t000000-some-source", "2026-04/2026-04-02t000000-other-source"],
+    compiled_at: "2026-04-15T00:00:00.000Z",
+    compiled_with: "claude-sonnet-4-6",
+    ...overrides,
+  });
+
+describe("patchExistingWikiSources", () => {
+  it("appends the new reading slug to a matching wiki article and stamps last_source_added", async () => {
+    const files = {
+      "src/content/wiki/ai-assisted-coding.md": baseWikiArticle(),
+    };
+    const changed = await patchExistingWikiSources({
+      topics: ["ai-assisted-coding"],
+      readingSlug: "2026-05/2026-05-05t120000-new-entry",
+      added: ADDED_AT,
+      getFile: fakeGetFile(files),
+      max: 5,
+    });
+    expect(changed).toHaveLength(1);
+    const file = changed[0];
+    expect(file?.path).toBe("src/content/wiki/ai-assisted-coding.md");
+    const parsed = matter(file?.after ?? "");
+    const data = parsed.data as Record<string, unknown>;
+    expect(data.sources).toEqual([
+      "2026-04/2026-04-01t000000-some-source",
+      "2026-04/2026-04-02t000000-other-source",
+      "2026-05/2026-05-05t120000-new-entry",
+    ]);
+    expect(data.last_source_added).toBe(ADDED_AT.toISOString());
+    // Body untouched — frontmatter-only patch.
+    expect(parsed.content.trim()).toBe("Body content unchanged.");
+  });
+
+  it("returns no changes when no topic matches an existing wiki article", async () => {
+    const changed = await patchExistingWikiSources({
+      topics: ["topic-with-no-article"],
+      readingSlug: "2026-05/2026-05-05t120000-x",
+      added: ADDED_AT,
+      getFile: fakeGetFile({}),
+      max: 5,
+    });
+    expect(changed).toHaveLength(0);
+  });
+
+  it("is idempotent: a slug already in sources[] produces no change", async () => {
+    const slug = "2026-05/2026-05-05t120000-already-there";
+    const files = {
+      "src/content/wiki/ai-assisted-coding.md": baseWikiArticle({
+        sources: ["2026-04/2026-04-01t000000-some-source", slug],
+      }),
+    };
+    const changed = await patchExistingWikiSources({
+      topics: ["ai-assisted-coding"],
+      readingSlug: slug,
+      added: ADDED_AT,
+      getFile: fakeGetFile(files),
+      max: 5,
+    });
+    expect(changed).toHaveLength(0);
+  });
+
+  it("treats 404 as a no-op (no error, no throw)", async () => {
+    const failingGetFile = async () => ({ ok: false as const, error: "HTTP 404: Not Found" });
+    const changed = await patchExistingWikiSources({
+      topics: ["nonexistent-topic"],
+      readingSlug: "2026-05/2026-05-05t120000-x",
+      added: ADDED_AT,
+      getFile: failingGetFile,
+      max: 5,
+    });
+    expect(changed).toHaveLength(0);
+  });
+
+  it("logs and skips a wiki article whose YAML frontmatter is malformed; later topics still patch", async () => {
+    // First topic's article has malformed YAML; second topic's is well-formed.
+    // gray-matter throws on bad YAML — the helper must catch and continue.
+    const files = {
+      "src/content/wiki/broken-topic.md": "---\ntitle: [unterminated\n---\nbody",
+      "src/content/wiki/good-topic.md": baseWikiArticle(),
+    };
+    const changed = await patchExistingWikiSources({
+      topics: ["broken-topic", "good-topic"],
+      readingSlug: "2026-05/2026-05-05t120000-x",
+      added: ADDED_AT,
+      getFile: fakeGetFile(files),
+      max: 5,
+    });
+    // The good one still gets patched.
+    expect(changed.map((c) => c.path)).toEqual(["src/content/wiki/good-topic.md"]);
+  });
+
+  it("treats other (non-404) GitHub errors as skip-this-article, not throw", async () => {
+    const flakyGetFile = async () => ({ ok: false as const, error: "HTTP 500: Server Error" });
+    const changed = await patchExistingWikiSources({
+      topics: ["some-topic"],
+      readingSlug: "2026-05/2026-05-05t120000-x",
+      added: ADDED_AT,
+      getFile: flakyGetFile,
+      max: 5,
+    });
+    expect(changed).toHaveLength(0);
+  });
+
+  it("caps the number of wiki articles inspected per call (max=N)", async () => {
+    const files: Record<string, string> = {};
+    const topics: string[] = [];
+    for (let i = 0; i < 8; i++) {
+      const t = `topic-${i}`;
+      topics.push(t);
+      files[`src/content/wiki/${t}.md`] = baseWikiArticle();
+    }
+    const changed = await patchExistingWikiSources({
+      topics,
+      readingSlug: "2026-05/2026-05-05t120000-x",
+      added: ADDED_AT,
+      getFile: fakeGetFile(files),
+      max: 3,
+    });
+    // Only the first 3 topics are inspected — the rest are capped out.
+    expect(changed).toHaveLength(3);
+    expect(changed.map((c) => c.path)).toEqual([
+      "src/content/wiki/topic-0.md",
+      "src/content/wiki/topic-1.md",
+      "src/content/wiki/topic-2.md",
+    ]);
+  });
+
+  it("preserves existing frontmatter fields untouched (only sources[] and last_source_added change)", async () => {
+    const files = {
+      "src/content/wiki/ai-assisted-coding.md": baseWikiArticle({
+        aliases: ["ai-coding-agents"],
+        compile_cost: { foo: "bar" },
+      }),
+    };
+    const changed = await patchExistingWikiSources({
+      topics: ["ai-assisted-coding"],
+      readingSlug: "2026-05/2026-05-05t120000-new",
+      added: ADDED_AT,
+      getFile: fakeGetFile(files),
+      max: 5,
+    });
+    const data = matter(changed[0]?.after ?? "").data as Record<string, unknown>;
+    expect(data.title).toBe("AI-assisted coding");
+    expect(data.summary).toBe("A brief summary.");
+    expect(data.aliases).toEqual(["ai-coding-agents"]);
+    expect(data.compile_cost).toEqual({ foo: "bar" });
+    expect(data.compiled_with).toBe("claude-sonnet-4-6");
+  });
+});
+
+// ---------- A1 + A3: integration via makeLinkStrategy.plan ----------
+
+describe("makeLinkStrategy.plan — wiki sources[] patch", () => {
+  beforeEach(() => {
+    __resetRobotsCacheForTests();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+    __resetRobotsCacheForTests();
+  });
+
+  it("includes a matching wiki article in mutation.changed alongside the new reading entry", async () => {
+    // Allow path: robots.txt 404, normal page response — drives the path
+    // past the opt-out checks and into the Anthropic + wiki-patch flow.
+    stubFetch((url) => {
+      if (url.endsWith("/robots.txt")) {
+        return new Response("", { status: 404 });
+      }
+      return new Response("<html><title>Article</title></html>", { status: 200 });
+    });
+    vi.spyOn(anthropicModule, "summarizeLink").mockResolvedValue({
+      ok: true,
+      data: {
+        title: "Article",
+        summary: "Summary.",
+        category: "tech",
+        topics: ["ai-assisted-coding"],
+        model: "claude-sonnet-4-6",
+        cost: {
+          usage: {
+            input_tokens: 0,
+            output_tokens: 0,
+            cache_creation_input_tokens: 0,
+            cache_read_input_tokens: 0,
+          },
+          model: "claude-sonnet-4-6",
+          pricing: null,
+          cost_usd: 0,
+        },
+      },
+    });
+    const wikiBody = baseWikiArticle();
+    vi.spyOn(githubModule, "getFile").mockImplementation(async (path) => {
+      if (path === "src/content/wiki/ai-assisted-coding.md") {
+        return { ok: true, data: { content: wikiBody, sha: "deadbeef" } };
+      }
+      return { ok: false, error: "HTTP 404: Not Found" };
+    });
+    const strategy = makeLinkStrategy({
+      url: "https://example.com/post",
+      // topic_priors: false short-circuits the wiki.json fetch — we don't
+      // need the canonical-vocabulary network round-trip in this test.
+      topic_priors: false,
+    });
+    const env = baseEnv();
+    const result = await strategy.plan({ env }, env);
+    expect(result.ok).toBe(true);
+    if (!result.ok) {
+      return;
+    }
+    expect(result.data.mutation.added).toHaveLength(1);
+    expect(result.data.mutation.changed).toHaveLength(1);
+    const wikiPatch = result.data.mutation.changed[0];
+    expect(wikiPatch?.path).toBe("src/content/wiki/ai-assisted-coding.md");
+    const data = matter(wikiPatch?.after ?? "").data as Record<string, unknown>;
+    expect(Array.isArray(data.sources)).toBe(true);
+    expect((data.sources as string[]).length).toBe(3);
+    expect(data.last_source_added).toBeDefined();
+  });
+
+  it("leaves mutation.changed empty when the topic does not match any wiki article", async () => {
+    stubFetch((url) => {
+      if (url.endsWith("/robots.txt")) {
+        return new Response("", { status: 404 });
+      }
+      return new Response("<html><title>X</title></html>", { status: 200 });
+    });
+    vi.spyOn(anthropicModule, "summarizeLink").mockResolvedValue({
+      ok: true,
+      data: {
+        title: "X",
+        summary: "x.",
+        category: "tech",
+        topics: ["a-very-novel-topic"],
+        model: "claude-sonnet-4-6",
+        cost: {
+          usage: {
+            input_tokens: 0,
+            output_tokens: 0,
+            cache_creation_input_tokens: 0,
+            cache_read_input_tokens: 0,
+          },
+          model: "claude-sonnet-4-6",
+          pricing: null,
+          cost_usd: 0,
+        },
+      },
+    });
+    // Every wiki getFile call returns 404 — no article matches.
+    vi.spyOn(githubModule, "getFile").mockResolvedValue({
+      ok: false,
+      error: "HTTP 404: Not Found",
+    });
+    const strategy = makeLinkStrategy({
+      url: "https://example.com/post",
+      topic_priors: false,
+    });
+    const env = baseEnv();
+    const result = await strategy.plan({ env }, env);
+    expect(result.ok).toBe(true);
+    if (!result.ok) {
+      return;
+    }
+    expect(result.data.mutation.added).toHaveLength(1);
+    expect(result.data.mutation.changed).toHaveLength(0);
+  });
+
+  it("matches the canonical wiki article when the model returns an alias topic", async () => {
+    // Stub fetch so:
+    //  - robots.txt → 404 (no opt-out)
+    //  - wiki.json → returns a single concept with one alias mapping
+    //    "ai-coding-assistants" → canonical slug "ai-assisted-coding".
+    //  - article URL → trivial 200
+    stubFetch((url) => {
+      if (url.endsWith("/robots.txt")) {
+        return new Response("", { status: 404 });
+      }
+      if (url.endsWith("/wiki.json")) {
+        return new Response(
+          JSON.stringify({
+            concepts: [{ slug: "ai-assisted-coding", aliases: ["ai-coding-assistants"] }],
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      return new Response("<html><title>Article</title></html>", { status: 200 });
+    });
+    // Model emits the alias slug; applyVocabulary should rewrite it to the
+    // canonical, and the wiki-patch helper should fetch
+    // `src/content/wiki/ai-assisted-coding.md` (not the alias file).
+    vi.spyOn(anthropicModule, "summarizeLink").mockResolvedValue({
+      ok: true,
+      data: {
+        title: "Article",
+        summary: "x.",
+        category: "tech",
+        topics: ["ai-coding-assistants"],
+        model: "claude-sonnet-4-6",
+        cost: {
+          usage: {
+            input_tokens: 0,
+            output_tokens: 0,
+            cache_creation_input_tokens: 0,
+            cache_read_input_tokens: 0,
+          },
+          model: "claude-sonnet-4-6",
+          pricing: null,
+          cost_usd: 0,
+        },
+      },
+    });
+    const wikiBody = baseWikiArticle();
+    const getFileSpy = vi.spyOn(githubModule, "getFile").mockImplementation(async (path) => {
+      if (path === "src/content/wiki/ai-assisted-coding.md") {
+        return { ok: true, data: { content: wikiBody, sha: "deadbeef" } };
+      }
+      return { ok: false, error: "HTTP 404: Not Found" };
+    });
+    const strategy = makeLinkStrategy({
+      url: "https://example.com/post",
+      topic_priors: true,
+    });
+    const env = baseEnv();
+    const result = await strategy.plan({ env }, env);
+    expect(result.ok).toBe(true);
+    if (!result.ok) {
+      return;
+    }
+    // The helper was called with the canonical slug, not the alias.
+    const calledPaths = getFileSpy.mock.calls.map((c) => c[0]);
+    expect(calledPaths).toContain("src/content/wiki/ai-assisted-coding.md");
+    expect(calledPaths).not.toContain("src/content/wiki/ai-coding-assistants.md");
+    expect(result.data.mutation.changed).toHaveLength(1);
+    expect(result.data.mutation.changed[0]?.path).toBe("src/content/wiki/ai-assisted-coding.md");
   });
 });
