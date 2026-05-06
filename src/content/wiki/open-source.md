@@ -1,18 +1,25 @@
 ---
 title: Open source
 summary: >-
-  Open-source software releases source code under licenses that permit
-  inspection, modification, and redistribution; the cited sources illustrate
-  this through a Kubernetes UI distributed as a single binary under Apache 2.0.
+  Open-source software spans licensing choices, transparency expectations, and
+  governance realities, with sources here covering a Kubernetes UI, a container
+  tutorial, and competing local-LLM tools as concrete cases.
 sources:
   - 2026-05/2026-05-03t105219-radar-open-source-kubernetes-ui
   - 2026-05/2026-05-03t105238-radar-or-the-missing-open-source-kubernetes-ui
-compiled_at: '2026-05-04T04:09:31.288Z'
+  - >-
+    2026-05/2026-05-04t231858-how-container-filesystem-works-building-a-docker-like
+  - 2026-05/2026-05-05t071447-friends-dont-let-friends-use-ollama
+  - 2026-05/2026-05-05t071908-oobaboogatextgen
+aliases:
+  - open-source-packages
+  - open-source-tools
+compiled_at: '2026-05-06T16:13:36.882Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 2270
-    output_tokens: 373
+    input_tokens: 2795
+    output_tokens: 455
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -23,10 +30,10 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.012405
+  cost_usd: 0.01521
 ---
-Open-source software makes its source code publicly available under a license that grants users the right to inspect, modify, and redistribute it. The Apache 2.0 license, used by Radar, is one of the most permissive in common use: it allows commercial use and does not require derivative works to carry the same license.
+Open source covers a wide spectrum in practice. At one end, [Radar](/reading/2026-05/2026-05-03t105238-radar-or-the-missing-open-source-kubernetes-ui) is a clean example: Apache 2.0 licensed, single-binary, self-hostable, no telemetry, no cloud account required. The license and the architecture reinforce each other. [Ivan Velichko's container tutorial](/reading/2026-05/2026-05-04t231858-how-container-filesystem-works-building-a-docker-like) sits in the same tradition: open knowledge, reproducible from Linux primitives, no proprietary surface.
 
-The two sources here both cover Radar, an open-source Kubernetes UI [Radar on Product Hunt](/reading/2026-05/2026-05-03t105219-radar-open-source-kubernetes-ui) [Radar site](/reading/2026-05/2026-05-03t105238-radar-or-the-missing-open-source-kubernetes-ui). What they illustrate about open source more broadly is the distribution model: a single self-contained binary that a user can run locally or self-host inside their own cluster, with no dependency on a vendor's cloud account or proprietary agent. That pattern, shipping a complete artifact alongside its source, is common in the Kubernetes ecosystem where operators want auditability and the option to patch or extend the tooling themselves.
+The local-LLM space complicates the picture. [Zetaphor's critique of Ollama](/reading/2026-05/2026-05-05t071447-friends-dont-let-friends-use-ollama) argues that Ollama obscures its dependence on llama.cpp, ships a closed-source GUI alongside its open core, and has drifted toward cloud monetization. The critique is essentially that the open-source label does not guarantee transparency about dependencies or business direction. [oobabooga/textgen](/reading/2026-05/2026-05-05t071908-oobaboogatextgen) is offered as a contrasting tool: no telemetry, fully offline, with a straightforward dependency chain.
 
-The Apache 2.0 framing also signals something about project positioning. Choosing a permissive license over a copyleft one (GPL, AGPL) lowers the barrier for commercial adoption and integration, which matters when the target audience is platform and infrastructure teams that may embed the tool inside products or internal platforms.
+Taken together, these sources suggest that open-source status is a starting condition, not a guarantee. Licensing terms, dependency transparency, telemetry posture, and monetization trajectory all determine whether a project delivers on what the label implies.
