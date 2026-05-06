@@ -10,6 +10,7 @@ sources:
   - 2026-04/2026-04-30t231909-the-great-css-expansion
   - 2026-04/2026-04-30t231931-50-best-font-combinations-for-graphic-design
   - 2026-05/2026-05-02t145719-micrographics-templates-design-layouts
+  - 2026-05/2026-05-05t183935-type-scale-graphs
 aliases:
   - css-layout
 compiled_at: 2026-05-04T03:36:37.485Z
@@ -29,6 +30,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.017676
+last_source_added: '2026-05-06T01:39:35.789Z'
 ---
 Responsive design has traditionally meant adding media query breakpoints that reorganize a layout when the viewport crosses defined thresholds. The approach works but couples layout logic to a global viewport measurement, which breaks down when components are reused in different containers at different sizes.
 

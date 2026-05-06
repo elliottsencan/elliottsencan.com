@@ -8,6 +8,7 @@ sources:
   - 2026-04/2026-04-30t230919-dmytro-mezhenskyi-udmezhenskyi-on-reddit
   - 2026-04/2026-04-30t231909-the-great-css-expansion
   - 2026-04/2026-04-30t231931-50-best-font-combinations-for-graphic-design
+  - 2026-05/2026-05-05t183935-type-scale-graphs
 aliases:
   - accessibility
 compiled_at: '2026-05-04T04:07:30.528Z'
@@ -27,6 +28,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.014862
+last_source_added: '2026-05-06T01:39:35.789Z'
 ---
 Web accessibility is the practice of building interfaces that work for users regardless of ability, device, or assistive technology. Neither of the two substantive sources tagged here addresses accessibility as a primary concern, but each touches on it in ways worth noting.
 
