@@ -243,6 +243,17 @@ function printSynthesize(body) {
     `failed:    ${body.failed}`,
     `skipped:   ${body.skipped}`,
   ];
+  if (Array.isArray(body.deferred) && body.deferred.length > 0) {
+    const preview = body.deferred.slice(0, 3).join(", ");
+    const more = body.deferred.length > 3 ? ", …" : "";
+    lines.push(`deferred:  ${body.deferred.length} (${preview}${more})`);
+  }
+  if (body.dry_run && Array.isArray(body.would_compile) && body.would_compile.length > 0) {
+    const preview = body.would_compile.slice(0, 5).join(", ");
+    const more =
+      body.would_compile.length > 5 ? `, … (+${body.would_compile.length - 5} more)` : "";
+    lines.push(`would_compile: ${preview}${more}`);
+  }
   if (body.run_cost?.cost_usd !== undefined) {
     lines.push(`cost:      $${Number(body.run_cost.cost_usd).toFixed(4)}`);
   }

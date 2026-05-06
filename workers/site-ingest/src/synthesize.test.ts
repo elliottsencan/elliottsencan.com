@@ -507,6 +507,7 @@ describe("buildPrBody (deferred section)", () => {
       auto_repaired: [],
       alias_outcomes: [],
       deferred: [] as string[],
+      would_compile: [] as string[],
       run_cost: aggregateCost([]),
     };
   }
