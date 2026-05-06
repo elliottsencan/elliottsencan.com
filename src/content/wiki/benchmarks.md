@@ -1,9 +1,9 @@
 ---
 title: Benchmarks
 summary: >-
-  Benchmarks in AI agent research are the empirical datasets and task suites
-  used to measure system capability, but their scope shapes which claims
-  practitioners can actually make about real-world performance.
+  Benchmarks in AI agent research measure coordination overhead, tool-handling
+  efficiency, and reliability, but the metrics often reflect a system's
+  architecture more than its raw capability.
 sources:
   - >-
     2026-05/2026-05-03t110011-getting-up-to-speed-on-multi-agent-systems-part-1-the
@@ -11,15 +11,13 @@ sources:
     2026-05/2026-05-03t110027-getting-up-to-speed-on-multi-agent-systems-part-2-the
   - >-
     2026-05/2026-05-03t115608-how-to-choose-between-single-and-multi-agent-solutions
-aliases:
-  - benchmarking
-  - evaluation-methodology
-compiled_at: 2026-05-04T04:10:03.644Z
+  - 2026-05/2026-05-04t235011-plurai
+compiled_at: '2026-05-06T04:11:40.272Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 2559
-    output_tokens: 464
+    input_tokens: 2761
+    output_tokens: 416
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -30,10 +28,10 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.014637
+  cost_usd: 0.014523
 ---
-In [multi-agent systems research](/wiki/multi-agent-systems), benchmarks do more than measure performance; they define what counts as success and, in doing so, narrow or widen what researchers claim their systems can do. Christopher Meiklejohn's survey of the field notes that agentic coding benchmarks like SWE-bench effectively constrained the scope of multi-agent claims, since systems like SWE-agent were optimized for a specific, well-defined task class [Part 1](/reading/2026-05/2026-05-03t110011-getting-up-to-speed-on-multi-agent-systems-part-1-the).
+In multi-agent systems research, benchmarks do a lot of quiet work shaping what counts as progress. Christopher Meiklejohn's survey of the field [Part 1](/reading/2026-05/2026-05-03t110011-getting-up-to-speed-on-multi-agent-systems-part-1-the) notes that systems like SWE-agent achieved strong scores on coding benchmarks while operating as single-agent loops, which narrowed what the multi-agent label could credibly claim. A high benchmark number, in other words, does not confirm the architectural story a paper tells.
 
-The vocabulary work that accompanies that survey underscores how benchmark framing shapes the taxonomy readers use to compare papers [Part 2](/reading/2026-05/2026-05-03t110027-getting-up-to-speed-on-multi-agent-systems-part-2-the). Without shared definitions for agent types and coordination structures, benchmark results across papers become difficult to interpret against each other.
+The coordination tax that benchmarks sometimes obscure is quantified in AlphaSignal's synthesis of Stanford and Google/MIT research [single vs. multi-agent](/reading/2026-05/2026-05-03t115608-how-to-choose-between-single-and-multi-agent-solutions): multi-agent orchestration can amplify errors up to 17x and reduce tool-handling efficiency by 2 to 6x relative to single-agent baselines. Those numbers come from benchmarks, but the lesson is that the benchmark must measure the right failure mode to be useful.
 
-The practical stakes of benchmark choice become concrete in the single-versus-multi-agent comparison. Stanford and Google/MIT research cited by Ben Dickson found that [multi-agent orchestration](/wiki/llm-orchestration) can amplify errors up to 17x and reduce tool-handling efficiency by 2 to 6x relative to single-agent baselines [How to Choose](/reading/2026-05/2026-05-03t115608-how-to-choose-between-single-and-multi-agent-solutions). Those numbers only hold meaning relative to the benchmarks on which they were measured, which is exactly the kind of scope limitation Meiklejohn's retrospective flags. A benchmark that rewards coordination complexity will produce different comparative conclusions than one that penalizes error propagation.
+On the evaluation tooling side, Plurai [Plurai](/reading/2026-05/2026-05-04t235011-plurai) replaces LLM-as-judge scoring with a multi-agent debate process for validating synthetic training data, targeting sub-100ms latency and claiming 8x cost reduction. That framing treats benchmark infrastructure itself as a product problem, not just a research methodology.
