@@ -1,20 +1,22 @@
 ---
 title: LLM tooling
 summary: >-
-  Infrastructure and conventions for making knowledge accessible to language
-  models, spanning documentation platforms, structured knowledge bases, and
-  LLM-compiled wiki patterns that let models navigate context without burning
-  tokens on unstructured retrieval.
+  The ecosystem of tools for running, serving, and organizing knowledge for LLMs
+  spans local inference runtimes, documentation platforms, and structured
+  knowledge bases, with transparency and context efficiency as recurring
+  concerns.
 sources:
   - 2026-04/2026-04-30t231435-mintlify
   - 2026-04/2026-04-30t232052-how-to-implement-karpathys-llm-knowledge-base
   - 2026-04/2026-04-30t232126-lostwarriorknowledge-base
-compiled_at: 2026-05-04T04:08:13.728Z
+  - 2026-05/2026-05-05t071447-friends-dont-let-friends-use-ollama
+  - 2026-05/2026-05-05t071908-oobaboogatextgen
+compiled_at: '2026-05-06T16:12:27.740Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 2706
-    output_tokens: 528
+    input_tokens: 3065
+    output_tokens: 661
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -25,14 +27,14 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.016038
+  cost_usd: 0.01911
 ---
-LLM tooling covers the layer between raw knowledge and the model that needs to consume it. Three sources here converge on a shared problem: LLMs work better when they can reach well-structured, machine-legible context, and [building that context is now its own engineering discipline](/wiki/context-engineering).
+LLM tooling covers the software layer between raw model weights and useful outputs: runtimes that serve models locally, platforms that structure knowledge for LLM consumption, and utilities that manage the context passed to a model at query time.
 
-[Mintlify](/reading/2026-04/2026-04-30t231435-mintlify) approaches this from the documentation side. It generates and serves docs in formats explicitly designed for model consumption, including llms.txt support and [MCP integration](/wiki/mcp), so the same knowledge base that a human reads can be queried directly by an agent without reformatting.
+On the local inference side, [oobabooga/textgen](/reading/2026-05/2026-05-05t071908-oobaboogatextgen) offers a fully offline desktop app with support for tool-calling, LoRA fine-tuning, vision, and an OpenAI-compatible API, all with no telemetry. [Friends Don't Let Friends Use Ollama](/reading/2026-05/2026-05-05t071447-friends-dont-let-friends-use-ollama) argues that Ollama, a popular alternative, obscures its llama.cpp dependency, misleads users with model naming conventions, and has drifted toward cloud monetization, positioning more transparent tools as the better choice for users who want genuine local control.
 
-A different angle comes from Andrej Karpathy's LLM-compiled wiki pattern, documented in a [Reddit walkthrough](/reading/2026-04/2026-04-30t232052-how-to-implement-karpathys-llm-knowledge-base). The idea is to use an LLM itself to ingest raw documents and produce structured Markdown files that persist as a maintained wiki. This [sidesteps RAG entirely](/wiki/retrieval-augmented-generation): instead of retrieving chunks at query time, the model builds a coherent knowledge store upfront and runs periodic health checks to prevent drift. It trades retrieval latency for maintenance overhead.
+On the knowledge organization side, two approaches address how to feed structured information to models without burning unnecessary tokens. [LostWarrior/knowledge-base](/reading/2026-04/2026-04-30t232126-lostwarriorknowledge-base) is a zero-dependency bash CLI that organizes project context as tiered markdown files, generating both a human-readable INDEX.md and a machine-readable manifest.json so agents can navigate large knowledge bases efficiently. The Karpathy wiki pattern described in [a Reddit guide](/reading/2026-04/2026-04-30t232052-how-to-implement-karpathys-llm-knowledge-base) takes a different angle: rather than retrieval-augmented generation, it has the model itself ingest raw documents and maintain structured markdown files, then queries those files directly at scale, with periodic health checks to prevent knowledge drift.
 
-The [LostWarrior knowledge-base CLI](/reading/2026-04/2026-04-30t232126-lostwarriorknowledge-base) takes an operational stance on the same problem. A zero-dependency bash tool organizes project context into tiered Markdown files alongside a machine-readable manifest.json, giving AI agents a navigable structure without requiring them to scan entire codebases. The dual output, one for humans and one for agents, points to a broader pattern: knowledge organization for LLMs often means maintaining two parallel representations of the same content.
+[Mintlify](/reading/2026-04/2026-04-30t231435-mintlify) sits at the documentation end of the stack, serving knowledge to both human users and LLMs through support for llms.txt, MCP, and context-aware agents. That positions it as infrastructure for teams whose documentation needs to be machine-readable as a first-class concern, not an afterthought.
 
-Across all three, the core concern is context efficiency. Whether through standardized serving formats, pre-compiled wikis, or tiered manifests, the goal is letting a model find what it needs without wasting tokens on unstructured traversal.
+The through-line across these sources is context efficiency and transparency. Whether the question is which runtime to trust, how to structure a knowledge base, or how to serve docs to an agent, the practical pressure is the same: get the right information into the model's context window without waste, and do it with tools whose behavior you can actually inspect.
