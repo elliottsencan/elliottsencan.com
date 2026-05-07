@@ -189,6 +189,109 @@ function writeIngestPipelineCost(records) {
   return { out, payload };
 }
 
+function writeCitationFaithfulness() {
+  // The /eval endpoint writes the real sidecar at this path. Until then,
+  // we drop a `status: "no-data"` sentinel so the labs cell can render a
+  // placeholder without failing the build. The sentinel is committed so
+  // git-tracked output stays deterministic; subsequent builds see it and
+  // skip rewriting (idempotent).
+  //
+  // When the real sidecar exists, append a `derived` block (per-judge
+  // accuracy, headline agreement) so the labs cell renders without
+  // recomputing on every page load. Derived numbers are pure functions of
+  // the sidecar — no `generated_at` baked in — so a rebuild without input
+  // changes produces an identical file (no `git diff`).
+  const sidecarPath = join(OUT_DIR, "citation-faithfulness.json");
+  let raw;
+  try {
+    raw = readFileSync(sidecarPath, "utf8");
+  } catch {
+    const sentinel = {
+      status: "no-data",
+      message:
+        "POST /eval has not run yet — the sidecar will populate on the first non-dry-run pass.",
+    };
+    writeFileSync(sidecarPath, `${JSON.stringify(sentinel, null, 2)}\n`, "utf8");
+    return { out: sidecarPath, status: "sentinel" };
+  }
+  let sidecar;
+  try {
+    sidecar = JSON.parse(raw);
+  } catch {
+    return { out: sidecarPath, status: "parse-failed" };
+  }
+  if (sidecar.status === "no-data") {
+    // Sentinel already in place; leave it untouched. No churn.
+    return { out: sidecarPath, status: "sentinel-preserved" };
+  }
+  if (!Array.isArray(sidecar.articles)) {
+    return { out: sidecarPath, status: "skip-malformed" };
+  }
+  const judges = new Map();
+  let totalAgreementClaims = 0;
+  let totalAgree = 0;
+  for (const article of sidecar.articles) {
+    if (Array.isArray(article.judges)) {
+      for (const judge of article.judges) {
+        const name = judge.judge_model;
+        if (!name) {
+          continue;
+        }
+        const slot = judges.get(name) ?? {
+          model: name,
+          supported: 0,
+          partial: 0,
+          unsupported: 0,
+          claims: 0,
+          cost_usd: 0,
+        };
+        const sum = judge.summary ?? {};
+        slot.supported += Number(sum.supported ?? 0);
+        slot.partial += Number(sum.partial ?? 0);
+        slot.unsupported += Number(sum.unsupported ?? 0);
+        slot.claims += Array.isArray(judge.claims) ? judge.claims.length : 0;
+        slot.cost_usd += Number(sum.total_cost_usd ?? 0);
+        judges.set(name, slot);
+      }
+    }
+    if (article.judge_agreement) {
+      totalAgreementClaims += Number(article.judge_agreement.total_claims ?? 0);
+      totalAgree += Number(article.judge_agreement.agree ?? 0);
+    }
+  }
+  const judgeArr = [...judges.values()]
+    .sort((a, b) => a.model.localeCompare(b.model))
+    .map((j) => {
+      const total = j.supported + j.partial + j.unsupported;
+      const accuracy = total === 0 ? 0 : ((j.supported + 0.5 * j.partial) / total) * 100;
+      return {
+        model: j.model,
+        claims: j.claims,
+        supported: j.supported,
+        partial: j.partial,
+        unsupported: j.unsupported,
+        accuracy_pct: Math.round(accuracy * 100) / 100,
+        cost_usd: Math.round(j.cost_usd * 10_000) / 10_000,
+      };
+    });
+  const agreementPct =
+    totalAgreementClaims === 0 ? 0 : Math.round((totalAgree / totalAgreementClaims) * 10_000) / 100;
+  const enriched = {
+    ...sidecar,
+    derived: {
+      headline_agreement_pct: agreementPct,
+      total_agreement_claims: totalAgreementClaims,
+      judges: judgeArr,
+    },
+  };
+  const next = `${JSON.stringify(enriched, null, 2)}\n`;
+  if (next === raw) {
+    return { out: sidecarPath, status: "unchanged", articles: sidecar.articles.length };
+  }
+  writeFileSync(sidecarPath, next, "utf8");
+  return { out: sidecarPath, status: "enriched", articles: sidecar.articles.length };
+}
+
 mkdirSync(OUT_DIR, { recursive: true });
 
 const records = collectCostRecords();
@@ -196,3 +299,6 @@ const { out, payload } = writeIngestPipelineCost(records);
 console.log(
   `[labs-aggregate] ${records.length} records → ${payload.by_day.length} day(s), ${payload.by_week.length} week(s) → ${out}`,
 );
+
+const cf = writeCitationFaithfulness();
+console.log(`[labs-aggregate] citation-faithfulness: ${cf.status} → ${cf.out}`);

@@ -20,6 +20,7 @@ import { ReadingCategorySchema } from "@shared/schemas/content.ts";
 import { z } from "zod";
 import { type CostRecord, computeCost, type Usage } from "./cost.ts";
 import type { CorpusName } from "./crosslink-config.ts";
+import { CITATION_JUDGE_SYSTEM, JudgeVerdictSchema } from "./eval-prompts.ts";
 import type { Result } from "./types.ts";
 import { log } from "./util.ts";
 
@@ -327,6 +328,90 @@ export async function proposeCrosslinks(args: {
   } catch (err) {
     return mapError(err, "propose-crosslinks");
   }
+}
+
+// Allowed judge models for /eval. Excludes Opus deliberately — the eval
+// surface is supposed to compare two cheap-enough models and the cost
+// envelope assumes Haiku/Sonnet pricing. Adding Opus would require a
+// matching budget revisit.
+export const JUDGE_MODELS = ["claude-haiku-4-5", "claude-sonnet-4-6"] as const;
+export type JudgeModel = (typeof JUDGE_MODELS)[number];
+
+export function isJudgeModel(model: string): model is JudgeModel {
+  return (JUDGE_MODELS as readonly string[]).includes(model);
+}
+
+export type JudgeCitationResult = {
+  verdict: "supported" | "partial" | "unsupported";
+  justification: string;
+  model: string;
+  cost: CostRecord;
+};
+
+export async function judgeCitation(
+  env: { ANTHROPIC_API_KEY: string },
+  args: {
+    claim: string;
+    sourceText: string;
+    sourceSlug: string;
+    wikiSlug: string;
+    judgeModel: JudgeModel;
+  },
+): Promise<Result<JudgeCitationResult>> {
+  try {
+    const userMessage = buildJudgeUserMessage(args);
+    const response = await withRetries("judge-citation", () =>
+      client(env.ANTHROPIC_API_KEY).messages.parse({
+        model: args.judgeModel,
+        // verdict + a single-sentence justification fits in well under 200
+        // tokens; 400 leaves headroom for the JSON wrapper without inviting
+        // the model to write paragraphs.
+        max_tokens: 400,
+        system: CITATION_JUDGE_SYSTEM,
+        messages: [{ role: "user", content: userMessage }],
+        output_config: { format: zodOutputFormat(JudgeVerdictSchema) },
+      }),
+    );
+    if (!response.parsed_output) {
+      log.warn("anthropic", "judge-citation", "parsed_output missing", {
+        stopReason: response.stop_reason,
+        blocks: response.content.map((b) => b.type).join(","),
+        wiki: args.wikiSlug,
+        source: args.sourceSlug,
+      });
+      return { ok: false, error: `parsed_output missing (stop_reason: ${response.stop_reason})` };
+    }
+    const cost = computeCost(readUsage(response), args.judgeModel);
+    return {
+      ok: true,
+      data: {
+        verdict: response.parsed_output.verdict,
+        justification: response.parsed_output.justification,
+        model: args.judgeModel,
+        cost,
+      },
+    };
+  } catch (err) {
+    return mapError(err, "judge-citation");
+  }
+}
+
+function buildJudgeUserMessage(args: {
+  claim: string;
+  sourceText: string;
+  sourceSlug: string;
+  wikiSlug: string;
+}): string {
+  return [
+    `Wiki article: ${args.wikiSlug}`,
+    `Cited source: ${args.sourceSlug}`,
+    "",
+    "Claim (taken from the wiki article):",
+    args.claim,
+    "",
+    "Source text (the full body of the cited reading entry):",
+    args.sourceText,
+  ].join("\n");
 }
 
 function mapError(err: unknown, op: string): { ok: false; error: string } {

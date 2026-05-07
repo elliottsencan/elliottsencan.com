@@ -42,6 +42,8 @@ export interface Env {
   MAX_CONCEPTS_PER_RUN?: string;
   /** Optional override for /recompile per-run entry cap. Defaults to 100. */
   MAX_ENTRIES_PER_RUN?: string;
+  /** Optional override for /eval per-run Anthropic call ceiling. Defaults to 500. */
+  MAX_EVAL_CALLS_PER_RUN?: string;
 
   // KV
   NOW_INPUTS: KVNamespace;

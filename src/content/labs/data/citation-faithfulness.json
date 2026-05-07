@@ -1,0 +1,4 @@
+{
+  "status": "no-data",
+  "message": "POST /eval has not run yet — the sidecar will populate on the first non-dry-run pass."
+}

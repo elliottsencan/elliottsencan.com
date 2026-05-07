@@ -147,6 +147,70 @@ export const WikiFrontmatterSchema = z.object({
   last_source_added: z.coerce.date().optional(),
 });
 
+/**
+ * Citation-faithfulness sidecar — output of the Tier 1 /eval pass.
+ *
+ * One file per repo (currently `src/content/labs/data/citation-faithfulness.json`).
+ * Validated by both the worker (before writing the merged sidecar to a PR
+ * branch) and `scripts/labs-aggregate.mjs` (before reading the same file at
+ * site-build time). Convenience aggregates (`summary`, `judge_agreement`)
+ * are written by the worker so the labs cell does not have to recompute on
+ * every render; the aggregator may also recompute them as a sanity check.
+ *
+ * Skip key: a tuple of `(wiki_slug, content_hash, judge_model, rubric_version)`
+ * already evaluated is reused on the next /eval run unless `force: true`.
+ */
+export const JudgeVerdictKindSchema = z.enum(["supported", "partial", "unsupported"]);
+export const JudgeModelSchema = z.enum(["claude-haiku-4-5", "claude-sonnet-4-6"]);
+
+export const CitationFaithfulnessSidecarSchema = z.object({
+  rubric_version: z.string().min(1),
+  generated_at: z.string().min(1),
+  articles: z.array(
+    z.object({
+      wiki_slug: z.string().min(1),
+      content_hash: z.string().min(1),
+      evaluated_at: z.string().min(1),
+      judges: z.array(
+        z.object({
+          judge_model: JudgeModelSchema,
+          claims: z.array(
+            z.object({
+              claim_text: z.string().min(1),
+              cited_source_slug: z.string().min(1),
+              verdict: JudgeVerdictKindSchema,
+              justification: z.string().min(1),
+              cost_usd: z.number(),
+            }),
+          ),
+          summary: z.object({
+            supported: z.number().int().nonnegative(),
+            partial: z.number().int().nonnegative(),
+            unsupported: z.number().int().nonnegative(),
+            accuracy_pct: z.number(),
+            total_cost_usd: z.number(),
+          }),
+        }),
+      ),
+      judge_agreement: z
+        .object({
+          total_claims: z.number().int().nonnegative(),
+          agree: z.number().int().nonnegative(),
+          disagree: z.number().int().nonnegative(),
+          agreement_pct: z.number(),
+        })
+        .nullable(),
+    }),
+  ),
+  totals: z.object({
+    articles_evaluated: z.number().int().nonnegative(),
+    total_claims: z.number().int().nonnegative(),
+    total_cost_usd_by_judge: z.record(z.string(), z.number()),
+  }),
+});
+
+export type CitationFaithfulnessSidecar = z.infer<typeof CitationFaithfulnessSidecarSchema>;
+
 export const LabStatuses = ["draft", "running", "live", "archived"] as const;
 export const LabStatusSchema = z.enum(LabStatuses);
 
