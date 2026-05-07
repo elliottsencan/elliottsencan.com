@@ -114,13 +114,22 @@ POST endpoints + one cron, all guarded by `Authorization: Bearer <API_TOKEN>`:
 - **`POST /recompile`:** rebuilds older reading entries via Wayback Machine snapshots — doubles as a migration tool when the `/link` prompt or schema changes.
 - **`POST /contribute`:** generic prose-contribution endpoint (substrate-only — see below).
 - **`POST /crosslink`:** runs the cross-link phase on demand (forward proposals from new pieces, backward proposals into them) and opens a follow-up PR.
-- **`POST /lint`:** drift detection over the reading + wiki collections (orphan citations, sub-threshold concepts, hallucinated `related_concepts`).
+- **`POST /lint`:** drift detection over the reading + wiki collections (orphan citations, sub-threshold concepts, hallucinated `related_concepts`). This is the **Tier 0** (structural) eval — cheap, no Anthropic call.
+- **`POST /eval`:** **Tier 1** semantic eval — citation faithfulness. For every wiki article in scope, extracts each sentence that cites a `/reading/<slug>` and asks one or more judge models (Haiku and/or Sonnet) whether the cited reading entry actually supports the claim. Writes the merged sidecar at `src/content/labs/data/citation-faithfulness.json` via PR. Skip key is `(wiki_slug, content_hash, judge_model, rubric_version)` so reruns are idempotent. Default `dry_run: true`. Refuses runs whose call ceiling exceeds 500 unless `MAX_EVAL_CALLS_PER_RUN` is set. Rubric version lives in `eval-prompts.ts`; bump `RUBRIC_VERSION` whenever the judge prompt or output schema changes — the sidecar treats a rubric mismatch as full invalidation.
 - **`POST /trigger`:** manually fires the /now pipeline; idempotent (no-ops if today's branch/PR exists).
 - **`POST /consume`:** called by the `now-consume.yml` GitHub Action *after* a `now-update/*` PR merges, to delete the KV inputs that were snapshotted at PR-open time. Don't call this manually unless cleaning up a failed merge.
 
 #### Substrate / Strategy pattern
 
-`workers/site-ingest/src/pipeline.ts` defines a `Strategy<S>` interface and a `runPipeline` substrate. The four mutating endpoints (`/link`, `/synthesize`, `/contribute`, `/recompile`) implement `Strategy` and share branch/commit/PR/crosslink logic via the substrate — no endpoint re-implements GitHub plumbing. The crosslink follow-up phase (`workers/site-ingest/src/crosslink-phase.ts`) is invoked by the substrate after the primary mutation lands.
+`workers/site-ingest/src/pipeline.ts` defines a `Strategy<S>` interface and a `runPipeline` substrate. The mutating endpoints (`/link`, `/synthesize`, `/contribute`, `/recompile`, `/eval`) implement `Strategy` and share branch/commit/PR/crosslink logic via the substrate — no endpoint re-implements GitHub plumbing. The crosslink follow-up phase (`workers/site-ingest/src/crosslink-phase.ts`) is invoked by the substrate after the primary mutation lands. `/eval` opts out of the crosslink phase (`crosslink: "skip"`) — it writes a sidecar JSON, not prose.
+
+#### Eval tiers
+
+Public-facing measurement surface for the pipeline lives behind two endpoints today, with room for more:
+
+- **Tier 0 — structural (`/lint`).** Pure-function checks over the reading + wiki collections: orphan citations, sub-threshold concepts, hallucinated `related_concepts`, untagged readings. No Anthropic call.
+- **Tier 1 — citation faithfulness (`/eval`).** Per-claim semantic eval. Each cited `/reading/<slug>` is judged by Haiku and/or Sonnet against the cited reading entry. Output is a sidecar JSON; the labs cell at `/labs/citation-faithfulness` reads it.
+- **Tier 2+ (not implemented).** Synthesis quality rubric, voice adherence, recompile stability, cross-model synthesis comparison. Each is its own endpoint, its own rubric version, its own sidecar — they plug into `runPipeline` the same way `/eval` does.
 
 mdast-based crosslink insertion (`workers/site-ingest/src/crosslink-mdast.ts`) replaced an earlier substring + regex state machine — it walks the parsed markdown AST so anchors inside `**bold**`, `_emphasis_`, table cells, and link-references are detected and avoided correctly.
 

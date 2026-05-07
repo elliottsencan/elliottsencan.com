@@ -17,6 +17,8 @@
  *   trigger               POST /trigger
  *   contribute --file=P   POST /contribute  (--dry-run)
  *   crosslink             POST /crosslink   (--scope, --dry-run)
+ *   eval                  POST /eval        (--judges, --slugs, --max-articles,
+ *                                            --max-claims, --force, --dry-run)
  *
  * Top-level flags: --local, --json, --verbose, --help.
  */
@@ -48,6 +50,11 @@ const PARSE_OPTIONS = {
     scope: { type: "string" },
     // contribute
     file: { type: "string" },
+    // eval
+    judges: { type: "string" },
+    slugs: { type: "string" },
+    "max-articles": { type: "string" },
+    "max-claims": { type: "string" },
   },
   allowPositionals: true,
   strict: false,
@@ -316,6 +323,50 @@ function printTrigger(body) {
     lines.push(`pr:      #${body.prNumber}`);
   }
   process.stdout.write(`${lines.join("\n") || "ok"}\n`);
+}
+
+function printEval(body) {
+  const lines = [
+    `dry_run:        ${body.dry_run ?? false}`,
+    `rubric:         ${body.rubric_version ?? "(unknown)"}`,
+    `judges:         ${(body.judges ?? []).join(", ") || "(none)"}`,
+  ];
+  if (body.dry_run) {
+    lines.push(`articles_in_scope: ${body.articles_in_scope ?? 0}`);
+    lines.push(`total_claims:   ${body.total_claims ?? 0}`);
+    lines.push(`call_ceiling:   ${body.call_ceiling ?? 0}`);
+    lines.push(`call_count:     ${body.call_count ?? 0}`);
+    if (Array.isArray(body.would_evaluate) && body.would_evaluate.length > 0) {
+      const preview = body.would_evaluate
+        .slice(0, 5)
+        .map((w) => `${w.wiki_slug}:${w.judge_model}(${w.claims})`)
+        .join(", ");
+      const more =
+        body.would_evaluate.length > 5 ? `, … (+${body.would_evaluate.length - 5} more)` : "";
+      lines.push(`would_evaluate: ${preview}${more}`);
+    }
+  } else {
+    lines.push(`articles_evaluated: ${body.articles_evaluated ?? 0}`);
+    lines.push(`total_claims:   ${body.total_claims ?? 0}`);
+    lines.push(`call_count:     ${body.call_count ?? 0}`);
+    if (body.total_cost_usd_by_judge) {
+      for (const [judge, cost] of Object.entries(body.total_cost_usd_by_judge)) {
+        lines.push(`cost ${judge}: $${Number(cost).toFixed(4)}`);
+      }
+    }
+    if (Array.isArray(body.failed) && body.failed.length > 0) {
+      lines.push(`failed:         ${body.failed.length}`);
+    }
+    if (Array.isArray(body.skipped) && body.skipped.length > 0) {
+      lines.push(`skipped:        ${body.skipped.length}`);
+    }
+    if (body.pr) {
+      lines.push(`pr:             ${body.pr.url}`);
+    } else if (body.branch) {
+      lines.push(`branch:         ${body.branch}`);
+    }
+  }
+  process.stdout.write(`${lines.join("\n")}\n`);
 }
 
 function printContribute(body) {
@@ -626,6 +677,7 @@ Commands:
   trigger                    POST /trigger (run /now draft pipeline)
   contribute --file=PATH     POST /contribute (file a wiki article)
   crosslink                  POST /crosslink (cross-link suggestions)
+  eval                       POST /eval (Tier 1 citation-faithfulness eval)
 
 Flags:
   --local                    target http://localhost:8787 (wrangler dev)
@@ -639,6 +691,10 @@ Flags:
   --scope=...                (recompile/crosslink) all | since:DATE | slugs:a,b |
                              model:STR | slug:wiki/foo | slug:blog/bar
   --file=PATH                (contribute) markdown file with frontmatter
+  --judges=a,b               (eval) judge models; default both haiku + sonnet
+  --slugs=a,b                (eval) wiki slugs to evaluate; default all
+  --max-articles=N           (eval) cap articles per run; default 20
+  --max-claims=N             (eval) cap claims per article; default 10
 
 synthesize:run-all cost shape:
   Each chunk runs the inline crosslink phase (~30 Anthropic calls capped). A
@@ -801,6 +857,46 @@ async function main() {
         verbose,
       });
       emit(result, flags, printCrosslink);
+      return;
+    }
+    case "eval": {
+      const token = requireToken();
+      const body = { dry_run: resolveDryRun(flags, true) };
+      if (flags.judges) {
+        body.judge_models = flags.judges
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean);
+      }
+      if (flags.slugs) {
+        body.wiki_slugs = flags.slugs
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean);
+      }
+      if (flags["max-articles"]) {
+        const n = Number.parseInt(flags["max-articles"], 10);
+        if (Number.isFinite(n) && n > 0) {
+          body.max_articles = n;
+        }
+      }
+      if (flags["max-claims"]) {
+        const n = Number.parseInt(flags["max-claims"], 10);
+        if (Number.isFinite(n) && n > 0) {
+          body.max_claims_per_article = n;
+        }
+      }
+      if (flags.force) {
+        body.force = true;
+      }
+      const result = await callEndpoint({
+        baseUrl,
+        token,
+        path: "/eval",
+        body,
+        verbose,
+      });
+      emit(result, flags, printEval);
       return;
     }
     default:

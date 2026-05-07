@@ -147,6 +147,106 @@ export const WikiFrontmatterSchema = z.object({
   last_source_added: z.coerce.date().optional(),
 });
 
+/**
+ * Citation-faithfulness sidecar — output of the Tier 1 /eval pass.
+ *
+ * One file per repo (currently `src/content/labs/data/citation-faithfulness.json`).
+ * Validated by both the worker (before writing the merged sidecar to a PR
+ * branch) and `scripts/labs-aggregate.mjs` (before reading the same file at
+ * site-build time). Convenience aggregates (`summary`, `judge_agreement`)
+ * are written by the worker so the labs cell does not have to recompute on
+ * every render; the aggregator may also recompute them as a sanity check.
+ *
+ * Skip key: a tuple of `(wiki_slug, content_hash, judge_model, rubric_version)`
+ * already evaluated is reused on the next /eval run unless `force: true`.
+ *
+ * Top-level `rubric_version` mismatch invalidates the whole file; bump
+ * `RUBRIC_VERSION` (declared below) whenever the judge prompt or the
+ * claim/verdict schema below changes so prior verdicts stop being reused.
+ */
+
+// Bump whenever the citation-judge prompt (workers/site-ingest/src/eval-prompts.ts)
+// or any field in the schemas below changes. Old-rubric sidecars survive
+// the load (the schema accepts any non-empty string) and the eval pipeline
+// invalidates them at runtime via the rubric-mismatch checks in
+// `selectPreservedArticles` and `findExistingJudge` — that lets a rubric
+// bump trigger a clean re-evaluation rather than a hard "corrupt sidecar"
+// error.
+export const RUBRIC_VERSION = "v1.0" as const;
+
+// Single source of truth for the closed set of judge models the eval surface
+// accepts. Excludes Opus deliberately — the cost envelope assumes
+// Haiku/Sonnet pricing. Adding a model requires a budget revisit.
+export const JUDGE_MODELS = ["claude-haiku-4-5", "claude-sonnet-4-6"] as const;
+export type JudgeModel = (typeof JUDGE_MODELS)[number];
+
+export const JudgeVerdictKindSchema = z.enum(["supported", "partial", "unsupported"]);
+export const JudgeModelSchema = z.enum(JUDGE_MODELS);
+
+export const CitationFaithfulnessSidecarSchema = z.object({
+  rubric_version: z.string().min(1),
+  generated_at: z.string().min(1),
+  articles: z.array(
+    z.object({
+      wiki_slug: z.string().min(1),
+      content_hash: z.string().min(1),
+      evaluated_at: z.string().min(1),
+      judges: z.array(
+        z.object({
+          judge_model: JudgeModelSchema,
+          claims: z.array(
+            z.object({
+              claim_text: z.string().min(1),
+              cited_source_slug: z.string().min(1),
+              verdict: JudgeVerdictKindSchema,
+              justification: z.string().min(1),
+              cost_usd: z.number(),
+              // Set when the citation could not be loaded (orphan / deleted
+              // source). The verdict is synthesized as `unsupported` without
+              // an Anthropic call. Excluded from `accuracy_pct` so a Tier 0
+              // lint failure (broken citation) doesn't double-count as a
+              // Tier 1 faithfulness miss.
+              synthetic: z.literal(true).optional(),
+            }),
+          ),
+          summary: z.object({
+            supported: z.number().int().nonnegative(),
+            partial: z.number().int().nonnegative(),
+            unsupported: z.number().int().nonnegative(),
+            // Number of claims where the cited source was missing and the
+            // verdict was synthesized rather than judged. Counted under
+            // `unsupported` AND surfaced here so the aggregator can exclude
+            // them from accuracy.
+            synthetic_count: z.number().int().nonnegative(),
+            accuracy_pct: z.number(),
+            total_cost_usd: z.number(),
+          }),
+          // Set when the judge call failed mid-article (e.g. sustained
+          // Anthropic rate-limit). `claims` holds what completed; the next
+          // run treats this entry as a cache miss so resumption is possible.
+          partial: z.literal(true).optional(),
+          failed_claims: z.number().int().nonnegative().optional(),
+        }),
+      ),
+      judge_agreement: z
+        .object({
+          total_claims: z.number().int().nonnegative(),
+          agree: z.number().int().nonnegative(),
+          disagree: z.number().int().nonnegative(),
+          agreement_pct: z.number(),
+        })
+        .nullable(),
+    }),
+  ),
+  totals: z.object({
+    articles_evaluated: z.number().int().nonnegative(),
+    total_claims: z.number().int().nonnegative(),
+    total_cost_usd_by_judge: z.record(z.string(), z.number()),
+  }),
+});
+
+export type CitationFaithfulnessSidecar = z.infer<typeof CitationFaithfulnessSidecarSchema>;
+
 export const LabStatuses = ["draft", "running", "live", "archived"] as const;
 export const LabStatusSchema = z.enum(LabStatuses);
 
