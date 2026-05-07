@@ -8,6 +8,7 @@ summary: >-
 sources:
   - 2026-05/2026-05-03t105219-radar-open-source-kubernetes-ui
   - 2026-05/2026-05-03t105238-radar-or-the-missing-open-source-kubernetes-ui
+  - 2026-05/2026-05-06t204115-platform-engineering-end-to-end
 compiled_at: '2026-05-04T04:09:22.205Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -25,6 +26,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.013575
+last_source_added: '2026-05-07T03:41:15.229Z'
 ---
 Kubernetes is the dominant platform for deploying and managing containerized workloads, but its operational surface area, clusters, namespaces, workloads, networking, Helm releases, GitOps pipelines, RBAC, and audit posture, is large enough that the default tooling (kubectl and the official dashboard) leaves significant gaps in day-to-day visibility.
 

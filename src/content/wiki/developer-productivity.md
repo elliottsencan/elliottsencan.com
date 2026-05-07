@@ -12,6 +12,7 @@ sources:
   - >-
     2026-04/2026-04-30t231815-shell-tricks-that-actually-make-life-easier-and-save-your
   - 2026-05/2026-05-06t110728-the-bottleneck-was-never-the-code
+  - 2026-05/2026-05-06t204115-platform-engineering-end-to-end
 aliases:
   - developer-experience
   - developer-tooling
@@ -32,7 +33,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.015708
-last_source_added: '2026-05-06T18:07:28.855Z'
+last_source_added: '2026-05-07T03:41:15.229Z'
 ---
 Productivity for software engineers is not a single lever. The sources here each address a different surface: how developers interact with AI, how they manage test feedback, how they maintain documentation, and how they move efficiently at the command line.
 

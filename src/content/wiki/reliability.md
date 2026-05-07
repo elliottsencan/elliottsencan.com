@@ -10,6 +10,7 @@ sources:
   - 2026-04/2026-04-30t231348-testdino
   - 2026-04/2026-04-30t231511-temporal
   - 2026-05/2026-05-03t110355-babysitting-the-agent
+  - 2026-05/2026-05-06t204115-platform-engineering-end-to-end
 aliases:
   - reliability-engineering
 compiled_at: 2026-05-04T04:07:19.740Z
@@ -29,6 +30,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.015651
+last_source_added: '2026-05-07T03:41:15.229Z'
 ---
 Reliability is not a single property but a stack of guarantees, each layer capable of collapsing independently. The sources here approach it from four different angles that together describe the full surface area of the problem.
 
