@@ -19,22 +19,32 @@ order: 1
 import { getCollection } from "astro:content";
 import MetricsHeadline from "@components/projects/MetricsHeadline.astro";
 import PipelineDiagram from "@components/projects/PipelineDiagram.astro";
-import { loadProjectMetricsCached, formatCount, formatPct, formatTokens, formatUsd } from "@lib/projectMetrics";
+import { formatCount, formatPct, formatTokens, formatUsd } from "@lib/format";
+import { loadProjectMetricsCached } from "@lib/projectMetrics";
 import { MIN_WIKI_SOURCES } from "@lib/schemas/content";
 
 export const metrics = await loadProjectMetricsCached();
 
 export const labsSlugs = new Set((await getCollection("labs")).map((cell) => cell.id));
 
-export const repo = "https://github.com/elliottsencan/elliottsencan.com";
+export const citationFaithfulness =
+  metrics.citation_faithfulness.status === "ready" ? metrics.citation_faithfulness : null;
+export const synthesisQuality =
+  metrics.synthesis_quality.status === "ready" ? metrics.synthesis_quality : null;
+export const recompileStability =
+  metrics.recompile_stability.status === "ready" ? metrics.recompile_stability : null;
 
 export const costPerArticle =
-  metrics.corpus.total_cost_usd !== null && metrics.corpus.wiki_count > 0
+  metrics.corpus.total_cost_usd !== null &&
+  metrics.corpus.wiki_count !== null &&
+  metrics.corpus.wiki_count > 0
     ? metrics.corpus.total_cost_usd / metrics.corpus.wiki_count
     : null;
 
 export const costPerSource =
-  metrics.corpus.total_cost_usd !== null && metrics.corpus.reading_count > 0
+  metrics.corpus.total_cost_usd !== null &&
+  metrics.corpus.reading_count !== null &&
+  metrics.corpus.reading_count > 0
     ? metrics.corpus.total_cost_usd / metrics.corpus.reading_count
     : null;
 
@@ -69,15 +79,16 @@ that the labs cells render at build time. Keeping the three layers separate
 means a citation, a synthesis, and a measurement each have their own file
 on disk, their own Zod schema, and their own provenance trail.
 
-The four mutating endpoints (`/link`, `/synthesize`, `/recompile`,
-`/contribute`) all run through one substrate in
-[`workers/site-ingest/src/pipeline.ts`]({repo}/tree/main/workers/site-ingest/src/pipeline.ts).
+The five mutating endpoints (`/link`, `/synthesize`, `/recompile`,
+`/contribute`, `/eval`) all run through one substrate in
+[`workers/site-ingest/src/pipeline.ts`](https://github.com/elliottsencan/elliottsencan.com/tree/main/workers/site-ingest/src/pipeline.ts).
 Each endpoint implements a `Strategy<S>` interface that produces the file
 mutation; the substrate handles branch creation, commit, PR open, and
 secondary cross-link insertion. No endpoint re-implements GitHub plumbing.
-Cross-linking runs as a follow-up phase via `ctx.waitUntil` after the
-primary mutation lands, so the pipeline still fits inside Cloudflare's 30s
-wall-clock budget for a single request.
+Cross-linking runs as a follow-up phase via `ctx.waitUntil` after the four
+prose-writing endpoints; `/eval` writes a sidecar JSON rather than a wiki
+or reading entry and opts out of the crosslink phase. The whole pipeline
+fits inside Cloudflare's 30s wall-clock budget for a single request.
 
 ## Schemas and provenance
 
@@ -85,7 +96,7 @@ Every artifact carries provenance in its frontmatter: `compiled_at`,
 `compiled_with` (model identifier), `compile_cost` (with the pricing snapshot
 captured at the moment of the call), and `title_source` (which branch
 produced the title). Schemas live in
-[`src/lib/schemas/content.ts`]({repo}/tree/main/src/lib/schemas/content.ts)
+[`src/lib/schemas/content.ts`](https://github.com/elliottsencan/elliottsencan.com/tree/main/src/lib/schemas/content.ts)
 and are imported by both the Astro site (for content-collection validation
 at build) and the worker (for pre-commit validation of drafted content).
 Zod once, validated in two places.
@@ -96,7 +107,7 @@ Zod once, validated in two places.
 
 Catches orphan citations, hallucinated `related_concepts`, and sub-threshold
 concepts. Cheap, deterministic, no LLM call. Lives in
-[`workers/site-ingest/src/lint.ts`]({repo}/tree/main/workers/site-ingest/src/lint.ts)
+[`workers/site-ingest/src/lint.ts`](https://github.com/elliottsencan/elliottsencan.com/tree/main/workers/site-ingest/src/lint.ts)
 and runs on every PR. Tier 0 is the only tier that's fully shipped today.
 
 ### Tier 1: citation faithfulness (Haiku vs Sonnet judge)
@@ -104,9 +115,9 @@ and runs on every PR. Tier 0 is the only tier that's fully shipped today.
 A two-judge LLM-as-judge eval. For each `[claim → source]` pair in a wiki
 article, both Haiku and Sonnet rate whether the source actually supports the
 claim. Headline numbers: Sonnet accuracy
-{" "}{formatPct(metrics.citation_faithfulness?.accuracy_pct_by_judge?.sonnet ?? null)}
+{" "}{formatPct(citationFaithfulness?.accuracy_pct_by_judge.sonnet ?? null)}
 on the latest run, Haiku and Sonnet agree on
-{" "}{formatPct(metrics.citation_faithfulness?.judge_agreement_pct ?? null)}{" "}
+{" "}{formatPct(citationFaithfulness?.judge_agreement_pct ?? null)}{" "}
 of pairs. Disagreement between judges is the interesting signal: those rows
 get pulled into the watchlist for human review. {labsLink("citation-faithfulness", "See the labs cell")}.
 
@@ -115,9 +126,9 @@ get pulled into the watchlist for human review. {labsLink("citation-faithfulness
 Scores articles on novelty (does it say something the individual sources
 don't?), coherence (does it read like one essay or three stapled together?),
 depth, and internal consistency. Mean novelty:
-{" "}{formatCount(metrics.synthesis_quality?.mean_scores?.novelty ?? null)}.
+{" "}{formatCount(synthesisQuality?.mean_scores.novelty ?? null)}.
 Mean coherence:
-{" "}{formatCount(metrics.synthesis_quality?.mean_scores?.coherence ?? null)}.
+{" "}{formatCount(synthesisQuality?.mean_scores.coherence ?? null)}.
 {labsLink("synthesis-quality", "See the labs cell")}.
 
 ### Tier 3: voice adherence
@@ -132,9 +143,9 @@ of voice" verdict, with a flagged-paragraph list as the actionable output.
 Deterministic, no LLM call. Tracks which wiki articles got rewritten when
 new reading entries with their topics landed, and surfaces articles that
 churn often relative to the size of their new-source delta. Currently
-{" "}{formatCount(metrics.recompile_stability?.flagged_count ?? null)}{" "}
+{" "}{formatCount(recompileStability?.flagged_count ?? null)}{" "}
 articles flagged.
-{" "}{formatCount(metrics.recompile_stability?.last_30_days_recompiles ?? null)}{" "}
+{" "}{formatCount(recompileStability?.last_30_days_recompiles ?? null)}{" "}
 recompiles in the last 30 days.
 {labsLink("recompile-stability", "See the labs cell")}.
 
@@ -221,8 +232,8 @@ synonyms.
 
 ## Repo and code
 
-- [`workers/site-ingest/src`]({repo}/tree/main/workers/site-ingest/src). Worker source, including the substrate, the four endpoint strategies, and the cross-link phase.
-- [`workers/site-ingest/src/lint.ts`]({repo}/tree/main/workers/site-ingest/src/lint.ts). Tier 0 structural lint.
-- [`src/lib/schemas/content.ts`]({repo}/tree/main/src/lib/schemas/content.ts). Shared Zod schemas, including `MIN_WIKI_SOURCES` and the `compile_cost` snapshot.
-- [`src/content/labs`]({repo}/tree/main/src/content/labs). Labs cells that read sidecar JSON and render the measurements.
+- [`workers/site-ingest/src`](https://github.com/elliottsencan/elliottsencan.com/tree/main/workers/site-ingest/src). Worker source, including the substrate, the four endpoint strategies, and the cross-link phase.
+- [`workers/site-ingest/src/lint.ts`](https://github.com/elliottsencan/elliottsencan.com/tree/main/workers/site-ingest/src/lint.ts). Tier 0 structural lint.
+- [`src/lib/schemas/content.ts`](https://github.com/elliottsencan/elliottsencan.com/tree/main/src/lib/schemas/content.ts). Shared Zod schemas, including `MIN_WIKI_SOURCES` and the `compile_cost` snapshot.
+- [`src/content/labs`](https://github.com/elliottsencan/elliottsencan.com/tree/main/src/content/labs). Labs cells that read sidecar JSON and render the measurements.
 - [`/labs`](/labs). The public labs index.
