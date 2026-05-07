@@ -23,6 +23,10 @@ pnpm-debug.log*
 # jetbrains setting folder
 .idea/
 
+# Claude Code subagent worktrees (locked git worktrees created by parallel
+# subagents; live inside the repo at .claude/worktrees/<id>/).
+.claude/worktrees/
+
 # font source files (only WOFF2 in public/fonts/ gets committed)
 PP Neue Montreal*/
 .envrc
