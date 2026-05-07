@@ -11,6 +11,7 @@ sources:
   - >-
     2026-05/2026-05-01t104137-harness-design-for-long-running-application-development
   - 2026-05/2026-05-03t103944-the-lobster-in-the-hot-pot
+  - 2026-05/2026-05-06t171355-vectifyaipageindex
 compiled_at: 2026-05-04T04:08:56.031Z
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -28,6 +29,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.018531
+last_source_added: '2026-05-07T00:13:55.450Z'
 ---
 LLM engineering sits at the intersection of software architecture and model behavior: the discipline of designing systems that use language models reliably, at scale, and without accumulating hidden failure modes.
 
