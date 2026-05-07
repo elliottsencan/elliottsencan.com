@@ -1,0 +1,239 @@
+---
+title: "Wiki synthesis pipeline"
+description: "An evaluated LLM pipeline that ingests reading sources, synthesizes per-concept wiki articles, and measures its own output."
+date: 2026-05-07
+draft: false
+demoURL: "https://elliottsencan.com/wiki"
+repoURL: "https://github.com/elliottsencan/elliottsencan.com"
+isCaseStudy: true
+status: "active"
+role: "Solo build"
+stack:
+  - "TypeScript"
+  - "Cloudflare Workers"
+  - "Anthropic"
+  - "Astro"
+  - "Zod"
+order: 1
+---
+import { getCollection } from "astro:content";
+import MetricsHeadline from "@components/projects/MetricsHeadline.astro";
+import PipelineDiagram from "@components/projects/PipelineDiagram.astro";
+import { formatCount, formatPct, formatTokens, formatUsd } from "@lib/format";
+import { loadProjectMetricsCached } from "@lib/projectMetrics";
+import { MIN_WIKI_SOURCES } from "@lib/schemas/content";
+
+export const metrics = await loadProjectMetricsCached();
+
+export const labsSlugs = new Set((await getCollection("labs")).map((cell) => cell.id));
+
+export const citationFaithfulness =
+  metrics.citation_faithfulness.status === "ready" ? metrics.citation_faithfulness : null;
+export const synthesisQuality =
+  metrics.synthesis_quality.status === "ready" ? metrics.synthesis_quality : null;
+export const recompileStability =
+  metrics.recompile_stability.status === "ready" ? metrics.recompile_stability : null;
+
+export const costPerArticle =
+  metrics.corpus.total_cost_usd !== null &&
+  metrics.corpus.wiki_count !== null &&
+  metrics.corpus.wiki_count > 0
+    ? metrics.corpus.total_cost_usd / metrics.corpus.wiki_count
+    : null;
+
+export const costPerSource =
+  metrics.corpus.total_cost_usd !== null &&
+  metrics.corpus.reading_count !== null &&
+  metrics.corpus.reading_count > 0
+    ? metrics.corpus.total_cost_usd / metrics.corpus.reading_count
+    : null;
+
+export function labsLink(slug, label) {
+  if (labsSlugs.has(slug)) {
+    return <a href={`/labs/${slug}`}>{label}</a>;
+  }
+  return <span>{label} (forthcoming)</span>;
+}
+
+<MetricsHeadline metrics={metrics} />
+
+This site runs an LLM pipeline that turns saved reading into a per-concept
+wiki, with cost tracking and evals on every layer. {formatCount(metrics.corpus.reading_count)} sources
+read so far, {formatCount(metrics.corpus.wiki_count)} synthesized wiki articles,
+{" "}{formatUsd(metrics.corpus.total_cost_usd)} total spend across every priced
+call. The pipeline ships open-source on Cloudflare Workers and measures its
+own output through a tiered eval layer documented below. Numbers on this page
+are pulled from sidecar JSON at build time, so a stale count never sneaks in.
+
+## Architecture
+
+<PipelineDiagram />
+
+The diagram covers the three content layers and the worker endpoints that
+write them. Reading entries (`src/content/reading/`) hold one summary per
+source URL with a stable `topics[]` array. Wiki articles
+(`src/content/wiki/`) compile from clusters of reading entries that share a
+topic, gated by a {MIN_WIKI_SOURCES}-source minimum so under-cited concepts
+never ship. Labs sidecars (`src/content/labs/data/`) hold raw measurements
+that the labs cells render at build time. Keeping the three layers separate
+means a citation, a synthesis, and a measurement each have their own file
+on disk, their own Zod schema, and their own provenance trail.
+
+The five mutating endpoints (`/link`, `/synthesize`, `/recompile`,
+`/contribute`, `/eval`) all run through one substrate in
+[`workers/site-ingest/src/pipeline.ts`](https://github.com/elliottsencan/elliottsencan.com/tree/main/workers/site-ingest/src/pipeline.ts).
+Each endpoint implements a `Strategy<S>` interface that produces the file
+mutation; the substrate handles branch creation, commit, PR open, and
+secondary cross-link insertion. No endpoint re-implements GitHub plumbing.
+Cross-linking runs as a follow-up phase via `ctx.waitUntil` after the four
+prose-writing endpoints; `/eval` writes a sidecar JSON rather than a wiki
+or reading entry and opts out of the crosslink phase. The whole pipeline
+fits inside Cloudflare's 30s wall-clock budget for a single request.
+
+## Schemas and provenance
+
+Every artifact carries provenance in its frontmatter: `compiled_at`,
+`compiled_with` (model identifier), `compile_cost` (with the pricing snapshot
+captured at the moment of the call), and `title_source` (which branch
+produced the title). Schemas live in
+[`src/lib/schemas/content.ts`](https://github.com/elliottsencan/elliottsencan.com/tree/main/src/lib/schemas/content.ts)
+and are imported by both the Astro site (for content-collection validation
+at build) and the worker (for pre-commit validation of drafted content).
+Zod once, validated in two places.
+
+## Eval layer
+
+### Tier 0: structural lint
+
+Catches orphan citations, hallucinated `related_concepts`, and sub-threshold
+concepts. Cheap, deterministic, no LLM call. Lives in
+[`workers/site-ingest/src/lint.ts`](https://github.com/elliottsencan/elliottsencan.com/tree/main/workers/site-ingest/src/lint.ts)
+and runs on every PR. Tier 0 is the only tier that's fully shipped today.
+
+### Tier 1: citation faithfulness (Haiku vs Sonnet judge)
+
+A two-judge LLM-as-judge eval. For each `[claim → source]` pair in a wiki
+article, both Haiku and Sonnet rate whether the source actually supports the
+claim. Headline numbers: Sonnet accuracy
+{" "}{formatPct(citationFaithfulness?.accuracy_pct_by_judge.sonnet ?? null)}
+on the latest run, Haiku and Sonnet agree on
+{" "}{formatPct(citationFaithfulness?.judge_agreement_pct ?? null)}{" "}
+of pairs. Disagreement between judges is the interesting signal: those rows
+get pulled into the watchlist for human review. {labsLink("citation-faithfulness", "See the labs cell")}.
+
+### Tier 2: synthesis quality rubric
+
+Scores articles on novelty (does it say something the individual sources
+don't?), coherence (does it read like one essay or three stapled together?),
+depth, and internal consistency. Mean novelty:
+{" "}{formatCount(synthesisQuality?.mean_scores.novelty ?? null)}.
+Mean coherence:
+{" "}{formatCount(synthesisQuality?.mean_scores.coherence ?? null)}.
+{labsLink("synthesis-quality", "See the labs cell")}.
+
+### Tier 3: voice adherence
+
+Catches drift from `voice-reference.md`. The eval feeds a wiki paragraph and
+the voice reference to a judge model and asks for a binary "in voice / out
+of voice" verdict, with a flagged-paragraph list as the actionable output.
+{labsLink("voice-adherence", "See the labs cell")}.
+
+### Tier 4: recompile stability watchlist
+
+Deterministic, no LLM call. Tracks which wiki articles got rewritten when
+new reading entries with their topics landed, and surfaces articles that
+churn often relative to the size of their new-source delta. Currently
+{" "}{formatCount(recompileStability?.flagged_count ?? null)}{" "}
+articles flagged.
+{" "}{formatCount(recompileStability?.last_30_days_recompiles ?? null)}{" "}
+recompiles in the last 30 days.
+{labsLink("recompile-stability", "See the labs cell")}.
+
+### Tier 5: cross-model synthesis comparison
+
+Compiles the same topic-cluster with Haiku, Sonnet, and Opus, then scores
+the results across the Tier 2 rubric to plot a cost-quality frontier.
+{metrics.model_comparison.available
+  ? <span>{metrics.model_comparison.pareto_summary ?? "See the labs cell for the latest pareto plot."}</span>
+  : <span>In flight; the cell will land at /labs/model-comparison after the first comparison run.</span>}
+
+## Failure modes catalog
+
+The eval layer surfaces five categories of failure. The list below
+describes the categories, how the eval catches them, and where to see real
+examples once the eval has run.
+
+**Citation drift.** A wiki claim is broader than what the cited source
+actually supports. Tier 1 catches this when the judge model rates a
+`[claim → source]` pair as unsupported. First production examples will land
+at /labs/citation-faithfulness after the first eval run.
+
+**Voice drift.** A paragraph that doesn't match the site voice (corporate
+adjectives, hedging qualifiers, em-dashes, the not-X-but-Y construction).
+Tier 3 catches this paragraph-by-paragraph against `voice-reference.md`.
+First production examples will land at /labs/voice-adherence after the first
+eval run.
+
+**Recompile churn.** A single new reading source triggers a full rewrite of
+a wiki article, even when the source adds nothing material. Tier 4 catches
+this deterministically by tracking the diff size of recompiles relative to
+their new-source delta. Real examples surface in
+{" "}{labsLink("recompile-stability", "the recompile stability cell")} as
+they accumulate.
+
+**Hallucinated related concepts.** A wiki article cites
+`related_concepts: [...]` slugs that don't exist in the wiki collection.
+Tier 0 catches this on every PR via the structural lint and rejects the
+article before merge.
+
+**Sub-threshold synthesis.** A wiki article gets compiled with fewer than
+{MIN_WIKI_SOURCES} contributing sources. Tier 0 catches this in the schema:
+the wiki frontmatter Zod schema's `sources` field is `min({MIN_WIKI_SOURCES})`,
+so an under-cited article fails build-time validation before it ever
+renders.
+
+## Cost economics
+
+Total spend across every priced call so far: {formatUsd(metrics.corpus.total_cost_usd)}.
+{metrics.corpus.total_tokens !== null
+  ? <span>Total tokens: {formatTokens(metrics.corpus.total_tokens)}.</span>
+  : null}{" "}
+Cost per wiki article (total spend divided by {formatCount(metrics.corpus.wiki_count)} compiled
+articles): {formatUsd(costPerArticle)}. Cost per reading source (total spend
+divided by {formatCount(metrics.corpus.reading_count)} ingested sources):
+{" "}{formatUsd(costPerSource)}. The breakdown by model and the daily series
+live in [the ingest-pipeline-cost lab cell](/labs/ingest-pipeline-cost),
+regenerated on every build by `scripts/labs-aggregate.mjs`.
+
+The cadence shapes the numbers. `/now` runs once a week. `/link` runs when I
+save a URL from my phone, which clusters in evening reading sessions.
+`/synthesize` runs on demand when a topic crosses the threshold. This is a
+personal-cadence pipeline, not a high-volume one, so the absolute spend is
+small. The point of tracking it is the per-article and per-source ratios,
+which set the budget envelope for any future change to prompts or models.
+
+## What I'd build differently
+
+Prompt caching is the obvious miss. I skipped it deliberately because the
+cadence doesn't fit: `/now` runs weekly (cache TTL is 5 minutes or 1 hour),
+`/link` runs ad-hoc with a different URL each time, and `/synthesize` runs
+once per topic compile. None of those flows reuse a system prompt within
+the cache window. If a future surface starts hitting the same prompt several
+times in a session (a chat-with-the-wiki interface, say), caching becomes
+free money and I'd add it then.
+
+A vector index for retrieval is the second skip. The current architecture
+is Karpathy's "LLM Wiki" pattern: hand-curated topics, deterministic
+clustering by `topics[]` slug, no embeddings. That holds up at the current
+{formatCount(metrics.corpus.wiki_count)} concepts because clustering is
+small and stable. If the wiki passes ~200 articles I'd revisit, both for
+fuzzy topic matching at ingest and for an on-site search that knows about
+synonyms.
+
+## Repo and code
+
+- [`workers/site-ingest/src`](https://github.com/elliottsencan/elliottsencan.com/tree/main/workers/site-ingest/src). Worker source, including the substrate, the four endpoint strategies, and the cross-link phase.
+- [`workers/site-ingest/src/lint.ts`](https://github.com/elliottsencan/elliottsencan.com/tree/main/workers/site-ingest/src/lint.ts). Tier 0 structural lint.
+- [`src/lib/schemas/content.ts`](https://github.com/elliottsencan/elliottsencan.com/tree/main/src/lib/schemas/content.ts). Shared Zod schemas, including `MIN_WIKI_SOURCES` and the `compile_cost` snapshot.
+- [`src/content/labs`](https://github.com/elliottsencan/elliottsencan.com/tree/main/src/content/labs). Labs cells that read sidecar JSON and render the measurements.
+- [`/labs`](/labs). The public labs index.

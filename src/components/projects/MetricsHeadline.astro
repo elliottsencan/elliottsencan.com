@@ -1,0 +1,78 @@
+---
+/**
+ * Headline metrics band for the wiki-synthesis-pipeline project page.
+ *
+ * Each tile prints a real number when the underlying sidecar is present and
+ * a "—" placeholder with a "Pending first eval run" tooltip when it isn't.
+ * Visual treatment mirrors `src/components/labs/StatGrid.astro` so the band
+ * reads as a peer of the labs cells the page links into.
+ */
+import { formatCount, formatPct, formatUsd } from "@lib/format";
+import type { ProjectMetrics } from "@lib/projectMetrics";
+
+type Props = {
+  metrics: ProjectMetrics;
+};
+
+const { metrics } = Astro.props;
+
+const citation = metrics.citation_faithfulness;
+const sonnetAccuracy = citation.status === "ready" ? (citation.accuracy_pct_by_judge.sonnet ?? null) : null;
+const judgeAgreement = citation.status === "ready" ? citation.judge_agreement_pct : null;
+
+type Tile = {
+  label: string;
+  value: string;
+  pending: boolean;
+};
+
+const tiles: Tile[] = [
+  {
+    label: "Sources read",
+    value: formatCount(metrics.corpus.reading_count),
+    pending: metrics.corpus.reading_count === null,
+  },
+  {
+    label: "Wiki articles",
+    value: formatCount(metrics.corpus.wiki_count),
+    pending: metrics.corpus.wiki_count === null,
+  },
+  {
+    label: "Total spend",
+    value: formatUsd(metrics.corpus.total_cost_usd),
+    pending: metrics.corpus.total_cost_usd === null,
+  },
+  {
+    label: "Citation accuracy",
+    value: formatPct(sonnetAccuracy),
+    pending: sonnetAccuracy === null,
+  },
+  {
+    label: "Judge agreement",
+    value: formatPct(judgeAgreement),
+    pending: judgeAgreement === null,
+  },
+];
+---
+
+<div
+  class="not-prose my-8 grid gap-4 sm:gap-6"
+  style={`grid-template-columns: repeat(${tiles.length}, minmax(0, 1fr));`}
+>
+  {
+    tiles.map((tile) => (
+      <div class="flex flex-col gap-1">
+        <span class="font-mono text-[10px] uppercase tracking-widest text-black/55 dark:text-white/55">
+          {tile.label}
+        </span>
+        <span
+          class="font-heading text-2xl font-medium tracking-tight text-black md:text-3xl dark:text-white"
+          style="font-variant-numeric: tabular-nums;"
+          title={tile.pending ? "Pending first eval run" : undefined}
+        >
+          {tile.value}
+        </span>
+      </div>
+    ))
+  }
+</div>
