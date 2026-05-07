@@ -20,12 +20,15 @@
 import {
   type CitationFaithfulnessSidecar,
   CitationFaithfulnessSidecarSchema,
+  JUDGE_MODELS,
+  type JudgeModel,
+  JudgeModelSchema,
+  RUBRIC_VERSION,
 } from "@shared/schemas/content.ts";
 import matter from "gray-matter";
 import { z } from "zod";
-import { type JudgeCitationResult, type JudgeModel, judgeCitation } from "./anthropic.ts";
+import { type JudgeCitationResult, judgeCitation } from "./anthropic.ts";
 import type { CostRecord } from "./cost.ts";
-import { RUBRIC_VERSION } from "./eval-prompts.ts";
 import { createGitHubClient, type GitHubClient, getFile, listDir } from "./github.ts";
 import { type PlanOutput, type PlanResult, runPipeline, type Strategy } from "./pipeline.ts";
 import { makePipelineDeps } from "./synthesize.ts";
@@ -34,15 +37,15 @@ import { jsonResponse, log, readingSlugFromPath } from "./util.ts";
 
 const WIKI_DIR = "src/content/wiki";
 const SIDECAR_PATH = "src/content/labs/data/citation-faithfulness.json";
+// 20 articles × 10 claims × 2 judges = 400 calls, leaving headroom under the
+// 500 default ceiling.
 const DEFAULT_MAX_EVAL_CALLS_PER_RUN = 500;
 const DEFAULT_MAX_ARTICLES = 20;
 const DEFAULT_MAX_CLAIMS_PER_ARTICLE = 10;
 
-const JUDGE_MODEL_SCHEMA = z.enum(["claude-haiku-4-5", "claude-sonnet-4-6"]);
-
 export const EvalRequestSchema = z.object({
   wiki_slugs: z.array(z.string()).optional(),
-  judge_models: z.array(JUDGE_MODEL_SCHEMA).optional(),
+  judge_models: z.array(JudgeModelSchema).optional(),
   max_articles: z.number().int().positive().optional().default(DEFAULT_MAX_ARTICLES),
   max_claims_per_article: z
     .number()
@@ -95,12 +98,12 @@ type EvalSummary = {
   would_evaluate: Array<{ wiki_slug: string; judge_model: JudgeModel; claims: number }>;
 };
 
-// ---------- pure helpers (exported for tests) ----------
-
 /**
  * Compute sha256-hex over the article BODY only. Frontmatter changes
  * (compile_cost, compiled_at, related_concepts churn) must not invalidate
- * prior eval results. Body churn must.
+ * prior eval results. Body churn must. Treat this function's output as
+ * on-disk schema: changing what it returns for unchanged bodies invalidates
+ * every prior sidecar entry.
  */
 export async function computeContentHash(body: string): Promise<string> {
   const data = new TextEncoder().encode(body);
@@ -163,9 +166,8 @@ export function extractClaims(body: string): ExtractedClaim[] {
 }
 
 function splitSentences(paragraph: string): string[] {
-  // Split on sentence-ending punctuation followed by whitespace, keeping the
-  // punctuation glued to the preceding sentence. Simple regex; if false-
-  // splitting becomes a problem, replace with a parser-aware tokenizer.
+  // Replace with a parser-aware tokenizer if abbreviation-style false splits
+  // (Mr./Dr./e.g.) show up — current wiki voice avoids them.
   const parts: string[] = [];
   let buf = "";
   for (let i = 0; i < paragraph.length; i++) {
@@ -174,7 +176,6 @@ function splitSentences(paragraph: string): string[] {
     if ((ch === "." || ch === "!" || ch === "?") && /\s/.test(paragraph[i + 1] ?? "")) {
       parts.push(buf);
       buf = "";
-      // Skip the whitespace.
       while (i + 1 < paragraph.length && /\s/.test(paragraph[i + 1] ?? "")) {
         i++;
       }
@@ -187,17 +188,23 @@ function splitSentences(paragraph: string): string[] {
 }
 
 export function summarizeJudge(
-  claims: Array<{ verdict: "supported" | "partial" | "unsupported"; cost_usd: number }>,
+  claims: Array<{
+    verdict: "supported" | "partial" | "unsupported";
+    cost_usd: number;
+    synthetic?: true;
+  }>,
 ): {
   supported: number;
   partial: number;
   unsupported: number;
+  synthetic_count: number;
   accuracy_pct: number;
   total_cost_usd: number;
 } {
   let supported = 0;
   let partial = 0;
   let unsupported = 0;
+  let synthetic_count = 0;
   let cost = 0;
   for (const c of claims) {
     if (c.verdict === "supported") {
@@ -207,14 +214,23 @@ export function summarizeJudge(
     } else {
       unsupported++;
     }
+    if (c.synthetic) {
+      synthetic_count++;
+    }
     cost += c.cost_usd;
   }
+  // Exclude synthetic verdicts (orphan citations) from the accuracy
+  // denominator — a Tier 0 lint failure shouldn't double-count as a
+  // Tier 1 faithfulness miss. They stay in the unsupported tally so the
+  // raw count matches `claims.length`.
   const total = supported + partial + unsupported;
-  const accuracy_pct = total === 0 ? 0 : ((supported + 0.5 * partial) / total) * 100;
+  const judged = total - synthetic_count;
+  const accuracy_pct = judged === 0 ? 0 : ((supported + 0.5 * partial) / judged) * 100;
   return {
     supported,
     partial,
     unsupported,
+    synthetic_count,
     accuracy_pct: round4(accuracy_pct),
     total_cost_usd: round4(cost),
   };
@@ -249,7 +265,7 @@ function round4(n: number): number {
   return Math.round(n * 10_000) / 10_000;
 }
 
-function resolveMaxEvalCalls(env: Env): number {
+export function resolveMaxEvalCalls(env: { MAX_EVAL_CALLS_PER_RUN?: string }): number {
   const raw = env.MAX_EVAL_CALLS_PER_RUN;
   if (!raw) {
     return DEFAULT_MAX_EVAL_CALLS_PER_RUN;
@@ -258,32 +274,58 @@ function resolveMaxEvalCalls(env: Env): number {
   return Number.isFinite(n) && n > 0 ? n : DEFAULT_MAX_EVAL_CALLS_PER_RUN;
 }
 
-// ---------- sidecar load + skip logic ----------
+/**
+ * Load the existing sidecar from `main`. Discriminates three states:
+ *   - `{ state: "missing" }`                      — file does not exist (cold start).
+ *   - `{ state: "loaded", sidecar, raw }`         — file exists and validates.
+ *   - `{ state: "corrupt", raw, error }`          — file exists but is corrupt.
+ *
+ * `raw` is the original on-disk content, kept so callers can decide
+ * `added` vs `changed` (and overwrite-on-force) without a second `getFile`
+ * round-trip.
+ *
+ * The corrupt case is surfaced as a real state rather than silently treated
+ * as missing — otherwise a single bad commit to the sidecar would trigger a
+ * full Anthropic re-run on the next call. Callers respect `force: true` to
+ * overwrite a corrupt file when the operator opts in.
+ */
+export type LoadedSidecar =
+  | { state: "missing" }
+  | { state: "loaded"; sidecar: CitationFaithfulnessSidecar; raw: string }
+  | { state: "corrupt"; raw: string; error: string };
 
-export async function loadExistingSidecar(
-  gh: GitHubClient,
-): Promise<CitationFaithfulnessSidecar | null> {
+export async function loadExistingSidecar(gh: GitHubClient): Promise<LoadedSidecar> {
   const file = await getFile(SIDECAR_PATH, "main", gh);
   if (!file.ok) {
-    return null;
+    return { state: "missing" };
   }
   let parsed: unknown;
   try {
     parsed = JSON.parse(file.data.content);
   } catch (err) {
-    log.warn("eval", "load-sidecar", "JSON parse failed", {
-      msg: err instanceof Error ? err.message : "unknown",
-    });
-    return null;
+    const msg = err instanceof Error ? err.message : "unknown";
+    log.error("eval", "load-sidecar", "JSON parse failed", { msg });
+    return {
+      state: "corrupt",
+      raw: file.data.content,
+      error: `sidecar JSON parse failed: ${msg}`,
+    };
   }
   const validation = CitationFaithfulnessSidecarSchema.safeParse(parsed);
   if (!validation.success) {
-    log.warn("eval", "load-sidecar", "schema invalid", {
-      first: validation.error.issues[0]?.path.join(".") ?? "(root)",
-    });
-    return null;
+    const path = validation.error.issues[0]?.path.join(".") ?? "(root)";
+    log.error("eval", "load-sidecar", "schema invalid", { first: path });
+    return {
+      state: "corrupt",
+      raw: file.data.content,
+      error: `sidecar schema invalid at ${path}`,
+    };
   }
-  return validation.data;
+  return {
+    state: "loaded",
+    sidecar: validation.data,
+    raw: file.data.content,
+  };
 }
 
 export type SidecarArticle = CitationFaithfulnessSidecar["articles"][number];
@@ -305,10 +347,14 @@ export function findExistingJudge(
   if (!article) {
     return null;
   }
-  return article.judges.find((j) => j.judge_model === judgeModel) ?? null;
+  const match = article.judges.find((j) => j.judge_model === judgeModel);
+  if (!match || match.partial) {
+    // Partial entries (judge run abandoned mid-claim due to a sustained
+    // failure) are treated as cache misses so the next run resumes.
+    return null;
+  }
+  return match;
 }
-
-// ---------- corpus enumeration ----------
 
 async function enumerateWiki(
   gh: GitHubClient,
@@ -411,8 +457,6 @@ function buildSourceText(doc: ReadingDoc): string {
   return parts.join("\n");
 }
 
-// ---------- planning ----------
-
 function selectArticles(articles: WikiArticleDoc[], req: EvalRequest): ArticleScope[] {
   const scoped = articles.slice(0, req.max_articles);
   return scoped.map((article) => ({
@@ -420,8 +464,6 @@ function selectArticles(articles: WikiArticleDoc[], req: EvalRequest): ArticleSc
     claims: extractClaims(article.body).slice(0, req.max_claims_per_article),
   }));
 }
-
-// ---------- merge new + existing ----------
 
 type FreshJudgeRun = {
   judge_model: JudgeModel;
@@ -431,8 +473,13 @@ type FreshJudgeRun = {
     verdict: "supported" | "partial" | "unsupported";
     justification: string;
     cost_usd: number;
+    synthetic?: true;
   }>;
   cost_records: CostRecord[];
+  /** True when the run aborted mid-claim; `claims` holds what completed. */
+  partial: boolean;
+  failed_claims: number;
+  failure_error?: string;
 };
 
 type ArticleEvalOutcome = {
@@ -445,10 +492,11 @@ type ArticleEvalOutcome = {
   preservedEvaluatedAt: string | null;
 };
 
-function buildSidecar(
+export function buildSidecar(
   outcomes: ArticleEvalOutcome[],
   preservedArticles: SidecarArticle[],
   costByJudge: Record<string, number>,
+  priorGeneratedAt: string | null,
 ): CitationFaithfulnessSidecar {
   const now = new Date().toISOString();
   const evaluatedArticles: SidecarArticle[] = outcomes.map((o) => {
@@ -468,13 +516,16 @@ function buildSidecar(
   const allArticles = [...preservedArticles, ...evaluatedArticles].sort((a, b) =>
     a.wiki_slug.localeCompare(b.wiki_slug),
   );
-  const totalClaims = evaluatedArticles.reduce(
-    (sum, a) => sum + (a.judges[0]?.claims.length ?? 0),
-    0,
-  );
+  // Corpus total — sum across all articles, not just this run's outcomes,
+  // so a partial rerun's `total_claims` reflects the file-level number.
+  const totalClaims = allArticles.reduce((sum, a) => sum + (a.judges[0]?.claims.length ?? 0), 0);
+  // Reuse prior generated_at when nothing in this run produced fresh
+  // verdicts — keeps the sidecar diff empty on a fully-cached rerun.
+  const noFreshWork = outcomes.every((o) => !o.freshlyEvaluated);
+  const generatedAt = noFreshWork && priorGeneratedAt ? priorGeneratedAt : now;
   return {
     rubric_version: RUBRIC_VERSION,
-    generated_at: now,
+    generated_at: generatedAt,
     articles: allArticles,
     totals: {
       articles_evaluated: evaluatedArticles.length,
@@ -486,7 +537,20 @@ function buildSidecar(
   };
 }
 
-// ---------- strategy ----------
+/**
+ * Articles outside this run's scope are kept verbatim from the existing
+ * sidecar — but only when its rubric matches. A rubric mismatch nukes the
+ * whole file (the worker rebuilds from scratch on subsequent runs).
+ */
+export function selectPreservedArticles(
+  existing: CitationFaithfulnessSidecar | null,
+  outcomeSlugs: ReadonlySet<string>,
+): SidecarArticle[] {
+  if (!existing || existing.rubric_version !== RUBRIC_VERSION) {
+    return [];
+  }
+  return existing.articles.filter((a) => !outcomeSlugs.has(a.wiki_slug));
+}
 
 export function makeEvalStrategy(req: EvalRequest): Strategy<EvalSummary> {
   return {
@@ -510,7 +574,7 @@ async function planEval(
   gh: GitHubClient,
   req: EvalRequest,
 ): Promise<PlanResult<EvalSummary>> {
-  const judgeModels: JudgeModel[] = req.judge_models ?? ["claude-haiku-4-5", "claude-sonnet-4-6"];
+  const judgeModels: JudgeModel[] = req.judge_models ?? [...JUDGE_MODELS];
   const filterSlugs = req.wiki_slugs && req.wiki_slugs.length > 0 ? new Set(req.wiki_slugs) : null;
 
   const wikiResult = await enumerateWiki(gh, filterSlugs);
@@ -521,6 +585,10 @@ async function planEval(
   const scopes = selectArticles(wikiResult.data, req);
   const totalClaims = scopes.reduce((sum, s) => sum + s.claims.length, 0);
 
+  // callCeiling is the worst-case spend (claims × judges) BEFORE skip-logic
+  // kicks in; the actual `call_count` is post-skip. The ceiling is what the
+  // budget governor rejects against — operators narrow `wiki_slugs` or lower
+  // `max_articles` if they hit it.
   const callCeiling = scopes.reduce((sum, s) => sum + s.claims.length * judgeModels.length, 0);
   const callCap = resolveMaxEvalCalls(env);
   if (callCeiling > callCap) {
@@ -531,7 +599,20 @@ async function planEval(
     };
   }
 
-  const existing = await loadExistingSidecar(gh);
+  const sidecarLoad = await loadExistingSidecar(gh);
+  if (sidecarLoad.state === "corrupt" && !req.force) {
+    return {
+      ok: false,
+      error: `${sidecarLoad.error}. Pass force: true to overwrite the corrupt sidecar.`,
+      status: 409,
+    };
+  }
+  if (sidecarLoad.state === "corrupt") {
+    log.warn("eval", "plan", "force overwrite of corrupt sidecar", { error: sidecarLoad.error });
+  }
+  const existing = sidecarLoad.state === "loaded" ? sidecarLoad.sidecar : null;
+  const existingRaw =
+    sidecarLoad.state === "loaded" || sidecarLoad.state === "corrupt" ? sidecarLoad.raw : null;
 
   const wouldEvaluate: EvalSummary["would_evaluate"] = [];
   for (const scope of scopes) {
@@ -583,8 +664,6 @@ async function planEval(
     return { ok: true, data: { mutation: { added: [], changed: [] }, summary } };
   }
 
-  // --- live run ---
-
   const readingCache = new Map<string, ReadingDoc>();
   const outcomes: ArticleEvalOutcome[] = [];
   let articlesEvaluatedCount = 0;
@@ -610,8 +689,6 @@ async function planEval(
           judge_model: judgeModel,
           reason: "already evaluated at current content_hash + rubric",
         });
-        // Track the article's prior evaluated_at so we don't bump the
-        // timestamp on a no-op run.
         const prior = existing?.articles.find(
           (a) => a.wiki_slug === scope.article.slug && a.content_hash === scope.article.contentHash,
         );
@@ -629,30 +706,33 @@ async function planEval(
         scope,
         judgeModel,
       );
-      if (!fresh.ok) {
+      const judgeSummary = summarizeJudge(fresh.claims);
+      const judgeEntry: SidecarJudge = {
+        judge_model: judgeModel,
+        claims: fresh.claims,
+        summary: judgeSummary,
+        ...(fresh.partial ? { partial: true as const, failed_claims: fresh.failed_claims } : {}),
+      };
+      judgesForArticle.push(judgeEntry);
+      totalCostByJudge[judgeModel] =
+        (totalCostByJudge[judgeModel] ?? 0) + judgeSummary.total_cost_usd;
+      // Bump evaluated_at any time we wrote new claims for this article,
+      // even if the run was partial — the sidecar genuinely changed.
+      if (fresh.claims.length > 0) {
+        freshlyEvaluated = true;
+      }
+      if (fresh.partial) {
         failed.push({
           wiki_slug: scope.article.slug,
           judge_model: judgeModel,
-          error: fresh.error,
+          error: `partial: ${fresh.failed_claims} claim${fresh.failed_claims === 1 ? "" : "s"} unjudged (${fresh.failure_error ?? "unknown"})`,
         });
-        continue;
       }
-      const judgeSummary = summarizeJudge(fresh.data.claims);
-      judgesForArticle.push({
-        judge_model: judgeModel,
-        claims: fresh.data.claims,
-        summary: judgeSummary,
-      });
-      totalCostByJudge[judgeModel] =
-        (totalCostByJudge[judgeModel] ?? 0) + judgeSummary.total_cost_usd;
-      freshlyEvaluated = true;
     }
     if (judgesForArticle.length === 0) {
       continue;
     }
     if (!freshlyEvaluated && allReused) {
-      // Whole article reused — keep prior timestamp so the sidecar diff is empty
-      // when nothing actually changed.
       preservedEvaluatedAt =
         preservedEvaluatedAt ??
         existing?.articles.find(
@@ -670,15 +750,15 @@ async function planEval(
     articlesEvaluatedCount++;
   }
 
-  // Articles outside this run's scope are preserved verbatim from the
-  // existing sidecar (when its rubric matches). When the rubric changes,
-  // we drop everything and rebuild from scratch on subsequent runs.
-  const preservedArticles: SidecarArticle[] =
-    existing && existing.rubric_version === RUBRIC_VERSION
-      ? existing.articles.filter((a) => !outcomes.some((o) => o.article.slug === a.wiki_slug))
-      : [];
+  const outcomeSlugs = new Set(outcomes.map((o) => o.article.slug));
+  const preservedArticles = selectPreservedArticles(existing, outcomeSlugs);
 
-  const sidecar = buildSidecar(outcomes, preservedArticles, totalCostByJudge);
+  const sidecar = buildSidecar(
+    outcomes,
+    preservedArticles,
+    totalCostByJudge,
+    existing?.generated_at ?? null,
+  );
   const validation = CitationFaithfulnessSidecarSchema.safeParse(sidecar);
   if (!validation.success) {
     return {
@@ -689,16 +769,13 @@ async function planEval(
   }
   const content = `${JSON.stringify(sidecar, null, 2)}\n`;
 
-  // Decide added vs changed by checking whether the file already exists on
-  // main. We already loaded it via loadExistingSidecar, but the call returns
-  // null on not-found AND on parse-failure; distinguish via a fresh getFile.
-  const existingFile = await getFile(SIDECAR_PATH, "main", gh);
-  const mutation = existingFile.ok
-    ? {
-        added: [],
-        changed: [{ path: SIDECAR_PATH, before: existingFile.data.content, after: content }],
-      }
-    : { added: [{ path: SIDECAR_PATH, content }], changed: [] };
+  const mutation =
+    existingRaw !== null
+      ? {
+          added: [],
+          changed: [{ path: SIDECAR_PATH, before: existingRaw, after: content }],
+        }
+      : { added: [{ path: SIDECAR_PATH, content }], changed: [] };
 
   const summary: EvalSummary = {
     rubric_version: RUBRIC_VERSION,
@@ -719,6 +796,12 @@ async function planEval(
   return { ok: true, data: { mutation, summary } };
 }
 
+/**
+ * Run one judge over every claim in a wiki article. Always returns a
+ * `FreshJudgeRun` (never a Result) — partial failures surface via the
+ * `partial` + `failed_claims` fields so completed claims are persisted to
+ * the sidecar instead of being thrown away on the first transient error.
+ */
 async function runJudgeForArticle(
   env: Env,
   gh: GitHubClient,
@@ -726,10 +809,14 @@ async function runJudgeForArticle(
   readingCache: Map<string, ReadingDoc>,
   scope: ArticleScope,
   judgeModel: JudgeModel,
-): Promise<Result<FreshJudgeRun>> {
+): Promise<FreshJudgeRun> {
   const claims: FreshJudgeRun["claims"] = [];
   const costRecords: CostRecord[] = [];
-  for (const claim of scope.claims) {
+  for (let i = 0; i < scope.claims.length; i++) {
+    const claim = scope.claims[i];
+    if (!claim) {
+      continue;
+    }
     let reading = readingCache.get(claim.cited_source_slug);
     if (!reading) {
       const loaded = await loadReadingDoc(gh, readingDir, claim.cited_source_slug);
@@ -740,14 +827,15 @@ async function runJudgeForArticle(
           judge: judgeModel,
           error: loaded.error,
         });
-        // Treat a missing source as "unsupported" — the citation is broken
-        // and the eval should reflect that without crashing the article.
+        // Missing source = `unsupported`, not a crash, so a broken citation
+        // surfaces in the verdicts. Tagged synthetic so accuracy excludes it.
         claims.push({
           claim_text: claim.claim_text,
           cited_source_slug: claim.cited_source_slug,
           verdict: "unsupported",
           justification: `cited source not found in repo (${loaded.error})`,
           cost_usd: 0,
+          synthetic: true,
         });
         continue;
       }
@@ -763,7 +851,17 @@ async function runJudgeForArticle(
       judgeModel,
     });
     if (!judged.ok) {
-      return { ok: false, error: judged.error };
+      // Persist what we have. Treating one transient failure as
+      // article-fatal would re-spend the prior claims' Anthropic budget on
+      // the next run.
+      return {
+        judge_model: judgeModel,
+        claims,
+        cost_records: costRecords,
+        partial: true,
+        failed_claims: scope.claims.length - i,
+        failure_error: judged.error,
+      };
     }
     costRecords.push(judged.data.cost);
     claims.push({
@@ -774,10 +872,14 @@ async function runJudgeForArticle(
       cost_usd: judged.data.cost.cost_usd ?? 0,
     });
   }
-  return { ok: true, data: { judge_model: judgeModel, claims, cost_records: costRecords } };
+  return {
+    judge_model: judgeModel,
+    claims,
+    cost_records: costRecords,
+    partial: false,
+    failed_claims: 0,
+  };
 }
-
-// ---------- PR body ----------
 
 export function buildPrBody(plan: PlanOutput<EvalSummary>): string {
   const summary = plan.summary;
@@ -796,9 +898,20 @@ export function buildPrBody(plan: PlanOutput<EvalSummary>): string {
       lines.push(`- ${judge}: $${cost.toFixed(4)}`);
     }
   }
-  if (summary && summary.failed.length > 0) {
+  const partials = summary?.failed.filter((f) => f.error.startsWith("partial:")) ?? [];
+  const fullFailures = summary?.failed.filter((f) => !f.error.startsWith("partial:")) ?? [];
+  if (partials.length > 0) {
+    lines.push("", "### Partial");
+    lines.push(
+      "Some claims were judged before the run aborted; the partial entry is in the sidecar and the next run will resume.",
+    );
+    for (const f of partials) {
+      lines.push(`- \`${f.wiki_slug}\` (${f.judge_model}) — ${f.error}`);
+    }
+  }
+  if (fullFailures.length > 0) {
     lines.push("", "### Failed");
-    for (const f of summary.failed) {
+    for (const f of fullFailures) {
       lines.push(`- \`${f.wiki_slug}\` (${f.judge_model}) — ${f.error}`);
     }
   }
@@ -808,8 +921,6 @@ export function buildPrBody(plan: PlanOutput<EvalSummary>): string {
   }
   return lines.join("\n");
 }
-
-// ---------- HTTP handler ----------
 
 export async function handle(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   let parsed: unknown;

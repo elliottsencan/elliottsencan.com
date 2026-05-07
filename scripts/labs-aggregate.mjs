@@ -2,10 +2,10 @@
 /**
  * labs-aggregate — derive corpus-backed labs data files at build time.
  *
- * Reads `compile_cost` (added in PR #27) from every reading + wiki entry
- * and writes the aggregated measurements that corpus-derived lab cells
- * read at build. Hand-snapshotted labs (e.g. human-judged evals) are
- * untouched — this script only writes JSON files it knows how to compute.
+ * Reads `compile_cost` from every reading + wiki entry and writes the
+ * aggregated measurements that corpus-derived lab cells read at build.
+ * Hand-snapshotted labs (e.g. human-judged evals) are untouched — this
+ * script only writes JSON files it knows how to compute.
  *
  * Currently emits:
  *   src/content/labs/data/ingest-pipeline-cost.json
@@ -190,35 +190,40 @@ function writeIngestPipelineCost(records) {
 }
 
 function writeCitationFaithfulness() {
-  // The /eval endpoint writes the real sidecar at this path. Until then,
-  // we drop a `status: "no-data"` sentinel so the labs cell can render a
-  // placeholder without failing the build. The sentinel is committed so
-  // git-tracked output stays deterministic; subsequent builds see it and
-  // skip rewriting (idempotent).
+  // If the sidecar is absent, drop a `status: "no-data"` sentinel so the
+  // labs cell renders a placeholder without failing the build. The sentinel
+  // is committed so git-tracked output stays deterministic.
   //
-  // When the real sidecar exists, append a `derived` block (per-judge
-  // accuracy, headline agreement) so the labs cell renders without
-  // recomputing on every page load. Derived numbers are pure functions of
-  // the sidecar — no `generated_at` baked in — so a rebuild without input
-  // changes produces an identical file (no `git diff`).
+  // If the real sidecar exists, append a `derived` block (per-judge accuracy,
+  // headline agreement) so the labs cell renders without recomputing on every
+  // page load. Derived numbers are pure functions of the sidecar — no
+  // `generated_at` baked in — so a rebuild with no input change produces an
+  // identical file (no `git diff`).
+  //
+  // Distinguish ENOENT (cold start) from other read/parse failures: only the
+  // missing case is "expected"; corruption or permission errors should fail
+  // the build loudly rather than be papered over with a sentinel.
   const sidecarPath = join(OUT_DIR, "citation-faithfulness.json");
   let raw;
   try {
     raw = readFileSync(sidecarPath, "utf8");
-  } catch {
-    const sentinel = {
-      status: "no-data",
-      message:
-        "POST /eval has not run yet — the sidecar will populate on the first non-dry-run pass.",
-    };
-    writeFileSync(sidecarPath, `${JSON.stringify(sentinel, null, 2)}\n`, "utf8");
-    return { out: sidecarPath, status: "sentinel" };
+  } catch (err) {
+    if (err && err.code === "ENOENT") {
+      const sentinel = {
+        status: "no-data",
+        message:
+          "POST /eval has not run yet — the sidecar will populate on the first non-dry-run pass.",
+      };
+      writeFileSync(sidecarPath, `${JSON.stringify(sentinel, null, 2)}\n`, "utf8");
+      return { out: sidecarPath, status: "sentinel" };
+    }
+    throw new Error(`failed to read ${sidecarPath}: ${err?.message ?? err}`);
   }
   let sidecar;
   try {
     sidecar = JSON.parse(raw);
-  } catch {
-    return { out: sidecarPath, status: "parse-failed" };
+  } catch (err) {
+    throw new Error(`failed to parse ${sidecarPath}: ${err?.message ?? err}`);
   }
   if (sidecar.status === "no-data") {
     // Sentinel already in place; leave it untouched. No churn.

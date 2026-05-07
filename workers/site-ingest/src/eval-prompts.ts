@@ -5,15 +5,14 @@
  * cited reading entry, and returns a verdict over whether the source actually
  * supports that claim. Used by /eval to drive the Tier 1 semantic eval layer.
  *
- * Bumping the rubric: change `RUBRIC_VERSION` whenever the system prompt or
- * the Zod schema below change. The sidecar JSON keys verdicts on
+ * Bumping the rubric: change `RUBRIC_VERSION` (in `@shared/schemas/content.ts`,
+ * where the sidecar schema validates it via `z.literal`) whenever the system
+ * prompt or the Zod schema below change. The sidecar JSON keys verdicts on
  * `(slug, content_hash, judge_model, rubric_version)` so prior scores stay
  * comparable to themselves and don't get cross-contaminated by a prompt edit.
  */
 
 import { z } from "zod";
-
-export const RUBRIC_VERSION = "v1.0";
 
 export const JudgeVerdictSchema = z.object({
   verdict: z.enum(["supported", "partial", "unsupported"]),

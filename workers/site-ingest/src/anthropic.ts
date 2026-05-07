@@ -16,7 +16,7 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
-import { ReadingCategorySchema } from "@shared/schemas/content.ts";
+import { JUDGE_MODELS, type JudgeModel, ReadingCategorySchema } from "@shared/schemas/content.ts";
 import { z } from "zod";
 import { type CostRecord, computeCost, type Usage } from "./cost.ts";
 import type { CorpusName } from "./crosslink-config.ts";
@@ -330,12 +330,7 @@ export async function proposeCrosslinks(args: {
   }
 }
 
-// Allowed judge models for /eval. Excludes Opus deliberately — the eval
-// surface is supposed to compare two cheap-enough models and the cost
-// envelope assumes Haiku/Sonnet pricing. Adding Opus would require a
-// matching budget revisit.
-export const JUDGE_MODELS = ["claude-haiku-4-5", "claude-sonnet-4-6"] as const;
-export type JudgeModel = (typeof JUDGE_MODELS)[number];
+export { JUDGE_MODELS, type JudgeModel } from "@shared/schemas/content.ts";
 
 export function isJudgeModel(model: string): model is JudgeModel {
   return (JUDGE_MODELS as readonly string[]).includes(model);
