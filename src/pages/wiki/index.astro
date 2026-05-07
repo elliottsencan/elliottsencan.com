@@ -1,5 +1,6 @@
 ---
 import { getCollection } from "astro:content";
+import EditorialRule from "@components/EditorialRule.astro";
 import LabeledRule from "@components/LabeledRule.astro";
 import Link from "@components/Link.astro";
 import ConstellationStrip from "@components/wiki/ConstellationStrip.astro";
@@ -94,6 +95,14 @@ const wiki = (await getCollection("wiki")).sort((a, b) => a.data.title.localeCom
           </p>
         )
       }
+
+      <EditorialRule />
+
+      <p class="text-xs text-black/55 dark:text-white/55">
+        <Link href="/wiki/how-this-works">how this works</Link>
+        &nbsp;&middot;&nbsp;
+        <Link href="/reading">reading log</Link>
+      </p>
     </div>
   </div>
 </Layout>
