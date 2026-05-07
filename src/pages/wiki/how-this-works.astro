@@ -1,0 +1,154 @@
+---
+import Container from "@components/Container.astro";
+import EditorialRule from "@components/EditorialRule.astro";
+import LabeledRule from "@components/LabeledRule.astro";
+import Link from "@components/Link.astro";
+import { REPO, SITE } from "@consts";
+import Layout from "@layouts/Layout.astro";
+
+const repoUrl = `https://github.com/${REPO.OWNER}/${REPO.NAME}`;
+const mailtoHref = `mailto:${SITE.EMAIL}`;
+---
+
+<Layout
+  title="How the wiki works"
+  description="How wiki articles get written, what 'compiled by Claude' means for accuracy, and what to expect from the content."
+>
+  <Container>
+    <div
+      class="space-y-10"
+      data-pagefind-body
+      data-pagefind-filter="type:About"
+    >
+      <LabeledRule>
+        <Link href="/wiki/">Wiki</Link> / How this works
+      </LabeledRule>
+
+      <section class="space-y-10 text-base leading-relaxed text-black/85 dark:text-white/85">
+        <div class="space-y-3">
+          <h2 class="font-heading text-sm font-medium tracking-wider text-black/65 uppercase dark:text-white/65">
+            What this page is for
+          </h2>
+          <p>
+            The wiki is not hand-written. Each article is synthesized across
+            multiple sources I've read. This page exists so a reader knows
+            what that means before they decide how much to trust it.
+          </p>
+        </div>
+
+        <div class="space-y-3">
+          <h2 class="font-heading text-sm font-medium tracking-wider text-black/65 uppercase dark:text-white/65">
+            How an article gets written
+          </h2>
+          <p>
+            I save links to articles, papers, and posts as I read. Each one
+            becomes a reading entry at <Link href="/reading">/reading</Link>,
+            with a short summary written by Claude at save time. Topics get
+            tagged at the same time so entries cluster naturally.
+          </p>
+          <p>
+            When several reading entries share a topic (at least two, often
+            more), the pipeline compiles a wiki article that synthesizes
+            across them. The wiki article is one concept's view of what
+            those sources collectively say.
+          </p>
+          <p>
+            Wiki articles cite the contributing sources inline. Every claim
+            in the body should trace back to a /reading link. If it doesn't,
+            that's a bug worth flagging.
+          </p>
+        </div>
+
+        <div class="space-y-3">
+          <h2 class="font-heading text-sm font-medium tracking-wider text-black/65 uppercase dark:text-white/65">
+            Why two layers, not one
+          </h2>
+          <p>
+            The reading entries preserve what each source actually said. The
+            wiki articles do the cross-source synthesis. Keeping them
+            separate means you can always check the original source against
+            the synthesized claim. A single-layer system collapses both jobs
+            into the same artifact and loses that property.
+          </p>
+        </div>
+
+        <div class="space-y-3">
+          <h2 class="font-heading text-sm font-medium tracking-wider text-black/65 uppercase dark:text-white/65">
+            What "compiled by Claude" means
+          </h2>
+          <p>
+            Each wiki article's frontmatter records which Claude model
+            compiled it and when, in <code>compiled_with</code> and
+            <code>compiled_at</code>. The choice of model affects quality
+            and cost. The current default is Claude Sonnet for synthesis.
+            I'll sometimes recompile articles with newer or different
+            models when it's worth it.
+          </p>
+          <p>
+            Compiled does not mean fact-checked by Claude. It means the
+            model wrote the synthesis given the sources I provided. The
+            trust comes from the citations being checkable, not from the
+            model being authoritative.
+          </p>
+        </div>
+
+        <div class="space-y-3">
+          <h2 class="font-heading text-sm font-medium tracking-wider text-black/65 uppercase dark:text-white/65">
+            What to expect, what not to expect
+          </h2>
+          <p>
+            First, expect the synthesis to reflect what the sources actually
+            say, not external knowledge the model might have. The compiler
+            sees the sources and is told to stay inside them.
+          </p>
+          <p>
+            Second, expect occasional drift. A claim sometimes lands
+            slightly broader than the source supports. I run evals against
+            citations to catch this; results are tracked publicly.
+          </p>
+          <p>
+            Third, don't expect this to replace reading the sources. The
+            wiki is a navigation layer, not a substitute. If a topic
+            matters to you, the reading entries link to the originals.
+          </p>
+        </div>
+
+        <div class="space-y-3">
+          <h2 class="font-heading text-sm font-medium tracking-wider text-black/65 uppercase dark:text-white/65">
+            When articles change
+          </h2>
+          <p>
+            Articles get recompiled when new sources land in the same
+            topic. The <code>compiled_at</code> timestamp tells you the
+            most recent compile. The git history at <Link
+              href={`${repoUrl}/commits/main/src/content/wiki`}
+              external>{`${repoUrl}/commits/main/src/content/wiki/<slug>.md`}</Link
+            > tells you every prior version, including which sources were
+            in scope at each compile.
+          </p>
+        </div>
+
+        <div class="space-y-3">
+          <h2 class="font-heading text-sm font-medium tracking-wider text-black/65 uppercase dark:text-white/65">
+            How to flag something
+          </h2>
+          <p>
+            If a claim looks wrong or a citation doesn't support what's
+            claimed, the way to flag it is the <Link href={mailtoHref}
+              >email link</Link
+            > in the footer. Send the article slug and the line in question.
+            I'll fix it or recompile.
+          </p>
+        </div>
+      </section>
+
+      <EditorialRule />
+
+      <p class="text-xs text-black/55 dark:text-white/55">
+        <Link href="/wiki/">back to wiki</Link>
+        &nbsp;&middot;&nbsp;
+        <Link href="/reading">reading log</Link>
+      </p>
+    </div>
+  </Container>
+</Layout>

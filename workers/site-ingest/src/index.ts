@@ -14,6 +14,7 @@
  *   POST /synthesize — compile wiki concept articles from reading clusters.
  *   POST /recompile  — rebuild reading entries via Wayback Machine.
  *   POST /lint       — read-only health check on reading + wiki collections.
+ *   POST /eval       — Tier 1 citation-faithfulness eval (Haiku + Sonnet judges).
  *   POST /contribute — file a manually-authored wiki article via PR.
  *   POST /crosslink  — propose anchor-phrase link insertions across wiki
  *                      and writing corpora as a reviewable PR.
@@ -26,6 +27,7 @@
 import * as consume from "./consume.ts";
 import * as contribute from "./contribute.ts";
 import * as crosslink from "./crosslink.ts";
+import * as evalEndpoint from "./eval.ts";
 import * as inputs from "./inputs.ts";
 import * as link from "./link.ts";
 import * as lint from "./lint.ts";
@@ -99,6 +101,17 @@ export default {
         return textResponse("rate limited", 429);
       }
       return consume.handle(request, env);
+    }
+
+    if (request.method === "POST" && url.pathname === "/eval") {
+      // Tier 1 semantic eval (citation faithfulness). Multi-Anthropic-call
+      // per invocation; shares the trigger limiter with /synthesize and
+      // /recompile.
+      const limited = await env.TRIGGER_LIMITER.limit({ key: ip });
+      if (!limited.success) {
+        return textResponse("rate limited", 429);
+      }
+      return evalEndpoint.handle(request, env, ctx);
     }
 
     if (request.method === "POST" && url.pathname === "/lint") {
