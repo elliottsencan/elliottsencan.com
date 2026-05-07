@@ -10,6 +10,7 @@ sources:
   - >-
     2026-04/2026-04-28t140203-vibe-training-auto-train-a-small-language-model-for-your
   - 2026-05/2026-05-05t071908-oobaboogatextgen
+  - 2026-05/2026-05-06t173338-raiyanyahyahow-to-train-your-gpt
 aliases:
   - lora
   - model-training
@@ -30,6 +31,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.01434
+last_source_added: '2026-05-07T00:33:38.689Z'
 ---
 Fine-tuning a pre-trained model on task-specific data lets teams replace expensive general-purpose inference with a smaller, cheaper, more accurate model for a defined workload. The friction has traditionally been hardware cost and the difficulty of assembling quality training data.
 
