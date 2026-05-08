@@ -10,6 +10,7 @@ sources:
   - 2026-04/2026-04-30t231537-startupsrip
   - 2026-04/2026-04-30t231745-optimal-vs-usertesting
   - 2026-05/2026-05-06t204115-platform-engineering-end-to-end
+  - 2026-05/2026-05-08t131438-apocalypse-no
 aliases:
   - startup-ecosystem
 compiled_at: '2026-05-04T03:37:21.522Z'
@@ -29,7 +30,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.015531
-last_source_added: '2026-05-07T03:41:15.229Z'
+last_source_added: '2026-05-08T20:14:38.280Z'
 ---
 Platform strategy describes how a product or company positions itself as a substrate that others depend on, rather than a feature among competing features. The sources here illustrate three distinct angles on that idea.
 

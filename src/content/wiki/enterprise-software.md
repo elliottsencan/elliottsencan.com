@@ -11,6 +11,8 @@ sources:
   - 2026-04/2026-04-30t231745-optimal-vs-usertesting
   - >-
     2026-05/2026-05-01t102345-sap-related-npm-packages-compromised-in-credential-stealing
+  - >-
+    2026-05/2026-05-08t112608-your-onboarding-is-a-hazing-ritual-and-you-call-it-agile
 compiled_at: 2026-05-04T04:08:24.933Z
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -28,6 +30,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.015162
+last_source_added: '2026-05-08T18:26:08.209Z'
 ---
 Enterprise software is distinguished less by feature count than by the organizational constraints it must satisfy: compliance certifications, audit trails, role-based access, and integration with existing infrastructure. These concerns show up across the sources here in different ways.
 
