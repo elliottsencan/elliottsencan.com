@@ -1,6 +1,5 @@
 ---
 import { type CollectionEntry, getCollection, render } from "astro:content";
-import Breadcrumb from "@components/Breadcrumb.astro";
 import EditorialRule from "@components/EditorialRule.astro";
 import LabeledRule from "@components/LabeledRule.astro";
 import Link from "@components/Link.astro";
@@ -156,13 +155,14 @@ const neighborCount = hasLocal ? localData.nodes.length - 1 : 0;
     >
       {/*
         Hero — 3-row × 2-col grid mirroring /wiki. Col 1 holds the editorial
-        rails: row 1 = EditorialRule compact (top dot row), row 2 =
-        breadcrumb/title/summary/source-count stack with flex justify-between,
-        row 3 = EditorialRule compact (bottom dot row). Col 2 holds the local
-        constellation spanning rows 1-2 and a footer caption (cluster ·
-        neighbors) in row 3 that grid-aligns with the col-1 bottom rule. The
-        breadcrumb lives inside the prose stack so the dot rows can be pure
-        bracketing chrome — no double "Wiki" labels with the h1.
+        rails: row 1 = LabeledRule with "Wiki" (linked back to the index)
+        as the back-nav, row 2 = title/summary/source-count stack with flex
+        justify-between, row 3 = EditorialRule compact (bottom dot row).
+        Col 2 holds the local constellation spanning rows 1-2 and a footer
+        caption (cluster · neighbors) in row 3 that grid-aligns with the
+        col-1 bottom rule. The h1 carries the current concept identity, so
+        the row-1 label stays minimal — just "Wiki" — to avoid double
+        labelling.
 
         NB: must NOT use bare <header> — global.css fixes-positions every
         <header> as site chrome (CLAUDE.md: "bare tags are reserved").
@@ -170,15 +170,16 @@ const neighborCount = hasLocal ? localData.nodes.length - 1 : 0;
       <div
         class="grid items-stretch gap-x-8 gap-y-3 md:grid-cols-[minmax(0,1fr)_auto] md:gap-x-10 md:[grid-template-rows:auto_1fr_auto]"
       >
-        <EditorialRule compact class="md:col-start-1 md:row-start-1" />
+        <div class="md:col-start-1 md:row-start-1">
+          <LabeledRule>
+            <Link href="/wiki/">Wiki</Link>
+          </LabeledRule>
+        </div>
 
         <div
           class="flex min-w-0 max-w-[62ch] flex-col justify-between gap-4 md:col-start-1 md:row-start-2"
         >
           <div class="flex flex-col gap-3">
-            <Breadcrumb>
-              <Link href="/wiki/">Wiki</Link> / {concept.id}
-            </Breadcrumb>
             <h1 class="font-heading text-xl font-semibold tracking-tight text-black dark:text-white">
               {concept.data.title}
             </h1>
