@@ -237,7 +237,7 @@ const visibleLocalEdges = local
                 y={n.y - r - 4}
                 text-anchor="middle"
                 font-family="var(--font-mono)"
-                font-size="11"
+                font-size="9"
                 fill="currentColor"
               >
                 {title}
@@ -373,6 +373,22 @@ const visibleLocalEdges = local
     .constellation-local :global(.breathe-ring) {
       display: none !important;
       animation: none !important;
+    }
+  }
+
+  /* Mobile / coarse-pointer adjustments. Local rail has no hover protocol,
+     so on touch the neighbor labels are otherwise unreachable — surface
+     them at low opacity by default below 640px (≤10 nodes per rail keeps
+     this from crowding). Hit targets grow on coarse pointer for forgiving
+     taps without changing the visible dot size. */
+  @media (max-width: 640px) {
+    .constellation-local :global(.node.neighbor .label) {
+      opacity: 0.55;
+    }
+  }
+  @media (pointer: coarse) {
+    .constellation-local :global(.hit) {
+      r: 16;
     }
   }
 </style>
