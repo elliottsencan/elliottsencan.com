@@ -148,7 +148,10 @@ const clusterGroups = clusters
     }
     const hull = convexHull(members.map((n) => ({ x: n.x, y: n.y })));
     const path = smoothClosed(inflateHull(hull, 22));
-    return { ...cl, path };
+    // Centroid x, top edge y (minus pad) — drives the focus-only italic label.
+    const labelX = members.reduce((s, n) => s + n.x, 0) / members.length;
+    const top = Math.min(...members.map((n) => n.y));
+    return { ...cl, path, labelX, labelY: top - 12 };
   })
   .filter((g): g is NonNullable<typeof g> => g !== null);
 
@@ -177,9 +180,30 @@ const nodeById = new Map(nodes.map((n) => [n.id, n]));
           data-cluster={g.id}
           data-hue={g.hue}
           d={g.path}
-          stroke="none"
           style={`--hue: ${g.hue};`}
         />
+      ))
+    }
+
+    {/* Cluster names — italic, opacity 0 by default; only the focused
+        cluster's label fades in. font-size is in viewBox user-units. */}
+    {
+      clusterGroups.map((g) => (
+        <text
+          class="cluster-name"
+          data-cluster={g.id}
+          x={g.labelX}
+          y={g.labelY}
+          text-anchor="middle"
+          font-family="var(--font-heading)"
+          font-style="italic"
+          font-size="22"
+          letter-spacing="0.01em"
+          fill="currentColor"
+          vector-effect="non-scaling-stroke"
+        >
+          {g.short}
+        </text>
       ))
     }
 
@@ -277,22 +301,52 @@ const nodeById = new Map(nodes.map((n) => [n.id, n]));
   /* Opacity matches the local rail (0.5 base / 1.0 active) — consistent
      color weight between global and per-concept views. */
   #constellation-strip .region {
-    fill: oklch(0.86 0.04 var(--hue));
+    fill: oklch(0.84 0.06 var(--hue));
     opacity: 0.5;
+    stroke: oklch(0.62 0.08 var(--hue));
+    stroke-width: 1;
+    stroke-opacity: 0.35;
+    vector-effect: non-scaling-stroke;
     transition:
       fill 200ms ease,
-      opacity 200ms ease;
+      opacity 200ms ease,
+      stroke-opacity 200ms ease;
   }
   .dark #constellation-strip .region {
-    fill: oklch(0.34 0.04 var(--hue));
+    fill: oklch(0.36 0.06 var(--hue));
+    stroke: oklch(0.55 0.08 var(--hue));
+    stroke-opacity: 0.45;
   }
   /* Focused cluster swaps to higher chroma at full opacity. */
   #constellation-strip .region[data-on] {
-    fill: oklch(0.78 0.07 var(--hue));
+    fill: oklch(0.76 0.10 var(--hue));
     opacity: 1;
+    stroke-opacity: 0.7;
   }
   .dark #constellation-strip .region[data-on] {
-    fill: oklch(0.42 0.07 var(--hue));
+    fill: oklch(0.44 0.10 var(--hue));
+    stroke-opacity: 0.8;
+  }
+
+  /* ─── Cluster names (focus-only italic labels) ──────────────────────── */
+  /* Pre-rendered for all clusters but invisible by default; only the
+     focused cluster's label fades in. Paper-stroke halo separates the
+     italic from the region fill underneath. */
+  #constellation-strip .cluster-name {
+    paint-order: stroke fill;
+    stroke: #f6f4ef;
+    stroke-width: 4px;
+    stroke-linejoin: round;
+    pointer-events: none;
+    opacity: 0;
+    font-feature-settings: "ss01" 1;
+    transition: opacity 180ms ease;
+  }
+  .dark #constellation-strip .cluster-name {
+    stroke: #18161a;
+  }
+  #constellation-strip .cluster-name[data-on] {
+    opacity: 0.75;
   }
 
   /* ─── Edges ─────────────────────────────────────────────────────────── */
@@ -301,18 +355,18 @@ const nodeById = new Map(nodes.map((n) => [n.id, n]));
      resolves to near-white in dark and reads visually heavier than the same
      value would in light. */
   #constellation-strip .edge.same {
-    stroke-width: 0.45;
-    opacity: 0.16;
+    stroke-width: 0.5;
+    opacity: 0.22;
   }
   #constellation-strip .edge.cross {
     stroke-width: 0.3;
-    opacity: 0.08;
+    opacity: 0.05;
   }
   .dark #constellation-strip .edge.same {
-    opacity: 0.1;
+    opacity: 0.14;
   }
   .dark #constellation-strip .edge.cross {
-    opacity: 0.05;
+    opacity: 0.04;
   }
   /* When focus is active, dim non-incident edges hard. */
   #constellation-strip[data-focus] .edge {
@@ -344,6 +398,7 @@ const nodeById = new Map(nodes.map((n) => [n.id, n]));
   #constellation-strip .node[data-focus-self] .dot {
     fill: var(--accent);
     opacity: 1;
+    filter: drop-shadow(0 0 4px color-mix(in oklch, var(--accent) 35%, transparent));
   }
 
   /* ─── Breathe ring (focus only) ─────────────────────────────────────── */
@@ -392,6 +447,7 @@ const nodeById = new Map(nodes.map((n) => [n.id, n]));
   #constellation-strip .node[data-focus-self] .label {
     opacity: 1;
     fill: var(--accent);
+    letter-spacing: 0.04em;
   }
   /* No-JS fallback: hover reveals the label for the hovered node. */
   #constellation-strip:not([data-focus]) .node:hover .label,
@@ -415,7 +471,11 @@ const nodeById = new Map(nodes.map((n) => [n.id, n]));
 
     const nodes = Array.from(svg.querySelectorAll<SVGElement>(".node"));
     const edges = Array.from(svg.querySelectorAll<SVGElement>(".edge"));
-    const regions = Array.from(svg.querySelectorAll<SVGElement>(".region"));
+    // Includes .cluster-name so the focus-only italic label lights up
+    // alongside its region — both key off matching data-cluster.
+    const regions = Array.from(
+      svg.querySelectorAll<SVGElement>(".region, .cluster-name"),
+    );
 
     const setFocus = (slug: string | null) => {
       // Clear toggleable state up front — covers slug→slug transitions

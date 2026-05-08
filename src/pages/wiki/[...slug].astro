@@ -193,7 +193,7 @@ const neighborCount = hasLocal ? localData.nodes.length - 1 : 0;
                   />
                 ))}
               </span>
-              <span>
+              <span class="tracking-wider">
                 {sources.length} source{sources.length === 1 ? "" : "s"}
                 {" · "}
                 {longDateFormatter.format(concept.data.compiled_at)}
@@ -221,7 +221,7 @@ const neighborCount = hasLocal ? localData.nodes.length - 1 : 0;
         {
           hasLocal && (
             <p
-              class="font-mono text-xs text-black/55 dark:text-white/55 md:col-start-2 md:row-start-3"
+              class="font-mono text-xs tracking-wider text-black/55 dark:text-white/55 md:col-start-2 md:row-start-3 md:self-center"
             >
               {myCluster ? `${myCluster.short} · ` : ""}
               {neighborCount} neighbor{neighborCount === 1 ? "" : "s"}

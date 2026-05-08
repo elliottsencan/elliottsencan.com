@@ -158,7 +158,6 @@ const NEIGHBOR_R = 2.6;
             data-cluster={g.id}
             data-active={g.id === myCluster ? "" : null}
             d={g.path}
-            stroke="none"
             style={`--hue: ${g.hue};`}
           />
         ))}
@@ -250,14 +249,24 @@ const NEIGHBOR_R = 2.6;
 
   /* Cluster regions */
   .constellation-local :global(.region) {
-    fill: oklch(0.86 0.04 var(--hue));
+    fill: oklch(0.84 0.06 var(--hue));
     opacity: 0.5;
+    stroke: oklch(0.62 0.08 var(--hue));
+    stroke-width: 1;
+    stroke-opacity: 0.35;
+    vector-effect: non-scaling-stroke;
   }
   :global(.dark) .constellation-local :global(.region) {
-    fill: oklch(0.34 0.04 var(--hue));
+    fill: oklch(0.36 0.06 var(--hue));
+    stroke: oklch(0.55 0.08 var(--hue));
+    stroke-opacity: 0.45;
   }
   .constellation-local :global(.region[data-active]) {
     opacity: 1;
+    stroke-opacity: 0.7;
+  }
+  :global(.dark) .constellation-local :global(.region[data-active]) {
+    stroke-opacity: 0.8;
   }
 
   /* Edges — base opacity dropped in dark mode to match the strip; near-white
@@ -293,6 +302,9 @@ const NEIGHBOR_R = 2.6;
   .constellation-local :global(.node.neighbor:focus-visible .dot) {
     fill: var(--accent);
     opacity: 1;
+  }
+  .constellation-local :global(.node.active .dot) {
+    filter: drop-shadow(0 0 4px color-mix(in oklch, var(--accent) 35%, transparent));
   }
 
   /* Hover-revealed labels — paint-order halo for legibility over edges. */

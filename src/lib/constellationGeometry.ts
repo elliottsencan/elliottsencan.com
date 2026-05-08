@@ -8,7 +8,7 @@ import layout from "@data/constellation-layout.json";
 // sizes when given the same `width`). The local's own square content is
 // centered within the wider strip-shaped frame via preserveAspectRatio.
 
-export const STRIP_PAD_X = 80;
+export const STRIP_PAD_X = 120;
 export const STRIP_PAD_Y_TOP = 80;
 export const STRIP_PAD_Y_BOTTOM = 80;
 

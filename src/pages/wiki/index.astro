@@ -99,9 +99,7 @@ const constellationTieCount = constellationLayout.global.edges.length;
                   />
                 ))}
               </span>
-              <span>
-                {wiki.length} concept{wiki.length === 1 ? "" : "s"}
-                {" · "}
+              <span class="tracking-wider">
                 {readingSourceCount} source{readingSourceCount === 1 ? "" : "s"}
                 {lastCompiledFormatted ? ` · ${lastCompiledFormatted}` : ""}
               </span>
@@ -128,7 +126,7 @@ const constellationTieCount = constellationLayout.global.edges.length;
         {/* Caption sits in col 2 row 3 so it lines up horizontally with the
             col-1 EditorialRule. Same row → guaranteed alignment. */}
         <p
-          class="font-mono text-xs text-black/55 dark:text-white/55 md:col-start-2 md:row-start-3"
+          class="font-mono text-xs tracking-wider text-black/55 dark:text-white/55 md:col-start-2 md:row-start-3 md:self-center"
         >
           {constellationNeighborhoodCount} neighborhoods
           {" · "}
