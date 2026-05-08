@@ -32,12 +32,19 @@ const wiki = (await getCollection("wiki")).sort((a, b) => a.data.title.localeCom
         strip drops below the prose.
       */}
       <div class="grid items-start gap-8 md:grid-cols-[minmax(0,1fr)_auto] md:gap-10">
-        <p class="max-w-[62ch] w-full text-base leading-relaxed text-black/85 dark:text-white/85">
-          Concept-indexed synthesis articles. Each article compiles across
-          multiple sources from the <Link href="/reading">reading log</Link>;
-          one article per concept that has at least two contributing
-          sources.
-        </p>
+        <div class="flex max-w-[62ch] w-full flex-col gap-3">
+          <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
+            Concept-indexed synthesis articles. Each article compiles across
+            multiple sources from the <Link href="/reading">reading log</Link>;
+            one article per concept that has at least two contributing
+            sources.
+          </p>
+          <p class="text-xs text-black/55 dark:text-white/55">
+            Compiled by Claude
+            {" · "}
+            <Link href="/wiki/how-this-works">how this works →</Link>
+          </p>
+        </div>
         {
           wiki.length > 0 && (
             <div class="flex flex-col gap-1.5">
@@ -46,6 +53,8 @@ const wiki = (await getCollection("wiki")).sort((a, b) => a.data.title.localeCom
           )
         }
       </div>
+
+      <EditorialRule />
 
       {
         wiki.length > 0 ? (
@@ -96,9 +105,7 @@ const wiki = (await getCollection("wiki")).sort((a, b) => a.data.title.localeCom
       <EditorialRule />
 
       <p class="text-xs text-black/55 dark:text-white/55">
-        <Link href="/wiki/how-this-works">how this works</Link>
-        &nbsp;&middot;&nbsp;
-        <Link href="/reading">reading log</Link>
+        <Link href="/reading">reading log →</Link>
       </p>
     </div>
   </div>

@@ -1,5 +1,6 @@
 ---
 import { type CollectionEntry, getCollection, render } from "astro:content";
+import EditorialRule from "@components/EditorialRule.astro";
 import LabeledRule from "@components/LabeledRule.astro";
 import Link from "@components/Link.astro";
 import ConstellationLocal from "@components/wiki/ConstellationLocal.astro";
@@ -169,9 +170,9 @@ const breadcrumbs = [
             </span>
           </p>
           <p class="text-xs text-black/55 dark:text-white/55">
-            Compiled by Claude.
-            {" "}
-            <Link href="/wiki/how-this-works">How this works →</Link>
+            Compiled by Claude
+            {" · "}
+            <Link href="/wiki/how-this-works">how this works →</Link>
           </p>
         </div>
 
@@ -184,6 +185,8 @@ const breadcrumbs = [
           <ConstellationLocal slug={concept.id} size={220} />
         </div>
       </div>
+
+      <EditorialRule />
 
       {/*
         Body row — prose on the left, sticky sources rail on the right. The
