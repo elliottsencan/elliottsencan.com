@@ -217,6 +217,9 @@ const scopes = [
       --pagefind-ui-text: #d4d4d4;
       --pagefind-ui-background: transparent;
       --pagefind-ui-border: transparent;
+      /* Result-tag pill background. Light value would otherwise leak
+         through from :root and read as a bright chip on a dark page. */
+      --pagefind-ui-tag: rgba(255, 255, 255, 0.08);
     }
 
     /* Scope chips: hairline pills above the input. Active state inverts the
@@ -274,10 +277,41 @@ const scopes = [
       border-radius: 0;
       outline: none;
       font-size: 1.375rem;
+      color: rgb(0 0 0 / 0.92);
+    }
+    #search .pagefind-ui__search-input::placeholder {
+      color: rgb(0 0 0 / 0.4);
+      opacity: 1;
     }
 
     .dark #search .pagefind-ui__search-input {
       border-bottom-color: rgba(255, 255, 255, 0.15);
+      color: rgb(255 255 255 / 0.92);
+    }
+    .dark #search .pagefind-ui__search-input::placeholder {
+      color: rgb(255 255 255 / 0.4);
+    }
+
+    /* <mark> highlights: Pagefind's reset reverts <mark> to the browser
+       default (yellow bg + black text), which clashes hard in dark mode.
+       Re-style with the site accent so the match emphasis lands in both
+       themes. */
+    #search .pagefind-ui__result-excerpt mark,
+    #search .pagefind-ui__result-link mark {
+      background: color-mix(in oklch, var(--accent) 28%, transparent);
+      color: inherit;
+      padding: 0 0.12em;
+      border-radius: 0.15rem;
+    }
+
+    /* Result title link inherits --pagefind-ui-text (#d4d4d4 in dark);
+       bump it brighter so titles read with proper hierarchy against the
+       softer excerpt body. */
+    .dark #search .pagefind-ui__result-link {
+      color: rgb(255 255 255 / 0.95);
+    }
+    #search .pagefind-ui__result-link {
+      color: rgb(0 0 0 / 0.92);
     }
 
     /* Clear button — anchored to the top-right of the input row. Pagefind

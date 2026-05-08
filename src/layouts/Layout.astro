@@ -15,6 +15,9 @@ type Props = {
   author?: string;
   schemaType?: "BlogPosting" | "Article";
   includePersonSchema?: boolean;
+  breadcrumbs?: Array<{ name: string; url: string | URL }>;
+  basedOn?: string;
+  citations?: string[];
 };
 
 const { title, description, ...headProps } = Astro.props;

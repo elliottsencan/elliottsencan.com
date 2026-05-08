@@ -16,6 +16,13 @@ type Props = {
 
 const { post } = Astro.props;
 const ogImage = post.data.image ?? `/og/writing/${post.id}.png`;
+const year = post.data.date.getUTCFullYear();
+const breadcrumbs = [
+  { name: "Home", url: "/" },
+  { name: "Writing", url: "/writing/" },
+  { name: String(year), url: `/writing/${year}/` },
+  { name: post.data.title, url: `/writing/${post.id}/` },
+];
 ---
 
 <Layout
@@ -28,6 +35,7 @@ const ogImage = post.data.image ?? `/og/writing/${post.id}.png`;
   tags={post.data.tags}
   canonical={post.data.canonical}
   image={ogImage}
+  breadcrumbs={breadcrumbs}
 >
   <slot />
 </Layout>

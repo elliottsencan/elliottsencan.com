@@ -22,11 +22,6 @@ export const HOME: Metadata = {
   DESCRIPTION: STANDFIRST,
 };
 
-export const PROJECTS: Metadata = {
-  TITLE: "Projects",
-  DESCRIPTION: "Selected projects and case studies.",
-};
-
 export const SOCIALS: Socials = [
   // {
   //   NAME: "GitHub",
@@ -62,3 +57,12 @@ export const REPO: Repo = {
   OWNER: "elliottsencan",
   NAME: "elliottsencan.com",
 };
+
+// Stable @id URIs so JSON-LD blocks can cross-reference the same Person /
+// WebSite entity instead of each block re-declaring it. Schema.org `@id`
+// values are URL-shaped opaque identifiers — convention is the site's origin
+// plus a `#` fragment.
+export const SCHEMA_IDS = {
+  PERSON: "https://elliottsencan.com/#person",
+  WEBSITE: "https://elliottsencan.com/#website",
+} as const;

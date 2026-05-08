@@ -1,0 +1,17 @@
+---
+// Canonical content-list wrapper. Pair with EditorialListItem.astro.
+//
+// Use for any list of dated/statused entries with a title and an optional
+// blurb: writing index, /about career and projects, etc.
+// Reading and wiki entries have richer per-item metadata (source lines,
+// citation chips, mobile mono strips) and stay hand-rolled in their own
+// pages — this component intentionally covers the simpler editorial
+// pattern only.
+//
+// Spacing rationale: gap-6 reads well when items carry a blurb; if a list
+// only has single-line items with no blurb, prefer the compact chrome list
+// (e.g. /about Elsewhere) instead of dropping the gap on this one.
+---
+<ul class="not-prose flex flex-col gap-6 text-sm">
+  <slot />
+</ul>

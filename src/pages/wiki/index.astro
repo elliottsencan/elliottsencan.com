@@ -32,7 +32,7 @@ const wiki = (await getCollection("wiki")).sort((a, b) => a.data.title.localeCom
         strip drops below the prose.
       */}
       <div class="grid items-start gap-8 md:grid-cols-[minmax(0,1fr)_auto] md:gap-10">
-        <p class="max-w-[62ch] text-base leading-relaxed text-black/85 dark:text-white/85">
+        <p class="max-w-[62ch] w-full text-base leading-relaxed text-black/85 dark:text-white/85">
           Concept-indexed synthesis articles. Each article compiles across
           multiple sources from the <Link href="/reading">reading log</Link>;
           one article per concept that has at least two contributing

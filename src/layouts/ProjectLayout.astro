@@ -16,6 +16,14 @@ type Props = {
 
 const { project } = Astro.props;
 const ogImage = project.data.thumbnail ?? `/og/projects/${project.id}.png`;
+// Projects are listed on /about; the legacy /projects index page was removed.
+// Breadcrumb climbs Home → About → Project so search engines see the parent
+// page that exists rather than a synthesized /projects/ hash.
+const breadcrumbs = [
+  { name: "Home", url: "/" },
+  { name: "About", url: "/about/" },
+  { name: project.data.title, url: `/projects/${project.id}/` },
+];
 ---
 
 <Layout
@@ -26,6 +34,7 @@ const ogImage = project.data.thumbnail ?? `/og/projects/${project.id}.png`;
   publishedTime={project.data.date}
   tags={project.data.stack}
   image={ogImage}
+  breadcrumbs={breadcrumbs}
 >
   <slot />
 </Layout>
