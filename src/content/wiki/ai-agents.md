@@ -39,6 +39,7 @@ sources:
   - 2026-05/2026-05-03t173422-vectorize-iohindsight
   - 2026-05/2026-05-03t173528-lthoanggopenagentd
   - 2026-05/2026-05-04t235011-plurai
+  - 2026-05/2026-05-07t193804-agents-need-control-flow-not-more-prompts
 compiled_at: 2026-05-06T04:00:21.862Z
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -56,6 +57,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.041529
+last_source_added: '2026-05-08T02:38:04.717Z'
 ---
 An AI agent, in the current practical sense, is a system where a language model drives a loop of reasoning and action: it observes some environment, selects tools or sub-tasks, executes them, and feeds results back into its next decision. The concept sounds clean in definition and proves messy in deployment.
 

@@ -11,6 +11,7 @@ sources:
   - 2026-05/2026-05-03t173422-vectorize-iohindsight
   - 2026-05/2026-05-03t173528-lthoanggopenagentd
   - 2026-05/2026-05-06t110728-the-bottleneck-was-never-the-code
+  - 2026-05/2026-05-07t193804-agents-need-control-flow-not-more-prompts
 compiled_at: 2026-05-04T03:36:22.698Z
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -28,7 +29,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.016995
-last_source_added: '2026-05-06T18:07:28.855Z'
+last_source_added: '2026-05-08T02:38:04.717Z'
 ---
 Agentic workflows are pipelines in which an AI model takes sequences of actions, using tools, memory, and external services, to complete tasks that unfold over multiple steps. The design decisions made at each layer, tool access, memory architecture, [orchestration topology, and observability](/wiki/systems-design), determine whether the system performs reliably or compounds failures.
 
