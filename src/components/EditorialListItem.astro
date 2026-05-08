@@ -1,0 +1,101 @@
+---
+import Link from "@components/Link.astro";
+
+// Canonical editorial list item. See EditorialList.astro for the wrapper
+// and the convention this implements.
+//
+// Layout: at md+, a fixed-width date/status column on the left and a
+// title-led content column on the right. Below md, the date/status is
+// promoted into the title row as a compact mono caption so the layout
+// stops fighting narrow viewports.
+//
+// `meta` holds whatever the leading column should show — a date string
+// ("4 May 2026"), a date range ("2024 — present"), or a status label
+// ("Live" / "In flight"). The component does not format dates — callers
+// pass already-formatted strings so each list page can choose its own
+// granularity (day vs year, range vs single).
+//
+// `metaDateTime` is an optional ISO string. When provided, the meta column
+// renders inside a <time> element with `datetime=` for machine-readable
+// dates. Omit it for status labels that aren't dates.
+//
+// `metaCompact` is an optional shorter form for the mobile-promoted caption
+// (e.g. "May 04" vs "May 4, 2026"). Falls back to `meta` if not provided.
+//
+// Two slots:
+//   - default: the blurb paragraph (plain text or inline markup). When
+//     empty we drop the <p> wrapper so empty items collapse cleanly.
+//   - title: optional override for title-row markup. Use this when the
+//     title needs embedded markup the prop API can't express — e.g.
+//     "Role at <Company link>" on /about Career. When this slot is used,
+//     `title` / `href` / `external` props are ignored.
+
+type Props = {
+  title?: string;
+  href?: string;
+  external?: boolean;
+  meta?: string;
+  metaCompact?: string;
+  metaDateTime?: string;
+};
+
+const { title, href, external, meta, metaCompact, metaDateTime } = Astro.props;
+const hasBlurb = Astro.slots.has("default");
+const hasTitleSlot = Astro.slots.has("title");
+const mobileMeta = metaCompact ?? meta;
+
+const MetaTag = metaDateTime ? "time" : "span";
+const metaProps = metaDateTime ? { datetime: metaDateTime } : {};
+---
+<li class="flex flex-col gap-2 md:flex-row md:items-baseline md:gap-4">
+  {
+    meta && (
+      <MetaTag
+        {...metaProps}
+        class="hidden w-32 shrink-0 font-sans text-xs text-black/50 md:block dark:text-white/60"
+      >
+        {meta}
+      </MetaTag>
+    )
+  }
+  <div class="flex-1 space-y-1.5">
+    <div class="flex items-baseline justify-between gap-3 md:block">
+      {
+        hasTitleSlot ? (
+          <span class="font-heading font-medium text-black dark:text-white">
+            <slot name="title" />
+          </span>
+        ) : href ? (
+          <Link
+            href={href}
+            external={external}
+            class="font-heading font-medium text-black dark:text-white"
+          >
+            {title}
+          </Link>
+        ) : (
+          <span class="font-heading font-medium text-black dark:text-white">
+            {title}
+          </span>
+        )
+      }
+      {
+        mobileMeta && (
+          <MetaTag
+            {...metaProps}
+            class="shrink-0 font-mono text-[11px] tracking-wider text-black/55 md:hidden dark:text-white/55"
+          >
+            {mobileMeta}
+          </MetaTag>
+        )
+      }
+    </div>
+    {
+      hasBlurb && (
+        <p class="leading-relaxed text-black/75 dark:text-white/75">
+          <slot />
+        </p>
+      )
+    }
+  </div>
+</li>

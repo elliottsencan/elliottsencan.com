@@ -60,9 +60,24 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
   year: "numeric",
   timeZone: SITE_TIMEZONE,
 });
+
+const breadcrumbs = [
+  { name: "Home", url: "/" },
+  { name: "Reading", url: "/reading/" },
+  { name: entry.data.title, url: `/reading/${entry.id}/` },
+];
 ---
 
-<Layout title={`Reading: ${entry.data.title}`} description={entry.data.summary}>
+<Layout
+  title={`Reading: ${entry.data.title}`}
+  description={entry.data.summary}
+  ogType="article"
+  schemaType="Article"
+  publishedTime={entry.data.added}
+  author={entry.data.author}
+  basedOn={entry.data.url}
+  breadcrumbs={breadcrumbs}
+>
   <Container>
     <div
       class="space-y-10"

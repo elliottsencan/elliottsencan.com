@@ -1,6 +1,8 @@
 ---
 import { getCollection, getEntry } from "astro:content";
 import Container from "@components/Container.astro";
+import EditorialList from "@components/EditorialList.astro";
+import EditorialListItem from "@components/EditorialListItem.astro";
 import LabeledRule from "@components/LabeledRule.astro";
 import Link from "@components/Link.astro";
 import Sparkline from "@components/labs/Sparkline.astro";
@@ -164,39 +166,19 @@ const trails = [
           <>
             <LabeledRule as="h2">Recent posts</LabeledRule>
             <section data-pagefind-ignore>
-              <ul class="not-prose flex flex-col gap-6 text-sm">
+              <EditorialList>
                 {posts.map((post) => (
-                  <li class="flex flex-col gap-2 md:flex-row md:items-baseline md:gap-4">
-                    {/* Desktop dated column. Hidden on mobile so the date
-                        can move into the title row, mirroring /reading's
-                        mobile-hard variant. */}
-                    <time
-                      datetime={post.data.date.toISOString()}
-                      class="hidden w-32 shrink-0 font-sans text-xs text-black/50 md:block dark:text-white/60"
-                    >
-                      {longDate.format(post.data.date)}
-                    </time>
-                    <div class="flex-1 space-y-1.5">
-                      <div class="flex items-baseline justify-between gap-3 md:block">
-                        <Link
-                          href={`/writing/${post.id}`}
-                          class="font-heading font-medium text-black dark:text-white"
-                        >
-                          {post.data.title}
-                        </Link>
-                        <span class="shrink-0 font-mono text-[11px] tracking-wider text-black/55 md:hidden dark:text-white/55">
-                          {compactDate.format(post.data.date)}
-                        </span>
-                      </div>
-                      {post.data.description && (
-                        <p class="leading-relaxed text-black/75 dark:text-white/75">
-                          {post.data.description}
-                        </p>
-                      )}
-                    </div>
-                  </li>
+                  <EditorialListItem
+                    title={post.data.title}
+                    href={`/writing/${post.id}`}
+                    meta={longDate.format(post.data.date)}
+                    metaCompact={compactDate.format(post.data.date)}
+                    metaDateTime={post.data.date.toISOString()}
+                  >
+                    {post.data.description}
+                  </EditorialListItem>
                 ))}
-              </ul>
+              </EditorialList>
             </section>
           </>
         ) : null

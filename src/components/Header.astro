@@ -6,25 +6,26 @@ import SignatureLogo from "./SignatureLogo.astro";
 
 <header transition:persist>
   <Container>
-    {/* Header layout: signature anchored left, nav stays on the same row at
-        every breakpoint and scrolls horizontally if its content overflows.
-        The right-edge mask fades the trailing nav item so the row signals
-        scroll affordance without showing a scrollbar (which would clash
-        with the editorial chrome). The previous layout used flex-wrap, so
-        on narrow phones the nav broke into a second row of two-three
-        items each — looked accidental rather than intentional. */}
-    <div class="flex items-center justify-between gap-3">
-      <Link href="/" underline={false} class="shrink-0">
+    {/* Two-row editorial masthead under sm:. Below 640px the logo + utility
+        controls take row 1 and the section index drops to row 2 with a
+        hairline rule between them — every link visible without horizontal
+        scroll. At sm: and up the grid collapses to a single row in the
+        canonical order: logo · section links · utility. */}
+    <div class="header-grid items-center gap-x-3">
+      <Link href="/" underline={false} class="header-logo shrink-0">
         <SignatureLogo />
       </Link>
       <nav
-        class="header-nav flex min-w-0 flex-1 items-center justify-end gap-x-3.5 overflow-x-auto whitespace-nowrap text-sm sm:gap-x-5"
+        class="header-links flex items-center gap-x-4 text-sm sm:justify-end sm:gap-x-5"
       >
+        <!-- <Link href="/writing">writing</Link> -->
         <Link href="/now">now</Link>
         <Link href="/reading">reading</Link>
         <Link href="/wiki">wiki</Link>
         <Link href="/labs">labs</Link>
         <Link href="/about">about</Link>
+      </nav>
+      <div class="header-utility flex items-center gap-x-3.5">
         <a
           href="/search"
           aria-label="Search"
@@ -101,35 +102,53 @@ import SignatureLogo from "./SignatureLogo.astro";
             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" />
           </svg>
         </button>
-      </nav>
+      </div>
     </div>
   </Container>
 </header>
 
 <style>
-  /* Hide the horizontal-scroll scrollbar — the right-edge fade carries the
-     scroll affordance instead. Touch swipe still works on mobile, and
-     keyboard users still get arrow-key scrolling on the focused nav. */
-  .header-nav {
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-    /* Soft fade on the trailing edge so the last visible item dissolves
-       rather than ending in a hard cut. mask is content-only; clipping
-       happens via overflow-x: auto on the same element. */
-    mask-image: linear-gradient(
-      to right,
-      black 0,
-      black calc(100% - 1.5rem),
-      transparent 100%
-    );
-    -webkit-mask-image: linear-gradient(
-      to right,
-      black 0,
-      black calc(100% - 1.5rem),
-      transparent 100%
-    );
+  /* Two-row grid below sm: — logo + utility on row 1, section links on
+     row 2 separated by a hairline rule. Single source of truth per item;
+     CSS handles the responsive shape, no markup duplication. */
+  .header-grid {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    grid-template-areas:
+      "logo . utility"
+      "links links links";
+    row-gap: 0.625rem;
   }
-  .header-nav::-webkit-scrollbar {
-    display: none;
+  .header-logo {
+    grid-area: logo;
+  }
+  .header-links {
+    grid-area: links;
+    /* Mobile: links pack from the left below the hairline rule. Five
+       items × short labels fit comfortably in any phone viewport with
+       gap-x-2; no scroll mask, no space-between stretching. */
+    justify-content: flex-start;
+    white-space: nowrap;
+    padding-top: 0.625rem;
+    border-top: 1px solid rgb(0 0 0 / 0.1);
+  }
+  :global(.dark) .header-links {
+    border-top-color: rgb(255 255 255 / 0.1);
+  }
+  .header-utility {
+    grid-area: utility;
+  }
+
+  @media (min-width: 640px) {
+    /* sm: collapse to a single row — logo · links · utility. */
+    .header-grid {
+      grid-template-areas: "logo links utility";
+      row-gap: 0;
+    }
+    .header-links {
+      justify-content: flex-end;
+      padding-top: 0;
+      border-top: 0;
+    }
   }
 </style>

@@ -1,6 +1,6 @@
 ---
 import "../styles/global.css";
-import { PERSON, SITE } from "@consts";
+import { PERSON, SCHEMA_IDS, SITE } from "@consts";
 
 interface Props {
   title: string;
@@ -20,8 +20,23 @@ interface Props {
   author?: string;
   /** BlogPosting for blog posts, Article for project/case-study pages. Ignored when ogType="website". */
   schemaType?: "BlogPosting" | "Article";
-  /** Emit the Person JSON-LD block. Intended only for the homepage. */
+  /** Emit the Person JSON-LD block. Intended only for the homepage and /about. */
   includePersonSchema?: boolean;
+  /**
+   * Path crumbs from root → current page. When present, a BreadcrumbList
+   * JSON-LD block is emitted; Google renders these directly in SERPs.
+   */
+  breadcrumbs?: Array<{ name: string; url: string | URL }>;
+  /**
+   * Source URL for /reading entries. Emitted as `Article.isBasedOn` so search
+   * engines understand the page is a summary of an external source.
+   */
+  basedOn?: string;
+  /**
+   * Cited /reading entry URLs for /wiki entries. Emitted as `Article.citation`
+   * so search engines see the synthesis-from-multiple-sources relationship.
+   */
+  citations?: string[];
 }
 
 const {
@@ -36,6 +51,9 @@ const {
   author,
   schemaType = "BlogPosting",
   includePersonSchema = false,
+  breadcrumbs,
+  basedOn,
+  citations,
 } = Astro.props;
 
 const canonicalURL = canonical
@@ -51,6 +69,7 @@ const siteURL = Astro.site?.toString() ?? "/";
 const websiteSchema = {
   "@context": "https://schema.org",
   "@type": "WebSite",
+  "@id": SCHEMA_IDS.WEBSITE,
   name: SITE.TITLE,
   url: siteURL,
   description: SITE.DESCRIPTION,
@@ -60,6 +79,7 @@ const personSchema = includePersonSchema
   ? {
       "@context": "https://schema.org",
       "@type": "Person",
+      "@id": SCHEMA_IDS.PERSON,
       name: PERSON.NAME,
       url: siteURL,
       jobTitle: PERSON.JOB_TITLE,
@@ -68,6 +88,15 @@ const personSchema = includePersonSchema
       sameAs: PERSON.SAME_AS,
     }
   : null;
+
+// `Article.author` references the Person via @id when the author is the site
+// owner — search engines resolve the reference to the homepage's Person block
+// rather than treating each article's inline author as a separate entity.
+// Falls back to an inline Person for guest authors.
+const articleAuthor =
+  !author || author === PERSON.NAME
+    ? { "@id": SCHEMA_IDS.PERSON }
+    : { "@type": "Person", name: author };
 
 // Only emit Article schema when we have enough signal: ogType=article AND a publish date.
 // Without a date the schema is invalid anyway, so skipping it keeps validators clean.
@@ -80,19 +109,34 @@ const articleSchema =
         description,
         datePublished: publishedTime.toISOString(),
         ...(updatedTime && { dateModified: updatedTime.toISOString() }),
-        author: {
-          "@type": "Person",
-          name: author ?? PERSON.NAME,
-          url: siteURL,
-        },
+        author: articleAuthor,
         image: imageURL.toString(),
         ...(tags?.length && { keywords: tags.join(", ") }),
+        ...(basedOn && {
+          isBasedOn: { "@type": "WebPage", url: basedOn },
+        }),
+        ...(citations?.length && {
+          citation: citations.map((url) => ({ "@type": "WebPage", url })),
+        }),
         mainEntityOfPage: {
           "@type": "WebPage",
           "@id": canonicalURL.toString(),
         },
       }
     : null;
+
+const breadcrumbSchema = breadcrumbs?.length
+  ? {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: breadcrumbs.map((crumb, i) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        name: crumb.name,
+        item: new URL(crumb.url.toString(), Astro.site).toString(),
+      })),
+    }
+  : null;
 ---
 
 <!-- Global Metadata -->
@@ -181,6 +225,7 @@ const articleSchema =
 <script is:inline type="application/ld+json" set:html={JSON.stringify(websiteSchema)} />
 {personSchema && <script is:inline type="application/ld+json" set:html={JSON.stringify(personSchema)} />}
 {articleSchema && <script is:inline type="application/ld+json" set:html={JSON.stringify(articleSchema)} />}
+{breadcrumbSchema && <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)} />}
 
 <script is:inline>
   function init() {

@@ -105,9 +105,28 @@ const longDateFormatter = new Intl.DateTimeFormat("en-US", {
   year: "numeric",
   timeZone: SITE_TIMEZONE,
 });
+
+// Citations point at the contributing /reading/<slug> entries — search engines
+// read this as "this synthesis cites these sources." Absolute URLs because
+// schema.org `citation` items should be dereferenceable.
+const citations = sources.map(({ slug }) => `https://elliottsencan.com/reading/${slug}/`);
+const breadcrumbs = [
+  { name: "Home", url: "/" },
+  { name: "Wiki", url: "/wiki/" },
+  { name: concept.data.title, url: `/wiki/${concept.id}/` },
+];
 ---
 
-<Layout title={`Wiki: ${concept.data.title}`} description={concept.data.summary}>
+<Layout
+  title={`Wiki: ${concept.data.title}`}
+  description={concept.data.summary}
+  ogType="article"
+  schemaType="Article"
+  publishedTime={concept.data.compiled_at}
+  updatedTime={concept.data.last_source_added}
+  citations={citations}
+  breadcrumbs={breadcrumbs}
+>
   <div class="mx-auto max-w-5xl px-6 md:px-8">
     <div
       class="space-y-10"
@@ -148,6 +167,11 @@ const longDateFormatter = new Intl.DateTimeFormat("en-US", {
               {" · "}
               {longDateFormatter.format(concept.data.compiled_at)}
             </span>
+          </p>
+          <p class="text-xs text-black/55 dark:text-white/55">
+            Compiled by Claude.
+            {" "}
+            <Link href="/wiki/how-this-works">How this works →</Link>
           </p>
         </div>
 
@@ -212,12 +236,6 @@ const longDateFormatter = new Intl.DateTimeFormat("en-US", {
           </p>
         </aside>
       </div>
-
-      <p class="text-xs text-black/55 dark:text-white/55">
-        Compiled by Claude.
-        {" "}
-        <Link href="/wiki/how-this-works">How this works →</Link>
-      </p>
 
       {/*
         Ambient related-concepts strip — sits below the body. Soft cards, not

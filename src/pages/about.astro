@@ -1,5 +1,7 @@
 ---
 import Container from "@components/Container.astro";
+import EditorialList from "@components/EditorialList.astro";
+import EditorialListItem from "@components/EditorialListItem.astro";
 import EditorialRule from "@components/EditorialRule.astro";
 import LabeledRule from "@components/LabeledRule.astro";
 import Link from "@components/Link.astro";
@@ -10,29 +12,73 @@ import Layout from "@layouts/Layout.astro";
 // collections. This is a single page, the content changes rarely, and
 // collection ceremony earns nothing here. Dates are stored as plain strings
 // so the timeline reads in the order written; no coercion, no sorting.
+// ServiceNow is split into two entries because the IC → EM transition is
+// the load-bearing detail in the arc; collapsing it loses the signal.
 const career = [
   {
     company: "GrupBlox",
-    role: "Engineer",
+    role: "Principal Engineer",
     dates: "2024 — present",
-    blurb: "Developer tools and complex systems.",
+    blurb: "AI agent architecture, developer tooling, and frontend platform.",
     url: "https://grupblox.com",
   },
   {
-    company: "ServiceNow",
+    company: "Transposit",
     role: "Staff Software Engineer",
-    dates: "2019 — 2024",
-    blurb: "Platform and developer experience.",
+    dates: "2022 — 2023",
+    blurb: "Developer-facing automation for incident response.",
+    url: "https://www.transposit.com",
+  },
+  {
+    company: "ServiceNow",
+    role: "Engineering Manager, Platform UX",
+    dates: "2019 — 2022",
+    blurb: "Led a 10-person team building core platform UI.",
+    url: "https://www.servicenow.com",
+  },
+  {
+    company: "ServiceNow",
+    role: "Staff Software Engineer, Platform UX",
+    dates: "2014 — 2019",
+    blurb: "Render-pipeline performance and the prototype.js → Angular migration.",
     url: "https://www.servicenow.com",
   },
 ];
 
-const projectBlurbs = [
+// Projects mirror the active set in Linear (status: In Progress or
+// recently-Planned with a startedAt). When a project has a public
+// surface — case study, repo, live URL — it links there; otherwise
+// the title renders as plain text and the blurb does the work. The
+// `status` field becomes the meta column on the editorial list and
+// stands in for a date — projects don't have a single useful date the
+// way blog posts and reading entries do.
+const projectBlurbs: Array<{
+  title: string;
+  blurb: string;
+  status: string;
+  href?: string;
+  external?: boolean;
+}> = [
+  {
+    title: "Wiki synthesis pipeline",
+    blurb:
+      "Evaluated LLM pipeline that ingests reading, synthesizes per-concept wiki articles, and measures its own output.",
+    status: "Live",
+    href: "/projects/wiki-synthesis-pipeline",
+  },
   {
     title: "herald-ui",
     blurb:
-      "A design system for teams that don't want to re-solve the same primitives every quarter.",
-    href: "/projects",
+      "Open-source Angular library for AI chat interfaces — composable primitives inspired by assistant-ui.",
+    status: "In flight",
+    href: "https://github.com/herald-ui",
+    external: true,
+  },
+  {
+    title: "SSBD Platform v2.0",
+    blurb:
+      "Festival platform for Same Same But Different — backend-first, offline-resilient, mobile-led.",
+    status: "Aug 2026",
   },
 ];
 ---
@@ -48,85 +94,67 @@ const projectBlurbs = [
 
       <section class="space-y-4">
         <p class="font-sans text-base italic leading-relaxed text-black dark:text-white">
-          Elliott Sencan is an engineer in San Diego working on developer tools and
-          complex systems. Currently at GrupBlox; previously staff at ServiceNow.
+          Elliott Sencan is an engineer in San Diego working on AI agent
+          architecture, developer tools, and complex systems. Currently
+          Principal Engineer at GrupBlox; previously Staff at Transposit, and
+          before that eight years at ServiceNow across IC and engineering-management
+          tracks.
         </p>
         <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
           This site is where I write about software engineering, architecture,
           and craft. If you want to see what I'm thinking about right now, the
           <Link href="/now">/now page</Link> is more current than this one.
         </p>
+        <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
+          Outside of software, I co-own
+          <Link href="https://ssbdfest.com" external>Same Same But Different</Link>,
+          a 7,500-person music festival in Lake Perris, CA, and produce music as
+          Hollywood Principle (100M+ Spotify streams, video game placements).
+          Both inform how I think about systems and shipping.
+        </p>
       </section>
 
       <section class="space-y-4">
         <LabeledRule>Career</LabeledRule>
-        <ul class="not-prose flex flex-col gap-3 text-sm">
+        <EditorialList>
           {
             career.map((role) => (
-              <li class="flex items-baseline gap-4">
-                <span class="w-32 shrink-0 font-sans text-xs text-black/50 dark:text-white/60">
-                  {role.dates}
-                </span>
-                <span>
-                  <span class="font-heading font-medium text-black dark:text-white">
-                    {role.role}
-                    {" at "}
-                    {role.url ? (
-                      <Link href={role.url} external>
-                        {role.company}
-                      </Link>
-                    ) : (
-                      role.company
-                    )}
-                  </span>
-                  {role.blurb && (
-                    <span class="text-black/60 dark:text-white/60">
-                      {" — "}
-                      {role.blurb}
-                    </span>
+              <EditorialListItem meta={role.dates}>
+                <Fragment slot="title">
+                  {role.role}
+                  {" at "}
+                  {role.url ? (
+                    <Link href={role.url} external>
+                      {role.company}
+                    </Link>
+                  ) : (
+                    role.company
                   )}
-                </span>
-              </li>
+                </Fragment>
+                {role.blurb}
+              </EditorialListItem>
             ))
           }
-        </ul>
+        </EditorialList>
       </section>
 
 
       <section class="space-y-4">
         <LabeledRule>Projects</LabeledRule>
-        <!-- <div class="flex items-baseline justify-between">
-          
-          <Link href="/projects">
-            <span class="text-sm">All projects &rarr;</span>
-          </Link>
-        </div> -->
-        <ul class="not-prose flex flex-col gap-3 text-sm">
+        <EditorialList>
           {
             projectBlurbs.map((project) => (
-              <li class="flex items-baseline gap-4">
-                <span
-                  aria-hidden="true"
-                  class="shrink-0 text-xs text-black/50 dark:text-white/50"
-                >
-                  &middot;
-                </span>
-                <span>
-                  <Link
-                    href={project.href}
-                    class="font-heading font-medium text-black dark:text-white"
-                  >
-                    {project.title}
-                  </Link>
-                  <span class="text-black/60 dark:text-white/60">
-                    {" — "}
-                    {project.blurb}
-                  </span>
-                </span>
-              </li>
+              <EditorialListItem
+                title={project.title}
+                href={project.href}
+                external={project.external}
+                meta={project.status}
+              >
+                {project.blurb}
+              </EditorialListItem>
             ))
           }
-        </ul>
+        </EditorialList>
       </section>
 
       <section class="space-y-4">
