@@ -8,17 +8,25 @@
  * composites cleanly without being multiplied down by a parent opacity.
  *
  * `py-2` gives a 16px interactive band around the 1px dot line so the
- * cursor-tracking mousemove has a realistic hover zone. Margins dial back
- * to `my-8` to match the original visual rhythm (total vertical footprint
- * unchanged vs the old `my-10` + 1px rule).
+ * cursor-tracking mousemove has a realistic hover zone. The default `my-8`
+ * matches the original visual rhythm between major page sections; pass
+ * `compact` to drop the margins so the rule can sit inside a hero cell or
+ * other tight context where the surrounding flex/grid spacing already
+ * provides breathing room. The `class` passthrough lets callers stitch
+ * the rule into a grid via `col-start-…` / `row-start-…` placement.
  *
  * Decorative — hidden from assistive tech.
  */
+type Props = {
+  compact?: boolean;
+  class?: string;
+};
+const { compact = false, class: className = "" } = Astro.props;
 ---
 
 <div
   role="presentation"
   aria-hidden="true"
-  class="dot-rule my-8 h-px w-full py-2"
+  class:list={["dot-rule h-px w-full py-2", compact ? "my-0" : "my-8", className]}
 >
 </div>

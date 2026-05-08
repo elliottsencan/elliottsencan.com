@@ -26,7 +26,7 @@ const tags = [...new Set(posts.flatMap((post) => post.data.tags || []))].sort();
               class="inline-flex items-center rounded-sm bg-black/5 px-2 py-0.5 text-xs text-black/65 transition-colors hover:bg-black/10 hover:text-black focus-visible:bg-black/10 focus-visible:text-black dark:bg-white/5 dark:text-white/65 dark:hover:bg-white/10 dark:hover:text-white dark:focus-visible:bg-white/10 dark:focus-visible:text-white"
             >
               {tag}
-              <span class="ml-1.5 font-mono text-[11px] text-black/50 dark:text-white/50">
+              <span class="ml-1.5 font-mono text-xs text-black/50 dark:text-white/50">
                 {posts.filter((post) => post.data.tags?.includes(tag)).length}
               </span>
             </a>

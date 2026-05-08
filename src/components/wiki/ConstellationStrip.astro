@@ -9,29 +9,31 @@
  * 1-hop neighborhood, and its cluster region.
  *
  * Visual rules: design_handoff_constellation_v2/README.md §1.
- * Reference implementation: design_handoff_constellation_v2/source/v2.jsx.
  *
  * Hover/focus is implemented via data-attribute toggles on the SVG root —
  * CSS attribute selectors do all the visual transitions; the inline IIFE
  * only updates the attrs.
+ *
+ * Sizing: container is fully fluid. Pass desktop intent via `width`; the
+ * height is derived from the layout's natural viewBox aspect so the strip
+ * fills the container with no internal whitespace. All SVG font sizes are
+ * in viewBox user-units, so labels scale with the field.
  */
 import layout from "@data/constellation-layout.json";
+import {
+  STRIP_DEFAULT_WIDTH,
+  STRIP_VH,
+  STRIP_VW,
+  STRIP_VX,
+  STRIP_VY,
+} from "@lib/constellationGeometry";
 
 type Props = {
   width?: number;
-  height?: number;
-  mobileWidth?: number;
-  mobileHeight?: number;
   activeSlug?: string;
 };
 
-const {
-  width = 460,
-  height = 260,
-  mobileWidth = 350,
-  mobileHeight = 200,
-  activeSlug,
-} = Astro.props;
+const { width = STRIP_DEFAULT_WIDTH, activeSlug } = Astro.props;
 
 type LayoutNode = { id: string; x: number; y: number; weight: number };
 type LayoutEdge = { a: string; b: string };
@@ -43,32 +45,13 @@ const titles: Record<string, string> = layout.titles;
 const clusters: Cluster[] = layout.clusters;
 const clusterById: Record<string, string | null> = layout.clusterById;
 
-// ─── viewBox derivation ──────────────────────────────────────────────────
-// Padding values from the design spec. Top padding is larger to give cluster
-// names room to float above their region.
-const xs = nodes.map((n) => n.x);
-const ys = nodes.map((n) => n.y);
-const minX = Math.min(...xs);
-const maxX = Math.max(...xs);
-const minY = Math.min(...ys);
-const maxY = Math.max(...ys);
-
-const PAD_X = 56;
-const PAD_Y_TOP = 38;
-const PAD_Y_BOTTOM = 28;
-
-const VX = minX - PAD_X;
-const VY = minY - PAD_Y_TOP;
-const VW = maxX - minX + PAD_X * 2;
-const VH = maxY - minY + PAD_Y_TOP + PAD_Y_BOTTOM;
-
-// SVG text font-size sits in user-space units and scales with the viewBox.
-// At a 460×260 render over a ~750-wide viewBox the visual scale is ~0.6,
-// which crushes a font-size of 11 to ~6.7 screen pixels. Compute the
-// inverse scale and multiply intended screen-px sizes through, so values
-// in the markup read as "want this many CSS pixels at render time."
-const renderScale = Math.min(width / VW, height / VH);
-const sz = (px: number) => px / renderScale;
+// viewBox derivation lives in @lib/constellationGeometry so the local rail
+// can mirror it and both widgets render at identical pixel sizes when
+// passed the same `width`.
+const VX = STRIP_VX;
+const VY = STRIP_VY;
+const VW = STRIP_VW;
+const VH = STRIP_VH;
 
 // ─── weight normalization ────────────────────────────────────────────────
 const weights = nodes.map((n) => n.weight);
@@ -78,9 +61,12 @@ const wNorm = (w: number) => (wMax === wMin ? 0.5 : (w - wMin) / (wMax - wMin));
 
 // Density-aware radius scale — no-op below 80 concepts, shrinks smoothly
 // above. Keeps the strip legible as the corpus grows past the current 41.
+// Base sizes are tuned to match the visual prominence of nodes in the local
+// rail (active r=5, neighbor r=2.6), so the global field reads with similar
+// node weight per square viewBox unit.
 const N = nodes.length;
-const densityScale = Math.max(0.4, Math.min(1, 80 / N));
-const nodeR = (w: number) => (1.6 + 4.2 * wNorm(w)) * densityScale;
+const densityScale = Math.max(0.5, Math.min(1, 80 / N));
+const nodeR = (w: number) => (2.2 + 4.6 * wNorm(w)) * densityScale;
 
 // ─── adjacency (1-hop neighborhood per node) ─────────────────────────────
 const adj = new Map<string, Set<string>>();
@@ -154,8 +140,7 @@ function smoothClosed(points: Pt[]): string {
   return `${d} Z`;
 }
 
-// Group nodes by cluster, then build a per-cluster hull path + label position.
-const rawClusterGroups = clusters
+const clusterGroups = clusters
   .map((cl) => {
     const members = nodes.filter((n) => clusterById[n.id] === cl.id);
     if (members.length < 2) {
@@ -163,57 +148,16 @@ const rawClusterGroups = clusters
     }
     const hull = convexHull(members.map((n) => ({ x: n.x, y: n.y })));
     const path = smoothClosed(inflateHull(hull, 22));
-    const cx = members.reduce((s, n) => s + n.x, 0) / members.length;
-    const top = Math.min(...members.map((n) => n.y));
-    const labelY = Math.max(top - 12, VY + 18);
-    return { ...cl, path, labelX: cx, labelY };
+    return { ...cl, path };
   })
   .filter((g): g is NonNullable<typeof g> => g !== null);
 
-// Cluster-name collision: when two cluster centroids put their names at
-// similar (x, y), the italics stack illegibly. Greedily push later names
-// down by line-height when their bounding box would overlap an earlier
-// placed one. char-width is approximate — Neue Montreal italic at 14px
-// averages ~6.8px per character — but exact metrics aren't available at
-// SSG time, and this is a layout hint, not pixel-precise typesetting.
-// Both widths are scaled into viewBox units so the heuristic stays valid
-// regardless of viewBox-to-render scale.
-const CLUSTER_LABEL_CHAR_W = sz(6.8);
-const CLUSTER_LABEL_LINE_H = sz(22);
-const sortedForLayout = [...rawClusterGroups].sort((a, b) => a.labelY - b.labelY);
-const placedClusterLabels: Array<{
-  labelX: number;
-  labelY: number;
-  halfW: number;
-}> = [];
-const clusterGroups = sortedForLayout.map((g) => {
-  const halfW = (g.title.length * CLUSTER_LABEL_CHAR_W) / 2;
-  let y = g.labelY;
-  for (let attempt = 0; attempt < 6; attempt++) {
-    const collides = placedClusterLabels.some(
-      (p) =>
-        Math.abs(p.labelX - g.labelX) < p.halfW + halfW + 6 &&
-        Math.abs(p.labelY - y) < CLUSTER_LABEL_LINE_H,
-    );
-    if (!collides) {
-      break;
-    }
-    y += CLUSTER_LABEL_LINE_H;
-  }
-  placedClusterLabels.push({ labelX: g.labelX, labelY: y, halfW });
-  return { ...g, labelY: y };
-});
-
-// ─── footer caption ──────────────────────────────────────────────────────
-const captionText = `${clusterGroups.length} neighborhoods · ${nodes.length} concepts · ${edges.length} ties`;
-
-// Map for quick title lookup downstream.
 const nodeById = new Map(nodes.map((n) => [n.id, n]));
 ---
 
 <div
   class="constellation-strip"
-  style={`--cs-w: ${width}px; --cs-h: ${height}px; --cs-w-mobile: ${mobileWidth}px; --cs-aspect-mobile: ${mobileWidth} / ${mobileHeight};`}
+  style={`--cs-w: ${width}px; --cs-aspect: ${VW} / ${VH};`}
 >
   <svg
     id="constellation-strip"
@@ -236,27 +180,6 @@ const nodeById = new Map(nodes.map((n) => [n.id, n]));
           stroke="none"
           style={`--hue: ${g.hue};`}
         />
-      ))
-    }
-
-    {/* Cluster names — italic heading face, paper-stroke halo. */}
-    {
-      clusterGroups.map((g) => (
-        <text
-          class="cluster-name"
-          x={g.labelX}
-          y={g.labelY}
-          text-anchor="middle"
-          font-family="var(--font-heading)"
-          font-style="italic"
-          font-size={sz(14)}
-          letter-spacing="0.01em"
-          fill="currentColor"
-          opacity="0.55"
-          vector-effect="non-scaling-stroke"
-        >
-          {g.title}
-        </text>
       ))
     }
 
@@ -321,7 +244,7 @@ const nodeById = new Map(nodes.map((n) => [n.id, n]));
               y={n.y - r - 5}
               text-anchor="middle"
               font-family="var(--font-mono)"
-              font-size={sz(13)}
+              font-size="26"
               fill="currentColor"
             >
               {title}
@@ -330,73 +253,38 @@ const nodeById = new Map(nodes.map((n) => [n.id, n]));
         );
       })
     }
-
-    {/* Footer rule + caption — caption baseline sits a small margin above
-        the viewBox bottom; rule sits a full line-height above the caption
-        baseline. Both derive from the scaled font size so the spacing stays
-        correct as render scale shifts. */}
-    <line
-      class="footer-rule"
-      x1={VX + 4}
-      y1={VY + VH - sz(3) - sz(20)}
-      x2={VX + VW - 4}
-      y2={VY + VH - sz(3) - sz(20)}
-      stroke="currentColor"
-      stroke-width="0.5"
-      vector-effect="non-scaling-stroke"
-      opacity="0.25"
-    />
-    <text
-      class="footer-caption"
-      x={VX + 6}
-      y={VY + VH - sz(3)}
-      font-family="var(--font-mono)"
-      font-size={sz(11)}
-      fill="currentColor"
-      opacity="0.55"
-    >
-      {captionText}
-    </text>
   </svg>
 </div>
 
 <style is:global>
   /* ─── Sizing ─────────────────────────────────────────────────────────
-     Mobile is fluid: the strip fills its container, capped at the
-     mobileWidth prop, with height derived from the mobile aspect
-     ratio. Desktop (≥ md:) locks to the fixed width/height props.
-     The SVG inside fills 100%/100% and viewBox + preserveAspectRatio
-     handle geometry scaling — font and stroke sizes derive from the
-     desktop renderScale at SSG time, so they shrink proportionally
-     when the strip is rendered narrower than its desktop intent. */
+     Fully container-driven: the strip fills its parent up to the desktop
+     intent (--cs-w), preserving aspect ratio. The SVG inside fills 100%
+     and viewBox + preserveAspectRatio handle geometry. All SVG fonts and
+     stroke widths sit in viewBox user-units, so they scale with the
+     field — no JS, no media query, no SSG-time scale math. */
   .constellation-strip {
     width: 100%;
-    max-width: var(--cs-w-mobile);
-    aspect-ratio: var(--cs-aspect-mobile);
+    max-width: var(--cs-w);
+    aspect-ratio: var(--cs-aspect);
     color: rgb(0 0 0 / 0.88);
-  }
-  @media (min-width: 768px) {
-    .constellation-strip {
-      width: var(--cs-w);
-      height: var(--cs-h);
-      max-width: none;
-      aspect-ratio: auto;
-    }
   }
   .dark .constellation-strip {
     color: rgb(255 255 255 / 0.88);
   }
 
   /* ─── Cluster regions ───────────────────────────────────────────────── */
+  /* Opacity matches the local rail (0.5 base / 1.0 active) — consistent
+     color weight between global and per-concept views. */
   #constellation-strip .region {
     fill: oklch(0.86 0.04 var(--hue));
-    opacity: 0.55;
+    opacity: 0.5;
     transition:
       fill 200ms ease,
       opacity 200ms ease;
   }
   .dark #constellation-strip .region {
-    fill: oklch(0.32 0.04 var(--hue));
+    fill: oklch(0.34 0.04 var(--hue));
   }
   /* Focused cluster swaps to higher chroma at full opacity. */
   #constellation-strip .region[data-on] {
@@ -405,25 +293,6 @@ const nodeById = new Map(nodes.map((n) => [n.id, n]));
   }
   .dark #constellation-strip .region[data-on] {
     fill: oklch(0.42 0.07 var(--hue));
-  }
-
-  /* ─── Cluster names ─────────────────────────────────────────────────── */
-  #constellation-strip .cluster-name {
-    paint-order: stroke fill;
-    stroke: #f6f4ef;
-    stroke-width: 4px;
-    stroke-linejoin: round;
-    pointer-events: none;
-    font-feature-settings: "ss01" 1;
-    transition: opacity 150ms ease;
-  }
-  .dark #constellation-strip .cluster-name {
-    stroke: #18161a;
-  }
-  /* On focus, the cluster names step aside so the active node's label has
-     the field. Cluster identity still reads through the brightened region. */
-  #constellation-strip[data-focus] .cluster-name {
-    opacity: 0;
   }
 
   /* ─── Edges ─────────────────────────────────────────────────────────── */
@@ -497,7 +366,6 @@ const nodeById = new Map(nodes.map((n) => [n.id, n]));
     }
   }
   @media (prefers-reduced-motion: reduce) {
-    /* Spec: render the inner accent dot statically, no animate. */
     #constellation-strip .breathe-ring {
       display: none !important;
       animation: none !important;

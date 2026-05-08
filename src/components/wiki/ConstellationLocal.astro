@@ -1,26 +1,39 @@
 ---
 /**
- * Constellation rail — V2 "Cluster constellations".
+ * Constellation rail — V2 "Cluster constellations" (per-concept).
  *
  * Hero widget on /wiki/[slug]. Renders the active concept and its 1-hop
- * neighborhood as a 200×200 field with editorial corner ticks, a cluster
- * region behind the locals, an italic cluster name floated above, and a
- * single ambient breathe ring on the active node.
+ * neighborhood as a field with a tinted cluster region and a single
+ * ambient breathe ring on the active node.
  *
- * Visual rules: design_handoff_constellation_v2/README.md §2.
- * Reference implementation: design_handoff_constellation_v2/source/v2.jsx
- * (the RailV2 export).
+ * No on-SVG chrome — cluster identity and neighbor count are surfaced by
+ * the page caption (col 2 row 3 in the slug-page hero grid), not by labels
+ * inside the SVG.
+ *
+ * Sizing: aspect-locked to the strip via @lib/constellationGeometry, so
+ * the slug-page rail and the index strip render at identical pixel
+ * dimensions when given the same `width`. Local content sits centered
+ * within the wider strip-aspect viewBox.
  *
  * No hover protocol — `active` is always the page slug, set once at render.
  */
 import layout from "@data/constellation-layout.json";
+import {
+  LOCAL_VH,
+  LOCAL_VW,
+  LOCAL_VX,
+  LOCAL_VY,
+  STRIP_DEFAULT_WIDTH,
+  STRIP_VH,
+  STRIP_VW,
+} from "@lib/constellationGeometry";
 
 type Props = {
   slug: string;
-  size?: number;
+  width?: number;
 };
 
-const { slug, size = 220 } = Astro.props;
+const { slug, width = STRIP_DEFAULT_WIDTH } = Astro.props;
 
 type LocalNode = { id: string; x: number; y: number };
 type LocalEdge = { a: string; b: string };
@@ -48,7 +61,6 @@ const localGroups: Group[] = local
   : [];
 
 const myCluster = clusterById[slug];
-const myClusterMeta = myCluster ? clusters.find((c) => c.id === myCluster) : null;
 
 // ─── geometry helpers (mirror the strip; pad shrinks for the local view) ─
 type Pt = { x: number; y: number };
@@ -126,12 +138,16 @@ const NEIGHBOR_R = 2.6;
 
 {
   local && local.nodes.length > 1 && (
-    <div class="constellation-local" style={`width: ${size}px;`}>
+    <div
+      class="constellation-local"
+      style={`--cl-w: ${width}px; --cl-aspect: ${STRIP_VW} / ${STRIP_VH};`}
+    >
       <svg
         class="constellation-local-svg"
-        width={size}
-        height={size + 16}
-        viewBox="-10 -10 220 236"
+        viewBox={`${LOCAL_VX} ${LOCAL_VY} ${LOCAL_VW} ${LOCAL_VH}`}
+        width="100%"
+        height="100%"
+        preserveAspectRatio="xMidYMid meet"
         role="img"
         aria-label={`Neighborhood graph for ${titles[slug] ?? slug}`}
       >
@@ -146,35 +162,6 @@ const NEIGHBOR_R = 2.6;
             style={`--hue: ${g.hue};`}
           />
         ))}
-
-        {/* Editorial corner ticks at the corners of the 0..200 inner box. */}
-        <g class="corner-ticks" stroke="currentColor" stroke-width="1" opacity="0.45">
-          {/* top-left */}
-          <line x1="0" y1="0" x2="9" y2="0" vector-effect="non-scaling-stroke" />
-          <line x1="0" y1="0" x2="0" y2="9" vector-effect="non-scaling-stroke" />
-          {/* top-right */}
-          <line x1="200" y1="0" x2="191" y2="0" vector-effect="non-scaling-stroke" />
-          <line x1="200" y1="0" x2="200" y2="9" vector-effect="non-scaling-stroke" />
-          {/* bottom-left */}
-          <line x1="0" y1="200" x2="9" y2="200" vector-effect="non-scaling-stroke" />
-          <line x1="0" y1="200" x2="0" y2="191" vector-effect="non-scaling-stroke" />
-          {/* bottom-right */}
-          <line x1="200" y1="200" x2="191" y2="200" vector-effect="non-scaling-stroke" />
-          <line x1="200" y1="200" x2="200" y2="191" vector-effect="non-scaling-stroke" />
-        </g>
-
-        {/* Top edge rule — gives the field its "lifted off the page" feel. */}
-        <line
-          class="top-rule"
-          x1="0"
-          y1="0"
-          x2="200"
-          y2="0"
-          stroke="currentColor"
-          stroke-width="1"
-          opacity="0.5"
-          vector-effect="non-scaling-stroke"
-        />
 
         {/* Edges — incident to active go to accent. */}
         {local.edges.map((e) => {
@@ -229,51 +216,28 @@ const NEIGHBOR_R = 2.6;
                 y={n.y - r - 4}
                 text-anchor="middle"
                 font-family="var(--font-mono)"
-                font-size="10"
+                font-size="14"
                 fill="currentColor"
-                vector-effect="non-scaling-stroke"
               >
                 {title}
               </text>
             </a>
           );
         })}
-
-        {/* Cluster name floated above the field. */}
-        {myClusterMeta && (
-          <text
-            class="cluster-name"
-            x={100}
-            y={-2}
-            text-anchor="middle"
-            font-family="var(--font-heading)"
-            font-style="italic"
-            font-size="11"
-            fill="currentColor"
-            opacity="0.6"
-          >
-            {myClusterMeta.short}
-          </text>
-        )}
-
-        <text
-          class="footer-caption"
-          x="0"
-          y="220"
-          font-family="var(--font-mono)"
-          font-size="10"
-          fill="currentColor"
-          opacity="0.55"
-        >
-          {local.nodes.length - 1} neighbors
-        </text>
       </svg>
     </div>
   )
 }
 
 <style>
+  /* Aspect-locked to the strip via @lib/constellationGeometry, so passing
+     the same `width` to both widgets renders them at identical pixel
+     sizes. viewBox + preserveAspectRatio handle the geometry; user-unit
+     fonts and non-scaling strokes scale with the field. */
   .constellation-local {
+    width: 100%;
+    max-width: var(--cl-w);
+    aspect-ratio: var(--cl-aspect);
     color: rgb(0 0 0 / 0.88);
   }
   :global(.dark) .constellation-local {
@@ -294,25 +258,6 @@ const NEIGHBOR_R = 2.6;
   }
   .constellation-local :global(.region[data-active]) {
     opacity: 1;
-  }
-
-  /* Cluster name halo so it stays legible over the region tint. */
-  .constellation-local :global(.cluster-name) {
-    paint-order: stroke fill;
-    stroke: #f6f4ef;
-    stroke-width: 4px;
-    stroke-linejoin: round;
-    pointer-events: none;
-    transition: opacity 150ms ease;
-  }
-  :global(.dark) .constellation-local :global(.cluster-name) {
-    stroke: #18161a;
-  }
-  /* When a neighbor is being inspected, the active concept's cluster label
-     steps aside so the neighbor's own label has the field. */
-  .constellation-local :global(.constellation-local-svg:has(.node.neighbor:hover)) :global(.cluster-name),
-  .constellation-local :global(.constellation-local-svg:has(.node.neighbor:focus-visible)) :global(.cluster-name) {
-    opacity: 0;
   }
 
   /* Edges — base opacity dropped in dark mode to match the strip; near-white
@@ -350,7 +295,7 @@ const NEIGHBOR_R = 2.6;
     opacity: 1;
   }
 
-  /* Hover-revealed labels — same paint-order halo treatment as the strip. */
+  /* Hover-revealed labels — paint-order halo for legibility over edges. */
   .constellation-local :global(.node.neighbor .label) {
     opacity: 0;
     pointer-events: none;
@@ -360,6 +305,7 @@ const NEIGHBOR_R = 2.6;
     stroke-width: 4px;
     stroke-linejoin: round;
     fill: var(--accent);
+    vector-effect: non-scaling-stroke;
   }
   :global(.dark) .constellation-local :global(.node.neighbor .label) {
     stroke: #18161a;

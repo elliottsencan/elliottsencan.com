@@ -223,7 +223,7 @@ const trails = [
                     {trail.blurb}
                   </p>
                   {trail.latest && (
-                    <p class="relative z-10 m-0 w-fit font-mono text-[11px] tracking-wider text-black/55 dark:text-white/55">
+                    <p class="relative z-10 m-0 w-fit font-mono text-xs tracking-wider text-black/55 dark:text-white/55">
                       latest ·{" "}
                       <Link href={trail.latest.href} class="font-sans text-xs">
                         {trail.latest.title}
@@ -247,7 +247,7 @@ const trails = [
                         >
                           {trail.stat.n}
                         </span>
-                        <span class="font-mono text-[10px] uppercase tracking-widest text-black/55 md:mt-1 dark:text-white/55">
+                        <span class="font-mono text-xs uppercase tracking-widest text-black/55 md:mt-1 dark:text-white/55">
                           {trail.stat.unit}
                         </span>
                       </div>
@@ -316,7 +316,7 @@ const trails = [
                     </div>
 
                     {trail.stat.aux && (
-                      <span class="font-mono text-[10px] tracking-wider text-black/55 md:w-full md:text-right dark:text-white/55">
+                      <span class="font-mono text-xs tracking-wider text-black/55 md:w-full md:text-right dark:text-white/55">
                         {trail.stat.aux}
                       </span>
                     )}
