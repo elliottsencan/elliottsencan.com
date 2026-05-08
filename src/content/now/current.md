@@ -2,7 +2,7 @@
 title: "Now"
 description: "What I'm working on right now."
 updated: 2026-05-03
-standfirst: "Grupblox and a public Karpathy LLM wiki"
+standfirst: "Engineer in San Diego. Building Grupblox, advising at ShopTickets.net, the Same Same But Different Festival app, and a Karpathy LLM-wiki pipeline for this site."
 ---
 
 ## Building

@@ -6,11 +6,20 @@ import SignatureLogo from "./SignatureLogo.astro";
 
 <header transition:persist>
   <Container>
-    <div class="flex flex-wrap items-center justify-between gap-y-2">
-      <Link href="/" underline={false}>
+    {/* Header layout: signature anchored left, nav stays on the same row at
+        every breakpoint and scrolls horizontally if its content overflows.
+        The right-edge mask fades the trailing nav item so the row signals
+        scroll affordance without showing a scrollbar (which would clash
+        with the editorial chrome). The previous layout used flex-wrap, so
+        on narrow phones the nav broke into a second row of two-three
+        items each — looked accidental rather than intentional. */}
+    <div class="flex items-center justify-between gap-3">
+      <Link href="/" underline={false} class="shrink-0">
         <SignatureLogo />
       </Link>
-      <nav class="flex flex-wrap items-center gap-x-3.5 gap-y-1 text-sm sm:gap-x-5">
+      <nav
+        class="header-nav flex min-w-0 flex-1 items-center justify-end gap-x-3.5 overflow-x-auto whitespace-nowrap text-sm sm:gap-x-5"
+      >
         <Link href="/now">now</Link>
         <Link href="/reading">reading</Link>
         <Link href="/wiki">wiki</Link>
@@ -96,3 +105,31 @@ import SignatureLogo from "./SignatureLogo.astro";
     </div>
   </Container>
 </header>
+
+<style>
+  /* Hide the horizontal-scroll scrollbar — the right-edge fade carries the
+     scroll affordance instead. Touch swipe still works on mobile, and
+     keyboard users still get arrow-key scrolling on the focused nav. */
+  .header-nav {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    /* Soft fade on the trailing edge so the last visible item dissolves
+       rather than ending in a hard cut. mask is content-only; clipping
+       happens via overflow-x: auto on the same element. */
+    mask-image: linear-gradient(
+      to right,
+      black 0,
+      black calc(100% - 1.5rem),
+      transparent 100%
+    );
+    -webkit-mask-image: linear-gradient(
+      to right,
+      black 0,
+      black calc(100% - 1.5rem),
+      transparent 100%
+    );
+  }
+  .header-nav::-webkit-scrollbar {
+    display: none;
+  }
+</style>

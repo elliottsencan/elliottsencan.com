@@ -3,34 +3,37 @@ import { getCollection, getEntry } from "astro:content";
 import Container from "@components/Container.astro";
 import LabeledRule from "@components/LabeledRule.astro";
 import Link from "@components/Link.astro";
+import Sparkline from "@components/labs/Sparkline.astro";
 import Masthead from "@components/Masthead.astro";
 import { HOME } from "@consts";
 import Layout from "@layouts/Layout.astro";
+import { loadLabData } from "@lib/lab-data";
+import { SITE_TIMEZONE } from "@lib/utils";
 
-// The homepage IS the writing feed — flat reverse-chron, no slice, no year
-// grouping, no bio. Post titles + dates are the entire content below the
-// masthead dateline; full bio lives at /about.
+// Homepage layout: Masthead → Recent posts → Where this writing comes from
+// (the wiki-led trail cards). Writing list mirrors /reading's grammar so
+// the rhythm reads as one site rather than two. Trail cards drop the count
+// caption in favour of an inline stat block (number + unit + a small
+// mini-viz + aux line) so each surface signals scale and cadence at a
+// glance, on real data only.
 const posts = (await getCollection("blog"))
   .filter((post) => !post.data.draft)
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 
-// Standfirst is co-authored by the /now drafting step and lives in the
-// now collection's frontmatter. One sentence, landing-page dateline. If
-// the entry or field is missing (old seed, edge case), the block is
-// skipped and the writing list sits directly under the Masthead rule.
 const nowEntry = await getEntry("now", "current");
 const standfirst = nowEntry?.data.standfirst;
 
-const dateFormatter = new Intl.DateTimeFormat("en-US", {
+const longDate = new Intl.DateTimeFormat("en-US", {
   day: "numeric",
   month: "long",
   year: "numeric",
 });
+const compactDate = new Intl.DateTimeFormat("en-US", {
+  day: "2-digit",
+  month: "short",
+  timeZone: SITE_TIMEZONE,
+});
 
-// Trails — three input/synthesis/data surfaces, surfaced from the home
-// page so the new IA is legible without bloating the nav. Counts and
-// "latest" lines are computed at build from the live collections so
-// they stay accurate as content lands.
 const reading = await getCollection("reading");
 const wiki = await getCollection("wiki");
 const labs = await getCollection("labs");
@@ -41,35 +44,112 @@ const latestReading = [...reading].sort(
 const latestWiki = [...wiki].sort(
   (a, b) => b.data.compiled_at.valueOf() - a.data.compiled_at.valueOf(),
 )[0];
-const latestLab = [...labs].sort(
-  (a, b) => b.data.lastRunDate.valueOf() - a.data.lastRunDate.valueOf(),
-)[0];
+// Prefer the most-recent live cell with a concrete headline value over
+// one whose first run is still pending (TBD / em-dash placeholder). The
+// homepage signal is "this number is real today," not "we have a card
+// reserved for a future number."
+const isConcreteValue = (v: string) => !/^(tbd|—|-|n\/a)$/i.test(v.trim());
+const liveLabs = labs.filter((l) => l.data.status === "live");
+const sortByLastRun = <T extends { data: { lastRunDate: Date } }>(arr: T[]): T[] =>
+  [...arr].sort((a, b) => b.data.lastRunDate.valueOf() - a.data.lastRunDate.valueOf());
+const latestLab =
+  sortByLastRun(liveLabs.filter((l) => isConcreteValue(l.data.headlineMetric.value)))[0] ??
+  sortByLastRun(liveLabs)[0] ??
+  sortByLastRun(labs)[0];
 
-const totalSources = wiki.reduce((sum, concept) => sum + concept.data.sources.length, 0);
+// Wiki signal: total contributing-source citations across every concept.
+// One entry can be cited from multiple concepts, so this is the reach of
+// the synthesis rather than the deduped reading count.
+const wikiCitationCount = wiki.reduce((sum, c) => sum + c.data.sources.length, 0);
+
+// Reading cadence — last 12 weeks, bucketed by week-of (Pacific). Empty
+// weeks render as a 1-unit bar so the row reads as a continuous rhythm
+// rather than a gappy column chart.
+const WEEKS = 12;
+function pacificWeekStart(d: Date): number {
+  // Convert to PT then floor to Monday 00:00. The PT offset bounces
+  // between -7 and -8 across DST; for week-bucketing the off-by-an-hour
+  // edge cases all collapse to adjacent weeks at midnight, which doesn't
+  // change the cadence reading.
+  const pt = new Date(d.getTime() - 7 * 60 * 60 * 1000);
+  const day = pt.getUTCDay();
+  const diff = (day + 6) % 7;
+  pt.setUTCDate(pt.getUTCDate() - diff);
+  pt.setUTCHours(0, 0, 0, 0);
+  return pt.getTime();
+}
+const thisWeekStart = pacificWeekStart(new Date());
+const cadenceBuckets: number[] = Array.from({ length: WEEKS }, () => 0);
+for (const entry of reading) {
+  const weekStart = pacificWeekStart(entry.data.added);
+  const weeksAgo = Math.round((thisWeekStart - weekStart) / (1000 * 60 * 60 * 24 * 7));
+  if (weeksAgo >= 0 && weeksAgo < WEEKS) {
+    cadenceBuckets[WEEKS - 1 - weeksAgo] += 1;
+  }
+}
+const thisWeekCount = cadenceBuckets[WEEKS - 1];
+const cadenceMax = Math.max(1, ...cadenceBuckets);
+
+// Labs spark — pull the latest live cell's chart values.
+const labSparkData =
+  latestLab && latestLab.data.kind === "chart" ? await loadLabData(latestLab.data.dataPath) : null;
+const labSparkValues =
+  labSparkData &&
+  typeof labSparkData === "object" &&
+  Array.isArray((labSparkData as { values?: unknown }).values)
+    ? (labSparkData as { values: number[] }).values
+    : null;
+const lastRunIso = latestLab
+  ? new Intl.DateTimeFormat("en-CA", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      timeZone: SITE_TIMEZONE,
+    }).format(latestLab.data.lastRunDate)
+  : null;
 
 const trails = [
   {
-    key: "reading",
+    key: "wiki" as const,
+    href: "/wiki",
+    blurb:
+      "Concept-indexed synthesis. One article per topic with two or more contributing sources from the reading log, recompiled per batch with a citation-faithfulness sidecar attached.",
+    latest: latestWiki ? { title: latestWiki.data.title, href: `/wiki/${latestWiki.id}/` } : null,
+    stat: {
+      n: wiki.length.toString(),
+      unit: wiki.length === 1 ? "concept" : "concepts",
+      aux: `${wikiCitationCount} contributing source ${wikiCitationCount === 1 ? "citation" : "citations"}`,
+    },
+  },
+  {
+    key: "reading" as const,
     href: "/reading",
-    caption: `${reading.length} sources`,
-    blurb: "Per-source citation log. The raw input.",
+    blurb:
+      "Per-source citation log. One file per URL I've saved from my phone, summarized and topic-tagged at ingest. The raw input the wiki compiles over.",
     latest: latestReading
       ? { title: latestReading.data.title, href: `/reading/${latestReading.id}/` }
       : null,
+    stat: {
+      n: reading.length.toString(),
+      unit: reading.length === 1 ? "source" : "sources",
+      aux: thisWeekCount > 0 ? `+${thisWeekCount} this week` : `${WEEKS}-week cadence shown`,
+    },
   },
   {
-    key: "wiki",
-    href: "/wiki",
-    caption: `${wiki.length} articles`,
-    blurb: "Synthesis. Concepts compiled across multiple sources.",
-    latest: latestWiki ? { title: latestWiki.data.title, href: `/wiki/${latestWiki.id}/` } : null,
-  },
-  {
-    key: "labs",
+    key: "labs" as const,
     href: "/labs",
-    caption: labs.length > 0 ? `${labs.length} cells` : "data behind posts",
-    blurb: "Numbers behind the posts. Cost, evals, telemetry.",
+    blurb:
+      "Numbers behind the posts. Cost breakdowns, eval runs, telemetry — each cell names a question and reports a measurement against it.",
     latest: latestLab ? { title: latestLab.data.title, href: `/labs/${latestLab.id}/` } : null,
+    stat: latestLab
+      ? {
+          n: latestLab.data.headlineMetric.value,
+          unit: latestLab.data.headlineMetric.label.toLowerCase(),
+          aux:
+            `${labs.length} ${labs.length === 1 ? "cell" : "cells"}` +
+            (lastRunIso ? ` · last run ${lastRunIso}` : ""),
+        }
+      : null,
   },
 ];
 ---
@@ -82,31 +162,38 @@ const trails = [
       {
         posts.length > 0 ? (
           <>
-            <LabeledRule as="h2">Writing</LabeledRule>
+            <LabeledRule as="h2">Recent posts</LabeledRule>
             <section data-pagefind-ignore>
-              <ul class="not-prose flex flex-col gap-3 text-sm">
+              <ul class="not-prose flex flex-col gap-6 text-sm">
                 {posts.map((post) => (
-                  <li class="flex items-baseline gap-4">
+                  <li class="flex flex-col gap-2 md:flex-row md:items-baseline md:gap-4">
+                    {/* Desktop dated column. Hidden on mobile so the date
+                        can move into the title row, mirroring /reading's
+                        mobile-hard variant. */}
                     <time
                       datetime={post.data.date.toISOString()}
-                      class="w-32 shrink-0 font-sans text-xs text-black/50 dark:text-white/60"
+                      class="hidden w-32 shrink-0 font-sans text-xs text-black/50 md:block dark:text-white/60"
                     >
-                      {dateFormatter.format(post.data.date)}
+                      {longDate.format(post.data.date)}
                     </time>
-                    <span>
-                      <Link
-                        href={`/writing/${post.id}`}
-                        class="font-heading font-medium text-black dark:text-white"
-                      >
-                        {post.data.title}
-                      </Link>
-                      {post.data.description && (
-                        <span class="text-black/60 dark:text-white/60">
-                          {" — "}
-                          {post.data.description}
+                    <div class="flex-1 space-y-1.5">
+                      <div class="flex items-baseline justify-between gap-3 md:block">
+                        <Link
+                          href={`/writing/${post.id}`}
+                          class="font-heading font-medium text-black dark:text-white"
+                        >
+                          {post.data.title}
+                        </Link>
+                        <span class="shrink-0 font-mono text-[11px] tracking-wider text-black/55 md:hidden dark:text-white/55">
+                          {compactDate.format(post.data.date)}
                         </span>
+                      </div>
+                      {post.data.description && (
+                        <p class="leading-relaxed text-black/75 dark:text-white/75">
+                          {post.data.description}
+                        </p>
                       )}
-                    </span>
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -116,30 +203,45 @@ const trails = [
       }
 
       {/*
-        Trails — three input/synthesis/data surfaces in one row. Lets the new
-        IA show on the home page without bloating the nav.
+        Trail cards — wiki leads, reading + labs follow. Each card pairs a
+        prose body (slug, blurb, latest pointer) with a stat block (number,
+        unit, mini-viz, aux). On md+ the stat sits as a right column; on
+        mobile it collapses to a horizontal strip beneath the prose.
       */}
-      <LabeledRule as="h2">Trails</LabeledRule>
+      <LabeledRule as="h2">Where this writing comes from</LabeledRule>
       <section data-pagefind-ignore>
-        <ul class="not-prose flex flex-col gap-6 text-sm">
+        <ol class="not-prose flex flex-col">
           {
-            trails.map((trail) => (
-              <li class="flex items-baseline gap-4">
-                <span class="w-24 md:w-30 shrink-0 font-mono text-[11px] uppercase tracking-wider text-black/55 dark:text-white/55">
-                  {trail.caption}
-                </span>
-                <div class="flex-1 space-y-1.5">
+            trails.map((trail, i) => (
+              <li
+                class:list={[
+                  "group relative grid grid-cols-1 gap-5 border-t border-black/10 py-5 first:border-t-0 md:grid-cols-[minmax(0,1fr)_minmax(10rem,16rem)] md:gap-8 md:py-6 dark:border-white/10",
+                  i === trails.length - 1 && "border-b border-black/10 dark:border-white/10",
+                ]}
+              >
+                <div class="space-y-2.5">
+                  {/* Stretched-link slug. The ::before pseudo serves two
+                      jobs: it extends the click target across the entire
+                      <li> (since the <li> is the nearest positioned
+                      ancestor), and it's the canvas for the hover-state
+                      background. -inset-x-3 / md:-inset-x-4 lets that
+                      background extend slightly past the container content
+                      edges into the gutter, so the body text inside the
+                      card stays flush with the standfirst and section
+                      labels above while hover still reads as a card with
+                      breathing room. The latest pointer below opts back
+                      into pointer events with relative z-10. */}
                   <Link
                     href={trail.href}
-                    class="font-heading font-medium text-black dark:text-white"
+                    class="font-heading font-medium text-black no-underline group-hover:text-[color:var(--accent)] before:absolute before:inset-y-0 before:-inset-x-3 before:rounded-md before:transition-colors before:content-[''] hover:before:bg-black/[0.03] md:before:-inset-x-4 dark:text-white dark:hover:before:bg-white/[0.03]"
                   >
                     /{trail.key}
                   </Link>
-                  <p class="leading-relaxed text-black/75 dark:text-white/75">
+                  <p class="m-0 text-[0.92rem] leading-relaxed text-black/75 dark:text-white/75">
                     {trail.blurb}
                   </p>
                   {trail.latest && (
-                    <p class="font-mono text-[11px] text-black/55 dark:text-white/55">
+                    <p class="relative z-10 m-0 w-fit font-mono text-[11px] tracking-wider text-black/55 dark:text-white/55">
                       latest ·{" "}
                       <Link href={trail.latest.href} class="font-sans text-xs">
                         {trail.latest.title}
@@ -147,10 +249,101 @@ const trails = [
                     </p>
                   )}
                 </div>
+
+                {trail.stat && (
+                  <div class="flex flex-col gap-2 md:items-end">
+                    {/* Mobile: number + unit inline ("41 CONCEPTS") with the
+                        mini-viz pinned to the right of the row, aux line on
+                        its own line below. Desktop: number/unit stack
+                        right-aligned, viz spans the column width beneath,
+                        aux line below right. */}
+                    <div class="flex w-full items-end gap-3 md:flex-col md:items-end md:gap-2">
+                      <div class="flex items-baseline gap-2 md:flex-col md:items-end md:gap-0">
+                        <span
+                          class="font-heading text-2xl font-medium leading-none text-black dark:text-white"
+                          style="font-variant-numeric: tabular-nums;"
+                        >
+                          {trail.stat.n}
+                        </span>
+                        <span class="font-mono text-[10px] uppercase tracking-widest text-black/55 md:mt-1 dark:text-white/55">
+                          {trail.stat.unit}
+                        </span>
+                      </div>
+
+                      <div class="ml-auto w-24 shrink-0 text-black/65 sm:w-32 md:ml-0 md:w-full md:shrink-0 dark:text-white/65">
+                      {/* /wiki — small concept cluster, decorative. The
+                          live concept graph lives at /wiki; this is the
+                          visual hint that the surface is graph-shaped. */}
+                      {trail.key === "wiki" && (
+                        <svg
+                          viewBox="0 0 80 40"
+                          aria-hidden="true"
+                          class="h-8 w-full"
+                          preserveAspectRatio="xMaxYMid meet"
+                        >
+                          <line x1="12" y1="22" x2="32" y2="10" stroke="currentColor" stroke-width="0.5" opacity="0.3" />
+                          <line x1="32" y1="10" x2="54" y2="24" stroke="currentColor" stroke-width="0.5" opacity="0.3" />
+                          <line x1="54" y1="24" x2="68" y2="14" stroke="currentColor" stroke-width="0.5" opacity="0.3" />
+                          <line x1="32" y1="10" x2="40" y2="30" stroke="currentColor" stroke-width="0.5" opacity="0.3" />
+                          <line x1="40" y1="30" x2="54" y2="24" stroke="currentColor" stroke-width="0.5" opacity="0.3" />
+                          <circle cx="12" cy="22" r="1.6" fill="currentColor" opacity="0.7" />
+                          <circle cx="32" cy="10" r="2.2" fill="var(--accent)" />
+                          <circle cx="40" cy="30" r="1.6" fill="currentColor" opacity="0.7" />
+                          <circle cx="54" cy="24" r="2" fill="currentColor" opacity="0.85" />
+                          <circle cx="68" cy="14" r="1.4" fill="currentColor" opacity="0.6" />
+                        </svg>
+                      )}
+
+                      {/* /reading — last 12 weeks of cadence, real data.
+                          Min-height clamps so quiet weeks still register.
+                          Last bar is the current week, painted in accent. */}
+                      {trail.key === "reading" && (
+                        <svg
+                          viewBox="0 0 80 40"
+                          aria-hidden="true"
+                          class="h-8 w-full"
+                          preserveAspectRatio="none"
+                        >
+                          {cadenceBuckets.map((v, idx) => {
+                            const barW = 80 / WEEKS - 1.4;
+                            const x = idx * (80 / WEEKS) + 0.7;
+                            const h = Math.max(2, (v / cadenceMax) * 36);
+                            const y = 38 - h;
+                            const isCurrent = idx === WEEKS - 1;
+                            return (
+                              <rect
+                                x={x}
+                                y={y}
+                                width={barW}
+                                height={h}
+                                fill={isCurrent ? "var(--accent)" : "currentColor"}
+                                opacity={isCurrent ? 1 : 0.55}
+                              />
+                            );
+                          })}
+                        </svg>
+                      )}
+
+                      {/* /labs — sparkline of the latest live cell's
+                          underlying values. Reuses the labs <Sparkline />
+                          so the rendering matches the /labs index. */}
+                      {trail.key === "labs" && labSparkValues && labSparkValues.length > 0 && (
+                        <Sparkline data={labSparkValues} height={32} />
+                      )}
+                      </div>
+                    </div>
+
+                    {trail.stat.aux && (
+                      <span class="font-mono text-[10px] tracking-wider text-black/55 md:w-full md:text-right dark:text-white/55">
+                        {trail.stat.aux}
+                      </span>
+                    )}
+                  </div>
+                )}
               </li>
             ))
           }
-        </ul>
+        </ol>
       </section>
     </div>
   </Container>

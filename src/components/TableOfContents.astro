@@ -2,7 +2,22 @@
 import TableOfContentsHeading from "./TableOfContentsHeading.astro";
 
 // https://kld.dev/building-table-of-contents/
-const { headings } = Astro.props;
+type Props = {
+  headings: Heading[];
+  /**
+   * `collapse` — `<details>` with a click-to-expand summary; the right
+   *   shape for inline / mobile use.
+   * `rail` — flat `<nav>` always-visible list, designed to sit inside a
+   *   sticky right-rail aside on long-form posts.
+   *
+   * Both render the same heading anchors with the same `.toc` class, so
+   * the active-section IntersectionObserver below picks up either one or
+   * both at once.
+   */
+  variant?: "collapse" | "rail";
+};
+
+const { headings, variant = "collapse" } = Astro.props;
 const toc = buildToc(headings);
 
 export interface Heading {
@@ -27,24 +42,41 @@ function buildToc(headings: Heading[]) {
 }
 ---
 
-<details
-  class="group toc not-prose mt-6 border-t border-black/10 dark:border-white/15"
->
-  <summary class="flex cursor-pointer items-center justify-between gap-4 py-3 font-heading text-sm font-medium text-black/65 transition-colors duration-300 hover:text-black dark:text-white/65 dark:hover:text-white">
-    <span>Contents &middot; {headings.filter((h: Heading) => h.depth === 2).length}</span>
-    <span
-      aria-hidden="true"
-      class="text-black/40 transition-transform duration-300 group-open:rotate-90 dark:text-white/40"
-    >
-      &rsaquo;
-    </span>
-  </summary>
-  <nav>
-    <ul class="pb-4">
-      {toc.map((heading) => <TableOfContentsHeading heading={heading} />)}
-    </ul>
-  </nav>
-</details>
+{
+  variant === "rail" ? (
+    <nav class="toc toc-rail not-prose">
+      <p class="mb-3 font-mono text-[10px] uppercase tracking-widest text-black/55 dark:text-white/55">
+        On this page
+      </p>
+      <ul>
+        {toc.map((heading) => (
+          <TableOfContentsHeading heading={heading} />
+        ))}
+      </ul>
+    </nav>
+  ) : (
+    <details class="group toc toc-collapse not-prose mt-6 border-t border-black/10 dark:border-white/15">
+      <summary class="flex cursor-pointer items-center justify-between gap-4 py-3 font-heading text-sm font-medium text-black/65 transition-colors duration-300 hover:text-black dark:text-white/65 dark:hover:text-white">
+        <span>
+          Contents &middot; {headings.filter((h: Heading) => h.depth === 2).length}
+        </span>
+        <span
+          aria-hidden="true"
+          class="text-black/40 transition-transform duration-300 group-open:rotate-90 dark:text-white/40"
+        >
+          &rsaquo;
+        </span>
+      </summary>
+      <nav>
+        <ul class="pb-4">
+          {toc.map((heading) => (
+            <TableOfContentsHeading heading={heading} />
+          ))}
+        </ul>
+      </nav>
+    </details>
+  )
+}
 
 <style is:global>
   /* Active-section highlighting. The inline script below sets
@@ -56,7 +88,9 @@ function buildToc(headings: Heading[]) {
   .toc a {
     color: inherit;
     opacity: 0.6;
-    transition: opacity 300ms ease, color 300ms ease;
+    transition:
+      opacity 300ms ease,
+      color 300ms ease;
   }
   .toc a:hover {
     opacity: 1;
@@ -73,23 +107,24 @@ function buildToc(headings: Heading[]) {
 <script>
   // Active-section tracking: observe every heading the TOC references, and
   // mark the TOC link whose target is furthest into the viewport as active.
+  // The selector spans every `.toc` on the page, so a post that renders both
+  // a mobile collapse and a desktop rail variant gets both kept in sync from
+  // the same observer.
   function initToc() {
-    const toc = document.querySelector(".toc");
-    if (!toc) return;
-
     const links = Array.from(
-      toc.querySelectorAll<HTMLAnchorElement>('a[href^="#"]'),
+      document.querySelectorAll<HTMLAnchorElement>('.toc a[href^="#"]'),
     );
     if (links.length === 0) return;
 
     const targets: HTMLElement[] = [];
-    const linkBySlug = new Map<string, HTMLAnchorElement>();
+    const seen = new Set<string>();
     for (const link of links) {
       const slug = decodeURIComponent(link.getAttribute("href")!.slice(1));
+      if (seen.has(slug)) continue;
       const el = document.getElementById(slug);
       if (el) {
         targets.push(el);
-        linkBySlug.set(slug, link);
+        seen.add(slug);
       }
     }
     if (targets.length === 0) return;
