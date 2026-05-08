@@ -22,6 +22,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { clusterById, clusters } from "../src/data/wiki-clusters.mjs";
 import { step } from "./lib/force-layout.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -86,6 +87,7 @@ function loadWiki() {
       id,
       title: data.title ?? id,
       sources: Array.isArray(data.sources) ? data.sources : [],
+      cluster: clusterById[id] ?? null,
       body,
     };
   });
@@ -152,12 +154,29 @@ function buildEdges(entries) {
 function solveStrip(entries, edges, width = 800, height = 420) {
   const cx = width / 2;
   const cy = height / 2;
+  // Seed each entry near a cluster-specific anchor so the force step has a
+  // sensible starting point for separating neighborhoods. Cluster anchors
+  // are spread evenly around the canvas; entries without a cluster start at
+  // the global center and let the springs find them a home.
+  const clusterAnchors = new Map();
+  const clusterIds = [...new Set(entries.map((e) => e.cluster).filter(Boolean))];
+  clusterIds.forEach((cid, i) => {
+    const a = (i / clusterIds.length) * Math.PI * 2;
+    clusterAnchors.set(cid, {
+      x: cx + Math.cos(a) * (width * 0.28),
+      y: cy + Math.sin(a) * (height * 0.28),
+    });
+  });
+
   const seeded = entries.map((e, i) => {
-    const a = (i / entries.length) * Math.PI * 2;
+    const anchor = e.cluster ? clusterAnchors.get(e.cluster) : null;
+    const baseX = anchor?.x ?? cx;
+    const baseY = anchor?.y ?? cy;
+    const jitter = (i / entries.length) * Math.PI * 2;
     return {
       id: e.id,
-      x: cx + Math.cos(a) * (width * 0.32),
-      y: cy + Math.sin(a) * (height * 0.32),
+      x: baseX + Math.cos(jitter) * (width * 0.04),
+      y: baseY + Math.sin(jitter) * (height * 0.04),
       vx: 0,
       vy: 0,
       cluster: e.cluster ?? "default",
@@ -168,7 +187,9 @@ function solveStrip(entries, edges, width = 800, height = 420) {
   // concepts get punted to the canvas walls by repulsion and pin there,
   // leaving a sparse central cluster surrounded by stranded outliers.
   // A stronger center pull keeps the layout cohesive so the rendered
-  // box frames a single legible cluster.
+  // box frames a single legible cluster. clusterPull is bumped from a
+  // near-zero placeholder to a value that holds neighborhoods together
+  // visibly — without it, the cluster-region hulls would tangle.
   for (let it = 0; it < 280; it++) {
     step(seeded, edges, {
       width,
@@ -177,7 +198,7 @@ function solveStrip(entries, edges, width = 800, height = 420) {
       springLen: 80,
       springK: 0.08,
       gravity: 0.075,
-      clusterPull: 0.005,
+      clusterPull: 0.03,
     });
   }
   return seeded.map((n) => ({
@@ -242,20 +263,48 @@ function solveLocal(activeId, _entries, allEdges, size = 200) {
 function main() {
   if (!existsSync(WIKI_DIR)) {
     console.warn(`[constellation] no wiki directory at ${WIKI_DIR}; emitting empty layout`);
-    write({ generated_at: new Date().toISOString(), global: { nodes: [], edges: [] }, local: {} });
+    write({
+      generated_at: new Date().toISOString(),
+      titles: {},
+      clusters,
+      clusterById: {},
+      global: { nodes: [], edges: [] },
+      local: {},
+    });
     return;
   }
 
   const entries = loadWiki();
   if (entries.length === 0) {
     console.warn("[constellation] no wiki entries found; emitting empty layout");
-    write({ generated_at: new Date().toISOString(), global: { nodes: [], edges: [] }, local: {} });
+    write({
+      generated_at: new Date().toISOString(),
+      titles: {},
+      clusters,
+      clusterById: {},
+      global: { nodes: [], edges: [] },
+      local: {},
+    });
     return;
   }
 
   const edges = buildEdges(entries);
   const stripNodes = solveStrip(entries, edges);
   const titleById = Object.fromEntries(entries.map((e) => [e.id, e.title]));
+
+  // Emit cluster assignment for every loaded slug. Slugs missing from the
+  // hand-curated map land as `null` — components render their nodes but
+  // skip cluster-region work for them.
+  const clusterByIdForEntries = Object.fromEntries(entries.map((e) => [e.id, e.cluster ?? null]));
+
+  // Surface unmapped slugs so an editor can fold them into a cluster on the
+  // next pass. Soft warning, not a build break.
+  const unmapped = entries.filter((e) => !e.cluster).map((e) => e.id);
+  if (unmapped.length > 0) {
+    console.warn(
+      `[constellation] ${unmapped.length} concept(s) without a cluster: ${unmapped.join(", ")} (add to src/data/wiki-clusters.mjs)`,
+    );
+  }
 
   const local = {};
   for (const entry of entries) {
@@ -265,12 +314,14 @@ function main() {
   const payload = {
     generated_at: new Date().toISOString(),
     titles: titleById,
+    clusters,
+    clusterById: clusterByIdForEntries,
     global: { nodes: stripNodes, edges },
     local,
   };
   write(payload);
   console.log(
-    `[constellation] solved ${entries.length} concepts, ${edges.length} edges → ${OUT_PATH}`,
+    `[constellation] solved ${entries.length} concepts (${clusters.length} clusters), ${edges.length} edges → ${OUT_PATH}`,
   );
 }
 

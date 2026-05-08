@@ -1,10 +1,10 @@
 ---
 /**
  * Result dispatcher — picks the viz primitive based on the cell's `kind`
- * and the shape of the loaded JSON measurements. Falls back to a `<pre>`
- * JSON dump when `kind` is unset or the data shape doesn't match (early-
- * stage cells render their raw measurements unstyled, which is the right
- * default for prose-only labs that haven't yet earned a chart).
+ * and the shape of the loaded JSON measurements. Renders a quiet "awaiting
+ * data" empty state when the data file is missing or carries the worker's
+ * `{status: "no-data", message}` stub, and falls back to a `<pre>` JSON
+ * dump for unexpected shapes (a developer affordance, not an editorial one).
  */
 import Barchart from "./Barchart.astro";
 import CalendarHeatmap from "./CalendarHeatmap.astro";
@@ -26,7 +26,16 @@ const { kind, data, size = "full" } = Astro.props;
 const isObject = (v: unknown): v is Record<string, unknown> =>
   typeof v === "object" && v !== null && !Array.isArray(v);
 
-const labelText = kind ?? "json";
+// Pre-data state: the worker writes a `{status: "no-data", message}` stub
+// at the dataPath until the first real run lands. Treat it (and a missing
+// data file) as a first-class empty state instead of dumping the stub JSON.
+const noDataMessage =
+  data === null
+    ? "Data file not found."
+    : isObject(data) && data.status === "no-data" && typeof data.message === "string"
+      ? data.message
+      : null;
+const isNoData = data === null || noDataMessage !== null;
 
 // Optional summary block lifted from the aggregator output. Shape:
 // `summary: { stats: [{label, value}] }`. Renders as a StatGrid above
@@ -90,9 +99,20 @@ const sparkHeight = size === "compact" ? 60 : 120;
 const scatterHeight = size === "compact" ? 100 : 180;
 ---
 
-<ResultCell label={labelText}>
+<ResultCell>
+  <slot name="header" slot="header" />
   {
-    chartData && (
+    isNoData && (
+      <div class="space-y-3 text-black/55 dark:text-white/55">
+        <Sparkline data={[]} height={sparkHeight} />
+        <p class="text-center font-mono text-[11px] tracking-wide">
+          {noDataMessage ?? "Awaiting first run."}
+        </p>
+      </div>
+    )
+  }
+  {
+    !isNoData && chartData && (
       <div class="space-y-4">
         {chartData.summary && size === "full" && (
           <StatGrid stats={chartData.summary.stats} />
@@ -128,7 +148,7 @@ const scatterHeight = size === "compact" ? 100 : 180;
     )
   }
   {
-    !matched && (
+    !isNoData && !matched && (
       <pre class="m-0 overflow-x-auto font-mono text-xs leading-relaxed text-black/85 dark:text-white/85">
         {JSON.stringify(data, null, 2)}
       </pre>

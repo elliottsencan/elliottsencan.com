@@ -25,19 +25,38 @@ const { cell } = Astro.props;
 const { Content } = await render(cell);
 const data = await loadLabData(cell.data.dataPath);
 
+// ISO-style YYYY-MM-DD reads as a build identifier in the operational rail —
+// matches the labs index convention so dates align across surfaces.
 const dateFormatter = new Intl.DateTimeFormat("en-US", {
-  day: "numeric",
-  month: "short",
   year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
   timeZone: SITE_TIMEZONE,
 });
 
-const STATUS_LABELS: Record<string, string> = {
-  draft: "draft",
-  running: "running",
-  live: "live",
-  archived: "archived",
-};
+function isoDate(date: Date): string {
+  const parts = dateFormatter.formatToParts(date);
+  const y = parts.find((p) => p.type === "year")?.value ?? "";
+  const m = parts.find((p) => p.type === "month")?.value ?? "";
+  const d = parts.find((p) => p.type === "day")?.value ?? "";
+  return `${y}-${m}-${d}`;
+}
+
+function statusLabel(status: string): string {
+  return status === "draft" ? "first-run pending" : status;
+}
+
+// "Pending" covers two distinct states that should both visually quiet the
+// headline metric: an editorial draft (status === "draft") and a live cell
+// whose data file hasn't populated yet (loadLabData returned null or the
+// worker's `{status: "no-data"}` stub).
+const isNoData =
+  data === null ||
+  (typeof data === "object" &&
+    data !== null &&
+    (data as { status?: unknown }).status === "no-data");
+const isPending = cell.data.status === "draft" || isNoData;
+const isLive = cell.data.status === "live";
 ---
 
 <Layout title={`Labs: ${cell.data.title}`} description={cell.data.tldr}>
@@ -51,114 +70,170 @@ const STATUS_LABELS: Record<string, string> = {
         <Link href="/labs/">Labs</Link> / {cell.id}
       </LabeledRule>
 
-      <div class="space-y-3">
-        <h1 class="font-heading text-2xl font-semibold tracking-tight text-black dark:text-white">
+      {/*
+        Hero — title + tldr + hypothesis as two consecutive prose paragraphs.
+        No mono "Hypothesis" label; the second paragraph reads as a
+        continuation of the lede (what is this → what's the question).
+      */}
+      <div class="flex max-w-[62ch] flex-col gap-3">
+        <h1
+          class="font-heading text-2xl font-semibold tracking-tight text-black dark:text-white"
+        >
           {cell.data.title}
         </h1>
         <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
           {cell.data.tldr}
         </p>
-        <div
-          class="flex flex-wrap items-baseline gap-x-4 gap-y-1 font-mono text-[11px] text-black/55 dark:text-white/55"
-        >
-          <span
-            class="rounded-sm border border-black/10 px-2 py-0.5 uppercase tracking-widest dark:border-white/15"
-          >
-            {STATUS_LABELS[cell.data.status] ?? cell.data.status}
-          </span>
-          <span>published {dateFormatter.format(cell.data.publishedDate)}</span>
-          <span>
-            <span aria-hidden="true">· </span>last run {dateFormatter.format(cell.data.lastRunDate)}
-          </span>
-          {
-            cell.data.repoUrl && (
-              <span>
-                <span aria-hidden="true">· </span>
-                <Link href={cell.data.repoUrl} external class="font-sans text-xs">
-                  repo
-                </Link>
-              </span>
-            )
-          }
-          {
-            cell.data.blogPostSlug && (
-              <span>
-                <span aria-hidden="true">· </span>cited by{" "}
-                <Link
-                  href={`/writing/${cell.data.blogPostSlug}/`}
-                  class="font-sans text-xs"
-                >
-                  {cell.data.blogPostSlug}
-                </Link>
-              </span>
-            )
-          }
-        </div>
-      </div>
-
-      <section class="space-y-3" data-pagefind-ignore>
-        <p
-          class="font-mono text-[11px] uppercase tracking-wider text-black/55 dark:text-white/55"
-        >
-          Hypothesis
-        </p>
         <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
           {cell.data.hypothesis}
         </p>
-      </section>
+      </div>
 
-      <section class="space-y-3">
-        <p
-          class="font-mono text-[11px] uppercase tracking-wider text-black/55 dark:text-white/55"
-        >
-          Headline
-        </p>
-        <div class="flex items-baseline gap-4">
+      {/*
+        Result card — metric + chart in one bordered region (provided by
+        ResultCell, the wrapper LabResult dispatches into). The metric
+        passes through LabResult's named "header" slot, so the number and
+        the picture read as one unit instead of two stacked blocks. For
+        pending cells the value is dimmed to match the labs index.
+      */}
+      <LabResult kind={cell.data.kind} data={data} size="full">
+        <div slot="header" class="mb-5 flex flex-col gap-1">
           <span
-            class="font-heading text-2xl font-medium tracking-tight text-black md:text-3xl dark:text-white"
+            class="font-mono text-[10px] uppercase tracking-widest text-black/55 dark:text-white/55"
+          >
+            {cell.data.headlineMetric.label}
+          </span>
+          <span
+            class:list={[
+              "font-heading font-medium tracking-tight",
+              isPending
+                ? "text-2xl text-black/40 dark:text-white/40"
+                : "text-3xl text-black md:text-[2.1rem] dark:text-white",
+            ]}
             style="font-variant-numeric: tabular-nums;"
           >
             {cell.data.headlineMetric.value}
           </span>
-          <span class="font-mono text-[11px] uppercase tracking-widest text-black/55 dark:text-white/55">
-            {cell.data.headlineMetric.label}
-          </span>
         </div>
-      </section>
+      </LabResult>
 
       {/*
-        Cell — code in (when set), data out (always). Body markdown
-        renders below as commentary. Both the cell wrapper and the
-        markdown commentary stay in the narrow column for readability.
+        Body row — prose + optional methodology code on the left, sticky
+        operational rail on the right. Mirrors /wiki/[slug]; the rail
+        collapses below the body on narrow screens.
+        NB: must NOT use bare <article> — global.css applies `prose`
+        (max-width: 65ch) to every <article>, which can win over Tailwind
+        utilities and collapse the body in this 2-col grid. The lab-body
+        class below carries the prose styling without the global side-effect.
       */}
-      <div class="space-y-4">
-        {cell.data.pre && <CodeCell lang="js">{cell.data.pre}</CodeCell>}
-        <LabResult kind={cell.data.kind} data={data} size="full" />
-      </div>
-
-      <div class="lab-body space-y-4">
-        <Content />
-      </div>
-
-      {
-        cell.data.post && (
-          <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
-            {cell.data.post}
-          </p>
-        )
-      }
-
-      {
-        cell.data.tags.length > 0 && (
-          <div class="flex flex-wrap gap-2">
-            {cell.data.tags.map((t) => (
-              <span class="rounded-sm bg-black/5 px-2 py-0.5 font-mono text-[11px] text-black/55 dark:bg-white/5 dark:text-white/55">
-                #{t}
-              </span>
-            ))}
+      <div class="grid gap-8 md:grid-cols-[minmax(0,1fr)_220px] md:gap-12">
+        <div class="min-w-0 space-y-6">
+          <div class="lab-body space-y-4">
+            <Content />
+            {cell.data.post && <p>{cell.data.post}</p>}
           </div>
-        )
-      }
+          {cell.data.pre && <CodeCell lang="js">{cell.data.pre}</CodeCell>}
+        </div>
+
+        <aside class="md:sticky md:top-28 md:self-start">
+          <dl class="flex flex-col gap-5">
+            <div class="flex flex-col gap-1.5">
+              <dt
+                class="font-mono text-[10px] uppercase tracking-widest text-black/55 dark:text-white/55"
+              >
+                Status
+              </dt>
+              <dd>
+                <span
+                  class:list={[
+                    "inline-flex rounded-sm border border-black/10 px-2 py-0.5 font-mono text-[11px] uppercase tracking-widest dark:border-white/15",
+                    isLive
+                      ? "text-[color:var(--accent)]"
+                      : "text-black/55 dark:text-white/55",
+                  ]}
+                >
+                  {statusLabel(cell.data.status)}
+                </span>
+              </dd>
+            </div>
+
+            <div class="flex flex-col gap-1.5">
+              <dt
+                class="font-mono text-[10px] uppercase tracking-widest text-black/55 dark:text-white/55"
+              >
+                Published
+              </dt>
+              <dd
+                class="font-mono text-[11px] text-black/65 dark:text-white/65"
+              >
+                {isoDate(cell.data.publishedDate)}
+              </dd>
+            </div>
+
+            <div class="flex flex-col gap-1.5">
+              <dt
+                class="font-mono text-[10px] uppercase tracking-widest text-black/55 dark:text-white/55"
+              >
+                Last run
+              </dt>
+              <dd
+                class="font-mono text-[11px] text-black/65 dark:text-white/65"
+              >
+                {isoDate(cell.data.lastRunDate)}
+              </dd>
+            </div>
+
+            {
+              cell.data.repoUrl && (
+                <div class="flex flex-col gap-1.5">
+                  <dt class="font-mono text-[10px] uppercase tracking-widest text-black/55 dark:text-white/55">
+                    Repo
+                  </dt>
+                  <dd class="text-xs">
+                    <Link href={cell.data.repoUrl} external>
+                      source ↗
+                    </Link>
+                  </dd>
+                </div>
+              )
+            }
+
+            {
+              cell.data.blogPostSlug && (
+                <div class="flex flex-col gap-1.5">
+                  <dt class="font-mono text-[10px] uppercase tracking-widest text-black/55 dark:text-white/55">
+                    Cited by
+                  </dt>
+                  <dd class="text-xs">
+                    <Link href={`/writing/${cell.data.blogPostSlug}/`}>
+                      {cell.data.blogPostSlug}
+                    </Link>
+                  </dd>
+                </div>
+              )
+            }
+
+            {
+              cell.data.tags.length > 0 && (
+                <div class="flex flex-col gap-1.5">
+                  <dt class="font-mono text-[10px] uppercase tracking-widest text-black/55 dark:text-white/55">
+                    Tags
+                  </dt>
+                  <dd>
+                    <ul class="flex flex-wrap gap-1.5">
+                      {cell.data.tags.map((t) => (
+                        <li class="rounded bg-black/5 px-2 py-1 font-mono text-xs text-black/65 dark:bg-white/10 dark:text-white/65">
+                          {t}
+                        </li>
+                      ))}
+                    </ul>
+                  </dd>
+                </div>
+              )
+            }
+          </dl>
+        </aside>
+      </div>
     </div>
   </Container>
 </Layout>

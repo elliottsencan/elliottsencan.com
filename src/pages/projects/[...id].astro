@@ -27,6 +27,19 @@ const statusColors: Record<string, string> = {
   archived: "bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400",
   killed: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
 };
+
+// Operational rail content — same affordance as wiki sources / labs status:
+// facts about the project the body keeps referring back to (what role,
+// what stack, where to see it). Hide the rail on projects that wouldn't
+// fill it (small one-off projects with no role/stack/links/non-default
+// status); they render single-column instead.
+const showStatusInRail = Boolean(project.data.status) && project.data.status !== "active";
+const hasRail =
+  showStatusInRail ||
+  Boolean(project.data.role) ||
+  (project.data.stack && project.data.stack.length > 0) ||
+  Boolean(project.data.demoURL) ||
+  Boolean(project.data.repoURL);
 ---
 
 <ProjectLayout project={project}>
@@ -34,56 +47,28 @@ const statusColors: Record<string, string> = {
     <div>
       <BackToPrevious href="/projects">Back to projects</BackToPrevious>
     </div>
-    <div class="my-10 space-y-2">
+    <div class="my-10 max-w-[62ch] space-y-2">
       <div class="flex items-center gap-1.5">
         <div class="font-base text-sm">
           <FormattedDate date={project.data.date} />
         </div>
         &bull;
         {project.body && (
-          <div class="font-base text-sm">
-            {readingTime(project.body)}
-          </div>
+          <div class="font-base text-sm">{readingTime(project.body)}</div>
         )}
       </div>
-      <h1 class="font-heading text-2xl font-medium tracking-tight text-black md:text-3xl dark:text-white">
+      <h1
+        class="font-heading text-2xl font-medium tracking-tight text-black md:text-3xl dark:text-white"
+      >
         {project.data.title}
       </h1>
-
-      <div class="flex flex-wrap items-center gap-2">
-        {project.data.status && project.data.status !== "active" && (
-          <span class={`rounded-sm px-2 py-0.5 text-xs font-medium ${statusColors[project.data.status]}`}>
-            {project.data.status}
-          </span>
-        )}
-        {project.data.role && (
-          <span class="text-sm text-neutral-500">{project.data.role}</span>
-        )}
-      </div>
-
-      {project.data.stack && project.data.stack.length > 0 && (
-        <div class="flex flex-wrap gap-1.5 pt-1">
-          {project.data.stack.map((tech) => (
-            <span class="rounded-sm border border-black/10 px-2 py-0.5 text-xs dark:border-white/15">
-              {tech}
-            </span>
-          ))}
-        </div>
-      )}
-
-      {(project.data.demoURL || project.data.repoURL) && (
-        <nav class="flex gap-1">
-          {project.data.demoURL && (
-            <Link href={project.data.demoURL} external>demo</Link>
-          )}
-          {project.data.demoURL && project.data.repoURL && <span>/</span>}
-          {project.data.repoURL && (
-            <Link href={project.data.repoURL} external>repo</Link>
-          )}
-        </nav>
-      )}
     </div>
 
+    {/*
+      Impact metrics stay full-width above the body — they read as the
+      headline finding of the case study, editorial weight rather than
+      operational metadata, and earn their own row.
+    */}
     {project.data.impact && project.data.impact.length > 0 && (
       <div class="mb-12 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 md:grid-cols-3">
         {project.data.impact.map((item) => (
@@ -97,16 +82,97 @@ const statusColors: Record<string, string> = {
       </div>
     )}
 
-    <TableOfContents headings={headings} />
-    <article
-      data-pagefind-body
-      data-pagefind-filter="type:Projects"
-      data-pagefind-meta={`date:${project.data.date.toISOString().slice(0, 10)}`}
+    <div
+      class={
+        hasRail
+          ? "grid gap-8 md:grid-cols-[minmax(0,1fr)_220px] md:gap-12"
+          : ""
+      }
     >
-      {project.data.stack && project.data.stack.length > 0 && (
-        <span data-pagefind-meta="tags" hidden>{project.data.stack.join(", ")}</span>
+      <div class="min-w-0">
+        <TableOfContents headings={headings} />
+        <article
+          data-pagefind-body
+          data-pagefind-filter="type:Projects"
+          data-pagefind-meta={`date:${project.data.date.toISOString().slice(0, 10)}`}
+        >
+          {project.data.stack && project.data.stack.length > 0 && (
+            <span data-pagefind-meta="tags" hidden>
+              {project.data.stack.join(", ")}
+            </span>
+          )}
+          <Content />
+        </article>
+      </div>
+
+      {hasRail && (
+        <aside class="md:sticky md:top-28 md:self-start">
+          <dl class="flex flex-col gap-5">
+            {showStatusInRail && (
+              <div class="flex flex-col gap-1.5">
+                <dt class="font-mono text-[10px] uppercase tracking-widest text-black/55 dark:text-white/55">
+                  Status
+                </dt>
+                <dd>
+                  <span
+                    class={`inline-flex rounded-sm px-2 py-0.5 text-xs font-medium ${statusColors[project.data.status as string]}`}
+                  >
+                    {project.data.status}
+                  </span>
+                </dd>
+              </div>
+            )}
+
+            {project.data.role && (
+              <div class="flex flex-col gap-1.5">
+                <dt class="font-mono text-[10px] uppercase tracking-widest text-black/55 dark:text-white/55">
+                  Role
+                </dt>
+                <dd class="text-sm text-black/85 dark:text-white/85">
+                  {project.data.role}
+                </dd>
+              </div>
+            )}
+
+            {project.data.stack && project.data.stack.length > 0 && (
+              <div class="flex flex-col gap-1.5">
+                <dt class="font-mono text-[10px] uppercase tracking-widest text-black/55 dark:text-white/55">
+                  Stack
+                </dt>
+                <dd>
+                  <ul class="flex flex-wrap gap-1.5">
+                    {project.data.stack.map((tech) => (
+                      <li class="rounded-sm border border-black/10 px-2 py-0.5 text-xs dark:border-white/15">
+                        {tech}
+                      </li>
+                    ))}
+                  </ul>
+                </dd>
+              </div>
+            )}
+
+            {(project.data.demoURL || project.data.repoURL) && (
+              <div class="flex flex-col gap-1.5">
+                <dt class="font-mono text-[10px] uppercase tracking-widest text-black/55 dark:text-white/55">
+                  Links
+                </dt>
+                <dd class="flex flex-col gap-1 text-xs">
+                  {project.data.demoURL && (
+                    <Link href={project.data.demoURL} external>
+                      demo ↗
+                    </Link>
+                  )}
+                  {project.data.repoURL && (
+                    <Link href={project.data.repoURL} external>
+                      repo ↗
+                    </Link>
+                  )}
+                </dd>
+              </div>
+            )}
+          </dl>
+        </aside>
       )}
-      <Content />
-    </article>
+    </div>
   </Container>
 </ProjectLayout>

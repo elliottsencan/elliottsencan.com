@@ -59,17 +59,45 @@ const { Content, headings } = await render(post);
       <PostMeta post={post} />
       <PostBadges post={post} />
     </div>
-    {headings.length > 0 && <TableOfContents headings={headings} />}
-    <article
-      data-pagefind-body
-      data-pagefind-filter="type:Writing"
-      data-pagefind-meta={`date:${post.data.date.toISOString().slice(0, 10)}`}
+    {/*
+      When the post has h2+ headings, render two TOC variants — a mobile
+      `<details>` collapse above the article and a sticky rail to the right
+      on md+. Both share the `.toc` class so the same IntersectionObserver
+      keeps active-section state in sync. Posts without headings skip the
+      grid entirely so the article isn't pushed into a narrower column.
+    */}
+    <div
+      class={
+        headings.length > 0
+          ? "grid gap-8 md:grid-cols-[minmax(0,1fr)_200px] md:gap-12"
+          : ""
+      }
     >
-      {post.data.tags && post.data.tags.length > 0 && (
-        <span data-pagefind-meta="tags" hidden>{post.data.tags.join(", ")}</span>
+      <div class="min-w-0">
+        {headings.length > 0 && (
+          <div class="md:hidden">
+            <TableOfContents headings={headings} variant="collapse" />
+          </div>
+        )}
+        <article
+          data-pagefind-body
+          data-pagefind-filter="type:Writing"
+          data-pagefind-meta={`date:${post.data.date.toISOString().slice(0, 10)}`}
+        >
+          {post.data.tags && post.data.tags.length > 0 && (
+            <span data-pagefind-meta="tags" hidden>
+              {post.data.tags.join(", ")}
+            </span>
+          )}
+          <Content />
+        </article>
+      </div>
+      {headings.length > 0 && (
+        <aside class="hidden md:sticky md:top-28 md:block md:self-start">
+          <TableOfContents headings={headings} variant="rail" />
+        </aside>
       )}
-      <Content />
-    </article>
+    </div>
     <RevisionHistory filePath={post.filePath} />
     <div class="mt-16">
       <PostNavigation prevPost={prevPost} nextPost={nextPost} />
