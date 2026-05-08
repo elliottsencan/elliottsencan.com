@@ -1,7 +1,6 @@
 ---
 import { getCollection } from "astro:content";
 import EditorialRule from "@components/EditorialRule.astro";
-import LabeledRule from "@components/LabeledRule.astro";
 import Link from "@components/Link.astro";
 import ConstellationStrip from "@components/wiki/ConstellationStrip.astro";
 import constellationLayout from "@data/constellation-layout.json";
@@ -73,7 +72,7 @@ const constellationTieCount = constellationLayout.global.edges.length;
       <div
         class="grid items-stretch gap-x-8 gap-y-3 md:grid-cols-[minmax(0,1fr)_auto] md:gap-x-10 md:[grid-template-rows:auto_1fr_auto]"
       >
-        <LabeledRule>Wiki</LabeledRule>
+        <EditorialRule compact class="md:col-start-1 md:row-start-1" />
 
         <div
           class="flex min-w-0 max-w-[62ch] flex-col justify-between gap-4 md:col-start-1 md:row-start-2"
@@ -99,7 +98,7 @@ const constellationTieCount = constellationLayout.global.edges.length;
                   />
                 ))}
               </span>
-              <span class="tracking-wider">
+              <span>
                 {readingSourceCount} source{readingSourceCount === 1 ? "" : "s"}
                 {lastCompiledFormatted ? ` · ${lastCompiledFormatted}` : ""}
               </span>
@@ -126,7 +125,7 @@ const constellationTieCount = constellationLayout.global.edges.length;
         {/* Caption sits in col 2 row 3 so it lines up horizontally with the
             col-1 EditorialRule. Same row → guaranteed alignment. */}
         <p
-          class="font-mono text-xs tracking-wider text-black/55 dark:text-white/55 md:col-start-2 md:row-start-3 md:self-center"
+          class="font-mono text-xs text-black/55 dark:text-white/55 md:col-start-2 md:row-start-3"
         >
           {constellationNeighborhoodCount} neighborhoods
           {" · "}

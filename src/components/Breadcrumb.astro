@@ -1,0 +1,27 @@
+---
+/**
+ * Quiet breadcrumb caption.
+ *
+ * Used at the top of section/article prose stacks to surface the page's
+ * place in the site hierarchy (e.g., "Wiki / agentic-workflows") without
+ * the visual weight of a `LabeledRule`. Pairs with `<EditorialRule
+ * compact />` for the bracketing dot row above and below.
+ *
+ * Typography mirrors `LabeledRule`'s label cell — same font/size/tracking
+ * — so breadcrumbs and bracket labels read as one editorial family.
+ */
+type Props = {
+  class?: string;
+};
+const { class: className = "" } = Astro.props;
+---
+
+<p
+  class:list={[
+    "font-heading text-xs font-medium tracking-wider text-black/55 dark:text-white/60",
+    className,
+  ]}
+  style="font-variant-numeric: tabular-nums;"
+>
+  <slot />
+</p>
