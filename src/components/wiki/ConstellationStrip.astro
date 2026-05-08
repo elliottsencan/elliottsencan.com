@@ -36,7 +36,13 @@ type Props = {
 const { width = STRIP_DEFAULT_WIDTH, activeSlug } = Astro.props;
 
 type LayoutNode = { id: string; x: number; y: number; weight: number };
-type LayoutEdge = { a: string; b: string };
+type LayoutEdge = {
+  a: string;
+  b: string;
+  weight: number;
+  via: { link: number; cocite: number };
+  display: boolean;
+};
 type Cluster = { id: string; title: string; short: string; hue: number };
 
 const nodes: LayoutNode[] = layout.global.nodes;
@@ -69,14 +75,23 @@ const densityScale = Math.max(0.5, Math.min(1, 80 / N));
 const nodeR = (w: number) => (2.2 + 4.6 * wNorm(w)) * densityScale;
 
 // ─── adjacency (1-hop neighborhood per node) ─────────────────────────────
+// Built from displayed edges only — neighbor highlighting reflects what the
+// reader can actually see, so we don't surface invisible relationships when
+// hovering a node.
+const visibleEdges = edges.filter((e) => e.display);
 const adj = new Map<string, Set<string>>();
 for (const n of nodes) {
   adj.set(n.id, new Set());
 }
-for (const e of edges) {
+for (const e of visibleEdges) {
   adj.get(e.a)?.add(e.b);
   adj.get(e.b)?.add(e.a);
 }
+
+// Per-edge stroke width and opacity multiplier driven by weight. Strong ties
+// (link-backed or weight ≥ 4) read first; weak co-citation pairs fade.
+const edgeStrokeW = (w: number) => 0.4 + Math.min(w, 6) * 0.15;
+const edgeOpacityMul = (w: number) => Math.min(1, w / 4);
 
 // ─── cluster region geometry (convex hull → inflate → cardinal-spline) ──
 type Pt = { x: number; y: number };
@@ -207,24 +222,50 @@ const nodeById = new Map(nodes.map((n) => [n.id, n]));
       ))
     }
 
-    {/* Edges — width and opacity vary with same-cluster vs cross-cluster. */}
+    {/* Edges — same-cluster as straight lines, cross-cluster as gentle
+        quadratic Beziers so coincident pairs don't overlap pixel-for-pixel
+        and the visual reads as relationships passing through neighborhoods.
+        Width and opacity per edge come from weight via CSS variables; the
+        focus-state rules below override those vars for incident edges. */}
     {
-      edges.map((e) => {
+      visibleEdges.map((e) => {
         const a = nodeById.get(e.a);
         const b = nodeById.get(e.b);
         if (!a || !b) return null;
         const sameCluster = clusterById[e.a] === clusterById[e.b] && clusterById[e.a] != null;
+        const styleVars = `--edge-w: ${edgeStrokeW(e.weight)}; --edge-o-mul: ${edgeOpacityMul(e.weight)};`;
+        if (sameCluster) {
+          return (
+            <line
+              class="edge same"
+              data-a={e.a}
+              data-b={e.b}
+              x1={a.x}
+              y1={a.y}
+              x2={b.x}
+              y2={b.y}
+              stroke="currentColor"
+              vector-effect="non-scaling-stroke"
+              style={styleVars}
+            />
+          );
+        }
+        const dx = b.x - a.x;
+        const dy = b.y - a.y;
+        const dist = Math.hypot(dx, dy) || 1;
+        const offset = -dist * 0.12;
+        const cx = (a.x + b.x) / 2 + (-dy / dist) * offset;
+        const cy = (a.y + b.y) / 2 + (dx / dist) * offset;
         return (
-          <line
-            class={`edge ${sameCluster ? "same" : "cross"}`}
+          <path
+            class="edge cross"
             data-a={e.a}
             data-b={e.b}
-            x1={a.x}
-            y1={a.y}
-            x2={b.x}
-            y2={b.y}
+            d={`M ${a.x} ${a.y} Q ${cx} ${cy} ${b.x} ${b.y}`}
+            fill="none"
             stroke="currentColor"
             vector-effect="non-scaling-stroke"
+            style={styleVars}
           />
         );
       })
@@ -268,7 +309,7 @@ const nodeById = new Map(nodes.map((n) => [n.id, n]));
               y={n.y - r - 5}
               text-anchor="middle"
               font-family="var(--font-mono)"
-              font-size="26"
+              font-size="20"
               fill="currentColor"
             >
               {title}
@@ -356,23 +397,24 @@ const nodeById = new Map(nodes.map((n) => [n.id, n]));
   }
 
   /* ─── Edges ─────────────────────────────────────────────────────────── */
-  /* Base opacities sit a touch below the original spec values so the field
-     reads as ground rather than mesh. Dark mode halves again — currentColor
-     resolves to near-white in dark and reads visually heavier than the same
-     value would in light. */
+  /* Width and per-edge opacity multiplier come from inline CSS vars set per
+     edge (driven by relationship weight in the producer). Base opacity sits
+     just below mesh so the field reads as ground; dark mode halves again
+     because currentColor resolves to near-white in dark and reads heavier
+     than the same value in light. */
   #constellation-strip .edge.same {
-    stroke-width: 0.5;
-    opacity: 0.22;
+    stroke-width: var(--edge-w, 0.5);
+    opacity: calc(0.22 * var(--edge-o-mul, 1));
   }
   #constellation-strip .edge.cross {
-    stroke-width: 0.3;
-    opacity: 0.05;
+    stroke-width: var(--edge-w, 0.3);
+    opacity: calc(0.08 * var(--edge-o-mul, 1));
   }
   .dark #constellation-strip .edge.same {
-    opacity: 0.14;
+    opacity: calc(0.14 * var(--edge-o-mul, 1));
   }
   .dark #constellation-strip .edge.cross {
-    opacity: 0.04;
+    opacity: calc(0.06 * var(--edge-o-mul, 1));
   }
   /* When focus is active, dim non-incident edges hard. */
   #constellation-strip[data-focus] .edge {
@@ -381,7 +423,7 @@ const nodeById = new Map(nodes.map((n) => [n.id, n]));
   .dark #constellation-strip[data-focus] .edge {
     opacity: 0.03;
   }
-  /* Incident edges go to accent. */
+  /* Incident edges go to accent — fixed weight regardless of per-edge var. */
   #constellation-strip[data-focus] .edge[data-on],
   .dark #constellation-strip[data-focus] .edge[data-on] {
     stroke: var(--accent);

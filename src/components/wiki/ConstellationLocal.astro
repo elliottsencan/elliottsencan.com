@@ -36,7 +36,13 @@ type Props = {
 const { slug, width = STRIP_DEFAULT_WIDTH } = Astro.props;
 
 type LocalNode = { id: string; x: number; y: number };
-type LocalEdge = { a: string; b: string };
+type LocalEdge = {
+  a: string;
+  b: string;
+  weight: number;
+  via: { link: number; cocite: number };
+  display: boolean;
+};
 type LocalLayout = { nodes: LocalNode[]; edges: LocalEdge[] };
 type Cluster = { id: string; title: string; short: string; hue: number };
 
@@ -134,6 +140,18 @@ const regionPaths = localGroups
 // Active node radius for the breathe ring inline custom properties.
 const ACTIVE_R = 5;
 const NEIGHBOR_R = 2.6;
+
+// Per-edge stroke width and opacity multiplier driven by relationship
+// weight. Mirrors the strip; the local rail keeps the same visual language.
+const edgeStrokeW = (w: number) => 0.4 + Math.min(w, 6) * 0.15;
+const edgeOpacityMul = (w: number) => Math.min(1, w / 4);
+
+// Edges incident to the active node always render (that's the whole point of
+// the 1-hop neighborhood view); non-incident edges between two neighbors are
+// gated by the same `display` flag as the strip so the field stays legible.
+const visibleLocalEdges = local
+  ? local.edges.filter((e) => e.a === slug || e.b === slug || e.display)
+  : [];
 ---
 
 {
@@ -162,12 +180,15 @@ const NEIGHBOR_R = 2.6;
           />
         ))}
 
-        {/* Edges — incident to active go to accent. */}
-        {local.edges.map((e) => {
+        {/* Edges — incident to active go to accent. Width and per-edge
+            opacity multiplier come from inline CSS vars driven by weight;
+            the .on selector below overrides those vars for active-incident. */}
+        {visibleLocalEdges.map((e) => {
           const a = local.nodes.find((n) => n.id === e.a);
           const b = local.nodes.find((n) => n.id === e.b);
           if (!a || !b) return null;
           const onActive = e.a === slug || e.b === slug;
+          const styleVars = `--edge-w: ${edgeStrokeW(e.weight)}; --edge-o-mul: ${edgeOpacityMul(e.weight)};`;
           return (
             <line
               class={`edge ${onActive ? "on" : ""}`}
@@ -176,6 +197,7 @@ const NEIGHBOR_R = 2.6;
               x2={b.x}
               y2={b.y}
               vector-effect="non-scaling-stroke"
+              style={styleVars}
             />
           );
         })}
@@ -215,7 +237,7 @@ const NEIGHBOR_R = 2.6;
                 y={n.y - r - 4}
                 text-anchor="middle"
                 font-family="var(--font-mono)"
-                font-size="14"
+                font-size="11"
                 fill="currentColor"
               >
                 {title}
@@ -272,16 +294,17 @@ const NEIGHBOR_R = 2.6;
     stroke-opacity: 0.8;
   }
 
-  /* Edges — base opacity dropped in dark mode to match the strip; near-white
-     currentColor on a near-black field reads heavier than the same alpha
-     would on a paper-toned field. */
+  /* Edges — width and per-edge opacity multiplier come from inline CSS vars
+     driven by relationship weight. Base opacity dropped in dark mode to
+     match the strip; near-white currentColor on a near-black field reads
+     heavier than the same alpha would on a paper-toned field. */
   .constellation-local :global(.edge) {
     stroke: currentColor;
-    stroke-width: 0.4;
-    opacity: 0.18;
+    stroke-width: var(--edge-w, 0.4);
+    opacity: calc(0.18 * var(--edge-o-mul, 1));
   }
   :global(.dark) .constellation-local :global(.edge) {
-    opacity: 0.1;
+    opacity: calc(0.1 * var(--edge-o-mul, 1));
   }
   .constellation-local :global(.edge.on),
   :global(.dark) .constellation-local :global(.edge.on) {

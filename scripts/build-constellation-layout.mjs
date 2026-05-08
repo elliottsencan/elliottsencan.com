@@ -99,20 +99,35 @@ const WIKI_LINK_RE = /\[[^\]]*\]\(\/wiki\/([a-z0-9-]+)\/?(?:[#?][^)]*)?\)/g;
 const FENCED_RE = /```[\s\S]*?```/g;
 const INLINE_CODE_RE = /`[^`\n]*`/g;
 
+// Body cross-links count double in `weight` because they're authorial intent
+// (someone deliberately linked one concept to another). Co-citation is
+// ambient — two concepts sharing a source is signal but not authorship.
+const LINK_W = 2;
+const COCITE_W = 1;
+
+// `display` flag: which edges actually render. Solver still sees every edge
+// (topology stays informed by all relationships), but weak co-citation pairs
+// drop from the picture so the canvas reads as a backbone, not a hairball.
+// Threshold of 2 = at least two shared sources (or one shared source plus
+// one body link) — enough signal to suggest a real relationship.
+const DISPLAY_WEIGHT = 2;
+
 function buildEdges(entries) {
   const slugs = new Set(entries.map((e) => e.id));
-  const edges = [];
-  const seen = new Set();
-  const add = (a, b) => {
+  const edgeMap = new Map();
+  const bump = (a, b, key) => {
     if (a === b) {
-      return;
+      return null;
     }
-    const k = a < b ? `${a}|${b}` : `${b}|${a}`;
-    if (seen.has(k)) {
-      return;
+    const [lo, hi] = a < b ? [a, b] : [b, a];
+    const k = `${lo}|${hi}`;
+    let entry = edgeMap.get(k);
+    if (!entry) {
+      entry = { a: lo, b: hi, via: { link: 0, cocite: 0 } };
+      edgeMap.set(k, entry);
     }
-    seen.add(k);
-    edges.push({ a, b });
+    entry.via[key] += 1;
+    return entry;
   };
 
   // body cross-links
@@ -121,7 +136,7 @@ function buildEdges(entries) {
     for (const m of sanitized.matchAll(WIKI_LINK_RE)) {
       const target = m[1];
       if (target && slugs.has(target)) {
-        add(entry.id, target);
+        bump(entry.id, target, "link");
       }
     }
   }
@@ -141,9 +156,46 @@ function buildEdges(entries) {
   for (const list of sourceMap.values()) {
     for (let i = 0; i < list.length; i++) {
       for (let j = i + 1; j < list.length; j++) {
-        add(list[i], list[j]);
+        bump(list[i], list[j], "cocite");
       }
     }
+  }
+
+  const edges = [...edgeMap.values()].map((e) => ({
+    ...e,
+    weight: e.via.link * LINK_W + e.via.cocite * COCITE_W,
+  }));
+
+  // Two-pass display rule. First pass: edges that qualify on their own merit
+  // (any authorial body link, or co-citation weight ≥ DISPLAY_WEIGHT).
+  for (const e of edges) {
+    e.display = e.via.link > 0 || e.weight >= DISPLAY_WEIGHT;
+  }
+
+  // Second pass: rescue any node that would otherwise have zero visible
+  // edges by promoting its single highest-weighted edge. Keeps the graph
+  // connected without re-introducing the hairball.
+  const strongIncidentCount = new Map();
+  for (const e of edges) {
+    if (e.display) {
+      strongIncidentCount.set(e.a, (strongIncidentCount.get(e.a) ?? 0) + 1);
+      strongIncidentCount.set(e.b, (strongIncidentCount.get(e.b) ?? 0) + 1);
+    }
+  }
+  const bestEdgeForNode = new Map();
+  for (const e of edges) {
+    for (const node of [e.a, e.b]) {
+      if ((strongIncidentCount.get(node) ?? 0) > 0) {
+        continue;
+      }
+      const cur = bestEdgeForNode.get(node);
+      if (!cur || e.weight > cur.weight) {
+        bestEdgeForNode.set(node, e);
+      }
+    }
+  }
+  for (const e of bestEdgeForNode.values()) {
+    e.display = true;
   }
 
   return edges;
@@ -163,8 +215,8 @@ function solveStrip(entries, edges, width = 800, height = 420) {
   clusterIds.forEach((cid, i) => {
     const a = (i / clusterIds.length) * Math.PI * 2;
     clusterAnchors.set(cid, {
-      x: cx + Math.cos(a) * (width * 0.28),
-      y: cy + Math.sin(a) * (height * 0.28),
+      x: cx + Math.cos(a) * (width * 0.36),
+      y: cy + Math.sin(a) * (height * 0.36),
     });
   });
 
@@ -183,14 +235,34 @@ function solveStrip(entries, edges, width = 800, height = 420) {
       weight: e.sources.length,
     };
   });
-  // Gravity is intentionally firm. With weaker pulls, weakly-connected
-  // concepts get punted to the canvas walls by repulsion and pin there,
-  // leaving a sparse central cluster surrounded by stranded outliers.
-  // A stronger center pull keeps the layout cohesive so the rendered
-  // box frames a single legible cluster. clusterPull is bumped from a
-  // near-zero placeholder to a value that holds neighborhoods together
-  // visibly — without it, the cluster-region hulls would tangle.
-  for (let it = 0; it < 280; it++) {
+
+  // Community-aware spring rest length: same-cluster edges keep neighborhoods
+  // tight; cross-cluster edges relax to a longer rest length so distinct
+  // neighborhoods push apart instead of collapsing into a single hairball.
+  const clusterOf = new Map(seeded.map((n) => [n.id, n.cluster]));
+  const springLenFor = (e) => (clusterOf.get(e.a) === clusterOf.get(e.b) ? 80 : 180);
+  // Per-edge spring strength scales with edge weight: weak co-citation pairs
+  // (weight 1) barely pull, strong ties (weight ≥ 3) pull at full strength.
+  // Strong relationships dominate placement.
+  const springKFor = (e) => 0.08 * Math.min(1, e.weight / 3);
+
+  // Anneal: phase-1 firmly separates cluster regions before phase-2 lets
+  // within-cluster structure relax. Without this, weakly-connected clusters
+  // get tugged toward the center by springs and the hulls tangle.
+  for (let it = 0; it < 80; it++) {
+    step(seeded, edges, {
+      width,
+      height,
+      repulse: 4200,
+      springLen: 80,
+      springK: 0.08,
+      gravity: 0.075,
+      clusterPull: 0.10,
+      springLenFor,
+      springKFor,
+    });
+  }
+  for (let it = 0; it < 200; it++) {
     step(seeded, edges, {
       width,
       height,
@@ -199,6 +271,8 @@ function solveStrip(entries, edges, width = 800, height = 420) {
       springK: 0.08,
       gravity: 0.075,
       clusterPull: 0.03,
+      springLenFor,
+      springKFor,
     });
   }
   return seeded.map((n) => ({
@@ -237,6 +311,10 @@ function solveLocal(activeId, _entries, allEdges, size = 200) {
       cluster: "x",
     };
   });
+  // Local layout is single-cluster (everyone is a neighbor of the active
+  // node) so cluster-aware spring length doesn't apply, but weight-aware
+  // strength still does — strongly-cocited neighbors land closer.
+  const springKFor = (e) => 0.12 * Math.min(1, e.weight / 3);
   for (let it = 0; it < 220; it++) {
     step(seeded, subEdges, {
       width: size,
@@ -246,6 +324,7 @@ function solveLocal(activeId, _entries, allEdges, size = 200) {
       springK: 0.12,
       gravity: 0.05,
       clusterPull: 0,
+      springKFor,
     });
   }
   return {

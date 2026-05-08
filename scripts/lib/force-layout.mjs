@@ -11,6 +11,11 @@
 // `nodes` items mutate in place. Each must have `id, x, y, vx, vy, cluster` and
 // optional `pinned` (frozen to its position) and `weight` (for downstream
 // rendering only — solver doesn't use it).
+//
+// `opts.springLenFor(edge)` / `opts.springKFor(edge)` are optional per-edge
+// overrides; when omitted, the scalar `springLen` / `springK` apply uniformly.
+// Use these for community-aware layouts (longer rest length on cross-cluster
+// edges) or weight-aware layouts (stronger pull on heavy ties).
 
 export function step(nodes, edges, opts) {
   const {
@@ -22,6 +27,8 @@ export function step(nodes, edges, opts) {
     damp = 0.78,
     gravity = 0.012,
     clusterPull = 0.02,
+    springKFor,
+    springLenFor,
   } = opts;
 
   const cx = width / 2;
@@ -62,7 +69,9 @@ export function step(nodes, edges, opts) {
     const dx = b.x - a.x;
     const dy = b.y - a.y;
     const d = Math.sqrt(dx * dx + dy * dy) || 1;
-    const force = (d - springLen) * springK;
+    const len = springLenFor ? springLenFor(e) : springLen;
+    const k = springKFor ? springKFor(e) : springK;
+    const force = (d - len) * k;
     const fx = (dx / d) * force;
     const fy = (dy / d) * force;
     a.fx += fx;
