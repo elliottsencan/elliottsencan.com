@@ -8,7 +8,7 @@ import layout from "@data/constellation-layout.json";
 // sizes when given the same `width`). The local's own square content is
 // centered within the wider strip-shaped frame via preserveAspectRatio.
 
-export const STRIP_PAD_X = 120;
+export const STRIP_PAD_X = 40;
 export const STRIP_PAD_Y_TOP = 80;
 export const STRIP_PAD_Y_BOTTOM = 80;
 
@@ -24,7 +24,7 @@ export const STRIP_VY = minY - STRIP_PAD_Y_TOP;
 export const STRIP_VW = maxX - minX + STRIP_PAD_X * 2;
 export const STRIP_VH = maxY - minY + STRIP_PAD_Y_TOP + STRIP_PAD_Y_BOTTOM;
 
-export const STRIP_DEFAULT_WIDTH = 750;
+export const STRIP_DEFAULT_WIDTH = 400;
 
 // Local-rail viewBox: aspect-locked to the strip's aspect, so a single
 // `width` prop drives both widgets to identical pixel dimensions. The

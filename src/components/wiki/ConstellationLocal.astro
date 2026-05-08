@@ -231,11 +231,14 @@ const NEIGHBOR_R = 2.6;
 <style>
   /* Aspect-locked to the strip via @lib/constellationGeometry, so passing
      the same `width` to both widgets renders them at identical pixel
-     sizes. viewBox + preserveAspectRatio handle the geometry; user-unit
-     fonts and non-scaling strokes scale with the field. */
+     sizes. Width strategy mirrors the strip: request --cl-w directly and
+     cap at the parent's width on narrow viewports. The earlier
+     `width: 100%; max-width: --cl-w` pattern collapses inside a CSS Grid
+     `auto` track because the column resolves against min-content, which
+     an aspect-ratio'd box can shrink to ~0. */
   .constellation-local {
-    width: 100%;
-    max-width: var(--cl-w);
+    width: var(--cl-w);
+    max-width: 100%;
     aspect-ratio: var(--cl-aspect);
     color: rgb(0 0 0 / 0.88);
   }

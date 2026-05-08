@@ -282,14 +282,20 @@ const nodeById = new Map(nodes.map((n) => [n.id, n]));
 
 <style is:global>
   /* ─── Sizing ─────────────────────────────────────────────────────────
-     Fully container-driven: the strip fills its parent up to the desktop
-     intent (--cs-w), preserving aspect ratio. The SVG inside fills 100%
-     and viewBox + preserveAspectRatio handle geometry. All SVG fonts and
-     stroke widths sit in viewBox user-units, so they scale with the
-     field — no JS, no media query, no SSG-time scale math. */
+     The strip requests `--cs-w` directly and caps at the parent's width
+     on narrow viewports. We flipped from `width: 100%; max-width: --cs-w`
+     because in a CSS Grid `auto` track that pattern resolves against
+     min-content, which an aspect-ratio'd box can shrink to ~0 — so
+     bumping --cs-w in @lib/constellationGeometry didn't actually widen
+     the column. With `width: --cs-w; max-width: 100%`, the auto track
+     sees a definite track size and the col-1 prose makes room. The SVG
+     inside fills 100%/100%; viewBox + preserveAspectRatio handle the
+     geometry. All SVG fonts and stroke widths sit in viewBox user-units,
+     so they scale with the field — no JS, no media query, no SSG-time
+     scale math. */
   .constellation-strip {
-    width: 100%;
-    max-width: var(--cs-w);
+    width: var(--cs-w);
+    max-width: 100%;
     aspect-ratio: var(--cs-aspect);
     color: rgb(0 0 0 / 0.88);
   }
