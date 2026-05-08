@@ -52,9 +52,7 @@ export type ProjectMetrics = {
         status: "ready";
         mean_scores: Record<string, number>;
       };
-  model_comparison:
-    | { available: false }
-    | { available: true; pareto_summary: string | null };
+  model_comparison: { available: false } | { available: true; pareto_summary: string | null };
 };
 
 async function walkMd(dir: string): Promise<string[]> {

@@ -32,7 +32,7 @@ const max = months.length > 0 ? Math.max(...months) : 1;
           >
             {m > 0 && (
               <span
-                class="absolute inset-0 flex items-center justify-center font-mono text-[10px] font-medium"
+                class="absolute inset-0 flex items-center justify-center font-mono text-xs font-medium"
                 style={
                   labelOnDark ? "color: #f6f4ef;" : "color: rgb(0 0 0 / 0.85);"
                 }
@@ -47,7 +47,7 @@ const max = months.length > 0 ? Math.max(...months) : 1;
   </div>
   {
     (startLabel || endLabel) && (
-      <div class="flex justify-between font-mono text-[10px] text-black/55 dark:text-white/55">
+      <div class="flex justify-between font-mono text-xs text-black/55 dark:text-white/55">
         <span>{startLabel ?? ""}</span>
         <span>{endLabel ?? ""}</span>
       </div>

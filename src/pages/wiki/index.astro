@@ -1,10 +1,11 @@
 ---
 import { getCollection } from "astro:content";
 import EditorialRule from "@components/EditorialRule.astro";
-import LabeledRule from "@components/LabeledRule.astro";
 import Link from "@components/Link.astro";
 import ConstellationStrip from "@components/wiki/ConstellationStrip.astro";
+import constellationLayout from "@data/constellation-layout.json";
 import Layout from "@layouts/Layout.astro";
+import { SITE_TIMEZONE } from "@lib/utils";
 
 // Wiki index — concept-indexed synthesis. The constellation hero handles
 // the topic-spatial visualization, so the grid below is a single flat
@@ -12,6 +13,36 @@ import Layout from "@layouts/Layout.astro";
 // summary, and source-count signal; the topic surfaces through the
 // constellation, not as a per-card chip.
 const wiki = (await getCollection("wiki")).sort((a, b) => a.data.title.localeCompare(b.data.title));
+
+// Last-compiled date for the hero meta cell — most recent compiled_at
+// across the corpus. Distinct reading entries that contribute = total
+// unique slugs across all `sources[]`.
+const lastCompiledMs =
+  wiki.length > 0 ? Math.max(...wiki.map((c) => c.data.compiled_at.getTime())) : null;
+const readingSourceCount = new Set(wiki.flatMap((c) => c.data.sources)).size;
+const dateFormatter = new Intl.DateTimeFormat("en-US", {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+  timeZone: SITE_TIMEZONE,
+});
+const lastCompiledFormatted = lastCompiledMs
+  ? dateFormatter.format(new Date(lastCompiledMs))
+  : null;
+
+// Constellation summary numbers — moved out of the SVG so the caption can
+// grid-align with the col-1 EditorialRule below. Mirrors the
+// clusterGroups computation in ConstellationStrip (a "neighborhood" is a
+// cluster with at least two members). Same Record<string, …> coercions
+// the strip uses, since the JSON is typed with its literal keys.
+const constellationNodes: { id: string }[] = constellationLayout.global.nodes;
+const constellationClusters: { id: string }[] = constellationLayout.clusters;
+const constellationClusterById: Record<string, string | null> = constellationLayout.clusterById;
+const constellationNeighborhoodCount = constellationClusters.filter(
+  (cl) => constellationNodes.filter((n) => constellationClusterById[n.id] === cl.id).length >= 2,
+).length;
+const constellationConceptCount = constellationNodes.length;
+const constellationTieCount = constellationLayout.global.edges.length;
 ---
 
 <Layout
@@ -24,28 +55,87 @@ const wiki = (await getCollection("wiki")).sort((a, b) => a.data.title.localeCom
       data-pagefind-body
       data-pagefind-filter="type:Wiki"
     >
-      <LabeledRule>Wiki</LabeledRule>
+      
 
       {/*
-        Hero — copy on the left, constellation tucked into the upper-right
-        corner. The grid collapses to a single column under 768px; the
-        strip drops below the prose.
+        Hero — 3-row grid at md+. Column 1 holds the editorial rails:
+          row 1: top rule
+          row 2: prose + meta cell, flex-col justify-between so the prose
+                 anchors at the top and the meta cell at the bottom of the
+                 row
+          row 3: bottom rule
+        Column 2 holds only the constellation (with its MAP eyebrow); it
+        spans all three rows, so the constellation's top and bottom edges
+        align with the col-1 rules. On mobile (no grid columns) items fall
+        back to source order: top rule → content → bottom rule → const.
       */}
-      <div class="grid items-start gap-8 md:grid-cols-[minmax(0,1fr)_auto] md:gap-10">
-        <p class="max-w-[62ch] w-full text-base leading-relaxed text-black/85 dark:text-white/85">
-          Concept-indexed synthesis articles. Each article compiles across
-          multiple sources from the <Link href="/reading">reading log</Link>;
-          one article per concept that has at least two contributing
-          sources.
-        </p>
+      <div
+        class="grid items-stretch gap-x-8 gap-y-3 md:grid-cols-[minmax(0,1fr)_auto] md:gap-x-10 md:[grid-template-rows:auto_1fr_auto]"
+      >
+        <EditorialRule compact class="md:col-start-1 md:row-start-1" />
+
+        <div
+          class="flex min-w-0 max-w-[62ch] flex-col justify-between gap-4 md:col-start-1 md:row-start-2"
+        >
+          <div class="flex flex-col gap-3">
+            <h1 class="font-heading text-xl font-semibold tracking-tight text-black dark:text-white">
+              Wiki
+            </h1>
+            <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
+              Concept-indexed synthesis articles. Each article compiles across
+              multiple sources from the <Link href="/reading">reading log</Link>;
+              one article per concept that has at least two contributing
+              sources.
+            </p>
+            <p
+              class="inline-flex w-fit items-center gap-2 rounded-sm border border-[color:var(--accent)]/35 px-2.5 py-1 font-mono text-xs text-[color:var(--accent)]"
+            >
+              <span class="flex gap-[2px]" aria-hidden="true">
+                {Array.from({ length: Math.min(wiki.length, 8) }).map((_, i) => (
+                  <span
+                    class="block h-1 w-1 rounded-full bg-current"
+                    style={`opacity: ${0.7 + i * 0.04};`}
+                  />
+                ))}
+              </span>
+              <span>
+                {readingSourceCount} source{readingSourceCount === 1 ? "" : "s"}
+                {lastCompiledFormatted ? ` · ${lastCompiledFormatted}` : ""}
+              </span>
+            </p>
+          </div>
+
+          <p class="text-xs text-black/55 dark:text-white/55">
+            Compiled by Claude
+            {" · "}
+            <Link href="/wiki/how-this-works">How this works →</Link>
+          </p>
+        </div>
+
+        <EditorialRule compact class="md:col-start-1 md:row-start-3" />
+
         {
           wiki.length > 0 && (
-            <div class="flex flex-col gap-1.5">
-              <ConstellationStrip width={460} height={260} />
+            <div class="md:col-start-2 md:row-start-1 md:row-end-3">
+              <ConstellationStrip />
             </div>
           )
         }
+
+        {/* Caption sits in col 2 row 3 so it lines up horizontally with the
+            col-1 EditorialRule. Same row → guaranteed alignment. */}
+        <p
+          class="font-mono text-xs text-black/55 dark:text-white/55 md:col-start-2 md:row-start-3"
+        >
+          {constellationNeighborhoodCount} neighborhoods
+          {" · "}
+          {constellationConceptCount} concepts
+          {" · "}
+          {constellationTieCount} ties
+        </p>
       </div>
+
+      <!-- <EditorialRule /> -->
 
       {
         wiki.length > 0 ? (
@@ -69,7 +159,7 @@ const wiki = (await getCollection("wiki")).sort((a, b) => a.data.title.localeCom
                     <p class="text-sm leading-relaxed text-black/75 dark:text-white/75">
                       {concept.data.summary}
                     </p>
-                    <div class="mt-auto flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-black/55 dark:text-white/55">
+                    <div class="mt-auto flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55">
                       <span class="flex gap-1" aria-hidden="true">
                         {Array.from({ length: visibleDots }).map((_, i) => (
                           <span
@@ -96,9 +186,7 @@ const wiki = (await getCollection("wiki")).sort((a, b) => a.data.title.localeCom
       <EditorialRule />
 
       <p class="text-xs text-black/55 dark:text-white/55">
-        <Link href="/wiki/how-this-works">how this works</Link>
-        &nbsp;&middot;&nbsp;
-        <Link href="/reading">reading log</Link>
+        <Link href="/reading">reading log →</Link>
       </p>
     </div>
   </div>

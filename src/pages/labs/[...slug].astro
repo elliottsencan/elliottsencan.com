@@ -99,7 +99,7 @@ const isLive = cell.data.status === "live";
       <LabResult kind={cell.data.kind} data={data} size="full">
         <div slot="header" class="mb-5 flex flex-col gap-1">
           <span
-            class="font-mono text-[10px] uppercase tracking-widest text-black/55 dark:text-white/55"
+            class="font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55"
           >
             {cell.data.headlineMetric.label}
           </span>
@@ -139,14 +139,14 @@ const isLive = cell.data.status === "live";
           <dl class="flex flex-col gap-5">
             <div class="flex flex-col gap-1.5">
               <dt
-                class="font-mono text-[10px] uppercase tracking-widest text-black/55 dark:text-white/55"
+                class="font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55"
               >
                 Status
               </dt>
               <dd>
                 <span
                   class:list={[
-                    "inline-flex rounded-sm border border-black/10 px-2 py-0.5 font-mono text-[11px] uppercase tracking-widest dark:border-white/15",
+                    "inline-flex rounded-sm border border-black/10 px-2 py-0.5 font-mono text-xs uppercase tracking-widest dark:border-white/15",
                     isLive
                       ? "text-[color:var(--accent)]"
                       : "text-black/55 dark:text-white/55",
@@ -159,12 +159,12 @@ const isLive = cell.data.status === "live";
 
             <div class="flex flex-col gap-1.5">
               <dt
-                class="font-mono text-[10px] uppercase tracking-widest text-black/55 dark:text-white/55"
+                class="font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55"
               >
                 Published
               </dt>
               <dd
-                class="font-mono text-[11px] text-black/65 dark:text-white/65"
+                class="font-mono text-xs text-black/65 dark:text-white/65"
               >
                 {isoDate(cell.data.publishedDate)}
               </dd>
@@ -172,12 +172,12 @@ const isLive = cell.data.status === "live";
 
             <div class="flex flex-col gap-1.5">
               <dt
-                class="font-mono text-[10px] uppercase tracking-widest text-black/55 dark:text-white/55"
+                class="font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55"
               >
                 Last run
               </dt>
               <dd
-                class="font-mono text-[11px] text-black/65 dark:text-white/65"
+                class="font-mono text-xs text-black/65 dark:text-white/65"
               >
                 {isoDate(cell.data.lastRunDate)}
               </dd>
@@ -186,7 +186,7 @@ const isLive = cell.data.status === "live";
             {
               cell.data.repoUrl && (
                 <div class="flex flex-col gap-1.5">
-                  <dt class="font-mono text-[10px] uppercase tracking-widest text-black/55 dark:text-white/55">
+                  <dt class="font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55">
                     Repo
                   </dt>
                   <dd class="text-xs">
@@ -201,7 +201,7 @@ const isLive = cell.data.status === "live";
             {
               cell.data.blogPostSlug && (
                 <div class="flex flex-col gap-1.5">
-                  <dt class="font-mono text-[10px] uppercase tracking-widest text-black/55 dark:text-white/55">
+                  <dt class="font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55">
                     Cited by
                   </dt>
                   <dd class="text-xs">
@@ -216,7 +216,7 @@ const isLive = cell.data.status === "live";
             {
               cell.data.tags.length > 0 && (
                 <div class="flex flex-col gap-1.5">
-                  <dt class="font-mono text-[10px] uppercase tracking-widest text-black/55 dark:text-white/55">
+                  <dt class="font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55">
                     Tags
                   </dt>
                   <dd>

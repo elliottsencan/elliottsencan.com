@@ -1,8 +1,10 @@
 ---
 import { type CollectionEntry, getCollection, render } from "astro:content";
+import EditorialRule from "@components/EditorialRule.astro";
 import LabeledRule from "@components/LabeledRule.astro";
 import Link from "@components/Link.astro";
 import ConstellationLocal from "@components/wiki/ConstellationLocal.astro";
+import constellationLayout from "@data/constellation-layout.json";
 import Layout from "@layouts/Layout.astro";
 import { SITE_TIMEZONE } from "@lib/utils";
 import { buildWikiLinkGraph, resolveRelatedConcepts, type WikiLinkGraph } from "@lib/wiki-graph";
@@ -115,6 +117,24 @@ const breadcrumbs = [
   { name: "Wiki", url: "/wiki/" },
   { name: concept.data.title, url: `/wiki/${concept.id}/` },
 ];
+
+// ─── Constellation caption data ──────────────────────────────────────────
+// The 3-row × 2-col hero grid mirrors /wiki — col 2 holds the local
+// constellation in rows 1-2 and a footer caption (cluster · neighbors) in
+// row 3 that grid-aligns with the EditorialRule below the prose in col 1.
+type ConstellationCluster = { id: string; title: string; short: string; hue: number };
+const constellationClusters: ConstellationCluster[] = constellationLayout.clusters;
+const constellationClusterById: Record<string, string | null> = constellationLayout.clusterById;
+const constellationLocal: Record<string, { nodes: { id: string }[] }> =
+  constellationLayout.local;
+
+const localData = constellationLocal[concept.id];
+const hasLocal = !!localData && localData.nodes.length > 1;
+const myClusterId = constellationClusterById[concept.id] ?? null;
+const myCluster = myClusterId
+  ? (constellationClusters.find((c) => c.id === myClusterId) ?? null)
+  : null;
+const neighborCount = hasLocal ? localData.nodes.length - 1 : 0;
 ---
 
 <Layout
@@ -133,56 +153,85 @@ const breadcrumbs = [
       data-pagefind-body
       data-pagefind-filter="type:Wiki"
     >
-      <LabeledRule>
-        <Link href="/wiki/">Wiki</Link> / {concept.id}
-      </LabeledRule>
-
       {/*
-        Hero — title + summary + compiled-from badge on the left, neighborhood
-        constellation tucked into the upper-right. Content reads first.
+        Hero — 3-row × 2-col grid mirroring /wiki. Col 1 holds the editorial
+        rails: row 1 = LabeledRule with "Wiki" (linked back to the index)
+        as the back-nav, row 2 = title/summary/source-count stack with flex
+        justify-between, row 3 = EditorialRule compact (bottom dot row).
+        Col 2 holds the local constellation spanning rows 1-2 and a footer
+        caption (cluster · neighbors) in row 3 that grid-aligns with the
+        col-1 bottom rule. The h1 carries the current concept identity, so
+        the row-1 label stays minimal — just "Wiki" — to avoid double
+        labelling.
+
         NB: must NOT use bare <header> — global.css fixes-positions every
         <header> as site chrome (CLAUDE.md: "bare tags are reserved").
       */}
-      <div class="grid items-start gap-8 md:grid-cols-[minmax(0,1fr)_auto] md:gap-10">
-        <div class="flex min-w-0 flex-col gap-3">
-          <h1 class="font-heading text-2xl font-semibold tracking-tight text-black dark:text-white">
-            {concept.data.title}
-          </h1>
-          <p class="max-w-[62ch] text-base leading-relaxed text-black/85 dark:text-white/85">
-            {concept.data.summary}
-          </p>
-          <p
-            class="inline-flex w-fit items-center gap-2 rounded-sm border border-[color:var(--accent)] bg-[color:var(--accent)]/10 px-2.5 py-1 font-mono text-[11px] uppercase tracking-wider text-[color:var(--accent)]"
-          >
-            <span class="flex gap-[2px]" aria-hidden="true">
-              {sources.map((_, i) => (
-                <span
-                  class="block h-1 w-1 rounded-full bg-current"
-                  style={`opacity: ${0.7 + i * 0.04};`}
-                />
-              ))}
-            </span>
-            <span>
-              compiled from {sources.length} source{sources.length === 1 ? "" : "s"}
-              {" · "}
-              {longDateFormatter.format(concept.data.compiled_at)}
-            </span>
-          </p>
+      <div
+        class="grid items-stretch gap-x-8 gap-y-3 md:grid-cols-[minmax(0,1fr)_auto] md:gap-x-10 md:[grid-template-rows:auto_1fr_auto]"
+      >
+        <div class="md:col-start-1 md:row-start-1">
+          <LabeledRule>
+            <Link href="/wiki/">Wiki</Link>
+          </LabeledRule>
+        </div>
+
+        <div
+          class="flex min-w-0 max-w-[62ch] flex-col justify-between gap-4 md:col-start-1 md:row-start-2"
+        >
+          <div class="flex flex-col gap-3">
+            <h1 class="font-heading text-xl font-semibold tracking-tight text-black dark:text-white">
+              {concept.data.title}
+            </h1>
+            <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
+              {concept.data.summary}
+            </p>
+            <p
+              class="inline-flex w-fit items-center gap-2 rounded-sm border border-[color:var(--accent)]/35 px-2.5 py-1 font-mono text-xs text-[color:var(--accent)]"
+            >
+              <span class="flex gap-[2px]" aria-hidden="true">
+                {sources.map((_, i) => (
+                  <span
+                    class="block h-1 w-1 rounded-full bg-current"
+                    style={`opacity: ${0.7 + i * 0.04};`}
+                  />
+                ))}
+              </span>
+              <span class="tracking-wider">
+                {sources.length} source{sources.length === 1 ? "" : "s"}
+                {" · "}
+                {longDateFormatter.format(concept.data.compiled_at)}
+              </span>
+            </p>
+          </div>
+
           <p class="text-xs text-black/55 dark:text-white/55">
-            Compiled by Claude.
-            {" "}
+            Compiled by Claude
+            {" · "}
             <Link href="/wiki/how-this-works">How this works →</Link>
           </p>
         </div>
 
-        <div class="hidden md:block">
-          <p
-            class="mb-1.5 font-mono text-[11px] uppercase tracking-wider text-black/55 dark:text-white/55"
-          >
-            Neighborhood
-          </p>
-          <ConstellationLocal slug={concept.id} size={220} />
-        </div>
+        <EditorialRule compact class="md:col-start-1 md:row-start-3" />
+
+        {
+          hasLocal && (
+            <div class="md:col-start-2 md:row-start-1 md:row-end-3">
+              <ConstellationLocal slug={concept.id} />
+            </div>
+          )
+        }
+
+        {
+          hasLocal && (
+            <p
+              class="font-mono text-xs tracking-wider text-black/55 dark:text-white/55 md:col-start-2 md:row-start-3 md:self-center"
+            >
+              {myCluster ? `${myCluster.short} · ` : ""}
+              {neighborCount} neighbor{neighborCount === 1 ? "" : "s"}
+            </p>
+          )
+        }
       </div>
 
       {/*
@@ -200,7 +249,7 @@ const breadcrumbs = [
 
         <aside class="wiki-rail md:sticky md:top-28 md:self-start">
           <p
-            class="mb-3 font-mono text-[11px] uppercase tracking-wider text-black/55 dark:text-white/55"
+            class="mb-3 font-mono text-xs uppercase tracking-wider text-black/55 dark:text-white/55"
           >
             Sources
           </p>
@@ -219,10 +268,10 @@ const breadcrumbs = [
                   >
                     {entry.data.title}
                   </a>
-                  <span class="text-[11px] text-black/55 dark:text-white/55">
+                  <span class="text-xs text-black/55 dark:text-white/55">
                     {entry.data.author ?? entry.data.source ?? ""}
                   </span>
-                  <span class="font-mono text-[10px] tracking-wide text-black/40 dark:text-white/45">
+                  <span class="font-mono text-xs tracking-wide text-black/40 dark:text-white/45">
                     {[entry.data.source, dateFormatter.format(entry.data.added)]
                       .filter(Boolean)
                       .join(" · ")}
@@ -231,7 +280,7 @@ const breadcrumbs = [
               </li>
             ))}
           </ol>
-          <p class="mt-3 font-mono text-[11px] tracking-wider text-black/55 dark:text-white/55">
+          <p class="mt-3 font-mono text-xs tracking-wider text-black/55 dark:text-white/55">
             <Link href="/reading">view in /reading →</Link>
           </p>
         </aside>
@@ -263,7 +312,7 @@ const breadcrumbs = [
                       <span class="text-xs leading-relaxed text-black/55 dark:text-white/55">
                         {blurb}…
                       </span>
-                      <span class="mt-auto pt-1 font-mono text-[10px] uppercase tracking-widest text-black/40 dark:text-white/40">
+                      <span class="mt-auto pt-1 font-mono text-xs uppercase tracking-widest text-black/40 dark:text-white/40">
                         {rc.data.sources.length} sources
                       </span>
                     </a>

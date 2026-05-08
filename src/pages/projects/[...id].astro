@@ -110,7 +110,7 @@ const hasRail =
           <dl class="flex flex-col gap-5">
             {showStatusInRail && (
               <div class="flex flex-col gap-1.5">
-                <dt class="font-mono text-[10px] uppercase tracking-widest text-black/55 dark:text-white/55">
+                <dt class="font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55">
                   Status
                 </dt>
                 <dd>
@@ -125,7 +125,7 @@ const hasRail =
 
             {project.data.role && (
               <div class="flex flex-col gap-1.5">
-                <dt class="font-mono text-[10px] uppercase tracking-widest text-black/55 dark:text-white/55">
+                <dt class="font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55">
                   Role
                 </dt>
                 <dd class="text-sm text-black/85 dark:text-white/85">
@@ -136,7 +136,7 @@ const hasRail =
 
             {project.data.stack && project.data.stack.length > 0 && (
               <div class="flex flex-col gap-1.5">
-                <dt class="font-mono text-[10px] uppercase tracking-widest text-black/55 dark:text-white/55">
+                <dt class="font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55">
                   Stack
                 </dt>
                 <dd>
@@ -153,7 +153,7 @@ const hasRail =
 
             {(project.data.demoURL || project.data.repoURL) && (
               <div class="flex flex-col gap-1.5">
-                <dt class="font-mono text-[10px] uppercase tracking-widest text-black/55 dark:text-white/55">
+                <dt class="font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55">
                   Links
                 </dt>
                 <dd class="flex flex-col gap-1 text-xs">

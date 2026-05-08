@@ -104,7 +104,7 @@ const compactDateFormatter = new Intl.DateTimeFormat("en-US", {
       {
         years.length > 1 && (
           <nav
-            class="flex flex-wrap items-baseline gap-x-3 gap-y-1 font-mono text-[11px] uppercase tracking-wider text-black/55 dark:text-white/55"
+            class="flex flex-wrap items-baseline gap-x-3 gap-y-1 font-mono text-xs uppercase tracking-wider text-black/55 dark:text-white/55"
             aria-label="Archive by year"
           >
             <span>Archive:</span>
@@ -180,7 +180,7 @@ const compactDateFormatter = new Intl.DateTimeFormat("en-US", {
                         {/* Mobile caption strip: monospace, dot-separated.
                             Promotes date into the row, keeps the cited-in
                             link as the accent-tinted final segment. */}
-                        <div class="flex flex-wrap items-center gap-x-2.5 gap-y-1 pt-1 font-mono text-[11px] tracking-wider text-black/55 md:hidden dark:text-white/55">
+                        <div class="flex flex-wrap items-center gap-x-2.5 gap-y-1 pt-1 font-mono text-xs tracking-wider text-black/55 md:hidden dark:text-white/55">
                           <time datetime={entry.data.added.toISOString()}>
                             {compactDateFormatter.format(entry.data.added)}
                           </time>
@@ -208,7 +208,7 @@ const compactDateFormatter = new Intl.DateTimeFormat("en-US", {
                             {entry.data.category}
                           </span>
                           {citings.map((ref) => (
-                            <span class="inline-flex items-baseline gap-1 font-mono text-[11px] text-[color:var(--accent)]">
+                            <span class="inline-flex items-baseline gap-1 font-mono text-xs text-[color:var(--accent)]">
                               <span aria-hidden="true">→</span>
                               <a
                                 href={`/wiki/${ref.id}/`}
