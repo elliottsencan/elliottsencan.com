@@ -11,6 +11,7 @@ sources:
   - 2026-05/2026-05-03t173422-vectorize-iohindsight
   - 2026-05/2026-05-03t173528-lthoanggopenagentd
   - 2026-05/2026-05-06t171355-vectifyaipageindex
+  - 2026-05/2026-05-09t110721-ai-control-plane-architecture-and-vendors
 aliases:
   - infrastructure
 compiled_at: '2026-05-04T03:37:09.740Z'
@@ -30,7 +31,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.01659
-last_source_added: '2026-05-07T00:13:55.450Z'
+last_source_added: '2026-05-09T18:07:21.023Z'
 ---
 AI infrastructure refers to the layer of systems that makes AI agents operable in production: orchestration, memory, observability, and the primitives that connect models to real-world actions. The sources here collectively argue that these choices carry more long-term weight than model selection itself.
 

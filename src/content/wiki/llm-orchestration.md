@@ -9,6 +9,7 @@ sources:
   - >-
     2026-05/2026-05-01t104137-harness-design-for-long-running-application-development
   - 2026-05/2026-05-07t193804-agents-need-control-flow-not-more-prompts
+  - 2026-05/2026-05-09t110721-ai-control-plane-architecture-and-vendors
 compiled_at: '2026-05-04T04:08:00.148Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -26,7 +27,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.013566
-last_source_added: '2026-05-08T02:38:04.717Z'
+last_source_added: '2026-05-09T18:07:21.023Z'
 ---
 LLM orchestration refers to the coordination of multiple language model agents through defined roles and control flow, rather than relying on a single model to handle an entire task end-to-end. The two sources here converge on a GAN-inspired decomposition: a planner that breaks work into subtasks, generators that execute in parallel, and evaluators that critique outputs before they advance downstream.
 

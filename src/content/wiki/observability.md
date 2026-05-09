@@ -7,6 +7,7 @@ summary: >-
 sources:
   - 2026-05/2026-05-03t105219-radar-open-source-kubernetes-ui
   - 2026-05/2026-05-03t105238-radar-or-the-missing-open-source-kubernetes-ui
+  - 2026-05/2026-05-09t110721-ai-control-plane-architecture-and-vendors
 compiled_at: '2026-05-04T04:09:40.819Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -24,6 +25,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.01242
+last_source_added: '2026-05-09T18:07:21.023Z'
 ---
 Observability, in the infrastructure sense, is the ability to understand what a running system is doing from its external outputs. For Kubernetes specifically, that means correlating pod states, network traffic, events, and configuration drift into a coherent picture without requiring operators to grep through raw logs or kubectl one resource at a time.
 
