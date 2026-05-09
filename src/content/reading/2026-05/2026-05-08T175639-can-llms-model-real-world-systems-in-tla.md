@@ -1,0 +1,40 @@
+---
+title: Can LLMs model real-world systems in TLA+?
+url: 'https://www.sigops.org/2026/can-llms-model-real-world-systems-in-tla/'
+summary: >-
+  SysMoBench benchmarks leading LLMs on generating TLA+ specs for real
+  distributed systems, finding near-perfect syntax scores but only ~46%
+  conformance and ~41% invariant accuracy, revealing that LLMs recite textbook
+  protocols rather than faithfully model actual implementations.
+category: tech
+added: '2026-05-09T00:56:39.862Z'
+author: >-
+  Qian Cheng, Ruize Tang, Emilie Ma, Finn Hackett, Peiyang He, Yiming Su, Ivan
+  Beschastnikh, Yu Huang, Xiaoxing Ma, and Tianyin Xu
+source: ACM SIGOPS
+topics:
+  - benchmarks
+  - distributed-systems
+  - llm-engineering
+  - formal-verification
+  - ai-agents
+compiled_at: '2026-05-09T00:56:39.862Z'
+compiled_with: claude-sonnet-4-6
+title_source: model
+compile_cost:
+  usage:
+    input_tokens: 5931
+    output_tokens: 236
+    cache_creation_input_tokens: 0
+    cache_read_input_tokens: 0
+  model: claude-sonnet-4-6
+  pricing:
+    model: claude-sonnet-4-6
+    input_per_million: 3
+    output_per_million: 15
+    cache_read_per_million: 0.3
+    cache_write_5m_per_million: 3.75
+    priced_at: '2026-04-30'
+  cost_usd: 0.021333
+---
+

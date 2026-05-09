@@ -14,6 +14,7 @@ sources:
   - 2026-05/2026-05-06t171355-vectifyaipageindex
   - 2026-05/2026-05-06t173338-raiyanyahyahow-to-train-your-gpt
   - 2026-05/2026-05-07t193804-agents-need-control-flow-not-more-prompts
+  - 2026-05/2026-05-08t175639-can-llms-model-real-world-systems-in-tla
 compiled_at: 2026-05-04T04:08:56.031Z
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -31,7 +32,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.018531
-last_source_added: '2026-05-08T02:38:04.717Z'
+last_source_added: '2026-05-09T00:56:39.862Z'
 ---
 LLM engineering sits at the intersection of software architecture and model behavior: the discipline of designing systems that use language models reliably, at scale, and without accumulating hidden failure modes.
 

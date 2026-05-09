@@ -12,6 +12,7 @@ sources:
   - >-
     2026-05/2026-05-03t115608-how-to-choose-between-single-and-multi-agent-solutions
   - 2026-05/2026-05-04t235011-plurai
+  - 2026-05/2026-05-08t175639-can-llms-model-real-world-systems-in-tla
 compiled_at: 2026-05-06T04:24:11.812Z
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -29,6 +30,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.014823
+last_source_added: '2026-05-09T00:56:39.862Z'
 ---
 In multi-agent systems research, benchmarks serve as the primary mechanism for comparing architectural choices against concrete performance metrics. Christopher Meiklejohn's survey of the field [identifies two waves of MAS research](/reading/2026-05/2026-05-03t110011-getting-up-to-speed-on-multi-agent-systems-part-1-the): 2023 coordination papers and 2025 reliability work, with benchmarks like SWE-bench helping narrow what "agentic" actually means in practice by grounding claims in [measurable coding task outcomes](/wiki/ai-assisted-coding).
 
