@@ -13,6 +13,8 @@ sources:
   - 2026-05/2026-05-03t173422-vectorize-iohindsight
   - 2026-05/2026-05-06t110728-the-bottleneck-was-never-the-code
   - 2026-05/2026-05-06t171355-vectifyaipageindex
+  - >-
+    2026-05/2026-05-10t140531-agent-observability-needs-feedback-to-power-learning
 compiled_at: '2026-05-04T03:37:55.731Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -30,7 +32,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.019617
-last_source_added: '2026-05-07T00:13:55.450Z'
+last_source_added: '2026-05-10T21:05:31.636Z'
 ---
 Context engineering is the practice of deciding what information an LLM sees, when it sees it, and in what form. It treats the context window not as a passive receptacle but as a surface to be designed, the same way an API schema or a database index is designed.
 
