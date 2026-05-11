@@ -22,6 +22,7 @@ sources:
   - 2026-05/2026-05-03t105238-radar-or-the-missing-open-source-kubernetes-ui
   - 2026-05/2026-05-03t173422-vectorize-iohindsight
   - 2026-05/2026-05-10t205349-github-is-sinking
+  - 2026-05/2026-05-11t155625-storybloqstorybloq
 aliases:
   - developer-tooling
 compiled_at: 2026-05-04T03:35:58.825Z
@@ -41,7 +42,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.025026
-last_source_added: '2026-05-11T03:53:49.265Z'
+last_source_added: '2026-05-11T22:56:25.382Z'
 ---
 Developer tools are the layer between an engineer's intent and working software. The sources here span a wide range of that layer, from low-level execution infrastructure to high-level AI-assisted coding environments, and together sketch how tooling has shifted as AI agents enter the picture.
 

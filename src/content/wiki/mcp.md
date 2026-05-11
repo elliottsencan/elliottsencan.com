@@ -9,6 +9,7 @@ sources:
   - 2026-04/2026-04-27t113354-the-orchestrator-isnt-your-moat
   - 2026-04/2026-04-30t231435-mintlify
   - 2026-05/2026-05-09t110721-ai-control-plane-architecture-and-vendors
+  - 2026-05/2026-05-11t155625-storybloqstorybloq
 aliases:
   - mcp-server
 compiled_at: '2026-05-04T03:35:41.359Z'
@@ -28,7 +29,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.01491
-last_source_added: '2026-05-09T18:07:21.023Z'
+last_source_added: '2026-05-11T22:56:25.382Z'
 ---
 MCP (Model Context Protocol) standardizes how AI agents discover and invoke external tools and context at runtime. Three sources frame it differently, and the tension between them is instructive.
 
