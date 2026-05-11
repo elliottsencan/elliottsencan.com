@@ -31,6 +31,7 @@ sources:
   - 2026-05/2026-05-06t173338-raiyanyahyahow-to-train-your-gpt
   - >-
     2026-05/2026-05-08t112608-your-onboarding-is-a-hazing-ritual-and-you-call-it-agile
+  - 2026-05/2026-05-10t205349-github-is-sinking
 compiled_at: '2026-05-06T16:17:24.293Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -48,7 +49,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.030135
-last_source_added: '2026-05-08T18:26:08.209Z'
+last_source_added: '2026-05-11T03:53:49.265Z'
 ---
 Software engineering as a discipline shows up in these sources less as a unified theory and more as a collection of recurring pressures: how to structure systems so they stay maintainable, how to choose tools that don't create new dependencies, and how to preserve the human judgment that holds everything together.
 
