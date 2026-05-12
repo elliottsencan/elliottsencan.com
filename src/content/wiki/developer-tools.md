@@ -23,6 +23,8 @@ sources:
   - 2026-05/2026-05-03t173422-vectorize-iohindsight
   - 2026-05/2026-05-10t205349-github-is-sinking
   - 2026-05/2026-05-11t155625-storybloqstorybloq
+  - >-
+    2026-05/2026-05-12t165232-seven-cool-javascript-libraries-you-should-know-about
 aliases:
   - developer-tooling
 compiled_at: 2026-05-04T03:35:58.825Z
@@ -42,7 +44,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.025026
-last_source_added: '2026-05-11T22:56:25.382Z'
+last_source_added: '2026-05-12T23:52:32.873Z'
 ---
 Developer tools are the layer between an engineer's intent and working software. The sources here span a wide range of that layer, from low-level execution infrastructure to high-level AI-assisted coding environments, and together sketch how tooling has shifted as AI agents enter the picture.
 

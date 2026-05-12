@@ -12,6 +12,8 @@ sources:
   - >-
     2026-04/2026-04-30t232001-a-better-way-to-build-angular-components-from-inputs-to
   - 2026-05/2026-05-04t231343-ai-likes-deep-modules
+  - >-
+    2026-05/2026-05-12t165232-seven-cool-javascript-libraries-you-should-know-about
 compiled_at: '2026-05-06T04:20:25.103Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -29,6 +31,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.016326
+last_source_added: '2026-05-12T23:52:32.873Z'
 ---
 The core of API design is the contract between a module and its callers: what is exposed, what is hidden, and how much the caller must know to use it correctly. Four sources touch this from different angles, all arriving at the same conclusion: leaky, wide, or unvalidated interfaces create problems at scale.
 
