@@ -16,6 +16,8 @@ sources:
   - 2026-05/2026-05-06t163329-multi-stroke-text-effect-in-css
   - >-
     2026-05/2026-05-08t112608-your-onboarding-is-a-hazing-ritual-and-you-call-it-agile
+  - >-
+    2026-05/2026-05-13t060018-why-senior-developers-fail-to-communicate-their-expertise
 compiled_at: 2026-05-04T04:07:42.371Z
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -33,7 +35,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.017049
-last_source_added: '2026-05-08T18:26:08.209Z'
+last_source_added: '2026-05-13T13:00:18.877Z'
 ---
 Engineering craft covers the habits, patterns, and safeguards that separate code that works from code that holds up. The sources here approach it from four distinct angles, but share a common thread: precision in design pays forward.
 
