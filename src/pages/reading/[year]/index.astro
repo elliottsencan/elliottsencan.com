@@ -2,8 +2,9 @@
 import { type CollectionEntry, getCollection } from "astro:content";
 import Container from "@components/Container.astro";
 import EditorialRule from "@components/EditorialRule.astro";
-import LabeledRule from "@components/LabeledRule.astro";
+import HeroMeta from "@components/HeroMeta.astro";
 import Link from "@components/Link.astro";
+import PageHero from "@components/PageHero.astro";
 import Layout from "@layouts/Layout.astro";
 import { monthKey, SITE_TIMEZONE } from "@lib/utils";
 
@@ -77,13 +78,20 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
       data-pagefind-body
       data-pagefind-filter="type:Reading"
     >
-      <LabeledRule>
-        <Link href="/reading/">Reading</Link> / {year}
-      </LabeledRule>
-
-      <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
-        {entries.length} entr{entries.length === 1 ? "y" : "ies"} from {year}.
-      </p>
+      <PageHero breadcrumb>
+        <Fragment slot="breadcrumb">
+          <Link href="/reading/">Reading</Link> / {year}
+        </Fragment>
+        <Fragment slot="title">{year}</Fragment>
+        <Fragment slot="summary">
+          {entries.length} entr{entries.length === 1 ? "y" : "ies"} from {year}.
+        </Fragment>
+        <HeroMeta
+          slot="meta"
+          count={entries.length}
+          label={`${entries.length} entr${entries.length === 1 ? "y" : "ies"}`}
+        />
+      </PageHero>
 
       {
         buckets.map((bucket, bucketIndex) => (
@@ -142,6 +150,12 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
           </section>
         ))
       }
+
+      <EditorialRule />
+
+      <p class="text-xs text-black/55 dark:text-white/55">
+        <Link href="/reading">back to /reading</Link>
+      </p>
     </div>
   </Container>
 </Layout>

@@ -1,7 +1,9 @@
 ---
 import { getCollection } from "astro:content";
 import Container from "@components/Container.astro";
-import LabeledRule from "@components/LabeledRule.astro";
+import EditorialRule from "@components/EditorialRule.astro";
+import Link from "@components/Link.astro";
+import PageHero from "@components/PageHero.astro";
 import Layout from "@layouts/Layout.astro";
 
 const posts = await getCollection("blog", ({ data }) => !data.draft);
@@ -11,12 +13,13 @@ const tags = [...new Set(posts.flatMap((post) => post.data.tags || []))].sort();
 <Layout title="Tags" description="List of tags used.">
   <Container>
     <div class="space-y-10" data-pagefind-ignore>
-      <LabeledRule>Tags</LabeledRule>
-
-      <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
-        Tags drawn from blog post frontmatter. Click through to see all
-        posts under each tag.
-      </p>
+      <PageHero>
+        <Fragment slot="title">Tags</Fragment>
+        <Fragment slot="summary">
+          Tags drawn from blog post frontmatter. Click through to see all
+          posts under each tag.
+        </Fragment>
+      </PageHero>
 
       <div class="flex flex-wrap gap-2">
         {
@@ -33,6 +36,12 @@ const tags = [...new Set(posts.flatMap((post) => post.data.tags || []))].sort();
           ))
         }
       </div>
+
+      <EditorialRule />
+
+      <p class="text-xs text-black/55 dark:text-white/55">
+        <Link href="/writing">writing →</Link>
+      </p>
     </div>
   </Container>
 </Layout>

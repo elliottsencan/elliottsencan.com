@@ -3,6 +3,7 @@ import { getCollection, getEntry } from "astro:content";
 import Container from "@components/Container.astro";
 import EditorialList from "@components/EditorialList.astro";
 import EditorialListItem from "@components/EditorialListItem.astro";
+import EditorialRule from "@components/EditorialRule.astro";
 import LabeledRule from "@components/LabeledRule.astro";
 import Link from "@components/Link.astro";
 import Sparkline from "@components/labs/Sparkline.astro";
@@ -189,18 +190,18 @@ const trails = [
         prose body (slug, blurb, latest pointer) with a stat block (number,
         unit, mini-viz, aux). On md+ the stat sits as a right column; on
         mobile it collapses to a horizontal strip beneath the prose.
+
+        Section boundaries: every card carries a border-t so the first card's
+        rule marks the section open. The bottom edge is left to the page-
+        level closing EditorialRule below — no border-b on the last card, no
+        opening EditorialRule above (which would double-up with the first
+        card's border-t and inflate the gap with its own margins).
       */}
-      <LabeledRule as="h2">Where this writing comes from</LabeledRule>
       <section data-pagefind-ignore>
         <ol class="not-prose flex flex-col">
           {
-            trails.map((trail, i) => (
-              <li
-                class:list={[
-                  "group relative grid grid-cols-1 gap-5 border-t border-black/10 py-5 first:border-t-0 md:grid-cols-[minmax(0,1fr)_minmax(10rem,16rem)] md:gap-8 md:py-6 dark:border-white/10",
-                  i === trails.length - 1 && "border-b border-black/10 dark:border-white/10",
-                ]}
-              >
+            trails.map((trail) => (
+              <li class="group relative grid grid-cols-1 gap-5 border-t border-black/10 py-5 md:grid-cols-[minmax(0,1fr)_minmax(12rem,18rem)] md:gap-8 md:py-6 dark:border-white/10">
                 <div class="space-y-2.5">
                   {/* Stretched-link slug. The ::before pseudo serves two
                       jobs: it extends the click target across the entire
@@ -316,7 +317,7 @@ const trails = [
                     </div>
 
                     {trail.stat.aux && (
-                      <span class="font-mono text-xs tracking-wider text-black/55 md:w-full md:text-right dark:text-white/55">
+                      <span class="whitespace-nowrap font-mono text-xs tracking-wider text-black/55 md:w-full md:text-right dark:text-white/55">
                         {trail.stat.aux}
                       </span>
                     )}
@@ -327,6 +328,12 @@ const trails = [
           }
         </ol>
       </section>
+
+      <EditorialRule />
+
+      <p class="text-xs text-black/55 dark:text-white/55">
+        <Link href="/about">about →</Link>
+      </p>
     </div>
   </Container>
 </Layout>

@@ -1,7 +1,8 @@
 ---
 import Container from "@components/Container.astro";
-import LabeledRule from "@components/LabeledRule.astro";
+import EditorialRule from "@components/EditorialRule.astro";
 import Link from "@components/Link.astro";
+import PageHero from "@components/PageHero.astro";
 import { SITE } from "@consts";
 import Layout from "@layouts/Layout.astro";
 ---
@@ -21,16 +22,19 @@ import Layout from "@layouts/Layout.astro";
       data-pagefind-body
       data-pagefind-filter="type:About"
     >
-      <LabeledRule>
-        <Link href="/about">About</Link> / Colophon
-      </LabeledRule>
-
-      <section class="space-y-6 text-base leading-relaxed text-black/85 dark:text-white/85">
-        <p>
+      <PageHero breadcrumb>
+        <Fragment slot="breadcrumb">
+          <Link href="/about">About</Link> / Colophon
+        </Fragment>
+        <Fragment slot="title">Colophon</Fragment>
+        <Fragment slot="summary">
           Set in <em>Neue Montreal</em> for headings and interface text,
           <em>Satoshi</em> for running copy, and <em>JetBrains Mono</em> for
           code and small typographic marks. All three self-hosted as WOFF2.
-        </p>
+        </Fragment>
+      </PageHero>
+
+      <section class="space-y-6 text-base leading-relaxed text-black/85 dark:text-white/85">
         <p>
           Built with <Link href="https://astro.build/" external>Astro</Link>
           and
@@ -44,6 +48,12 @@ import Layout from "@layouts/Layout.astro";
           build time from the GitHub GraphQL API.
         </p>
       </section>
+
+      <EditorialRule />
+
+      <p class="text-xs text-black/55 dark:text-white/55">
+        <Link href="/about">back to /about</Link>
+      </p>
     </div>
   </Container>
 </Layout>

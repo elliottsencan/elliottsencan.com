@@ -2,7 +2,9 @@
 import { type CollectionEntry, getCollection, render } from "astro:content";
 import Container from "@components/Container.astro";
 import EditorialRule from "@components/EditorialRule.astro";
+import HeroMeta from "@components/HeroMeta.astro";
 import Link from "@components/Link.astro";
+import PageHero from "@components/PageHero.astro";
 import Layout from "@layouts/Layout.astro";
 
 export async function getStaticPaths() {
@@ -31,14 +33,13 @@ const archivedISO = archivedDate.toISOString().slice(0, 10);
       data-pagefind-filter="type:About"
       data-pagefind-meta={`date:${archivedISO}`}
     >
-      <div>
-        <h1 class="sr-only">{entry.data.title}</h1>
-        <p class="font-heading text-xs font-medium tracking-wider text-black/55 dark:text-white/55">
-          Now &middot; Archived {formatted}
-        </p>
-      </div>
-
-      <EditorialRule />
+      <PageHero breadcrumb>
+        <Fragment slot="breadcrumb">
+          <Link href="/now/archive">Now / Archive</Link> / {entry.id}
+        </Fragment>
+        <Fragment slot="title">{entry.data.title}</Fragment>
+        <HeroMeta slot="meta" label={`Archived ${formatted}`} />
+      </PageHero>
 
       <section
         class="prose prose-neutral dark:prose-invert max-w-none text-base leading-relaxed text-black/85 dark:text-white/85"

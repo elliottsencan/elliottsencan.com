@@ -1,0 +1,33 @@
+---
+// Accent-bordered meta cell used inside PageHero — quantifies the surface in
+// one mono line. Optional `count` paints a saturation-ramped dot row to the
+// left of the label (capped at 8 dots so high-count surfaces don't crowd the
+// cell). The label text carries the actual count and any secondary fields
+// like a date.
+
+type Props = {
+  count?: number;
+  label: string;
+};
+
+const { count, label } = Astro.props;
+const dotCount = count ? Math.min(count, 8) : 0;
+---
+
+<p
+  class="inline-flex w-fit items-center gap-2 rounded-sm border border-[color:var(--accent)]/35 px-2.5 py-1 font-mono text-xs text-[color:var(--accent)]"
+>
+  {
+    dotCount > 0 && (
+      <span class="flex gap-[2px]" aria-hidden="true">
+        {Array.from({ length: dotCount }).map((_, i) => (
+          <span
+            class="block h-1 w-1 rounded-full bg-current"
+            style={`opacity: ${0.7 + i * 0.04};`}
+          />
+        ))}
+      </span>
+    )
+  }
+  <span class="tracking-wider">{label}</span>
+</p>

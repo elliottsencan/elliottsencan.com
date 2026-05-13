@@ -509,11 +509,11 @@ const nodeById = new Map(nodes.map((n) => [n.id, n]));
   }
 
   /* ─── Mobile / coarse-pointer adjustments ───────────────────────────────
-     Touch readers can't hover, so we surface the structural cues that are
+     Touch readers can't hover and taps follow links directly (no
+     tap-to-preview gesture), so we surface the structural cues that are
      focus-only on desktop (italic neighborhood names) and trim the visual
-     noise that needs the high-resolution hover protocol to be readable
-     (cross-cluster Béziers). Hit targets enlarge on coarse pointer for
-     forgiving taps. */
+     noise that needs the hover protocol to be legible (cross-cluster
+     Béziers). Hit targets enlarge on coarse pointer for forgiving taps. */
   @media (max-width: 640px) {
     #constellation-strip .cluster-name {
       opacity: 0.45;
@@ -589,41 +589,19 @@ const nodeById = new Map(nodes.map((n) => [n.id, n]));
       }
     };
 
-    // Touch devices can't hover, so we repurpose the first tap as the
-    // hover-equivalent (preview: light up node + neighbors + cluster) and
-    // let the second tap on the same node follow the link. Keyed on
-    // (pointer: coarse) so desktop hover/click stays untouched. Keyboard
-    // users on coarse devices are unaffected because focusin runs setFocus
-    // before they hit Enter, so the same-slug check passes through.
-    const coarseMql = window.matchMedia("(pointer: coarse)");
-    let isCoarse = coarseMql.matches;
-    coarseMql.addEventListener("change", (e) => {
-      isCoarse = e.matches;
-    });
-
+    // Pointer/keyboard focus only — taps on touch devices follow the link
+    // directly. Touch readers get the structural mobile fallbacks (italic
+    // cluster names at low opacity, cross-cluster edges hidden) without
+    // any tap-to-preview gesture.
     for (const n of nodes) {
       const slug = n.dataset.slug ?? null;
       n.addEventListener("mouseenter", () => setFocus(slug));
       n.addEventListener("focusin", () => setFocus(slug));
-      n.addEventListener("click", (e) => {
-        if (!isCoarse || !slug) return;
-        if (svg.getAttribute("data-focus") === slug) return;
-        e.preventDefault();
-        setFocus(slug);
-      });
     }
     svg.addEventListener("mouseleave", () => setFocus(null));
     svg.addEventListener("focusout", (e) => {
       const next = e.relatedTarget as Node | null;
       if (!next || !svg.contains(next)) setFocus(null);
-    });
-    // Tap-outside dismissal on coarse devices. pointerdown fires before
-    // click, but the .node click handler above runs against the still-set
-    // focus state, so dismissing here doesn't race the tap-to-navigate path.
-    svg.addEventListener("pointerdown", (e) => {
-      if (!isCoarse) return;
-      const target = e.target as Element | null;
-      if (!target?.closest(".node")) setFocus(null);
     });
 
     // If an `activeSlug` prop is set, surface it as the initial focus so

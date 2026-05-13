@@ -1,8 +1,8 @@
 ---
 import Container from "@components/Container.astro";
 import EditorialRule from "@components/EditorialRule.astro";
-import LabeledRule from "@components/LabeledRule.astro";
 import Link from "@components/Link.astro";
+import PageHero from "@components/PageHero.astro";
 import Layout from "@layouts/Layout.astro";
 import { Code } from "astro-expressive-code/components";
 
@@ -124,18 +124,18 @@ const configs: ConfigBlock[] = [
       data-pagefind-body
       data-pagefind-filter="type:Uses"
     >
-      <LabeledRule>
-        <Link href="/about">About</Link> / Uses
-      </LabeledRule>
-
-      <section class="space-y-4 text-base leading-relaxed text-black/85 dark:text-white/85">
-        <p>
+      <PageHero breadcrumb>
+        <Fragment slot="breadcrumb">
+          <Link href="/about">About</Link> / Uses
+        </Fragment>
+        <Fragment slot="title">Uses</Fragment>
+        <Fragment slot="summary">
           {/* TODO: one-paragraph opener. The premise: if you want to know what
           I actually use, read the configs. The /uses convention (uses.tech),
           but done the hacker-blog way — files over marketing. */}
           TODO — opener.
-        </p>
-      </section>
+        </Fragment>
+      </PageHero>
 
       {
         configs.map((config) => (
@@ -198,6 +198,12 @@ const configs: ConfigBlock[] = [
           </li>
         </ul>
       </section>
+
+      <EditorialRule />
+
+      <p class="text-xs text-black/55 dark:text-white/55">
+        <Link href="/about">back to /about</Link>
+      </p>
     </div>
   </Container>
 </Layout>
