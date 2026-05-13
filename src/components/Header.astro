@@ -16,7 +16,7 @@ import SignatureLogo from "./SignatureLogo.astro";
         <SignatureLogo />
       </Link>
       <nav
-        class="header-links flex items-center gap-x-4 text-sm sm:justify-end sm:gap-x-5"
+        class="header-links flex items-center text-sm sm:justify-end sm:gap-x-5"
       >
         <!-- <Link href="/writing">writing</Link> -->
         <Link href="/now">now</Link>
@@ -124,10 +124,10 @@ import SignatureLogo from "./SignatureLogo.astro";
   }
   .header-links {
     grid-area: links;
-    /* Mobile: links pack from the left below the hairline rule. Five
-       items × short labels fit comfortably in any phone viewport with
-       gap-x-2; no scroll mask, no space-between stretching. */
-    justify-content: flex-start;
+    /* Mobile: links stretch edge-to-edge below the hairline rule —
+       first item flush-left, last flush-right, equal gaps between.
+       Maximizes tap targets and reads as primary navigation. */
+    justify-content: space-between;
     white-space: nowrap;
     padding-top: 0.625rem;
     border-top: 1px solid rgb(0 0 0 / 0.1);
@@ -146,6 +146,7 @@ import SignatureLogo from "./SignatureLogo.astro";
       row-gap: 0;
     }
     .header-links {
+      gap: 1.25rem;
       justify-content: flex-end;
       padding-top: 0;
       border-top: 0;
