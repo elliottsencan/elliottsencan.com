@@ -1,0 +1,64 @@
+---
+import EditorialRule from "@components/EditorialRule.astro";
+import LabeledRule from "@components/LabeledRule.astro";
+
+// Site-wide page hero — h1 + summary + meta cell, closed by a bottom dot rule
+// that marks where the hero ends and the body begins. Top-level pages open
+// straight into the h1 (the site Header already sits above, so a top rule
+// would just compete with it). Sub/slug pages opt into `breadcrumb` mode,
+// which prepends a LabeledRule carrying back-nav above the h1 — that's a
+// label with a rule, not a bare rule, so it earns its place.
+//
+// The wiki index + slug pages keep their own bespoke 3-row grid because the
+// constellation in column 2 needs horizontal rules to grid-align against.
+//
+// Slots:
+//   - title    (required): the page h1 text
+//   - summary  (optional): standfirst paragraph
+//   - meta     (optional): typically a <HeroMeta /> cell
+//   - footer   (optional): small text-xs caption line (e.g. "Compiled by …")
+//   - breadcrumb (only used when `breadcrumb` prop is set)
+
+type Props = {
+  breadcrumb?: boolean;
+};
+
+const { breadcrumb = false } = Astro.props;
+---
+
+<div class="flex flex-col gap-3">
+  {
+    breadcrumb && (
+      <LabeledRule>
+        <slot name="breadcrumb" />
+      </LabeledRule>
+    )
+  }
+
+  <div class="flex min-w-0 max-w-[62ch] flex-col gap-4">
+    <div class="flex flex-col gap-3">
+      <h1
+        class="font-heading text-xl font-semibold tracking-tight text-black dark:text-white"
+      >
+        <slot name="title" />
+      </h1>
+      {
+        Astro.slots.has("summary") && (
+          <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
+            <slot name="summary" />
+          </p>
+        )
+      }
+      <slot name="meta" />
+    </div>
+    {
+      Astro.slots.has("footer") && (
+        <p class="text-xs text-black/55 dark:text-white/55">
+          <slot name="footer" />
+        </p>
+      )
+    }
+  </div>
+
+  <EditorialRule compact />
+</div>

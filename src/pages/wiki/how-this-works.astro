@@ -1,8 +1,8 @@
 ---
 import Container from "@components/Container.astro";
 import EditorialRule from "@components/EditorialRule.astro";
-import LabeledRule from "@components/LabeledRule.astro";
 import Link from "@components/Link.astro";
+import PageHero from "@components/PageHero.astro";
 import { REPO, SITE } from "@consts";
 import Layout from "@layouts/Layout.astro";
 
@@ -20,22 +20,19 @@ const mailtoHref = `mailto:${SITE.EMAIL}`;
       data-pagefind-body
       data-pagefind-filter="type:About"
     >
-      <LabeledRule>
-        <Link href="/wiki/">Wiki</Link> / How this works
-      </LabeledRule>
+      <PageHero breadcrumb>
+        <Fragment slot="breadcrumb">
+          <Link href="/wiki/">Wiki</Link> / How this works
+        </Fragment>
+        <Fragment slot="title">How the wiki works</Fragment>
+        <Fragment slot="summary">
+          The wiki is not hand-written. Each article is synthesized across
+          multiple sources I've read. This page exists so a reader knows
+          what that means before they decide how much to trust it.
+        </Fragment>
+      </PageHero>
 
       <section class="space-y-10 text-base leading-relaxed text-black/85 dark:text-white/85">
-        <div class="space-y-3">
-          <h2 class="font-heading text-sm font-medium tracking-wider text-black/65 uppercase dark:text-white/65">
-            What this page is for
-          </h2>
-          <p>
-            The wiki is not hand-written. Each article is synthesized across
-            multiple sources I've read. This page exists so a reader knows
-            what that means before they decide how much to trust it.
-          </p>
-        </div>
-
         <div class="space-y-3">
           <h2 class="font-heading text-sm font-medium tracking-wider text-black/65 uppercase dark:text-white/65">
             How an article gets written

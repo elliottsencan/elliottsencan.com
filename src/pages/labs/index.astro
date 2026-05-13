@@ -1,10 +1,12 @@
 ---
 import { getCollection } from "astro:content";
 import Container from "@components/Container.astro";
-import LabeledRule from "@components/LabeledRule.astro";
+import EditorialRule from "@components/EditorialRule.astro";
+import HeroMeta from "@components/HeroMeta.astro";
 import Link from "@components/Link.astro";
 import CodeCell from "@components/labs/CodeCell.astro";
 import Sparkline from "@components/labs/Sparkline.astro";
+import PageHero from "@components/PageHero.astro";
 import Layout from "@layouts/Layout.astro";
 import { loadLabData } from "@lib/lab-data";
 import { SITE_TIMEZONE } from "@lib/utils";
@@ -35,6 +37,17 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
   timeZone: SITE_TIMEZONE,
 });
 
+const heroMetaFormatter = new Intl.DateTimeFormat("en-US", {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+  timeZone: SITE_TIMEZONE,
+});
+const lastRun = cells[0]?.data.lastRunDate;
+const heroMetaLabel = lastRun
+  ? `${cells.length} ${cells.length === 1 ? "cell" : "cells"} · ${heroMetaFormatter.format(lastRun)}`
+  : `${cells.length} ${cells.length === 1 ? "cell" : "cells"}`;
+
 function formatLastRun(date: Date): string {
   // ISO-style YYYY-MM-DD reads as a build identifier, not a sentence.
   const parts = dateFormatter.formatToParts(date);
@@ -62,16 +75,23 @@ function statusLabel(status: string): string {
       data-pagefind-body
       data-pagefind-filter="type:Labs"
     >
-      <LabeledRule>Labs</LabeledRule>
-
-      <div class="space-y-3">
-        <p class="text-base leading-relaxed text-black dark:text-white">
+      <PageHero>
+        <Fragment slot="title">Labs</Fragment>
+        <Fragment slot="summary">
           The measurement layer. Each cell is a self-contained measurement
           artifact tied to a real failure mode in the pipeline that compiles{" "}
           <Link href="/wiki">/wiki</Link>: where it costs too much, where its
           summaries drift from the source, where its synthesis crosses from
           useful to wrong.
-        </p>
+        </Fragment>
+        {
+          cells.length > 0 && (
+            <HeroMeta slot="meta" count={cells.length} label={heroMetaLabel} />
+          )
+        }
+      </PageHero>
+
+      <div class="space-y-3">
         <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
           Cells live in tiers. Tier 0 is structural: pure-function checks
           over the reading and wiki collections. Tier 1 is semantic:
@@ -91,14 +111,9 @@ function statusLabel(status: string): string {
       {
         cells.length > 0 ? (
           <section data-pagefind-ignore class="space-y-0">
-            <div class="flex items-baseline justify-between gap-3 pb-3 font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55">
-              <span>
-                {cells.length} {cells.length === 1 ? "cell" : "cells"}
-              </span>
-              <span>
-                {liveCount} live · {pendingCount} pending
-              </span>
-            </div>
+            <p class="pb-3 text-right font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55">
+              {liveCount} live · {pendingCount} pending
+            </p>
             <ul class="not-prose flex flex-col">
               {cells.map((cell, i) => {
                 const data = dataByCellId.get(cell.id);
@@ -216,6 +231,12 @@ const { post, run } = await loadCell({
           </div>
         )
       }
+
+      <EditorialRule />
+
+      <p class="text-xs text-black/55 dark:text-white/55">
+        <Link href="/wiki">wiki →</Link>
+      </p>
     </div>
   </Container>
 </Layout>

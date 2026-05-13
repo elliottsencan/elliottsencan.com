@@ -1,10 +1,11 @@
 ---
 import { type CollectionEntry, getCollection, render } from "astro:content";
 import Container from "@components/Container.astro";
-import LabeledRule from "@components/LabeledRule.astro";
+import EditorialRule from "@components/EditorialRule.astro";
 import Link from "@components/Link.astro";
 import CodeCell from "@components/labs/CodeCell.astro";
 import LabResult from "@components/labs/LabResult.astro";
+import PageHero from "@components/PageHero.astro";
 import Layout from "@layouts/Layout.astro";
 import { loadLabData } from "@lib/lab-data";
 import { SITE_TIMEZONE } from "@lib/utils";
@@ -66,28 +67,17 @@ const isLive = cell.data.status === "live";
       data-pagefind-body
       data-pagefind-filter="type:Labs"
     >
-      <LabeledRule>
-        <Link href="/labs/">Labs</Link> / {cell.id}
-      </LabeledRule>
+      <PageHero breadcrumb>
+        <Fragment slot="breadcrumb">
+          <Link href="/labs/">Labs</Link> / {cell.id}
+        </Fragment>
+        <Fragment slot="title">{cell.data.title}</Fragment>
+        <Fragment slot="summary">{cell.data.tldr}</Fragment>
+      </PageHero>
 
-      {/*
-        Hero — title + tldr + hypothesis as two consecutive prose paragraphs.
-        No mono "Hypothesis" label; the second paragraph reads as a
-        continuation of the lede (what is this → what's the question).
-      */}
-      <div class="flex max-w-[62ch] flex-col gap-3">
-        <h1
-          class="font-heading text-2xl font-semibold tracking-tight text-black dark:text-white"
-        >
-          {cell.data.title}
-        </h1>
-        <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
-          {cell.data.tldr}
-        </p>
-        <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
-          {cell.data.hypothesis}
-        </p>
-      </div>
+      <p class="max-w-[62ch] text-base leading-relaxed text-black/85 dark:text-white/85">
+        {cell.data.hypothesis}
+      </p>
 
       {/*
         Result card — metric + chart in one bordered region (provided by
@@ -234,6 +224,12 @@ const isLive = cell.data.status === "live";
           </dl>
         </aside>
       </div>
+
+      <EditorialRule />
+
+      <p class="text-xs text-black/55 dark:text-white/55">
+        <Link href="/labs">back to /labs</Link>
+      </p>
     </div>
   </Container>
 </Layout>

@@ -1,8 +1,8 @@
 ---
 import { getCollection } from "astro:content";
 import Container from "@components/Container.astro";
-import LabeledRule from "@components/LabeledRule.astro";
 import Link from "@components/Link.astro";
+import PageHero from "@components/PageHero.astro";
 import Layout from "@layouts/Layout.astro";
 import { monthKey } from "@lib/utils";
 
@@ -38,7 +38,13 @@ const scopes = [
 >
   <Container>
     <div class="space-y-10" data-pagefind-ignore>
-      <LabeledRule>Search</LabeledRule>
+      <PageHero>
+        <Fragment slot="title">Search</Fragment>
+        <Fragment slot="summary">
+          Search across writing, reading, wiki, projects, and labs. Use the
+          scope chips to narrow.
+        </Fragment>
+      </PageHero>
 
       <div id="pagefind-host" class="space-y-4">
         <nav

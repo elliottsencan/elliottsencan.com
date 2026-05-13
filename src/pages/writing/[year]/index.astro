@@ -3,8 +3,10 @@ import { type CollectionEntry, getCollection } from "astro:content";
 import Container from "@components/Container.astro";
 import EditorialList from "@components/EditorialList.astro";
 import EditorialListItem from "@components/EditorialListItem.astro";
-import LabeledRule from "@components/LabeledRule.astro";
+import EditorialRule from "@components/EditorialRule.astro";
+import HeroMeta from "@components/HeroMeta.astro";
 import Link from "@components/Link.astro";
+import PageHero from "@components/PageHero.astro";
 import Layout from "@layouts/Layout.astro";
 
 export async function getStaticPaths() {
@@ -46,13 +48,20 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
       data-pagefind-body
       data-pagefind-filter="type:Writing"
     >
-      <LabeledRule>
-        <Link href="/writing/">Writing</Link> / {year}
-      </LabeledRule>
-
-      <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
-        {posts.length} post{posts.length === 1 ? "" : "s"} from {year}.
-      </p>
+      <PageHero breadcrumb>
+        <Fragment slot="breadcrumb">
+          <Link href="/writing/">Writing</Link> / {year}
+        </Fragment>
+        <Fragment slot="title">{year}</Fragment>
+        <Fragment slot="summary">
+          {posts.length} post{posts.length === 1 ? "" : "s"} from {year}.
+        </Fragment>
+        <HeroMeta
+          slot="meta"
+          count={posts.length}
+          label={`${posts.length} post${posts.length === 1 ? "" : "s"}`}
+        />
+      </PageHero>
 
       <EditorialList>
         {
@@ -68,6 +77,12 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
           ))
         }
       </EditorialList>
+
+      <EditorialRule />
+
+      <p class="text-xs text-black/55 dark:text-white/55">
+        <Link href="/writing">back to /writing</Link>
+      </p>
     </div>
   </Container>
 </Layout>

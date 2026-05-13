@@ -5,6 +5,7 @@ import EditorialListItem from "@components/EditorialListItem.astro";
 import EditorialRule from "@components/EditorialRule.astro";
 import LabeledRule from "@components/LabeledRule.astro";
 import Link from "@components/Link.astro";
+import PageHero from "@components/PageHero.astro";
 import { SITE } from "@consts";
 import Layout from "@layouts/Layout.astro";
 
@@ -90,16 +91,17 @@ const projectBlurbs: Array<{
       data-pagefind-body
       data-pagefind-filter="type:About"
     >
-      <LabeledRule>About</LabeledRule>
+      <PageHero>
+        <Fragment slot="title">About</Fragment>
+        <Fragment slot="summary">
+          Hi, I'm Elliott, an engineer in San Diego. Currently
+          Principal Engineer at GrupBlox; previously Staff at Transposit, and
+          before that eight years at ServiceNow across IC and
+          engineering-management tracks.
+        </Fragment>
+      </PageHero>
 
       <section class="space-y-4">
-        <p class="font-sans text-base italic leading-relaxed text-black dark:text-white">
-          Elliott Sencan is an engineer in San Diego working on AI agent
-          architecture, developer tools, and complex systems. Currently
-          Principal Engineer at GrupBlox; previously Staff at Transposit, and
-          before that eight years at ServiceNow across IC and engineering-management
-          tracks.
-        </p>
         <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
           This site is where I write about software engineering, architecture,
           and craft. If you want to see what I'm thinking about right now, the
@@ -110,7 +112,6 @@ const projectBlurbs: Array<{
           <Link href="https://ssbdfest.com" external>Same Same But Different</Link>,
           a 7,500-person music festival in Lake Perris, CA, and produce music as
           Hollywood Principle (100M+ Spotify streams, video game placements).
-          Both inform how I think about systems and shipping.
         </p>
       </section>
 
@@ -204,6 +205,12 @@ const projectBlurbs: Array<{
           </li>
         </ul>
       </section>
+
+      <EditorialRule />
+
+      <p class="text-xs text-black/55 dark:text-white/55">
+        <Link href="/now">now →</Link>
+      </p>
     </div>
   </Container>
 </Layout>

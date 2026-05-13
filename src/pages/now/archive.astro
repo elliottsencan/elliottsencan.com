@@ -2,8 +2,9 @@
 import { getCollection } from "astro:content";
 import Container from "@components/Container.astro";
 import EditorialRule from "@components/EditorialRule.astro";
-import LabeledRule from "@components/LabeledRule.astro";
+import HeroMeta from "@components/HeroMeta.astro";
 import Link from "@components/Link.astro";
+import PageHero from "@components/PageHero.astro";
 import Layout from "@layouts/Layout.astro";
 
 // Reverse-chronological list of /now snapshots. Each entry lives in
@@ -31,9 +32,21 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
       data-pagefind-body
       data-pagefind-filter="type:About"
     >
-      <LabeledRule>
-        <Link href="/now">Now</Link> / Archive
-      </LabeledRule>
+      <PageHero breadcrumb>
+        <Fragment slot="breadcrumb">
+          <Link href="/now">Now</Link> / Archive
+        </Fragment>
+        <Fragment slot="title">Archive</Fragment>
+        {
+          entries.length > 0 && (
+            <HeroMeta
+              slot="meta"
+              count={entries.length}
+              label={`${entries.length} snapshot${entries.length === 1 ? "" : "s"}`}
+            />
+          )
+        }
+      </PageHero>
 
       {
         entries.length > 0 ? (

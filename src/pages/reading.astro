@@ -2,8 +2,9 @@
 import { type CollectionEntry, getCollection } from "astro:content";
 import Container from "@components/Container.astro";
 import EditorialRule from "@components/EditorialRule.astro";
-import LabeledRule from "@components/LabeledRule.astro";
+import HeroMeta from "@components/HeroMeta.astro";
 import Link from "@components/Link.astro";
+import PageHero from "@components/PageHero.astro";
 import Layout from "@layouts/Layout.astro";
 import { monthKey, SITE_TIMEZONE } from "@lib/utils";
 
@@ -80,6 +81,17 @@ const compactDateFormatter = new Intl.DateTimeFormat("en-US", {
   month: "short",
   timeZone: SITE_TIMEZONE,
 });
+
+const lastAdded = entries[0]?.data.added;
+const heroMetaFormatter = new Intl.DateTimeFormat("en-US", {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+  timeZone: SITE_TIMEZONE,
+});
+const heroMetaLabel = lastAdded
+  ? `${entries.length} source${entries.length === 1 ? "" : "s"} · ${heroMetaFormatter.format(lastAdded)}`
+  : `${entries.length} source${entries.length === 1 ? "" : "s"}`;
 ---
 
 <Layout
@@ -92,14 +104,16 @@ const compactDateFormatter = new Intl.DateTimeFormat("en-US", {
       data-pagefind-body
       data-pagefind-filter="type:Reading"
     >
-      <LabeledRule>Reading</LabeledRule>
-
-      <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
-        Per-source citation index. Each entry is one URL with a short
-        AI-compiled summary and topic tags. Cross-source synthesis lives at the{" "}
-        <Link href="/wiki">wiki</Link>, where any concept with two or more
-        contributing sources gets a compiled article.
-      </p>
+      <PageHero>
+        <Fragment slot="title">Reading</Fragment>
+        <Fragment slot="summary">
+          Per-source citation index. Each entry is one URL with a short
+          AI-compiled summary and topic tags. Cross-source synthesis lives at
+          the <Link href="/wiki">wiki</Link>, where any concept with two or
+          more contributing sources gets a compiled article.
+        </Fragment>
+        <HeroMeta slot="meta" count={entries.length} label={heroMetaLabel} />
+      </PageHero>
 
       {
         years.length > 1 && (
@@ -234,6 +248,12 @@ const compactDateFormatter = new Intl.DateTimeFormat("en-US", {
           </p>
         )
       }
+
+      <EditorialRule />
+
+      <p class="text-xs text-black/55 dark:text-white/55">
+        <Link href="/wiki">wiki →</Link>
+      </p>
     </div>
   </Container>
 </Layout>
