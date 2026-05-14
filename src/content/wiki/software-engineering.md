@@ -37,6 +37,7 @@ sources:
     2026-05/2026-05-12t165232-seven-cool-javascript-libraries-you-should-know-about
   - >-
     2026-05/2026-05-13t060018-why-senior-developers-fail-to-communicate-their-expertise
+  - 2026-05/2026-05-14t151252-5-faster-fastblur-in-image-rs
 compiled_at: '2026-05-06T16:17:24.293Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -54,7 +55,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.030135
-last_source_added: '2026-05-13T13:00:18.877Z'
+last_source_added: '2026-05-14T22:12:52.626Z'
 ---
 Software engineering as a discipline shows up in these sources less as a unified theory and more as a collection of recurring pressures: how to structure systems so they stay maintainable, how to choose tools that don't create new dependencies, and how to preserve the human judgment that holds everything together.
 
