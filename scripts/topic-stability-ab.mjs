@@ -452,7 +452,6 @@ async function main() {
     without_priors: distinctOff.length,
     format: "int",
     better: "lower",
-    caption: "lower = less fragmentation",
   });
   if (avgJaccard !== null) {
     comparisonMetrics.push({

@@ -4,19 +4,25 @@
  *
  * Two regions:
  *
- *   1. Top: 2-3 paired-bar rows. Each row has a label, a "with" bar, a
- *      "without" bar, and a numeric value at the far right. The bars
- *      share an axis (0..max within the row) so the visual ratio reads
- *      as the delta between cells.
- *   2. Bottom: per-sample strip. One row per sample, paired thin bars
- *      for the same A/B comparison. Sorted so the easy wins land first
- *      and the regressions land last (reveals which entries hold up
- *      under each condition and which collapse).
+ *   1. Top: paired-bar rows, one per headline metric. Each row has a
+ *      fixed-width label on the left, two stacked thin bars in the
+ *      middle (with-priors above, without-priors below), and the two
+ *      numeric values stacked at the right. Bars share an axis (0..max
+ *      within the row) so the visual ratio matches the numeric delta.
+ *      The "winning" side picks up `var(--accent)` as a bar fill —
+ *      same accent the rest of the site uses for forward-link badges.
+ *   2. Bottom: per-sample strip. One row per sample, with a single
+ *      delta bar anchored to a vertical mid-rule. Bar extends right
+ *      and tints accent when priors helped, extends left and stays
+ *      muted when priors hurt. The two raw recovery numbers trail at
+ *      the right as small mono text — they're the receipt, not the
+ *      headline. Sorted so the biggest priors-on wins land first and
+ *      the regressions land last.
  *
- * The "better" hint controls accent placement — the winning side picks
- * up `text-[color:var(--accent)]`. When `single: true`, only one value
- * is shown (used for symmetric metrics like Jaccard where pairing makes
- * no sense). Format controls the value renderer.
+ * Color vocabulary: bars use opacity-modulated foreground for the
+ * losing/null state (`bg-black/55 dark:bg-white/40`) and `var(--accent)`
+ * for the winning state. No bespoke hues — dark and light mode behavior
+ * follows automatically off the existing tokens.
  */
 
 type Format = "percent" | "int" | "decimal";
@@ -26,9 +32,9 @@ type Metric = {
   with_priors: number;
   without_priors: number | null;
   format: Format;
-  /** Which side reads as "the wanted outcome". Controls accent color. */
+  /** Which side reads as "the wanted outcome". Controls accent placement. */
   better?: "higher" | "lower";
-  /** Inline caption shown under the label, mono small. */
+  /** Inline caption shown under the label, mono small. Use sparingly. */
   caption?: string;
   /** When true, render only the `with_priors` value (e.g. Jaccard). */
   single?: boolean;
@@ -83,7 +89,7 @@ function winner(m: Metric): "left" | "right" | null {
 
 // Per-row bar scale: 0..max within the row so the visual delta matches the
 // numeric delta. For percent metrics, cap at 1 so 100% reads as a full bar
-// rather than getting stretched if both values are well below 1.
+// rather than getting stretched when both values are well below 1.
 function rowMax(m: Metric): number {
   if (m.format === "percent") {
     return 1;
@@ -93,8 +99,8 @@ function rowMax(m: Metric): number {
 }
 
 // Stable sort for the per-sample strip: rows where the WITH cell wins most
-// land first (positive delta), even rows in the middle, regressions at the
-// end. Within ties, alphabetical for determinism.
+// land first (positive delta), regressions at the end. Within ties,
+// alphabetical for determinism.
 const sortedSamples = [...samples].sort((a, b) => {
   const da = a.with_priors - a.without_priors;
   const db = b.with_priors - b.without_priors;
@@ -103,26 +109,36 @@ const sortedSamples = [...samples].sort((a, b) => {
   }
   return a.label.localeCompare(b.label);
 });
+
+// Delta-strip geometry: max absolute delta in the sample set sets the
+// scale so the largest swing fills its half. Falls back to 1 if every
+// sample is a no-op.
+const maxAbsDelta =
+  sortedSamples.reduce(
+    (acc, s) => Math.max(acc, Math.abs(s.with_priors - s.without_priors)),
+    0,
+  ) || 1;
 ---
 
-<div class="flex flex-col gap-7">
+<div class="flex flex-col gap-8">
   {/* Legend strip — quiet, just labels the two columns of bars below. */}
   <div
-    class="flex items-center gap-3 font-mono text-[0.65rem] uppercase tracking-widest text-black/55 dark:text-white/55"
+    class="flex items-center gap-4 font-mono text-[0.65rem] uppercase tracking-widest text-black/55 dark:text-white/55"
   >
     <span class="inline-flex items-center gap-1.5">
-      <span class="inline-block h-2 w-2 rounded-sm bg-black/85 dark:bg-white/85"></span>
+      <span class="inline-block h-2 w-2 rounded-sm bg-[color:var(--accent)]"></span>
       {legend.left}
     </span>
     <span class="inline-flex items-center gap-1.5">
       <span
-        class="inline-block h-2 w-2 rounded-sm bg-black/25 dark:bg-white/25"
+        class="inline-block h-2 w-2 rounded-sm bg-black/55 dark:bg-white/40"
       ></span>
       {legend.right}
     </span>
   </div>
 
-  {/* Top: headline paired-bar rows. */}
+  {/* Top: headline paired-bar rows. Consistent label width, consistent bar
+      geometry — reads as one hierarchical block, not three loose rows. */}
   <div class="flex flex-col gap-5">
     {
       metrics.map((m) => {
@@ -131,9 +147,11 @@ const sortedSamples = [...samples].sort((a, b) => {
         const wo =
           m.without_priors === null ? 0 : (m.without_priors / max) * 100;
         const win = winner(m);
+        const leftWins = win === "left";
+        const rightWins = win === "right";
         return (
-          <div class="flex flex-col gap-1.5">
-            <div class="flex items-baseline justify-between gap-3">
+          <div class="grid grid-cols-[10rem_minmax(0,1fr)_4.5rem] items-center gap-4">
+            <div class="flex flex-col gap-0.5">
               <span class="font-mono text-xs uppercase tracking-widest text-black/65 dark:text-white/65">
                 {m.label}
               </span>
@@ -144,18 +162,39 @@ const sortedSamples = [...samples].sort((a, b) => {
               )}
             </div>
 
-            {/* WITH row */}
-            <div class="flex items-center gap-3">
-              <div class="relative h-4 flex-1 bg-black/5 dark:bg-white/8">
+            <div class="flex flex-col gap-1">
+              {/* WITH row */}
+              <div class="relative h-2.5 bg-black/5 dark:bg-white/8">
                 <div
-                  class="h-full bg-black/85 dark:bg-white/85"
+                  class:list={[
+                    "h-full",
+                    leftWins
+                      ? "bg-[color:var(--accent)]"
+                      : "bg-black/55 dark:bg-white/40",
+                  ]}
                   style={`width: ${w}%;`}
                 />
               </div>
+              {/* WITHOUT row — omitted entirely if single */}
+              {!m.single && (
+                <div class="relative h-2.5 bg-black/5 dark:bg-white/8">
+                  <div
+                    class:list={[
+                      "h-full",
+                      rightWins
+                        ? "bg-[color:var(--accent)]"
+                        : "bg-black/55 dark:bg-white/40",
+                    ]}
+                    style={`width: ${wo}%;`}
+                  />
+                </div>
+              )}
+            </div>
+
+            <div class="flex flex-col gap-1 text-right font-mono text-xs tabular-nums">
               <span
                 class:list={[
-                  "w-16 shrink-0 text-right font-mono text-xs",
-                  win === "left"
+                  leftWins
                     ? "text-[color:var(--accent)]"
                     : "text-black dark:text-white",
                 ]}
@@ -163,79 +202,80 @@ const sortedSamples = [...samples].sort((a, b) => {
               >
                 {fmt(m.with_priors, m.format)}
               </span>
-            </div>
-
-            {/* WITHOUT row — omitted entirely if single */}
-            {!m.single && (
-              <div class="flex items-center gap-3">
-                <div class="relative h-4 flex-1 bg-black/5 dark:bg-white/8">
-                  <div
-                    class="h-full bg-black/30 dark:bg-white/30"
-                    style={`width: ${wo}%;`}
-                  />
-                </div>
+              {!m.single && (
                 <span
                   class:list={[
-                    "w-16 shrink-0 text-right font-mono text-xs",
-                    win === "right"
+                    rightWins
                       ? "text-[color:var(--accent)]"
-                      : "text-black/65 dark:text-white/65",
+                      : "text-black/55 dark:text-white/55",
                   ]}
                   style="font-variant-numeric: tabular-nums;"
                 >
                   {fmt(m.without_priors, m.format)}
                 </span>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         );
       })
     }
   </div>
 
-  {/* Bottom: per-sample strip. Two thin paired bars per row. */}
+  {/* Bottom: per-sample delta strip. Single bar anchored to a vertical
+      mid-rule. Right = priors helped (accent); left = priors hurt (muted).
+      The two raw recovery numbers trail as small mono text. */}
   {
     sortedSamples.length > 0 && (
-      <div class="flex flex-col gap-2 border-t border-black/10 pt-5 dark:border-white/10">
-        <div class="flex items-baseline justify-between">
+      <div class="flex flex-col gap-3 border-t border-black/10 pt-6 dark:border-white/10">
+        <div class="flex items-baseline justify-between gap-3">
           <span class="font-mono text-xs uppercase tracking-widest text-black/65 dark:text-white/65">
             {stripLabel ?? `Per-sample recovery (n=${sortedSamples.length})`}
           </span>
-          <span class="font-mono text-[0.65rem] tracking-wide text-black/45 dark:text-white/45">
-            sorted by delta, best first
+          <span class="font-mono text-[0.65rem] uppercase tracking-widest text-black/45 dark:text-white/45">
+            delta · on − off
           </span>
         </div>
-        <div class="flex flex-col gap-1.5">
+        <div class="flex flex-col gap-1">
           {sortedSamples.map((s) => {
-            const w = s.with_priors * 100;
-            const wo = s.without_priors * 100;
+            const delta = s.with_priors - s.without_priors;
+            const magnitude = (Math.abs(delta) / maxAbsDelta) * 50; // %, half-track
+            const helped = delta > 0;
+            const neutral = delta === 0;
             return (
-              <div class="grid grid-cols-[minmax(0,1fr)_minmax(140px,1fr)_auto] items-center gap-3">
+              <div class="grid grid-cols-[minmax(0,1fr)_minmax(120px,200px)_5rem] items-center gap-4">
                 <span
                   class="truncate font-mono text-[0.7rem] text-black/65 dark:text-white/65"
                   title={s.label}
                 >
                   {s.label}
                 </span>
-                <div class="flex flex-col gap-0.5">
-                  <div class="relative h-1.5 bg-black/5 dark:bg-white/8">
+                {/* Delta bar — vertical mid-rule, bar extends from center. */}
+                <div class="relative h-2">
+                  {/* mid-rule */}
+                  <div class="absolute inset-y-0 left-1/2 w-px bg-black/20 dark:bg-white/20" />
+                  {!neutral && (
                     <div
-                      class="h-full bg-black/85 dark:bg-white/85"
-                      style={`width: ${w}%;`}
+                      class:list={[
+                        "absolute top-0 h-full",
+                        helped
+                          ? "bg-[color:var(--accent)]"
+                          : "bg-black/55 dark:bg-white/40",
+                      ]}
+                      style={
+                        helped
+                          ? `left: 50%; width: ${magnitude}%;`
+                          : `right: 50%; width: ${magnitude}%;`
+                      }
                     />
-                  </div>
-                  <div class="relative h-1.5 bg-black/5 dark:bg-white/8">
-                    <div
-                      class="h-full bg-black/30 dark:bg-white/30"
-                      style={`width: ${wo}%;`}
-                    />
-                  </div>
+                  )}
                 </div>
                 <span
-                  class="shrink-0 font-mono text-[0.65rem] tabular-nums text-black/55 dark:text-white/55"
+                  class="text-right font-mono text-[0.65rem] tabular-nums text-black/55 dark:text-white/55"
                   style="font-variant-numeric: tabular-nums;"
                 >
-                  {Math.round(w)}/{Math.round(wo)}
+                  {Math.round(s.with_priors * 100)}
+                  <span class="text-black/30 dark:text-white/30"> / </span>
+                  {Math.round(s.without_priors * 100)}
                 </span>
               </div>
             );

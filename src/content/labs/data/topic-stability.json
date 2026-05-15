@@ -1325,8 +1325,7 @@
         "with_priors": 32,
         "without_priors": 53,
         "format": "int",
-        "better": "lower",
-        "caption": "lower = less fragmentation"
+        "better": "lower"
       },
       {
         "label": "Per-URL Jaccard",
