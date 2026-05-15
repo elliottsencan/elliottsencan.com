@@ -160,6 +160,14 @@ export interface LinkRequest {
   excerpt?: string;
   /** Default true (production). Set false to skip the existing-topics fetch — used by the rigor-pass A/B run measuring topic-stability drift. */
   topic_priors: boolean;
+  /**
+   * Default false (production behavior). When true, the handler runs the
+   * Anthropic summarization step and returns the resulting topics + cost
+   * but skips the commit-to-main step and the threshold-trigger spawn.
+   * Used by the topic-stability A/B driver so a 20-URL × 2-cell run
+   * doesn't pollute the reading corpus with 40 duplicate entries.
+   */
+  dry_run: boolean;
 }
 
 // LinkSummary and WikiArticle are re-exported at the top of this file; the

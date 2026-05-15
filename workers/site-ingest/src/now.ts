@@ -121,11 +121,20 @@ export async function handle(env: Env, source: "scheduled" | "trigger"): Promise
   }
 
   const drafted = draft.data.markdown.trim();
+  const draftCost = draft.data.cost;
   // Byte-identical short-circuit: the model occasionally regenerates an
   // identical page. Skipping here keeps the git log clean (no churn PRs).
+  // The Anthropic call still happened, so we log + return the cost even
+  // when no PR opens — otherwise no-change runs would silently disappear
+  // from the cost rollup.
   if (drafted === currentNow.data.content.trim()) {
-    log.info("now", "no-change", "drafted content identical to current — skipping PR");
-    return jsonResponse({ ok: true, skipped: "no-change" });
+    log.info("now", "no-change", "drafted content identical to current — skipping PR", {
+      cost_usd: draftCost.cost_usd,
+      input_tokens: draftCost.usage.input_tokens,
+      output_tokens: draftCost.usage.output_tokens,
+      model: draftCost.model,
+    });
+    return jsonResponse({ ok: true, skipped: "no-change", cost: draftCost });
   }
 
   // Gate: validate the draft against the shared `now` collection schema
@@ -220,8 +229,14 @@ export async function handle(env: Env, source: "scheduled" | "trigger"): Promise
     return jsonResponse({ ok: false, error: `open PR: ${pr.error}` }, 502);
   }
 
-  log.info("now", "complete", "PR opened", { number: pr.data.number });
-  return jsonResponse({ ok: true, prNumber: pr.data.number, branch });
+  log.info("now", "complete", "PR opened", {
+    number: pr.data.number,
+    cost_usd: draftCost.cost_usd,
+    input_tokens: draftCost.usage.input_tokens,
+    output_tokens: draftCost.usage.output_tokens,
+    model: draftCost.model,
+  });
+  return jsonResponse({ ok: true, prNumber: pr.data.number, branch, cost: draftCost });
 }
 
 // ---------- prompt + PR body builders ----------

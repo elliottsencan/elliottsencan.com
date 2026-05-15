@@ -112,6 +112,28 @@ describe("link.validate", () => {
       ok: false,
     });
   });
+
+  it("defaults dry_run to false (production behavior — every /link commits)", () => {
+    const r = validate({ url: "https://example.com/" });
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.data.dry_run).toBe(false);
+    }
+  });
+
+  it("preserves dry_run=true so the topic-stability A/B driver can opt in", () => {
+    const r = validate({ url: "https://example.com/", dry_run: true });
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.data.dry_run).toBe(true);
+    }
+  });
+
+  it("rejects a non-boolean dry_run", () => {
+    expect(validate({ url: "https://example.com/", dry_run: "yes" })).toMatchObject({
+      ok: false,
+    });
+  });
 });
 
 // ---------- buildEntryMarkdown ----------
@@ -242,6 +264,7 @@ describe("makeLinkStrategy.plan — copyright-posture", () => {
     const strategy = makeLinkStrategy({
       url: "https://nyt.com/article",
       topic_priors: true,
+      dry_run: false,
     });
     const env = baseEnv({ EXCLUDED_HOSTS: "nyt.com" });
     const result = await strategy.plan({ env }, env);
@@ -258,6 +281,7 @@ describe("makeLinkStrategy.plan — copyright-posture", () => {
     const strategy = makeLinkStrategy({
       url: "https://cooking.nyt.com/recipe/x",
       topic_priors: true,
+      dry_run: false,
     });
     const env = baseEnv({ EXCLUDED_HOSTS: "nyt.com,washingtonpost.com" });
     const result = await strategy.plan({ env }, env);
@@ -281,6 +305,7 @@ describe("makeLinkStrategy.plan — copyright-posture", () => {
     const strategy = makeLinkStrategy({
       url: "https://example.com/post",
       topic_priors: false,
+      dry_run: false,
     });
     const env = baseEnv();
     const result = await strategy.plan({ env }, env);
@@ -313,6 +338,7 @@ describe("makeLinkStrategy.plan — copyright-posture", () => {
     const strategy = makeLinkStrategy({
       url: "https://example.com/post",
       topic_priors: false,
+      dry_run: false,
     });
     const env = baseEnv();
     const result = await strategy.plan({ env }, env);
@@ -339,6 +365,7 @@ describe("makeLinkStrategy.plan — copyright-posture", () => {
     const strategy = makeLinkStrategy({
       url: "https://example.com/post",
       topic_priors: false,
+      dry_run: false,
     });
     const env = baseEnv();
     const result = await strategy.plan({ env }, env);
@@ -369,6 +396,7 @@ describe("makeLinkStrategy.plan — copyright-posture", () => {
     const strategy = makeLinkStrategy({
       url: "https://example.com/post",
       topic_priors: false,
+      dry_run: false,
     });
     const env = baseEnv();
     const result = await strategy.plan({ env }, env);
@@ -397,6 +425,7 @@ describe("makeLinkStrategy.plan — copyright-posture", () => {
     const strategy = makeLinkStrategy({
       url: "https://blog.example.com/post",
       topic_priors: false,
+      dry_run: false,
     });
     const env = baseEnv();
     const result = await strategy.plan({ env }, env);
@@ -683,6 +712,7 @@ describe("makeLinkStrategy.plan — wiki sources[] patch", () => {
       // topic_priors: false short-circuits the wiki.json fetch — we don't
       // need the canonical-vocabulary network round-trip in this test.
       topic_priors: false,
+      dry_run: false,
     });
     const env = baseEnv();
     const result = await strategy.plan({ env }, env);
@@ -739,6 +769,7 @@ describe("makeLinkStrategy.plan — wiki sources[] patch", () => {
     const strategy = makeLinkStrategy({
       url: "https://example.com/post",
       topic_priors: false,
+      dry_run: false,
     });
     const env = baseEnv();
     const result = await strategy.plan({ env }, env);
@@ -804,6 +835,7 @@ describe("makeLinkStrategy.plan — wiki sources[] patch", () => {
     const strategy = makeLinkStrategy({
       url: "https://example.com/post",
       topic_priors: true,
+      dry_run: false,
     });
     const env = baseEnv();
     const result = await strategy.plan({ env }, env);
@@ -1154,6 +1186,7 @@ describe("makeLinkStrategy.plan — threshold trigger surfaces in summary", () =
     const strategy = makeLinkStrategy({
       url: "https://example.com/post",
       topic_priors: false,
+      dry_run: false,
     });
     const env = baseEnv();
     const result = await strategy.plan({ env }, env);
@@ -1215,6 +1248,7 @@ describe("makeLinkStrategy.plan — threshold trigger surfaces in summary", () =
     const strategy = makeLinkStrategy({
       url: "https://example.com/post",
       topic_priors: false,
+      dry_run: false,
     });
     const env = baseEnv();
     const result = await strategy.plan({ env }, env);
@@ -1364,5 +1398,136 @@ describe("spawnThresholdSynthesis — silent-failure surfacing", () => {
     const line = calls.find((c) => c.includes("[link:threshold-trigger]"));
     expect(line).toBeDefined();
     expect(line).toContain("error_message=github 502");
+  });
+});
+
+// ---------- dry_run: topic-stability A/B support ----------
+
+describe("makeLinkStrategy.plan — dry_run", () => {
+  beforeEach(() => {
+    __resetRobotsCacheForTests();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+    __resetRobotsCacheForTests();
+  });
+
+  it("returns the Anthropic summary and skips wiki-patch + threshold-trigger GitHub IO", async () => {
+    stubFetch((url) => {
+      if (url.endsWith("/robots.txt")) {
+        return new Response("", { status: 404 });
+      }
+      return new Response("<html><title>Article</title></html>", { status: 200 });
+    });
+    vi.spyOn(anthropicModule, "summarizeLink").mockResolvedValue({
+      ok: true,
+      data: {
+        title: "Article",
+        summary: "Summary.",
+        category: "tech",
+        topics: ["ai-assisted-coding"],
+        model: "claude-sonnet-4-6",
+        cost: {
+          usage: {
+            input_tokens: 1000,
+            output_tokens: 200,
+            cache_creation_input_tokens: 0,
+            cache_read_input_tokens: 0,
+          },
+          model: "claude-sonnet-4-6",
+          pricing: null,
+          cost_usd: 0.006,
+        },
+      },
+    });
+    // wiki-patch and threshold-trigger both reach GitHub via getFile/listDir.
+    // Both should be skipped in dry_run mode — spies assert that.
+    const getFileSpy = vi.spyOn(githubModule, "getFile");
+    const listDirSpy = vi.spyOn(githubModule, "listDir");
+    const strategy = makeLinkStrategy({
+      url: "https://example.com/post",
+      topic_priors: false,
+      dry_run: true,
+    });
+    const env = baseEnv();
+    const result = await strategy.plan({ env }, env);
+    expect(result.ok).toBe(true);
+    if (!result.ok) {
+      return;
+    }
+    expect(result.data.mutation.added).toEqual([]);
+    expect(result.data.mutation.changed).toEqual([]);
+    expect(result.data.summary?.topics_committed).toEqual(["ai-assisted-coding"]);
+    expect(result.data.summary?.wiki_patched).toEqual([]);
+    expect(result.data.summary?.triggered_synthesis).toEqual([]);
+    expect(result.data.summary?.cost.cost_usd).toBe(0.006);
+    expect(getFileSpy).not.toHaveBeenCalled();
+    expect(listDirSpy).not.toHaveBeenCalled();
+  });
+});
+
+describe("link.handle — dry_run", () => {
+  beforeEach(() => {
+    __resetRobotsCacheForTests();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+    __resetRobotsCacheForTests();
+  });
+
+  it("returns dry_run:true response without invoking runPipeline or ctx.waitUntil", async () => {
+    stubFetch((url) => {
+      if (url.endsWith("/robots.txt")) {
+        return new Response("", { status: 404 });
+      }
+      return new Response("<html><title>X</title></html>", { status: 200 });
+    });
+    vi.spyOn(anthropicModule, "summarizeLink").mockResolvedValue({
+      ok: true,
+      data: {
+        title: "X",
+        summary: "x.",
+        category: "tech",
+        topics: ["topic-a"],
+        model: "claude-sonnet-4-6",
+        cost: {
+          usage: {
+            input_tokens: 10,
+            output_tokens: 5,
+            cache_creation_input_tokens: 0,
+            cache_read_input_tokens: 0,
+          },
+          model: "claude-sonnet-4-6",
+          pricing: null,
+          cost_usd: 0.0001,
+        },
+      },
+    });
+    const runPipelineSpy = vi.spyOn(pipelineModule, "runPipeline");
+    const env = baseEnv();
+    const ctx = { waitUntil: vi.fn() } as unknown as ExecutionContext;
+    const req = new Request("https://w.example.com/link", {
+      method: "POST",
+      body: JSON.stringify({
+        url: "https://example.com/post",
+        topic_priors: false,
+        dry_run: true,
+      }),
+    });
+    const res = await handle(req, env, ctx);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as Record<string, unknown>;
+    expect(body.ok).toBe(true);
+    expect(body.dry_run).toBe(true);
+    expect(body.topics_committed).toEqual(["topic-a"]);
+    expect((body.cost as { cost_usd: number }).cost_usd).toBe(0.0001);
+    // No commit field on dry-run responses — committing is the thing we're skipping.
+    expect("commit" in body).toBe(false);
+    expect(runPipelineSpy).not.toHaveBeenCalled();
+    expect((ctx.waitUntil as unknown as ReturnType<typeof vi.fn>).mock.calls).toHaveLength(0);
   });
 });

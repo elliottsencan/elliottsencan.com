@@ -209,6 +209,31 @@ export function makeLinkStrategy(req: LinkRequest): Strategy<LinkSummaryRow> {
         added,
       });
       const path = buildEntryPath({ env, added, title: finalTitle });
+      // Dry-run short-circuit: skip the GitHub-touching wiki-patch and
+      // threshold-trigger work and return the summary directly. Used by the
+      // topic-stability A/B driver (rigor-pass §2) — runs Anthropic against
+      // 20 URLs × 2 cells, only needs `topics_committed` from each call.
+      if (req.dry_run) {
+        return {
+          ok: true,
+          data: {
+            mutation: { added: [], changed: [] },
+            summary: {
+              path,
+              category: summary.category,
+              topics_context_loaded: vocab.loaded,
+              title_source: titleSource,
+              topics_committed: applied.committed,
+              topics_rewritten: applied.rewritten,
+              topics_coined: applied.coined,
+              topic_rationale: summary.topic_rationale,
+              cost: summary.cost,
+              triggered_synthesis: [],
+              wiki_patched: [],
+            },
+          },
+        };
+      }
       // Hoisted: a single GitHub client shared by patchExistingWikiSources
       // (PR 4) and the threshold-trigger reading enumeration below (PR 5).
       // Reusing the client keeps connection pooling/coalescing tidy and
@@ -308,6 +333,42 @@ export async function handle(request: Request, env: Env, ctx: ExecutionContext):
   }
   const strategy = makeLinkStrategy(validation.data);
 
+  // Dry-run path: run plan() directly, return its summary, skip the
+  // substrate commit and the threshold-trigger spawn. Mirrors the same
+  // dry_run early-return in /synthesize.
+  if (validation.data.dry_run) {
+    const planned = await strategy.plan({ env }, env);
+    if (!planned.ok) {
+      return jsonResponse({ ok: false, error: planned.error }, planned.status ?? 500);
+    }
+    const summary = planned.data.summary;
+    log.info("link", "dry-run", "summarized without commit", {
+      category: summary?.category,
+      topics_context_loaded: summary?.topics_context_loaded,
+      topics_committed: summary?.topics_committed.join(","),
+      cost_usd: summary?.cost.cost_usd,
+      input_tokens: summary?.cost.usage.input_tokens,
+      output_tokens: summary?.cost.usage.output_tokens,
+      model: summary?.cost.model,
+    });
+    return jsonResponse(
+      {
+        ok: true,
+        dry_run: true,
+        category: summary?.category,
+        topics_context_loaded: summary?.topics_context_loaded ?? false,
+        title_source: summary?.title_source,
+        topics_committed: summary?.topics_committed ?? [],
+        topics_rewritten: summary?.topics_rewritten ?? [],
+        topics_coined: summary?.topics_coined ?? [],
+        topic_rationale: summary?.topic_rationale,
+        cost: summary?.cost ?? null,
+        ...(summary?.opted_out ? { opted_out: summary.opted_out } : {}),
+      },
+      200,
+    );
+  }
+
   const deps = makePipelineDeps(env);
   const result = await pipelineModule.runPipeline(
     strategy,
@@ -403,6 +464,12 @@ const LinkRequestSchema = z.object({
   // Default true (production behavior — show in-use slugs to the model
   // for stability). Flip to false to measure A/B topic drift.
   topic_priors: z.boolean().default(true),
+  // Default false (production behavior — every /link commits). When true,
+  // the handler runs the Anthropic summarization and returns the resulting
+  // topics + cost but skips the commit and threshold-trigger spawn. Used
+  // by the topic-stability A/B driver so a 20-URL × 2-cell run doesn't
+  // pollute the reading corpus with 40 duplicate entries.
+  dry_run: z.boolean().default(false),
 });
 
 // Exported for unit tests; in-file callers use it directly.
