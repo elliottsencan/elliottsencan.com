@@ -8,6 +8,7 @@
  */
 import Barchart from "./Barchart.astro";
 import CalendarHeatmap from "./CalendarHeatmap.astro";
+import ComparisonBars from "./ComparisonBars.astro";
 import LabTable from "./LabTable.astro";
 import ResultCell from "./ResultCell.astro";
 import Scatter from "./Scatter.astro";
@@ -15,7 +16,7 @@ import Sparkline from "./Sparkline.astro";
 import StatGrid from "./StatGrid.astro";
 
 type Props = {
-  kind?: "chart" | "table" | "barchart" | "stat" | "calendar" | "scatter";
+  kind?: "chart" | "table" | "barchart" | "stat" | "calendar" | "scatter" | "comparison";
   data: unknown;
   /** Visualization detail level — controls heights for charts/scatters. */
   size?: "compact" | "full";
@@ -93,7 +94,81 @@ const scatterData =
       }
     : null;
 
-const matched = chartData ?? tableData ?? barData ?? statData ?? calendarData ?? scatterData;
+// Comparison shape — A/B paired-bar headline metrics + a per-sample strip.
+// Reads from a top-level `comparison: { metrics, samples, legend?, stripLabel? }`
+// block written by the driver script. Renderer enforces shape per-field so a
+// partial sidecar (e.g. metrics present, samples missing) still renders the
+// piece it has rather than dropping to the JSON fallback.
+type ComparisonMetric = {
+  label: string;
+  with_priors: number;
+  without_priors: number | null;
+  format: "percent" | "int" | "decimal";
+  better?: "higher" | "lower";
+  caption?: string;
+  single?: boolean;
+};
+type ComparisonSample = { label: string; with_priors: number; without_priors: number };
+type ComparisonLegend = { left: string; right: string };
+
+function isMetric(v: unknown): v is ComparisonMetric {
+  if (!isObject(v)) {
+    return false;
+  }
+  const fmt = (v as { format?: unknown }).format;
+  return (
+    typeof (v as { label?: unknown }).label === "string" &&
+    typeof (v as { with_priors?: unknown }).with_priors === "number" &&
+    (typeof (v as { without_priors?: unknown }).without_priors === "number" ||
+      (v as { without_priors?: unknown }).without_priors === null ||
+      (v as { without_priors?: unknown }).without_priors === undefined) &&
+    (fmt === "percent" || fmt === "int" || fmt === "decimal")
+  );
+}
+function isSample(v: unknown): v is ComparisonSample {
+  return (
+    isObject(v) &&
+    typeof (v as { label?: unknown }).label === "string" &&
+    typeof (v as { with_priors?: unknown }).with_priors === "number" &&
+    typeof (v as { without_priors?: unknown }).without_priors === "number"
+  );
+}
+
+const comparisonRaw =
+  kind === "comparison" && isObject(data) && isObject(data.comparison)
+    ? (data.comparison as Record<string, unknown>)
+    : null;
+const comparisonData = comparisonRaw
+  ? {
+      metrics: Array.isArray(comparisonRaw.metrics)
+        ? (comparisonRaw.metrics as unknown[]).filter(isMetric)
+        : [],
+      samples: Array.isArray(comparisonRaw.samples)
+        ? (comparisonRaw.samples as unknown[]).filter(isSample)
+        : [],
+      legend:
+        isObject(comparisonRaw.legend) &&
+        typeof (comparisonRaw.legend as { left?: unknown }).left === "string" &&
+        typeof (comparisonRaw.legend as { right?: unknown }).right === "string"
+          ? (comparisonRaw.legend as ComparisonLegend)
+          : undefined,
+      stripLabel:
+        typeof comparisonRaw.stripLabel === "string" ? comparisonRaw.stripLabel : undefined,
+    }
+  : null;
+
+const hasComparison =
+  comparisonData !== null &&
+  (comparisonData.metrics.length > 0 || comparisonData.samples.length > 0);
+
+const matched =
+  chartData ??
+  tableData ??
+  barData ??
+  statData ??
+  calendarData ??
+  scatterData ??
+  (hasComparison ? comparisonData : null);
 
 const sparkHeight = size === "compact" ? 60 : 120;
 const scatterHeight = size === "compact" ? 100 : 180;
@@ -144,6 +219,16 @@ const scatterHeight = size === "compact" ? 100 : 180;
         xLabel={scatterData.xLabel}
         yLabel={scatterData.yLabel}
         height={scatterHeight}
+      />
+    )
+  }
+  {
+    hasComparison && comparisonData && (
+      <ComparisonBars
+        metrics={comparisonData.metrics}
+        samples={comparisonData.samples}
+        legend={comparisonData.legend}
+        stripLabel={comparisonData.stripLabel}
       />
     )
   }

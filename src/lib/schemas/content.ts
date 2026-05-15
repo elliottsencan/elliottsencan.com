@@ -250,7 +250,15 @@ export type CitationFaithfulnessSidecar = z.infer<typeof CitationFaithfulnessSid
 export const LabStatuses = ["draft", "running", "live", "archived"] as const;
 export const LabStatusSchema = z.enum(LabStatuses);
 
-export const LabKinds = ["chart", "table", "barchart", "stat", "calendar", "scatter"] as const;
+export const LabKinds = [
+  "chart",
+  "table",
+  "barchart",
+  "stat",
+  "calendar",
+  "scatter",
+  "comparison",
+] as const;
 export const LabKindSchema = z.enum(LabKinds);
 
 /**

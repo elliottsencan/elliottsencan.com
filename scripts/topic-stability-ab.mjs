@@ -34,7 +34,7 @@
  *   --help / -h
  */
 
-import { mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
+import { mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
@@ -134,9 +134,7 @@ function sampleCorpus(n) {
     if (fm.noindex === true) {
       continue;
     }
-    const topics = Array.isArray(fm.topics)
-      ? fm.topics.filter((t) => typeof t === "string")
-      : [];
+    const topics = Array.isArray(fm.topics) ? fm.topics.filter((t) => typeof t === "string") : [];
     if (topics.length === 0) {
       continue;
     }
@@ -405,6 +403,75 @@ async function main() {
     value: `$${(totalCostWithPriors + totalCostWithoutPriors).toFixed(2)}`,
   });
 
+  // Per-sample friendly label for the comparison strip. Reading entries
+  // carry path `src/content/reading/<YYYY-MM>/<isoTimestamp>-<slug>.md` — we
+  // strip the timestamp and clamp to keep the strip tidy. Fixture-mode
+  // targets fall back to a short hostname/path token.
+  const labelFromPath = (srcPath) => {
+    const base = srcPath.split("/").pop().replace(/\.md$/, "");
+    const m = base.match(/^\d{4}-\d{2}-\d{2}T\d{6}-(.+)$/);
+    const slug = m ? m[1] : base;
+    return slug.length > 44 ? `${slug.slice(0, 41)}...` : slug;
+  };
+  const labelFromUrl = (url) => {
+    try {
+      const u = new URL(url.split("\n")[0]);
+      const host = u.hostname.replace(/^www\./, "");
+      const last = u.pathname.replace(/\/$/, "").split("/").filter(Boolean).pop() || host;
+      return last.length > 30 ? `${last.slice(0, 27)}...` : last;
+    } catch {
+      return "(url)";
+    }
+  };
+
+  // Comparison shape — paired-bar headline metrics + per-sample strip. The
+  // /labs/topic-stability cell renders this directly. Recovery rows are only
+  // present when the run was corpus-mode (fixture-mode has no ground truth).
+  const recoverySamples = perUrl
+    .filter((e) => e.recovery_priors_on && e.recovery_priors_off)
+    .map((e) => ({
+      label: e.source_path ? labelFromPath(e.source_path) : labelFromUrl(e.url),
+      with_priors: e.recovery_priors_on.rate,
+      without_priors: e.recovery_priors_off.rate,
+    }));
+
+  const comparisonMetrics = [];
+  if (avgRecoveryOn !== null && avgRecoveryOff !== null) {
+    comparisonMetrics.push({
+      label: "Recovery rate",
+      with_priors: avgRecoveryOn,
+      without_priors: avgRecoveryOff,
+      format: "percent",
+      better: "higher",
+      caption: "share of original slugs recovered",
+    });
+  }
+  comparisonMetrics.push({
+    label: "Distinct slugs",
+    with_priors: distinctOn.length,
+    without_priors: distinctOff.length,
+    format: "int",
+    better: "lower",
+    caption: "lower = less fragmentation",
+  });
+  if (avgJaccard !== null) {
+    comparisonMetrics.push({
+      label: "Per-URL Jaccard",
+      with_priors: avgJaccard,
+      without_priors: null,
+      format: "decimal",
+      single: true,
+      caption: "set overlap between cells",
+    });
+  }
+
+  const comparison = {
+    legend: { left: "WITH PRIORS", right: "WITHOUT PRIORS" },
+    metrics: comparisonMetrics,
+    samples: recoverySamples,
+    stripLabel: `Per-sample recovery (n=${recoverySamples.length})`,
+  };
+
   const sidecar = {
     generated_at: new Date().toISOString(),
     source:
@@ -413,6 +480,7 @@ async function main() {
     sample: fixtureLabel,
     base_url: baseUrl,
     stats,
+    comparison,
     summary: {
       url_count: perUrl.length,
       error_count: errors.length,

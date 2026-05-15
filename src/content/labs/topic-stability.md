@@ -12,7 +12,7 @@ tags:
   - eval
   - anthropic
   - reading
-kind: stat
+kind: comparison
 dataPath: data/topic-stability.json
 post: The driver script lives at scripts/topic-stability-ab.mjs. It samples N entries across src/content/reading/, POSTs each URL to /link twice (topic_priors true then false) with dry_run:true so no commits land, and writes the sidecar JSON above. Default sample is stride-spread over the whole corpus so coverage isn't biased toward recent ingest. Cost is bounded — one /link call costs cents on Sonnet 4.6.
 ---

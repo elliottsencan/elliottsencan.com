@@ -5,12 +5,30 @@
   "sample": "corpus-sample(n=20, src/content/reading/)",
   "base_url": "https://ingest.elliottsencan.com",
   "stats": [
-    { "label": "Recovery with priors", "value": "42.2%" },
-    { "label": "Recovery without priors", "value": "22.5%" },
-    { "label": "Distinct slugs (priors on)", "value": "32" },
-    { "label": "Distinct slugs (priors off)", "value": "53" },
-    { "label": "Per-URL Jaccard (on vs off)", "value": "0.22" },
-    { "label": "Total cost", "value": "$0.24" }
+    {
+      "label": "Recovery with priors",
+      "value": "42.2%"
+    },
+    {
+      "label": "Recovery without priors",
+      "value": "22.5%"
+    },
+    {
+      "label": "Distinct slugs (priors on)",
+      "value": "32"
+    },
+    {
+      "label": "Distinct slugs (priors off)",
+      "value": "53"
+    },
+    {
+      "label": "Per-URL Jaccard (on vs off)",
+      "value": "0.22"
+    },
+    {
+      "label": "Total cost",
+      "value": "$0.24"
+    }
   ],
   "summary": {
     "url_count": 18,
@@ -1287,5 +1305,130 @@
       "url": "https://www.reddit.com/r/devops/s/YwpaID5SN9",
       "error": "HTTP 451: site_opted_out: robots.txt"
     }
-  ]
+  ],
+  "comparison": {
+    "legend": {
+      "left": "WITH PRIORS",
+      "right": "WITHOUT PRIORS"
+    },
+    "metrics": [
+      {
+        "label": "Recovery rate",
+        "with_priors": 0.4222,
+        "without_priors": 0.225,
+        "format": "percent",
+        "better": "higher",
+        "caption": "share of original slugs recovered"
+      },
+      {
+        "label": "Distinct slugs",
+        "with_priors": 32,
+        "without_priors": 53,
+        "format": "int",
+        "better": "lower",
+        "caption": "lower = less fragmentation"
+      },
+      {
+        "label": "Per-URL Jaccard",
+        "with_priors": 0.2156,
+        "without_priors": null,
+        "format": "decimal",
+        "single": true,
+        "caption": "set overlap between cells"
+      }
+    ],
+    "samples": [
+      {
+        "label": "your-agent-loves-mcp-as-much-as-you-love-...",
+        "with_priors": 0.6,
+        "without_priors": 0.2
+      },
+      {
+        "label": "he-came-he-saw-he-cooked",
+        "with_priors": 0,
+        "without_priors": 0
+      },
+      {
+        "label": "dont-prompt-your-agent-for-reliability-en...",
+        "with_priors": 0.2,
+        "without_priors": 0
+      },
+      {
+        "label": "how-to-build-scalable-web-apps-with-opena...",
+        "with_priors": 0,
+        "without_priors": 0.2
+      },
+      {
+        "label": "from-flaky-to-flawless-angular-api-respon...",
+        "with_priors": 0.6,
+        "without_priors": 0.2
+      },
+      {
+        "label": "ibrahim-3dorchestrator-supaconductor",
+        "with_priors": 0.25,
+        "without_priors": 0
+      },
+      {
+        "label": "mintlify",
+        "with_priors": 0.4,
+        "without_priors": 0.2
+      },
+      {
+        "label": "conductor",
+        "with_priors": 0.4,
+        "without_priors": 0.6
+      },
+      {
+        "label": "50-best-font-combinations-for-graphic-design",
+        "with_priors": 0.75,
+        "without_priors": 0.25
+      },
+      {
+        "label": "approaching-zero-bugs",
+        "with_priors": 0,
+        "without_priors": 0.4
+      },
+      {
+        "label": "the-lobster-in-the-hot-pot",
+        "with_priors": 0.2,
+        "without_priors": 0
+      },
+      {
+        "label": "getting-up-to-speed-on-multi-agent-system...",
+        "with_priors": 0.6,
+        "without_priors": 0.6
+      },
+      {
+        "label": "getting-up-to-speed-on-multi-agent-system...",
+        "with_priors": 0.4,
+        "without_priors": 0.4
+      },
+      {
+        "label": "how-to-choose-between-single-and-multi-ag...",
+        "with_priors": 0.2,
+        "without_priors": 0
+      },
+      {
+        "label": "ai-likes-deep-modules",
+        "with_priors": 0.6,
+        "without_priors": 0.4
+      },
+      {
+        "label": "friends-dont-let-friends-use-ollama",
+        "with_priors": 0.8,
+        "without_priors": 0.4
+      },
+      {
+        "label": "vectifyaipageindex",
+        "with_priors": 0.8,
+        "without_priors": 0.2
+      },
+      {
+        "label": "playwright-testing-in-staging-vs-production",
+        "with_priors": 0.8,
+        "without_priors": 0
+      }
+    ],
+    "stripLabel": "Per-sample recovery (n=18)"
+  }
 }
