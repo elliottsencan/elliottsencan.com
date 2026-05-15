@@ -7,7 +7,7 @@ lastRunDate: 2026-05-04T12:00:00-07:00
 tldr: Anthropic spend on /link, /recompile, and /synthesize, read directly from `compile_cost` in the corpus. Updated on every build.
 headlineMetric:
   label: Spent so far
-  value: $1.24
+  value: $1.86
 tags:
   - cost
   - infra

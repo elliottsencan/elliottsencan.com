@@ -297,6 +297,56 @@ function writeCitationFaithfulness() {
   return { out: sidecarPath, status: "enriched", articles: sidecar.articles.length };
 }
 
+/**
+ * Idempotently rewrite a lab MD's `headlineMetric.value` frontmatter
+ * field. The function inspects only the frontmatter region (between the
+ * `---` fences); the body and other frontmatter fields are untouched.
+ * Returns the operation status so the caller can log "updated"
+ * vs "unchanged" without re-reading the file.
+ *
+ * Why hand-roll instead of `gray-matter`: that dep isn't in site
+ * package.json (it's a worker-only dep), and the regex over the
+ * headlineMetric block is short enough that adding a dep isn't worth
+ * it. Pattern: `headlineMetric:` followed by indented `label:`/`value:`
+ * lines in any order, with `value:` being the one we replace.
+ */
+function syncLabHeadline(mdPath, newValue) {
+  let raw;
+  try {
+    raw = readFileSync(mdPath, "utf8");
+  } catch (err) {
+    if (err && err.code === "ENOENT") {
+      return { status: "missing" };
+    }
+    throw err;
+  }
+  if (!raw.startsWith("---\n")) {
+    return { status: "no-frontmatter" };
+  }
+  const fmEnd = raw.indexOf("\n---", 4);
+  if (fmEnd === -1) {
+    return { status: "no-frontmatter" };
+  }
+  const fm = raw.slice(4, fmEnd);
+  // headlineMetric: is a block scalar; its `value:` line is indented under it.
+  // Match the indented `value: <text>` that follows headlineMetric:'s opening.
+  const pattern = /(headlineMetric:\n(?:[ \t]+\w+: [^\n]*\n)*?[ \t]+value: )([^\n]+)/;
+  const m = pattern.exec(fm);
+  if (!m) {
+    return { status: "no-value-field" };
+  }
+  if (m[2] === newValue) {
+    return { status: "unchanged", value: m[2] };
+  }
+  // Use a replacer function so $-tokens in `newValue` (like `$1.86`) aren't
+  // interpreted as backreferences by String.replace. The string form would
+  // corrupt the file.
+  const updatedFm = fm.replace(pattern, (_match, prefix) => `${prefix}${newValue}`);
+  const updated = `---\n${updatedFm}${raw.slice(fmEnd)}`;
+  writeFileSync(mdPath, updated, "utf8");
+  return { status: "updated", from: m[2], to: newValue };
+}
+
 mkdirSync(OUT_DIR, { recursive: true });
 
 const records = collectCostRecords();
@@ -304,6 +354,22 @@ const { out, payload } = writeIngestPipelineCost(records);
 console.log(
   `[labs-aggregate] ${records.length} records → ${payload.by_day.length} day(s), ${payload.by_week.length} week(s) → ${out}`,
 );
+// Headline = "Spent so far" = total spend, formatted. Keep the MD in sync
+// with the freshly written sidecar so the page header and the chart match.
+const ingestMd = join(ROOT, "src/content/labs/ingest-pipeline-cost.md");
+const ingestSync = syncLabHeadline(ingestMd, payload.summary.stats[0].value);
+console.log(`[labs-aggregate] ingest-pipeline-cost headline: ${ingestSync.status}`);
 
 const cf = writeCitationFaithfulness();
 console.log(`[labs-aggregate] citation-faithfulness: ${cf.status} → ${cf.out}`);
+// Mirror the same sync for citation-faithfulness when there's real data;
+// while the sentinel is in place, leave the MD's "TBD" alone.
+if (cf.status === "enriched" || cf.status === "unchanged") {
+  const cfRaw = JSON.parse(readFileSync(cf.out, "utf8"));
+  const pct = cfRaw.derived?.headline_agreement_pct;
+  if (typeof pct === "number") {
+    const cfMd = join(ROOT, "src/content/labs/citation-faithfulness.md");
+    const cfSync = syncLabHeadline(cfMd, `${pct}%`);
+    console.log(`[labs-aggregate] citation-faithfulness headline: ${cfSync.status}`);
+  }
+}
