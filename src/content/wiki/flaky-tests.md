@@ -12,6 +12,7 @@ sources:
     2026-05/2026-05-03t150555-what-happens-if-a-merge-queue-builds-on-the-wrong-commit
   - >-
     2026-05/2026-05-05t135218-designing-playwright-tests-that-survive-ui-refactors
+  - 2026-05/2026-05-15t120337-playwright-testing-in-staging-vs-production
 compiled_at: '2026-05-06T16:09:50.608Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -29,6 +30,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.017412
+last_source_added: '2026-05-15T19:03:37.024Z'
 ---
 A flaky test is one whose result cannot be trusted because it passes or fails for reasons unrelated to the code under test. The sources here approach the problem from three angles: automated diagnosis at scale, tooling that classifies failures, and selector discipline that prevents flakiness in the first place.
 
