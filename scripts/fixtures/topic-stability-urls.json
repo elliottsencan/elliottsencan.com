@@ -1,0 +1,17 @@
+{
+  "comment": "URLs driving the topic-stability A/B experiment (rigor-pass §2 for 2TS-500). Each URL is summarized twice via /link with dry_run:true — once with topic_priors:true (the model sees the active corpus slug list) and once with topic_priors:false (the model coins slugs freely). Edit this list to expand the run; the driver script reads it from disk on every invocation so the run is fully reproducible.",
+  "urls": [
+    "https://karpathy.bearblog.dev/llm-wiki/",
+    "https://www.anthropic.com/engineering/claude-code-best-practices",
+    "https://www.anthropic.com/engineering/code-execution-with-mcp",
+    "https://every.to/p/building-rivulet",
+    "https://www.madaboutcode.com/mcp-as-a-gui-for-ai-agents.html",
+    "https://david.coffee/i-still-prefer-mcp-over-skills/",
+    "https://simonwillison.net/2026/Apr/22/inference-server/",
+    "https://martinfowler.com/articles/2024-llm-tutorial.html",
+    "https://www.jdhodges.com/blog/local-llms-on-tool-calling-2026-pt1-local-lm/",
+    "https://leerob.com/n/saas-killer",
+    "https://www.geoffreylitt.com/2024/07/06/end-user-programming-with-llms.html",
+    "https://www.fastcompany.com/91254889/the-shift-from-models-to-compound-ai-systems"
+  ]
+}

@@ -1,0 +1,4 @@
+{
+  "status": "no-data",
+  "message": "scripts/topic-stability-ab.mjs has not produced a run yet. The sidecar will populate on the first non-dry-write invocation."
+}
