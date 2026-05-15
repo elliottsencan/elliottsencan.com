@@ -380,6 +380,31 @@ async function main() {
           ).toFixed(4),
         );
 
+  // Top-level `stats` is what /labs/topic-stability's `kind: stat` reads.
+  // Same numbers as summary but in label/value pairs the StatGrid renders
+  // verbatim. Recovery rows are omitted when the run was fixture-mode (no
+  // original_topics → recovery is undefined).
+  const stats = [];
+  if (avgRecoveryOn !== null) {
+    stats.push({
+      label: "Recovery with priors",
+      value: `${(avgRecoveryOn * 100).toFixed(1)}%`,
+    });
+    stats.push({
+      label: "Recovery without priors",
+      value: `${(avgRecoveryOff * 100).toFixed(1)}%`,
+    });
+  }
+  stats.push({ label: "Distinct slugs (priors on)", value: String(distinctOn.length) });
+  stats.push({ label: "Distinct slugs (priors off)", value: String(distinctOff.length) });
+  if (avgJaccard !== null) {
+    stats.push({ label: "Per-URL Jaccard (on vs off)", value: avgJaccard.toFixed(2) });
+  }
+  stats.push({
+    label: "Total cost",
+    value: `$${(totalCostWithPriors + totalCostWithoutPriors).toFixed(2)}`,
+  });
+
   const sidecar = {
     generated_at: new Date().toISOString(),
     source:
@@ -387,6 +412,7 @@ async function main() {
     mode,
     sample: fixtureLabel,
     base_url: baseUrl,
+    stats,
     summary: {
       url_count: perUrl.length,
       error_count: errors.length,

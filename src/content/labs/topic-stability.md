@@ -1,17 +1,18 @@
 ---
 title: Topic-slug stability under priors
 hypothesis: When the model summarizing a saved link sees the active corpus's topic slugs, it produces more stable slugs — re-summarizing an existing entry recovers most of the original topics — than when it summarizes the same URL with no slug context. The "self-correcting drift" claim the wiki pipeline rests on lives or dies here.
-status: draft
+status: live
 publishedDate: 2026-05-15T12:00:00-07:00
-lastRunDate: 2026-05-15T12:00:00-07:00
+lastRunDate: 2026-05-15T13:23:00-07:00
 tldr: Each sampled reading entry is re-summarized twice — once with the model seeing the active corpus slug list (priors on), once without (priors off). The eval measures slug-set drift between cells and slug recovery against the entry's original topics.
 headlineMetric:
-  label: Recovery rate with priors
-  value: TBD
+  label: Slug recovery with priors
+  value: 42.2%
 tags:
   - eval
   - anthropic
   - reading
+kind: stat
 dataPath: data/topic-stability.json
 post: The driver script lives at scripts/topic-stability-ab.mjs. It samples N entries across src/content/reading/, POSTs each URL to /link twice (topic_priors true then false) with dry_run:true so no commits land, and writes the sidecar JSON above. Default sample is stride-spread over the whole corpus so coverage isn't biased toward recent ingest. Cost is bounded — one /link call costs cents on Sonnet 4.6.
 ---
