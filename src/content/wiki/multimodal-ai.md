@@ -8,6 +8,7 @@ summary: >-
 sources:
   - 2026-04/2026-04-29t171532-vision-language-models-better-faster-stronger
   - 2026-04/2026-04-30t231206-poolday
+  - 2026-05/2026-05-14t222554-piyush-mishra-00helply
 compiled_at: '2026-05-04T03:38:43.583Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -25,6 +26,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.01353
+last_source_added: '2026-05-15T05:25:54.540Z'
 ---
 Multimodal AI refers to models and systems that work across more than one data type, most commonly combining vision and language but increasingly extending to audio, video, and robotic action. The 2025 VLM landscape survey from Hugging Face [VLMs 2025](/reading/2026-04/2026-04-29t171532-vision-language-models-better-faster-stronger) maps the pace of this expansion: architectures have moved from single-modality specialists toward any-to-any models capable of accepting and producing arbitrary combinations of input and output types. The same survey documents parallel advances in mixture-of-experts (MoE) designs, vision-language-action (VLA) models for robotics, small multimodal models that run efficiently at reduced scale, multimodal RAG, and video understanding, all emerging in roughly a twelve-month window.
 
