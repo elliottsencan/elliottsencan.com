@@ -19,6 +19,8 @@ sources:
   - >-
     2026-05/2026-05-13t060018-why-senior-developers-fail-to-communicate-their-expertise
   - 2026-05/2026-05-14t151252-5-faster-fastblur-in-image-rs
+  - >-
+    2026-05/2026-05-14t223612-the-perils-of-ai-to-the-software-engineering-profession
 compiled_at: 2026-05-04T04:07:42.371Z
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -36,7 +38,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.017049
-last_source_added: '2026-05-14T22:12:52.626Z'
+last_source_added: '2026-05-15T05:36:12.497Z'
 ---
 Engineering craft covers the habits, patterns, and safeguards that separate code that works from code that holds up. The sources here approach it from four distinct angles, but share a common thread: precision in design pays forward.
 
