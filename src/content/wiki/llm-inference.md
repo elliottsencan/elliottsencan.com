@@ -18,6 +18,8 @@ sources:
   - 2026-05/2026-05-05t071908-oobaboogatextgen
   - >-
     2026-05/2026-05-12t215147-running-claude-code-with-a-local-model-via-lm-studio
+  - >-
+    2026-05/2026-05-14t190300-opus-47-low-vs-medium-vs-high-vs-xhigh-vs-max-the-reasoning
 aliases:
   - local-ai
   - local-llm
@@ -38,7 +40,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.020061
-last_source_added: '2026-05-13T04:51:47.073Z'
+last_source_added: '2026-05-15T02:03:00.097Z'
 ---
 Running a language model in practice involves decisions at every layer: hardware fit, quantization level, runtime choice, and serving architecture. These concerns are distinct from training or fine-tuning but intersect with all of them.
 

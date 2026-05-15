@@ -18,6 +18,8 @@ sources:
   - >-
     2026-05/2026-05-10t140531-agent-observability-needs-feedback-to-power-learning
   - 2026-05/2026-05-10t213609-raiyanyahyahow-to-train-your-gpt
+  - >-
+    2026-05/2026-05-14t190300-opus-47-low-vs-medium-vs-high-vs-xhigh-vs-max-the-reasoning
 compiled_at: 2026-05-04T04:08:56.031Z
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -35,7 +37,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.018531
-last_source_added: '2026-05-11T04:36:09.019Z'
+last_source_added: '2026-05-15T02:03:00.097Z'
 ---
 LLM engineering sits at the intersection of software architecture and model behavior: the discipline of designing systems that use language models reliably, at scale, and without accumulating hidden failure modes.
 
