@@ -78,11 +78,11 @@ function statusLabel(status: string): string {
       <PageHero>
         <Fragment slot="title">Labs</Fragment>
         <Fragment slot="summary">
-          The measurement layer. Each cell is a self-contained measurement
-          artifact tied to a real failure mode in the pipeline that compiles{" "}
-          <Link href="/wiki">/wiki</Link>: where it costs too much, where its
-          summaries drift from the source, where its synthesis crosses from
-          useful to wrong.
+          Numbers behind the AI pipeline that compiles{" "}
+          <Link href="/wiki">/wiki</Link>. Each cell asks one specific
+          question — does it cost too much, are its citations honest, do its
+          topic tags stay stable — and answers with a chart and a paragraph
+          in plain English.
         </Fragment>
         {
           cells.length > 0 && (
@@ -93,18 +93,19 @@ function statusLabel(status: string): string {
 
       <div class="space-y-3">
         <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
-          Cells live in tiers. Tier 0 is structural: pure-function checks
-          over the reading and wiki collections. Tier 1 is semantic:
-          per-claim eval against the cited source. Tier 2 and up are
-          synthesis quality, voice adherence, recompile stability.
+          Read top-down: the question being tested, the headline number, the
+          chart, then a short paragraph on what the number means and what to
+          watch for. The technical receipts (endpoint names, code, version
+          notes) sit at the bottom of each cell for anyone who wants to
+          verify the prose.
         </p>
         <p class="text-sm leading-relaxed text-black/65 dark:text-white/65">
-          Read a cell top-down: question, number, code that produced the
-          number, one paragraph of commentary. Cells marked{" "}
+          Cells marked{" "}
           <span class="font-mono text-black/65 dark:text-white/65">
             first-run pending
           </span>{" "}
-          have shipped methodology and are waiting on data. They count.
+          have the question written and the methodology in place — they're
+          waiting on data, not on a decision.
         </p>
       </div>
 
@@ -128,7 +129,7 @@ function statusLabel(status: string): string {
                 return (
                   <li
                     class:list={[
-                      "group relative grid grid-cols-1 items-baseline gap-x-8 gap-y-3 border-t border-black/10 py-6 md:grid-cols-[minmax(0,1fr)_auto_auto] dark:border-white/10",
+                      "group relative grid grid-cols-1 items-baseline gap-x-8 gap-y-3 border-t border-black/10 py-6 md:grid-cols-[minmax(0,1fr)_auto] dark:border-white/10",
                       i === cells.length - 1 &&
                         "border-b border-black/10 dark:border-white/10",
                     ]}
@@ -144,12 +145,46 @@ function statusLabel(status: string): string {
                       >
                         {cell.data.title}
                       </Link>
-                      <span class="font-mono text-xs tracking-wider text-black/55 dark:text-white/55">
-                        cell · {cell.id}
-                      </span>
+                      <div class="flex flex-wrap items-center gap-x-3 gap-y-0.5 font-mono text-xs">
+                        <span
+                          class:list={[
+                            "uppercase tracking-widest",
+                            cell.data.status === "live"
+                              ? "text-[color:var(--accent)]"
+                              : "text-black/55 dark:text-white/55",
+                          ]}
+                        >
+                          {statusLabel(cell.data.status)}
+                        </span>
+                        <span class="text-black/55 dark:text-white/55">
+                          {isPending
+                            ? "methodology shipped"
+                            : `last run · ${formatLastRun(cell.data.lastRunDate)}`}
+                        </span>
+                        {cell.data.blogPostSlug && (
+                          <span class="text-black/55 dark:text-white/55">
+                            cited by{" "}
+                            <Link
+                              href={`/writing/${cell.data.blogPostSlug}/`}
+                              class="relative z-10 font-sans text-xs"
+                            >
+                              {cell.data.blogPostSlug}
+                            </Link>
+                          </span>
+                        )}
+                      </div>
                       <p class="m-0 max-w-[38rem] text-sm leading-relaxed text-black/65 dark:text-white/65">
                         {cell.data.tldr}
                       </p>
+                      {cell.data.tags.length > 0 && (
+                        <ul class="mt-1 flex flex-wrap gap-1.5">
+                          {cell.data.tags.map((t) => (
+                            <li class="inline-flex items-center rounded-sm bg-black/5 px-2 py-0.5 text-xs text-black/65 dark:bg-white/5 dark:text-white/65">
+                              {t}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                     </div>
 
                     <div class="flex min-w-[7rem] flex-col gap-1 md:items-end">
@@ -161,7 +196,7 @@ function statusLabel(status: string): string {
                           "font-heading font-medium leading-none tracking-tight",
                           isPending
                             ? "text-2xl text-black/40 dark:text-white/40"
-                            : "text-3xl text-black dark:text-white md:text-[2.1rem]",
+                            : "text-3xl text-black md:text-[2.1rem] dark:text-white",
                         ]}
                         style="font-variant-numeric: tabular-nums;"
                       >
@@ -169,44 +204,8 @@ function statusLabel(status: string): string {
                       </span>
                     </div>
 
-                    <div class="flex min-w-[9rem] flex-col gap-1.5 md:items-end">
-                      <span
-                        class:list={[
-                          "font-mono text-xs uppercase tracking-widest",
-                          cell.data.status === "live"
-                            ? "text-[color:var(--accent)]"
-                            : "text-black/55 dark:text-white/55",
-                        ]}
-                      >
-                        {statusLabel(cell.data.status)}
-                      </span>
-                      <span class="font-mono text-xs text-black/55 dark:text-white/55">
-                        {isPending
-                          ? "methodology shipped"
-                          : `last run · ${formatLastRun(cell.data.lastRunDate)}`}
-                      </span>
-                      <span class="flex flex-wrap gap-x-2 gap-y-0.5 md:justify-end">
-                        {cell.data.tags.map((t) => (
-                          <span class="font-mono text-xs text-black/55 dark:text-white/55">
-                            ·{t}
-                          </span>
-                        ))}
-                      </span>
-                      {cell.data.blogPostSlug && (
-                        <span class="font-mono text-xs text-black/55 dark:text-white/55">
-                          cited by{" "}
-                          <Link
-                            href={`/writing/${cell.data.blogPostSlug}/`}
-                            class="relative z-10 font-sans text-xs"
-                          >
-                            {cell.data.blogPostSlug}
-                          </Link>
-                        </span>
-                      )}
-                    </div>
-
                     {sparkValues && (
-                      <div class="block w-full text-black/75 md:col-span-3 dark:text-white/75">
+                      <div class="block w-full text-black/75 md:col-span-2 dark:text-white/75">
                         <Sparkline data={sparkValues} height={36} />
                       </div>
                     )}

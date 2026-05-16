@@ -1,15 +1,28 @@
 ---
 /**
  * Result dispatcher — picks the viz primitive based on the cell's `kind`
- * and the shape of the loaded JSON measurements. Renders a quiet "awaiting
- * data" empty state when the data file is missing or carries the worker's
- * `{status: "no-data", message}` stub, and falls back to a `<pre>` JSON
- * dump for unexpected shapes (a developer affordance, not an editorial one).
+ * and the shape of the loaded JSON measurements. Two notable upgrades
+ * over the original sparkline-only chart path:
+ *
+ *   1. The `chart` kind now prefers the richer `by_day` array (one
+ *      entry per Pacific date) over the flat `values` array. When the
+ *      sidecar carries `by_day`, the dispatcher pairs a DailyBars
+ *      (with spike highlighting) with a CumulativeArea (cumulative vs
+ *      budget) so the headline reads "total + shape," not just shape.
+ *      Falls back to Sparkline when `by_day` isn't there.
+ *
+ *   2. The "awaiting data" state now opts into a PendingMethodology
+ *      card when the cell's frontmatter includes a `methodology` block
+ *      (steps + receipts + optional code stub). Cells without that
+ *      block still get the quiet dashed baseline.
  */
 import Barchart from "./Barchart.astro";
 import CalendarHeatmap from "./CalendarHeatmap.astro";
 import ComparisonBars from "./ComparisonBars.astro";
+import CumulativeArea from "./CumulativeArea.astro";
+import DailyBars from "./DailyBars.astro";
 import LabTable from "./LabTable.astro";
+import PendingMethodology from "./PendingMethodology.astro";
 import ResultCell from "./ResultCell.astro";
 import Scatter from "./Scatter.astro";
 import Sparkline from "./Sparkline.astro";
@@ -20,16 +33,22 @@ type Props = {
   data: unknown;
   /** Visualization detail level — controls heights for charts/scatters. */
   size?: "compact" | "full";
+  /** Optional fallback methodology when the sidecar is a `no-data` stub. */
+  methodology?: {
+    steps?: string[];
+    receipts?: { label: string; value: string }[];
+    code?: string;
+  };
 };
 
-const { kind, data, size = "full" } = Astro.props;
+const { kind, data, size = "full", methodology } = Astro.props;
 
 const isObject = (v: unknown): v is Record<string, unknown> =>
   typeof v === "object" && v !== null && !Array.isArray(v);
 
-// Pre-data state: the worker writes a `{status: "no-data", message}` stub
-// at the dataPath until the first real run lands. Treat it (and a missing
-// data file) as a first-class empty state instead of dumping the stub JSON.
+// Pre-data state — the worker writes `{ status: "no-data", message }` at
+// `dataPath` until first run. Treat that (and a missing file) as the
+// pending state.
 const noDataMessage =
   data === null
     ? "Data file not found."
@@ -38,13 +57,22 @@ const noDataMessage =
       : null;
 const isNoData = data === null || noDataMessage !== null;
 
-// Optional summary block lifted from the aggregator output. Shape:
-// `summary: { stats: [{label, value}] }`. Renders as a StatGrid above
-// the sparkline, lets the cell carry headline numbers without bespoke
-// markup. Generic — any chart-kind data file can include it.
+// Optional summary block lifted from aggregator output.
 type SummaryStats = { stats: { label: string; value: string }[] };
 function isSummary(v: unknown): v is SummaryStats {
   return isObject(v) && Array.isArray((v as { stats?: unknown }).stats);
+}
+
+// ── chart kind ──
+// Prefer `by_day` (cost-style daily series with counts) when present.
+type Day = { date: string; cost_usd: number; count: number };
+function isDay(v: unknown): v is Day {
+  return (
+    isObject(v) &&
+    typeof v.date === "string" &&
+    typeof v.cost_usd === "number" &&
+    typeof v.count === "number"
+  );
 }
 
 const chartData =
@@ -55,6 +83,15 @@ const chartData =
           ? (data.annotation as { at: number; label: string })
           : undefined,
         summary: isSummary(data.summary) ? data.summary : null,
+        byDay:
+          Array.isArray((data as { by_day?: unknown }).by_day) &&
+          ((data as { by_day: unknown[] }).by_day as unknown[]).every(isDay)
+            ? (data as { by_day: Day[] }).by_day
+            : null,
+        budget:
+          typeof (data as { budget?: unknown }).budget === "number"
+            ? (data as { budget: number }).budget
+            : null,
       }
     : null;
 
@@ -94,11 +131,7 @@ const scatterData =
       }
     : null;
 
-// Comparison shape — A/B paired-bar headline metrics + a per-sample strip.
-// Reads from a top-level `comparison: { metrics, samples, legend?, stripLabel? }`
-// block written by the driver script. Renderer enforces shape per-field so a
-// partial sidecar (e.g. metrics present, samples missing) still renders the
-// piece it has rather than dropping to the JSON fallback.
+// ── comparison kind (unchanged shape; renderer is what changed) ──
 type ComparisonMetric = {
   label: string;
   with_priors: number;
@@ -108,7 +141,11 @@ type ComparisonMetric = {
   caption?: string;
   single?: boolean;
 };
-type ComparisonSample = { label: string; with_priors: number; without_priors: number };
+type ComparisonSample = {
+  label: string;
+  with_priors: number;
+  without_priors: number;
+};
 type ComparisonLegend = { left: string; right: string };
 
 function isMetric(v: unknown): v is ComparisonMetric {
@@ -172,34 +209,78 @@ const matched =
 
 const sparkHeight = size === "compact" ? 60 : 120;
 const scatterHeight = size === "compact" ? 100 : 180;
+const dailyHeight = size === "compact" ? 130 : 200;
+const cumHeight = size === "compact" ? 130 : 200;
 ---
 
 <ResultCell>
   <slot name="header" slot="header" />
-  {
-    isNoData && (
-      <div class="space-y-3 text-black/55 dark:text-white/55">
-        <Sparkline data={[]} height={sparkHeight} />
-        <p class="text-center font-mono text-xs tracking-wide">
-          {noDataMessage ?? "Awaiting first run."}
-        </p>
+
+  {/* ── Pending state ── */}
+  {isNoData && methodology && (
+    <PendingMethodology
+      message={noDataMessage ?? "Awaiting first run."}
+      steps={methodology.steps}
+      receipts={methodology.receipts}
+      code={methodology.code}
+    />
+  )}
+  {isNoData && !methodology && (
+    <div class="space-y-3 text-black/55 dark:text-white/55">
+      <Sparkline data={[]} height={sparkHeight} />
+      <p class="text-center font-mono text-xs tracking-wide">
+        {noDataMessage ?? "Awaiting first run."}
+      </p>
+    </div>
+  )}
+
+  {/* ── Chart: prefer the byDay-paired layout when we have it ── */}
+  {!isNoData && chartData && chartData.byDay && chartData.byDay.length > 0 && (
+    <div class="flex flex-col gap-8">
+      {chartData.summary && size === "full" && (
+        <StatGrid stats={chartData.summary.stats} />
+      )}
+      <div class="grid grid-cols-1 gap-6 md:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] md:gap-10">
+        <div class="flex flex-col gap-2">
+          <span class="font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55">
+            Cumulative · vs budget
+          </span>
+          <CumulativeArea
+            data={chartData.byDay.map((d) => ({
+              date: d.date,
+              cost_usd: d.cost_usd,
+            }))}
+            height={cumHeight}
+            budget={chartData.budget ?? undefined}
+            budgetLabel={
+              chartData.budget !== null
+                ? `budget · $${chartData.budget.toFixed(2)}/mo`
+                : undefined
+            }
+          />
+        </div>
+        <div class="flex flex-col gap-2">
+          <span class="font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55">
+            Daily · spikes marked
+          </span>
+          <DailyBars data={chartData.byDay} height={dailyHeight} />
+        </div>
       </div>
-    )
-  }
-  {
-    !isNoData && chartData && (
-      <div class="space-y-4">
-        {chartData.summary && size === "full" && (
-          <StatGrid stats={chartData.summary.stats} />
-        )}
-        <Sparkline
-          data={chartData.values}
-          annotation={chartData.annotation}
-          height={sparkHeight}
-        />
-      </div>
-    )
-  }
+    </div>
+  )}
+  {!isNoData && chartData && (!chartData.byDay || chartData.byDay.length === 0) && (
+    <div class="space-y-4">
+      {chartData.summary && size === "full" && (
+        <StatGrid stats={chartData.summary.stats} />
+      )}
+      <Sparkline
+        data={chartData.values}
+        annotation={chartData.annotation}
+        height={sparkHeight}
+      />
+    </div>
+  )}
+
   {tableData && <LabTable headers={tableData.headers} rows={tableData.rows} />}
   {barData && <Barchart bars={barData.bars} />}
   {statData && <StatGrid stats={statData.stats} />}

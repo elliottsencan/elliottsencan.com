@@ -10,6 +10,17 @@ import Layout from "@layouts/Layout.astro";
 import { loadLabData } from "@lib/lab-data";
 import { SITE_TIMEZONE } from "@lib/utils";
 
+// Individual lab cell — keeps the prose + sticky right rail layout from
+// the previous version. The only material change is the result card,
+// which now renders the chart pair (DailyBars + CumulativeArea) for
+// cost-shaped data and an explicit PendingMethodology card for cells
+// still awaiting their first run.
+//
+// Mobile: every grid in this page (the body/rail split, the headline
+// + chart block inside LabResult, the methodology card) is single-col
+// at base and only switches to two at `md:`. SVG charts use viewBox so
+// they fluid down without horizontal scroll.
+
 export async function getStaticPaths() {
   const cells = await getCollection("labs");
   return cells.map((cell) => ({
@@ -26,8 +37,6 @@ const { cell } = Astro.props;
 const { Content } = await render(cell);
 const data = await loadLabData(cell.data.dataPath);
 
-// ISO-style YYYY-MM-DD reads as a build identifier in the operational rail —
-// matches the labs index convention so dates align across surfaces.
 const dateFormatter = new Intl.DateTimeFormat("en-US", {
   year: "numeric",
   month: "2-digit",
@@ -47,10 +56,6 @@ function statusLabel(status: string): string {
   return status === "draft" ? "first-run pending" : status;
 }
 
-// "Pending" covers two distinct states that should both visually quiet the
-// headline metric: an editorial draft (status === "draft") and a live cell
-// whose data file hasn't populated yet (loadLabData returned null or the
-// worker's `{status: "no-data"}` stub).
 const isNoData =
   data === null ||
   (typeof data === "object" &&
@@ -58,6 +63,20 @@ const isNoData =
     (data as { status?: unknown }).status === "no-data");
 const isPending = cell.data.status === "draft" || isNoData;
 const isLive = cell.data.status === "live";
+
+// Methodology is an optional frontmatter block — when present on a
+// pending cell, LabResult renders it as the explicit "what will run"
+// card instead of the quiet dashed baseline. See README for the schema
+// patch.
+const methodology = (
+  cell.data as {
+    methodology?: {
+      steps?: string[];
+      receipts?: { label: string; value: string }[];
+      code?: string;
+    };
+  }
+).methodology;
 ---
 
 <Layout title={`Labs: ${cell.data.title}`} description={cell.data.tldr}>
@@ -75,54 +94,70 @@ const isLive = cell.data.status === "live";
         <Fragment slot="summary">{cell.data.tldr}</Fragment>
       </PageHero>
 
-      <p class="max-w-[62ch] text-base leading-relaxed text-black/85 dark:text-white/85">
-        {cell.data.hypothesis}
-      </p>
+      {/* Hypothesis — labeled callout so it reads as the bet being
+          tested, not just another paragraph. */}
+      <div class="flex max-w-[62ch] flex-col gap-2">
+        <span
+          class="font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55"
+        >
+          The question
+        </span>
+        <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
+          {cell.data.hypothesis}
+        </p>
+      </div>
 
-      {/*
-        Result card — metric + chart in one bordered region (provided by
-        ResultCell, the wrapper LabResult dispatches into). The metric
-        passes through LabResult's named "header" slot, so the number and
-        the picture read as one unit instead of two stacked blocks. For
-        pending cells the value is dimmed to match the labs index.
-      */}
-      <LabResult kind={cell.data.kind} data={data} size="full">
-        <div slot="header" class="mb-5 flex flex-col gap-1">
-          <span
-            class="font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55"
-          >
-            {cell.data.headlineMetric.label}
-          </span>
-          <span
-            class:list={[
-              "font-heading font-medium tracking-tight",
-              isPending
-                ? "text-2xl text-black/40 dark:text-white/40"
-                : "text-3xl text-black md:text-[2.1rem] dark:text-white",
-            ]}
-            style="font-variant-numeric: tabular-nums;"
-          >
-            {cell.data.headlineMetric.value}
-          </span>
+      {/* Result card — the headline number + viz live inside ResultCell
+          via LabResult's "header" slot. On mobile the metric stacks
+          above the chart; on md+ they share a row (header sits above
+          the chart, but the chart itself splits into the byDay pair). */}
+      <LabResult kind={cell.data.kind} data={data} size="full" methodology={methodology}>
+        <div
+          slot="header"
+          class="mb-5 flex flex-col items-baseline gap-1 md:flex-row md:flex-wrap md:gap-x-10 md:gap-y-2"
+        >
+          <div class="flex flex-col gap-1">
+            <span
+              class="font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55"
+            >
+              {cell.data.headlineMetric.label}
+            </span>
+            <span
+              class:list={[
+                "font-heading font-medium leading-none tracking-tight",
+                isPending
+                  ? "text-2xl text-black/40 dark:text-white/40"
+                  : "text-3xl text-black md:text-[2.1rem] dark:text-white",
+              ]}
+              style="font-variant-numeric: tabular-nums;"
+            >
+              {cell.data.headlineMetric.value}
+            </span>
+          </div>
+          {/* Optional secondary stats live in the chart `summary` block;
+              they render in-card via StatGrid. We deliberately don't
+              re-emit them here. */}
         </div>
       </LabResult>
 
-      {/*
-        Body row — prose + optional methodology code on the left, sticky
-        operational rail on the right. Mirrors /wiki/[slug]; the rail
-        collapses below the body on narrow screens.
-        NB: must NOT use bare <article> — global.css applies `prose`
-        (max-width: 65ch) to every <article>, which can win over Tailwind
-        utilities and collapse the body in this 2-col grid. The lab-body
-        class below carries the prose styling without the global side-effect.
-      */}
+      {/* Body row — prose + optional methodology code on the left, sticky
+          operational rail on the right. Mirrors /wiki/[slug]. */}
       <div class="grid gap-8 md:grid-cols-[minmax(0,1fr)_220px] md:gap-12">
         <div class="min-w-0 space-y-6">
           <div class="lab-body space-y-4">
             <Content />
             {cell.data.post && <p>{cell.data.post}</p>}
           </div>
-          {cell.data.pre && <CodeCell lang="js">{cell.data.pre}</CodeCell>}
+          {
+            cell.data.pre && (
+              <div class="flex flex-col gap-2">
+                <span class="font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55">
+                  How it works
+                </span>
+                <CodeCell lang="js">{cell.data.pre}</CodeCell>
+              </div>
+            )
+          }
         </div>
 
         <aside class="md:sticky md:top-28 md:self-start">
@@ -249,6 +284,28 @@ const isLive = cell.data.status === "live";
   .lab-body p + p {
     margin-top: 1.1em;
   }
+  .lab-body ul {
+    margin: 1.1em 0 0;
+    padding-left: 1.25em;
+    list-style: disc outside;
+  }
+  .lab-body li {
+    margin-top: 0.5em;
+    padding-left: 0.25em;
+  }
+  .lab-body li::marker {
+    color: rgb(0 0 0 / 0.35);
+  }
+  .dark .lab-body li::marker {
+    color: rgb(255 255 255 / 0.35);
+  }
+  .lab-body strong {
+    font-weight: 600;
+    color: rgb(0 0 0 / 0.95);
+  }
+  .dark .lab-body strong {
+    color: rgb(255 255 255 / 0.95);
+  }
   .lab-body a {
     color: inherit;
     text-decoration: underline;
@@ -257,5 +314,15 @@ const isLive = cell.data.status === "live";
   }
   .dark .lab-body a {
     text-decoration-color: rgb(255 255 255 / 0.3);
+  }
+  .lab-body code {
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+    padding: 0.1em 0.35em;
+    border-radius: 3px;
+    background: rgb(0 0 0 / 0.05);
+  }
+  .dark .lab-body code {
+    background: rgb(255 255 255 / 0.08);
   }
 </style>

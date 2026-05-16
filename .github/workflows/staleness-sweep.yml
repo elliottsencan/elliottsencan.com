@@ -1,0 +1,121 @@
+name: Weekly staleness sweep
+
+# Mon 18:00 UTC, one hour after the /now cron (Mon 17:00 UTC). Runs the three
+# read/mutate steps in sequence:
+#   1. /lint  — structural report; logged for review, no mutation.
+#   2. /synthesize — picks up topics whose source_set drifted but didn't
+#      trigger Loop 1 (e.g. failed Action retries).
+#   3. /eval — picks up wiki articles whose content_hash drifted but didn't
+#      trigger Loop 2.
+#
+# Each step idempotent via its own skip key. /lint failure does not block /synthesize
+# or /eval (intentional — structural issues shouldn't gate token-spend loops).
+
+on:
+  schedule:
+    - cron: "0 18 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: staleness-sweep
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check kill switch
+        env:
+          ENABLED: ${{ vars.AUTO_TRIGGERS_ENABLED }}
+        run: |
+          set -euo pipefail
+          if [[ "${ENABLED:-true}" == "false" ]]; then
+            echo "AUTO_TRIGGERS_ENABLED=false — skipping."
+            exit 0
+          fi
+          echo "kill-switch=ok" >> "$GITHUB_OUTPUT"
+        id: killswitch
+
+      - name: /lint
+        if: steps.killswitch.outputs.kill-switch == 'ok'
+        env:
+          WORKER_URL: ${{ secrets.SITE_INGEST_URL }}
+          API_TOKEN: ${{ secrets.SITE_INGEST_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${WORKER_URL:-}" || -z "${API_TOKEN:-}" ]]; then
+            echo "::error::SITE_INGEST_URL and SITE_INGEST_API_TOKEN must be set."
+            exit 1
+          fi
+          STATUS=$(curl --silent --show-error --output /tmp/lint.json \
+            --write-out '%{http_code}' \
+            -X POST "${WORKER_URL%/}/lint" \
+            -H "Authorization: Bearer $API_TOKEN")
+          echo "HTTP $STATUS"
+          cat /tmp/lint.json | jq . 2>/dev/null || cat /tmp/lint.json
+          echo
+          if [[ "$STATUS" -lt 200 || "$STATUS" -ge 300 ]]; then
+            echo "::warning::/lint returned HTTP $STATUS — continuing to mutation steps."
+          else
+            # Surface the issue count so weekly review can spot drift quickly.
+            jq -r '"lint issues: \(.counts.total_issues // 0)"' /tmp/lint.json || true
+          fi
+
+      - name: /synthesize (sweep)
+        if: steps.killswitch.outputs.kill-switch == 'ok' && (success() || failure())
+        env:
+          WORKER_URL: ${{ secrets.SITE_INGEST_URL }}
+          API_TOKEN: ${{ secrets.SITE_INGEST_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          STATUS=$(curl --silent --show-error --output /tmp/syn.json \
+            --write-out '%{http_code}' \
+            -X POST "${WORKER_URL%/}/synthesize" \
+            -H "Authorization: Bearer $API_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{"dry_run":false}')
+          echo "HTTP $STATUS"
+          cat /tmp/syn.json | jq . 2>/dev/null || cat /tmp/syn.json
+          echo
+          if [[ "$STATUS" == "429" ]]; then
+            echo "::notice::synthesize throttled — treating as success-noop."
+          elif [[ "$STATUS" -lt 200 || "$STATUS" -ge 300 ]]; then
+            echo "::error::/synthesize returned HTTP $STATUS"
+            exit 1
+          else
+            jq -r '.run_cost | if . == null then "run_cost: null"
+              else "run_cost: $\(.total_usd // 0) " +
+                   "(in=\(.total_usage.input_tokens) " +
+                   "out=\(.total_usage.output_tokens) " +
+                   "calls=\(.records | length))" end' /tmp/syn.json || true
+          fi
+
+      - name: /eval (sweep)
+        if: steps.killswitch.outputs.kill-switch == 'ok' && (success() || failure())
+        env:
+          WORKER_URL: ${{ secrets.SITE_INGEST_URL }}
+          API_TOKEN: ${{ secrets.SITE_INGEST_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          STATUS=$(curl --silent --show-error --output /tmp/eval.json \
+            --write-out '%{http_code}' \
+            -X POST "${WORKER_URL%/}/eval" \
+            -H "Authorization: Bearer $API_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{"dry_run":false,"max_articles":20,"max_claims_per_article":10}')
+          echo "HTTP $STATUS"
+          cat /tmp/eval.json | jq . 2>/dev/null || cat /tmp/eval.json
+          echo
+          if [[ "$STATUS" == "429" ]]; then
+            echo "::notice::eval throttled — treating as success-noop."
+          elif [[ "$STATUS" -lt 200 || "$STATUS" -ge 300 ]]; then
+            echo "::error::/eval returned HTTP $STATUS"
+            exit 1
+          else
+            jq -r '"call_count: \(.call_count // 0) " +
+                   "cost_by_judge: \(.total_cost_usd_by_judge // {} | tostring) " +
+                   "evaluated: \(.articles_evaluated // 0)/\(.total_claims // 0)"' \
+              /tmp/eval.json || true
+          fi

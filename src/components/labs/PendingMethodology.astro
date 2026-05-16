@@ -1,0 +1,74 @@
+---
+/**
+ * Pending methodology card — replaces the headline chart for cells that
+ * are still waiting on their first run. Rather than showing a dashed
+ * "awaiting data" baseline alone (which reads as "broken"), this lays
+ * out the methodology that *will* run on first pass: numbered steps,
+ * a per-run cost estimate, the prompt or judge version locked in.
+ *
+ * Editorially: gives the cell a real first impression even before any
+ * numbers exist. The pending state then reads as "shipped methodology
+ * waiting on data," not as "page is incomplete."
+ *
+ * Methodology lines are passed through markdown-safe so frontmatter
+ * can use *emphasis*, `code`, and {variable} interpolation — but the
+ * markdown rendering is the caller's job (this component just renders
+ * the lines as already-prepared strings).
+ */
+type Receipt = { label: string; value: string };
+
+type Props = {
+  message?: string;
+  steps?: string[];
+  receipts?: Receipt[];
+  code?: string;
+};
+
+const { message, steps = [], receipts = [], code } = Astro.props;
+---
+
+<div class="flex flex-col gap-5 border border-dashed border-black/30 p-5 md:p-6 dark:border-white/25">
+  <div class="flex items-center gap-3">
+    <span class="inline-block h-2 w-2 animate-pulse rounded-full bg-[color:var(--accent)]"></span>
+    <span class="font-mono text-xs uppercase tracking-widest text-black/65 dark:text-white/65">
+      Methodology shipped · first run pending
+    </span>
+  </div>
+
+  {message && (
+    <p class="m-0 font-mono text-xs leading-relaxed text-black/65 dark:text-white/65">
+      {message}
+    </p>
+  )}
+
+  {
+    steps.length > 0 && (
+      <ol class="m-0 flex list-decimal flex-col gap-2 pl-5 font-sans text-sm leading-relaxed text-black/80 marker:font-mono marker:text-xs marker:text-black/45 dark:text-white/80 dark:marker:text-white/45">
+        {steps.map((s) => (
+          <li set:html={s} />
+        ))}
+      </ol>
+    )
+  }
+
+  {
+    code && (
+      <pre class="m-0 overflow-x-auto border-t border-black/10 pt-4 font-mono text-[0.7rem] leading-relaxed text-black/70 dark:border-white/10 dark:text-white/70">
+        {code}
+      </pre>
+    )
+  }
+
+  {
+    receipts.length > 0 && (
+      <div class="flex flex-wrap gap-x-5 gap-y-1.5 border-t border-black/10 pt-4 dark:border-white/10">
+        {receipts.map((r) => (
+          <span class="flex items-baseline gap-2 font-mono text-[0.7rem] text-black/55 dark:text-white/55">
+            <span class="uppercase tracking-widest">{r.label}</span>
+            <span class="text-black/85 dark:text-white/85">{r.value}</span>
+          </span>
+        ))}
+      </div>
+    )
+  }
+</div>

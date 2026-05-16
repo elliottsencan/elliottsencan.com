@@ -1,0 +1,95 @@
+---
+/**
+ * Daily bars — one bar per day for cost-by-day style data. Each bar's
+ * height is the day's cost; days that read as anomalies (>4× median and
+ * above a small absolute floor) are tinted with `var(--accent)` so the
+ * outlier reads as "spike, not steady state" without needing prose to
+ * call it out.
+ *
+ * Pure HTML+CSS (no SVG): the bar strip flexes to its container, which
+ * makes the chart fluid on mobile without a separate viewBox dance.
+ * Tooltips on hover via the bar's `title` attribute — native, accessible,
+ * doesn't need a JS island.
+ *
+ * Used by the `chart` kind of lab cell when the sidecar JSON ships a
+ * `by_day: [{ date, cost_usd, count }]` array (see ingest-pipeline-cost).
+ */
+type Day = { date: string; cost_usd: number; count: number };
+type Props = {
+  data: Day[];
+  height?: number;
+  /** Show the "spike: <date>" caption under the axis. */
+  annotate?: boolean;
+};
+
+const { data, height = 180, annotate = true } = Astro.props;
+
+const max = Math.max(...data.map((d) => d.cost_usd), 0.0001);
+const sorted = [...data.map((d) => d.cost_usd)].sort((a, b) => a - b);
+const median = sorted[Math.floor(sorted.length / 2)] || 0;
+const SPIKE_RATIO = 4;
+const SPIKE_FLOOR_USD = 0.15;
+const isSpike = (d: Day) => d.cost_usd > median * SPIKE_RATIO && d.cost_usd > SPIKE_FLOOR_USD;
+const spike = data.find(isSpike);
+
+function shortDate(iso: string): string {
+  // 2026-05-03 → 05·03 — same compact form used in the operational rail.
+  const [, m, d] = iso.split("-");
+  return `${m}·${d}`;
+}
+
+function formatUsd(v: number): string {
+  if (v < 0.01) {
+    return `$${v.toFixed(4)}`;
+  }
+  if (v < 1) {
+    return `$${v.toFixed(3)}`;
+  }
+  return `$${v.toFixed(2)}`;
+}
+---
+
+{
+  data.length === 0 ? (
+    <div class="flex h-[120px] items-center justify-center text-black/45 dark:text-white/45">
+      <span class="font-mono text-xs tracking-wide">Awaiting first run.</span>
+    </div>
+  ) : (
+    <div class="flex flex-col gap-2">
+      <div
+        class="flex items-end gap-[3px] border-b border-black/10 dark:border-white/10"
+        style={`height: ${height}px;`}
+        role="list"
+        aria-label="Daily cost"
+      >
+        {data.map((d) => {
+          const h = Math.max((d.cost_usd / max) * (height - 12), 1.5);
+          const spiked = isSpike(d);
+          return (
+            <div
+              class:list={[
+                "flex-1 transition-opacity hover:opacity-100",
+                spiked
+                  ? "bg-[color:var(--accent)] opacity-90"
+                  : "bg-black/75 opacity-75 dark:bg-white/75",
+              ]}
+              style={`height: ${h}px;`}
+              role="listitem"
+              title={`${d.date} · ${formatUsd(d.cost_usd)} · ${d.count} call${d.count === 1 ? "" : "s"}`}
+            />
+          );
+        })}
+      </div>
+
+      <div class="flex items-baseline justify-between font-mono text-[0.65rem] text-black/55 dark:text-white/55">
+        <span>{shortDate(data[0].date)}</span>
+        {annotate && spike && (
+          <span class="text-[color:var(--accent)]">
+            ↑ {shortDate(spike.date)} · {formatUsd(spike.cost_usd)}
+          </span>
+        )}
+        <span>{shortDate(data[data.length - 1].date)}</span>
+      </div>
+    </div>
+  )
+}

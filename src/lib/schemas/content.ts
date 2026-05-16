@@ -299,6 +299,26 @@ export const LabFrontmatterSchema = z.object({
   pre: z.string().optional(),
   // Commentary paragraph under the result cell.
   post: z.string().optional(),
+  // Pending-state methodology card. When a cell's sidecar is the worker's
+  // `{ status: "no-data" }` stub, LabResult renders this block instead of
+  // the quiet dashed baseline so the cell reads as "methodology shipped,
+  // waiting on data" rather than "page is incomplete." Step strings are
+  // rendered with `set:html`, so inline <code>/<em> in frontmatter is
+  // supported.
+  methodology: z
+    .object({
+      steps: z.array(z.string()).optional(),
+      receipts: z
+        .array(
+          z.object({
+            label: z.string(),
+            value: z.string(),
+          }),
+        )
+        .optional(),
+      code: z.string().optional(),
+    })
+    .optional(),
 });
 
 export const BlogFrontmatterSchema = z.object({

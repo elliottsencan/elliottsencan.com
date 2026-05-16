@@ -1,0 +1,159 @@
+---
+/**
+ * Slope chart — N rows, each with a "from" value on the left column and
+ * a "to" value on the right. Each row is a line connecting the two,
+ * stroked accent if the change goes the "wanted" direction and muted
+ * ink otherwise. Designed for A/B-shaped headline metrics where the
+ * question is "did the change move the needle the right way."
+ *
+ * Mobile-fluid: SVG viewBox + width="100%". On narrow screens the value
+ * labels at the right ends pull in to stay inside the viewport — the
+ * chart never overflows horizontally.
+ *
+ * Used inside ComparisonBars as the headline-row treatment for cells
+ * with `kind: comparison`; can also stand alone.
+ */
+type Format = "percent" | "int" | "decimal";
+
+export type SlopeRow = {
+  label: string;
+  from: number;
+  to: number;
+  format?: Format;
+  /** "higher" means a higher right-side number is the good outcome. */
+  better?: "higher" | "lower";
+};
+
+type Props = {
+  rows: SlopeRow[];
+  /** Column captions. */
+  leftLabel?: string;
+  rightLabel?: string;
+  height?: number;
+};
+
+const { rows, leftLabel = "without", rightLabel = "with priors", height = 220 } = Astro.props;
+
+const width = 380;
+const padTop = 22;
+const padBottom = 26;
+const xL = 90;
+const xR = width - 90;
+
+const allValues = rows.flatMap((r) => [r.from, r.to]);
+const min = Math.min(...allValues, 0);
+const max = Math.max(...allValues, 0);
+const range = max - min || 1;
+const yFor = (v: number) =>
+  height - padBottom - ((v - min) / range) * (height - padTop - padBottom);
+
+function fmt(v: number, format: Format = "percent"): string {
+  if (format === "percent") {
+    return `${(v * 100).toFixed(1)}%`;
+  }
+  if (format === "int") {
+    return String(Math.round(v));
+  }
+  return v.toFixed(2);
+}
+
+function isImprovement(r: SlopeRow): boolean {
+  const better = r.better ?? "higher";
+  return better === "higher" ? r.to > r.from : r.to < r.from;
+}
+---
+
+<div class="text-black/85 dark:text-white/85">
+  <svg
+    width="100%"
+    height={height}
+    viewBox={`0 0 ${width} ${height}`}
+    preserveAspectRatio="xMidYMid meet"
+    role="img"
+    aria-label="Slope comparison"
+    style="display: block;"
+  >
+    <line
+      x1={xL}
+      y1={padTop - 4}
+      x2={xL}
+      y2={height - padBottom + 4}
+      stroke="currentColor"
+      stroke-width="0.5"
+      opacity="0.25"
+    />
+    <line
+      x1={xR}
+      y1={padTop - 4}
+      x2={xR}
+      y2={height - padBottom + 4}
+      stroke="currentColor"
+      stroke-width="0.5"
+      opacity="0.25"
+    />
+
+    <text
+      x={xL}
+      y={height - 6}
+      text-anchor="middle"
+      font-family="var(--font-mono)"
+      font-size="8"
+      fill="currentColor"
+      opacity="0.55"
+    >{leftLabel}</text>
+    <text
+      x={xR}
+      y={height - 6}
+      text-anchor="middle"
+      font-family="var(--font-mono)"
+      font-size="8"
+      fill="currentColor"
+      opacity="0.55"
+    >{rightLabel}</text>
+
+    {
+      rows.map((r) => {
+        const y1 = yFor(r.from);
+        const y2 = yFor(r.to);
+        const improved = isImprovement(r);
+        const stroke = improved ? "var(--accent)" : "currentColor";
+        const op = improved ? 0.9 : 0.4;
+        const format = r.format ?? "percent";
+        return (
+          <g>
+            <title>{`${r.label} · ${fmt(r.from, format)} → ${fmt(r.to, format)}`}</title>
+            <line
+              x1={xL}
+              y1={y1}
+              x2={xR}
+              y2={y2}
+              stroke={stroke}
+              stroke-width="1.2"
+              opacity={op}
+            />
+            <circle cx={xL} cy={y1} r="2.8" fill={stroke} opacity={op} />
+            <circle cx={xR} cy={y2} r="2.8" fill={stroke} opacity={op} />
+            <text
+              x={xL - 8}
+              y={y1 + 3}
+              text-anchor="end"
+              font-family="var(--font-mono)"
+              font-size="8"
+              fill="currentColor"
+              opacity="0.7"
+            >{r.label}</text>
+            <text
+              x={xR + 8}
+              y={y2 + 3}
+              text-anchor="start"
+              font-family="var(--font-mono)"
+              font-size="8"
+              fill={stroke}
+              opacity={op}
+            >{fmt(r.to, format)}</text>
+          </g>
+        );
+      })
+    }
+  </svg>
+</div>

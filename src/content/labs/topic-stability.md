@@ -1,12 +1,12 @@
 ---
-title: Topic-slug stability under priors
-hypothesis: When the model summarizing a saved link sees the active corpus's topic slugs, it produces more stable slugs (re-summarizing an existing entry recovers most of its original topics) than when it summarizes the same URL with no slug context. The "self-correcting drift" claim the wiki pipeline rests on lives or dies here.
+title: Topic stability
+hypothesis: Showing the AI which topic tags are already in use keeps it from inventing new ones for articles it's seen before. Without that nudge, the same article could get tagged differently on different runs, and the wiki layer (which clusters articles by tag) would fragment.
 status: live
 publishedDate: 2026-05-15T12:00:00-07:00
 lastRunDate: 2026-05-15T13:23:00-07:00
-tldr: Each sampled reading entry is re-summarized twice. Once with the model seeing the active corpus slug list (priors on), once without (priors off). The eval measures slug-set drift between cells and slug recovery against the entry's original topics.
+tldr: When the AI tags a saved article with topics, do those tags stay stable over time? The chart compares tagging the same article with and without a list of existing tags as an anchor.
 headlineMetric:
-  label: Slug recovery with priors
+  label: Tag recovery
   value: 42.2%
 tags:
   - eval
@@ -14,47 +14,55 @@ tags:
   - reading
 kind: comparison
 dataPath: data/topic-stability.json
-post: |
-  Reading the panel: recovery is the share of the entry's original topic slugs the model gets back (higher is better). Distinct-slug count is corpus-wide vocabulary breadth (lower is better, since the wiki layer needs slug stability to compile). Jaccard is per-URL set overlap between cells, so it has no counterfactual side. The per-sample strip splits the recovery metric per URL, sorted so priors-on wins come first and regressions come last.
-
-  The driver lives at `scripts/topic-stability-ab.mjs`. It samples N entries across `src/content/reading/`, POSTs each URL to `/link` twice (`topic_priors` true then false) with `dry_run: true` so no commits land, and writes the sidecar JSON above. The default sample is stride-spread over the whole corpus so coverage isn't biased toward recent ingest. Per-run cost is bounded (one `/link` call costs cents on Sonnet 4.6) and lands in [`/labs/ingest-pipeline-cost`](/labs/ingest-pipeline-cost).
 ---
 
-The wiki layer compiles per-concept articles from reading entries that
-share a topic slug. If those slugs drift every time the model sees a
-URL (`ai-coding` one week, `agentic-coding` the next, `claude-code` the
-week after) the wiki's clusters fragment and the synthesis layer never
-gets enough citations to compile.
+The wiki layer of this site clusters my saved articles by topic, then
+writes a synthesis paragraph for each cluster. That falls apart if the
+AI tags the same article inconsistently — `ai-coding` one week,
+`agentic-coding` the next, `claude-code` the week after — because the
+clusters fragment and no single topic ever accumulates enough sources
+to be worth synthesizing.
 
-The pipeline's working assumption is that showing the model the slugs
-already in use is enough to keep things stable. This eval tests that
-assumption directly.
+The pipeline's working bet is that showing the AI a list of tags
+already in use is enough to keep it anchored. This eval tests the bet
+directly.
 
-For each sampled entry the script makes two POSTs to `/link`:
+For each sampled article the script asks the AI to re-tag it twice:
 
-- **priors on**: the model gets the same canonical-vocabulary block
-  production uses, listing every slug currently active in the corpus.
-- **priors off**: the model gets only the article title and excerpt.
-  No slug list. The model coins freely.
+- **with the anchor list**: the AI sees every tag currently active
+  across the whole corpus and is told to reuse where reasonable.
+- **without the anchor list**: the AI sees only the article's title and
+  excerpt and tags freely.
 
-Both cells use `dry_run: true`, so no reading entries are committed and
-no `/synthesize` spawn fires. The Anthropic call still happens, so the
-cost is real (the sidecar's `total_cost_usd` is the actual spend).
+Two things get measured per run:
 
-Two questions get measured per run:
+1. **Recovery against the original tags.** Each sampled article was
+   already tagged when I originally saved it, and those original tags
+   are treated as ground truth. The chart shows what fraction the AI
+   gets back in each cell. If with-anchor recovery is materially higher
+   than without-anchor, the bet pays off.
+2. **Vocabulary breadth.** How many distinct tags the AI invents across
+   the whole sample. Lower is better — fewer total tags means tighter
+   clusters downstream.
 
-1. **Drift between cells.** How different are priors-on slugs from
-   priors-off slugs on the same URL? Reported as per-URL Jaccard and
-   corpus-wide distinct-slug counts. A high Jaccard means priors don't
-   change much; a low Jaccard means they're load-bearing.
-2. **Recovery against original.** Each sampled entry was summarized by
-   production at ingest time and carries those slugs in its frontmatter.
-   The eval treats those as ground truth and measures how many the model
-   recovers in each cell. If priors-on recovery is materially higher than
-   priors-off, the assumption holds. If they're the same, the canonical-
-   vocabulary block is theater.
+If the two cells come out about the same, the anchor list is theatre
+and clusters drift no matter what. The right move then would be a
+different mechanism for stability — not a longer prompt, but something
+deterministic outside the model.
 
-This eval is upstream of [`/labs/citation-faithfulness`](/labs/citation-faithfulness):
-faithful citations don't matter much if the wiki article is clustering
-on a fragmented slug to begin with. The cost of running both lands in
-[`/labs/ingest-pipeline-cost`](/labs/ingest-pipeline-cost).
+This eval is upstream of [Citation faithfulness](/labs/citation-faithfulness):
+faithful citations don't matter much if the wiki article is built on a
+fragmented topic to begin with.
+
+Reading the chart: recovery is the share of an article's original tags
+the AI gets back on a re-run (higher is better — the "with anchor wins"
+line). Distinct-tag count is how many different tags the AI invents
+across the whole sample (lower is better, since the wiki layer needs
+tag stability to compile). Jaccard is per-article overlap between the
+two runs, so it has no winner side. The per-sample strip splits
+recovery per article, sorted with the biggest with-anchor wins first
+and regressions last.
+
+The runs are dry — no entries get committed — but the AI calls still
+cost money, and that spend lands in
+[Ingest pipeline cost](/labs/ingest-pipeline-cost).

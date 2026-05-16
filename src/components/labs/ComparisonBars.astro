@@ -1,29 +1,29 @@
 ---
 /**
- * Comparison bars — paired horizontal bars for A/B-shaped eval cells.
+ * Comparison cell — A/B-shaped headline metrics + a per-sample strip.
  *
- * Two regions:
+ * Three regions, top to bottom:
  *
- *   1. Top: paired-bar rows, one per headline metric. Each row has a
- *      fixed-width label on the left, two stacked thin bars in the
- *      middle (with-priors above, without-priors below), and the two
- *      numeric values stacked at the right. Bars share an axis (0..max
- *      within the row) so the visual ratio matches the numeric delta.
- *      The "winning" side picks up `var(--accent)` as a bar fill —
- *      same accent the rest of the site uses for forward-link badges.
- *   2. Bottom: per-sample strip. One row per sample, with a single
- *      delta bar anchored to a vertical mid-rule. Bar extends right
- *      and tints accent when priors helped, extends left and stays
- *      muted when priors hurt. The two raw recovery numbers trail at
- *      the right as small mono text — they're the receipt, not the
- *      headline. Sorted so the biggest priors-on wins land first and
- *      the regressions land last.
+ *   1. Slope chart for paired percent metrics (one line per metric,
+ *      "without" → "with", accent slope = improvement). Reads the
+ *      directional bet of the A/B at a glance — does the change move
+ *      the needle the right way.
  *
- * Color vocabulary: bars use opacity-modulated foreground for the
- * losing/null state (`bg-black/55 dark:bg-white/40`) and `var(--accent)`
- * for the winning state. No bespoke hues — dark and light mode behavior
- * follows automatically off the existing tokens.
+ *   2. Stat-tile callouts for non-slope-friendly metrics: integer counts
+ *      (e.g. distinct tags), single-sided values (e.g. Jaccard).
+ *      Same hierarchy as the cell's headline number on the labs index,
+ *      so the eye reads "supporting numbers" not "secondary chart."
+ *
+ *   3. Per-sample diverging strip: one row per sample, single bar
+ *      anchored to a vertical mid-rule. Right = priors helped (accent);
+ *      left = priors hurt (muted). Sorted biggest wins first.
+ *
+ * Mobile-first: every region is a single flex column at base; the
+ * grid layouts only kick in at `md:`. The slope chart and diverging
+ * strip both render through SVG/percent-width, so they fluid down to
+ * a phone viewport without horizontal scroll.
  */
+import SlopeChart, { type SlopeRow } from "./SlopeChart.astro";
 
 type Format = "percent" | "int" | "decimal";
 
@@ -32,11 +32,8 @@ type Metric = {
   with_priors: number;
   without_priors: number | null;
   format: Format;
-  /** Which side reads as "the wanted outcome". Controls accent placement. */
   better?: "higher" | "lower";
-  /** Inline caption shown under the label, mono small. Use sparingly. */
   caption?: string;
-  /** When true, render only the `with_priors` value (e.g. Jaccard). */
   single?: boolean;
 };
 
@@ -49,16 +46,14 @@ type Sample = {
 type Props = {
   metrics: Metric[];
   samples: Sample[];
-  /** Header labels for the two cells. */
   legend?: { left: string; right: string };
-  /** Optional caption above the per-sample strip. */
   stripLabel?: string;
 };
 
 const {
   metrics,
   samples,
-  legend = { left: "WITH PRIORS", right: "WITHOUT PRIORS" },
+  legend = { left: "without priors", right: "with priors" },
   stripLabel,
 } = Astro.props;
 
@@ -75,32 +70,22 @@ function fmt(value: number | null, format: Format): string {
   return value.toFixed(2);
 }
 
-function winner(m: Metric): "left" | "right" | null {
-  if (m.single || m.without_priors === null || !m.better) {
-    return null;
-  }
-  if (m.with_priors === m.without_priors) {
-    return null;
-  }
-  const leftWins =
-    m.better === "higher" ? m.with_priors > m.without_priors : m.with_priors < m.without_priors;
-  return leftWins ? "left" : "right";
-}
+// Slope-eligible: percent metrics with both a `with` and `without` value.
+// Everything else falls through to the callout row.
+const slopeMetrics: Metric[] = metrics.filter(
+  (m) => m.format === "percent" && !m.single && m.without_priors !== null,
+);
+const calloutMetrics: Metric[] = metrics.filter((m) => !slopeMetrics.includes(m));
 
-// Per-row bar scale: 0..max within the row so the visual delta matches the
-// numeric delta. For percent metrics, cap at 1 so 100% reads as a full bar
-// rather than getting stretched when both values are well below 1.
-function rowMax(m: Metric): number {
-  if (m.format === "percent") {
-    return 1;
-  }
-  const candidates = [m.with_priors, m.without_priors ?? 0];
-  return Math.max(...candidates) || 1;
-}
+const slopeRows: SlopeRow[] = slopeMetrics.map((m) => ({
+  label: m.label,
+  from: m.without_priors as number,
+  to: m.with_priors,
+  format: m.format,
+  better: m.better ?? "higher",
+}));
 
-// Stable sort for the per-sample strip: rows where the WITH cell wins most
-// land first (positive delta), regressions at the end. Within ties,
-// alphabetical for determinism.
+// Per-sample sort: biggest priors-on wins land first. Ties → alpha.
 const sortedSamples = [...samples].sort((a, b) => {
   const da = a.with_priors - a.without_priors;
   const db = b.with_priors - b.without_priors;
@@ -110,178 +95,141 @@ const sortedSamples = [...samples].sort((a, b) => {
   return a.label.localeCompare(b.label);
 });
 
-// Delta-strip geometry: max absolute delta in the sample set sets the
-// scale so the largest swing fills its half. Falls back to 1 if every
-// sample is a no-op.
 const maxAbsDelta =
-  sortedSamples.reduce(
-    (acc, s) => Math.max(acc, Math.abs(s.with_priors - s.without_priors)),
-    0,
-  ) || 1;
+  sortedSamples.reduce((acc, s) => Math.max(acc, Math.abs(s.with_priors - s.without_priors)), 0) ||
+  1;
+
+// Callout helpers: render a count metric as "32 vs 53" with a tone hint
+// in the smaller number.
+function calloutSecondary(m: Metric): string | null {
+  if (m.single || m.without_priors === null) {
+    return null;
+  }
+  return fmt(m.without_priors, m.format);
+}
+function calloutAccent(m: Metric): boolean {
+  if (m.single || m.without_priors === null || !m.better) {
+    return false;
+  }
+  return m.better === "higher"
+    ? m.with_priors > m.without_priors
+    : m.with_priors < m.without_priors;
+}
 ---
 
-<div class="flex flex-col gap-8">
-  {/* Legend strip — quiet, just labels the two columns of bars below. */}
-  <div
-    class="flex items-center gap-4 font-mono text-[0.65rem] uppercase tracking-widest text-black/55 dark:text-white/55"
-  >
-    <span class="inline-flex items-center gap-1.5">
-      <span class="inline-block h-2 w-2 rounded-sm bg-[color:var(--accent)]"></span>
-      {legend.left}
-    </span>
-    <span class="inline-flex items-center gap-1.5">
-      <span
-        class="inline-block h-2 w-2 rounded-sm bg-black/55 dark:bg-white/40"
-      ></span>
-      {legend.right}
-    </span>
-  </div>
-
-  {/* Top: headline paired-bar rows. Consistent label width, consistent bar
-      geometry — reads as one hierarchical block, not three loose rows. */}
-  <div class="flex flex-col gap-5">
-    {
-      metrics.map((m) => {
-        const max = rowMax(m);
-        const w = (m.with_priors / max) * 100;
-        const wo =
-          m.without_priors === null ? 0 : (m.without_priors / max) * 100;
-        const win = winner(m);
-        const leftWins = win === "left";
-        const rightWins = win === "right";
-        return (
-          <div class="grid grid-cols-[10rem_minmax(0,1fr)_4.5rem] items-center gap-4">
-            <div class="flex flex-col gap-0.5">
-              <span class="font-mono text-xs uppercase tracking-widest text-black/65 dark:text-white/65">
-                {m.label}
-              </span>
-              {m.caption && (
-                <span class="font-mono text-[0.65rem] tracking-wide text-black/45 dark:text-white/45">
-                  {m.caption}
-                </span>
-              )}
-            </div>
-
-            <div class="flex flex-col gap-1">
-              {/* WITH row */}
-              <div class="relative h-2.5 bg-black/5 dark:bg-white/8">
-                <div
-                  class:list={[
-                    "h-full",
-                    leftWins
-                      ? "bg-[color:var(--accent)]"
-                      : "bg-black/55 dark:bg-white/40",
-                  ]}
-                  style={`width: ${w}%;`}
-                />
-              </div>
-              {/* WITHOUT row — omitted entirely if single */}
-              {!m.single && (
-                <div class="relative h-2.5 bg-black/5 dark:bg-white/8">
-                  <div
-                    class:list={[
-                      "h-full",
-                      rightWins
-                        ? "bg-[color:var(--accent)]"
-                        : "bg-black/55 dark:bg-white/40",
-                    ]}
-                    style={`width: ${wo}%;`}
-                  />
-                </div>
-              )}
-            </div>
-
-            <div class="flex flex-col gap-1 text-right font-mono text-xs tabular-nums">
-              <span
-                class:list={[
-                  leftWins
-                    ? "text-[color:var(--accent)]"
-                    : "text-black dark:text-white",
-                ]}
-                style="font-variant-numeric: tabular-nums;"
-              >
-                {fmt(m.with_priors, m.format)}
-              </span>
-              {!m.single && (
-                <span
-                  class:list={[
-                    rightWins
-                      ? "text-[color:var(--accent)]"
-                      : "text-black/55 dark:text-white/55",
-                  ]}
-                  style="font-variant-numeric: tabular-nums;"
-                >
-                  {fmt(m.without_priors, m.format)}
-                </span>
-              )}
-            </div>
-          </div>
-        );
-      })
-    }
-  </div>
-
-  {/* Bottom: per-sample delta strip. Single bar anchored to a vertical
-      mid-rule. Right = priors helped (accent); left = priors hurt (muted).
-      The two raw recovery numbers trail as small mono text. */}
-  {
-    sortedSamples.length > 0 && (
-      <div class="flex flex-col gap-3 border-t border-black/10 pt-6 dark:border-white/10">
-        <div class="flex items-baseline justify-between gap-3">
-          <span class="font-mono text-xs uppercase tracking-widest text-black/65 dark:text-white/65">
-            {stripLabel ?? `Per-sample recovery (n=${sortedSamples.length})`}
+<div class="flex flex-col gap-8 md:gap-10">
+  {/* ── Region 1 + 2: slope chart + callouts, side-by-side on md+, stacked below ── */}
+  {(slopeRows.length > 0 || calloutMetrics.length > 0) && (
+    <div class="grid grid-cols-1 gap-6 md:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] md:gap-10">
+      {slopeRows.length > 0 ? (
+        <div class="flex flex-col gap-3">
+          <span class="font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55">
+            Headline · {legend.left} → {legend.right}
           </span>
-          <span class="font-mono text-[0.65rem] uppercase tracking-widest text-black/45 dark:text-white/45">
-            delta · on − off
-          </span>
+          <SlopeChart
+            rows={slopeRows}
+            leftLabel={legend.left}
+            rightLabel={legend.right}
+            height={Math.max(160, slopeRows.length * 56)}
+          />
         </div>
-        <div class="flex flex-col gap-1">
-          {sortedSamples.map((s) => {
-            const delta = s.with_priors - s.without_priors;
-            const magnitude = (Math.abs(delta) / maxAbsDelta) * 50; // %, half-track
-            const helped = delta > 0;
-            const neutral = delta === 0;
+      ) : <div></div>}
+
+      {calloutMetrics.length > 0 && (
+        <div class="flex flex-col gap-5">
+          {calloutMetrics.map((m) => {
+            const accent = calloutAccent(m);
+            const secondary = calloutSecondary(m);
             return (
-              <div class="grid grid-cols-[minmax(0,1fr)_minmax(120px,200px)_5rem] items-center gap-4">
-                <span
-                  class="truncate font-mono text-[0.7rem] text-black/65 dark:text-white/65"
-                  title={s.label}
-                >
-                  {s.label}
+              <div class="flex flex-col gap-1.5">
+                <span class="font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55">
+                  {m.label}
                 </span>
-                {/* Delta bar — vertical mid-rule, bar extends from center. */}
-                <div class="relative h-2">
-                  {/* mid-rule */}
-                  <div class="absolute inset-y-0 left-1/2 w-px bg-black/20 dark:bg-white/20" />
-                  {!neutral && (
-                    <div
-                      class:list={[
-                        "absolute top-0 h-full",
-                        helped
-                          ? "bg-[color:var(--accent)]"
-                          : "bg-black/55 dark:bg-white/40",
-                      ]}
-                      style={
-                        helped
-                          ? `left: 50%; width: ${magnitude}%;`
-                          : `right: 50%; width: ${magnitude}%;`
-                      }
-                    />
+                <div class="flex flex-wrap items-baseline gap-3">
+                  <span
+                    class:list={[
+                      "font-heading text-3xl font-medium tracking-tight tabular-nums md:text-[2.1rem]",
+                      accent ? "text-[color:var(--accent)]" : "text-black dark:text-white",
+                    ]}
+                    style="font-variant-numeric: tabular-nums;"
+                  >
+                    {fmt(m.with_priors, m.format)}
+                  </span>
+                  {secondary && (
+                    <span class="font-mono text-sm text-black/55 dark:text-white/55">
+                      vs <span class="tabular-nums" style="font-variant-numeric: tabular-nums;">{secondary}</span>
+                    </span>
                   )}
                 </div>
-                <span
-                  class="text-right font-mono text-[0.65rem] tabular-nums text-black/55 dark:text-white/55"
-                  style="font-variant-numeric: tabular-nums;"
-                >
-                  {Math.round(s.with_priors * 100)}
-                  <span class="text-black/30 dark:text-white/30"> / </span>
-                  {Math.round(s.without_priors * 100)}
-                </span>
+                {m.caption && (
+                  <span class="font-mono text-[0.7rem] text-black/55 dark:text-white/55">
+                    {m.caption}
+                  </span>
+                )}
               </div>
             );
           })}
         </div>
+      )}
+    </div>
+  )}
+
+  {/* ── Region 3: per-sample diverging strip. Already mobile-friendly —
+        labels truncate, the strip width stays bounded by the column. ── */}
+  {sortedSamples.length > 0 && (
+    <div class="flex flex-col gap-3 border-t border-black/10 pt-6 dark:border-white/10">
+      <div class="flex items-baseline justify-between gap-3">
+        <span class="font-mono text-xs uppercase tracking-widest text-black/65 dark:text-white/65">
+          {stripLabel ?? `Per-sample · n=${sortedSamples.length}`}
+        </span>
+        <span class="hidden font-mono text-[0.65rem] uppercase tracking-widest text-black/45 sm:inline dark:text-white/45">
+          ← priors hurt · priors helped →
+        </span>
       </div>
-    )
-  }
+      <div class="flex flex-col gap-1">
+        {sortedSamples.map((s) => {
+          const delta = s.with_priors - s.without_priors;
+          const magnitude = (Math.abs(delta) / maxAbsDelta) * 50;
+          const helped = delta > 0;
+          const neutral = delta === 0;
+          return (
+            <div class="grid grid-cols-[minmax(0,1fr)_minmax(100px,200px)_4.5rem] items-center gap-3 md:grid-cols-[minmax(0,1fr)_minmax(140px,260px)_5rem] md:gap-4">
+              <span
+                class="truncate font-mono text-[0.7rem] text-black/65 dark:text-white/65"
+                title={s.label}
+              >
+                {s.label}
+              </span>
+              <div class="relative h-2">
+                <div class="absolute inset-y-0 left-1/2 w-px bg-black/20 dark:bg-white/20" />
+                {!neutral && (
+                  <div
+                    class:list={[
+                      "absolute top-0 h-full",
+                      helped
+                        ? "bg-[color:var(--accent)]"
+                        : "bg-black/55 dark:bg-white/40",
+                    ]}
+                    style={
+                      helped
+                        ? `left: 50%; width: ${magnitude}%;`
+                        : `right: 50%; width: ${magnitude}%;`
+                    }
+                  />
+                )}
+              </div>
+              <span
+                class="text-right font-mono text-[0.65rem] tabular-nums text-black/55 dark:text-white/55"
+                style="font-variant-numeric: tabular-nums;"
+              >
+                {Math.round(s.with_priors * 100)}
+                <span class="text-black/30 dark:text-white/30"> / </span>
+                {Math.round(s.without_priors * 100)}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  )}
 </div>

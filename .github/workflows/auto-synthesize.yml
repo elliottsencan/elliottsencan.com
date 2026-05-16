@@ -1,0 +1,80 @@
+name: Auto-synthesize on new reading
+
+# Fires after /link commits a reading entry directly to main. POSTs /synthesize;
+# the worker's (topic, source_set) skip key short-circuits topics whose
+# contributing source set hasn't changed, so the call is cheap on no-ops.
+#
+# Setup notes: reuses SITE_INGEST_URL + SITE_INGEST_API_TOKEN from now-consume.yml.
+# Repo variable AUTO_TRIGGERS_ENABLED is a kill switch — set to "false" via the
+# GitHub UI (Settings → Secrets and variables → Actions → Variables) to halt all
+# three auto-trigger workflows without editing files.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/content/reading/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Collapse bursts of reading commits into one /synthesize run.
+concurrency:
+  group: auto-synthesize
+  cancel-in-progress: true
+
+jobs:
+  synthesize:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check kill switch
+        env:
+          ENABLED: ${{ vars.AUTO_TRIGGERS_ENABLED }}
+        run: |
+          set -euo pipefail
+          # Default is on. Only the literal "false" disables.
+          if [[ "${ENABLED:-true}" == "false" ]]; then
+            echo "AUTO_TRIGGERS_ENABLED=false — skipping."
+            exit 0
+          fi
+          echo "kill-switch=ok" >> "$GITHUB_OUTPUT"
+        id: killswitch
+
+      - name: Call worker /synthesize
+        if: steps.killswitch.outputs.kill-switch == 'ok'
+        env:
+          WORKER_URL: ${{ secrets.SITE_INGEST_URL }}
+          API_TOKEN: ${{ secrets.SITE_INGEST_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${WORKER_URL:-}" || -z "${API_TOKEN:-}" ]]; then
+            echo "::error::SITE_INGEST_URL and SITE_INGEST_API_TOKEN must be set."
+            exit 1
+          fi
+          # Worker handles its own scope: no `topics` filter = walk all topics,
+          # skip-key short-circuits stable ones. Idempotent.
+          # 429 means cooldown or budget kicked in — treat as success-noop.
+          STATUS=$(curl --silent --show-error --output /tmp/resp.json \
+            --write-out '%{http_code}' \
+            -X POST "${WORKER_URL%/}/synthesize" \
+            -H "Authorization: Bearer $API_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{"dry_run":false}')
+          echo "HTTP $STATUS"
+          cat /tmp/resp.json | jq . 2>/dev/null || cat /tmp/resp.json
+          echo
+          if [[ "$STATUS" == "429" ]]; then
+            echo "::notice::Worker throttled (cooldown or daily budget) — treating as success-noop."
+            exit 0
+          fi
+          if [[ "$STATUS" -lt 200 || "$STATUS" -ge 300 ]]; then
+            echo "::error::/synthesize returned HTTP $STATUS"
+            exit 1
+          fi
+          # Surface aggregated cost so weekly review can spot anomalies.
+          jq -r '.run_cost | if . == null then "run_cost: null"
+            else "run_cost: $\(.total_usd // 0) " +
+                 "(in=\(.total_usage.input_tokens) " +
+                 "out=\(.total_usage.output_tokens) " +
+                 "calls=\(.records | length))" end' /tmp/resp.json || true

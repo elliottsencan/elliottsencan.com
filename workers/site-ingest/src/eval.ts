@@ -31,6 +31,12 @@ import { type JudgeCitationResult, judgeCitation } from "./anthropic.ts";
 import type { CostRecord } from "./cost.ts";
 import { createGitHubClient, type GitHubClient, getFile, listDir } from "./github.ts";
 import { type PlanOutput, type PlanResult, runPipeline, type Strategy } from "./pipeline.ts";
+import {
+  checkGuard,
+  DEFAULTS as GUARD_DEFAULTS,
+  markRun,
+  parseEnvNumber,
+} from "./runtime-guard.ts";
 import { makePipelineDeps } from "./synthesize.ts";
 import type { Env, Result } from "./types.ts";
 import { jsonResponse, log, readingSlugFromPath } from "./util.ts";
@@ -940,6 +946,43 @@ export async function handle(request: Request, env: Env, ctx: ExecutionContext):
   const req = validation.data;
   const strategy = makeEvalStrategy(req);
 
+  // Cooldown + daily-budget guard. Skipped on dry_run (no Anthropic spend)
+  // and on force=true for cooldown (force is the manual-override escape
+  // hatch); the daily budget is always enforced.
+  if (!req.dry_run) {
+    const cooldownSec = req.force
+      ? 0
+      : parseEnvNumber(
+          env.EVAL_COOLDOWN_SECONDS,
+          GUARD_DEFAULTS.eval.cooldown_seconds,
+          "EVAL_COOLDOWN_SECONDS",
+        );
+    const dailyCap = parseEnvNumber(
+      env.EVAL_DAILY_CALL_CAP,
+      GUARD_DEFAULTS.eval.daily_call_cap,
+      "EVAL_DAILY_CALL_CAP",
+    );
+    const guard = await checkGuard(env.NOW_INPUTS, "eval", {
+      cooldown_seconds: cooldownSec,
+      daily_call_cap: dailyCap,
+    });
+    if (!guard.ok) {
+      log.info("eval", "guard", "throttled", {
+        reason: guard.reason,
+        details: guard.details,
+      });
+      return jsonResponse(
+        {
+          ok: false,
+          throttled: guard.reason,
+          details: guard.details,
+          retry_after_seconds: guard.retry_after_seconds,
+        },
+        guard.status,
+      );
+    }
+  }
+
   if (req.dry_run) {
     const planned = await strategy.plan({ env }, env);
     if (!planned.ok) {
@@ -971,6 +1014,7 @@ export async function handle(request: Request, env: Env, ctx: ExecutionContext):
     return jsonResponse({ ok: false, error: result.error }, result.status);
   }
   const summary = result.summary;
+  ctx.waitUntil(markRun(env.NOW_INPUTS, "eval", summary?.call_count ?? 0));
   return jsonResponse({
     ok: true,
     dry_run: false,

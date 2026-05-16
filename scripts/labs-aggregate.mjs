@@ -157,17 +157,29 @@ function writeIngestPipelineCost(records) {
   const sortedTimes = records.map((r) => r.compiled_at).sort((a, b) => a - b);
   const avg = records.length > 0 ? total / records.length : 0;
 
+  // Stats here are the *supporting* numbers under the headline "Spent so
+  // far" — so we deliberately don't repeat the total here. Models count
+  // is suppressed when degenerate (single model = no signal).
   const stats = [
-    { label: "Total spent", value: formatUsd(Math.round(total * 10_000) / 10_000) },
     { label: "Records", value: String(records.length) },
     { label: "Avg / record", value: formatUsd(Math.round(avg * 10_000) / 10_000) },
-    { label: "Models", value: String(modelArr.length) },
   ];
+  if (modelArr.length > 1) {
+    stats.push({ label: "Models", value: String(modelArr.length) });
+  }
+  const headlineValue = formatUsd(Math.round(total * 10_000) / 10_000);
 
   const payload = {
     generated_at: new Date().toISOString(),
     source:
       "Aggregated from compile_cost in src/content/reading/**/*.md + src/content/wiki/*.md by scripts/labs-aggregate.mjs.",
+    // Hypothesis line — surfaces the dashed "$5/mo target" on the
+    // cumulative chart. Static; if the budget assumption ever changes,
+    // change the cell's hypothesis prose and this number in tandem.
+    budget: 5,
+    // Pulled up so the caller can sync the cell's `headlineMetric.value`
+    // without having to dig into `summary.stats[0]`.
+    headlineValue,
     summary: {
       stats,
       total_cost_usd: Math.round(total * 10_000) / 10_000,
@@ -357,7 +369,7 @@ console.log(
 // Headline = "Spent so far" = total spend, formatted. Keep the MD in sync
 // with the freshly written sidecar so the page header and the chart match.
 const ingestMd = join(ROOT, "src/content/labs/ingest-pipeline-cost.md");
-const ingestSync = syncLabHeadline(ingestMd, payload.summary.stats[0].value);
+const ingestSync = syncLabHeadline(ingestMd, payload.headlineValue);
 console.log(`[labs-aggregate] ingest-pipeline-cost headline: ${ingestSync.status}`);
 
 const cf = writeCitationFaithfulness();

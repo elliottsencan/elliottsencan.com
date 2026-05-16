@@ -53,6 +53,15 @@ ANTHROPIC_MODEL = ""
 # MAX_CONCEPTS_PER_RUN = "100"
 # MAX_ENTRIES_PER_RUN = "100"
 
+# Auto-trigger guards (consumed by /synthesize and /eval). Defaults baked
+# in `src/runtime-guard.ts`: 300s cooldown for both endpoints, 300 daily
+# Anthropic calls for /synthesize and 500 for /eval. Set to "0" to disable
+# either check independently. Strings, parsed as numbers.
+# SYNTHESIZE_COOLDOWN_SECONDS = "300"
+# SYNTHESIZE_DAILY_CALL_CAP = "300"
+# EVAL_COOLDOWN_SECONDS = "300"
+# EVAL_DAILY_CALL_CAP = "500"
+
 [[kv_namespaces]]
 binding = "NOW_INPUTS"
 id = "bd8e73bf1e524f8783f64410a8f93eb7"

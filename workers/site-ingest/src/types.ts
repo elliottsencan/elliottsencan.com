@@ -44,6 +44,14 @@ export interface Env {
   MAX_ENTRIES_PER_RUN?: string;
   /** Optional override for /eval per-run Anthropic call ceiling. Defaults to 500. */
   MAX_EVAL_CALLS_PER_RUN?: string;
+  /** Minimum seconds between /synthesize runs. Default 300 (5 min). 0 disables. */
+  SYNTHESIZE_COOLDOWN_SECONDS?: string;
+  /** Daily Anthropic-call cap for /synthesize. Default 300. 0 disables. */
+  SYNTHESIZE_DAILY_CALL_CAP?: string;
+  /** Minimum seconds between /eval runs. Default 300 (5 min). 0 disables. */
+  EVAL_COOLDOWN_SECONDS?: string;
+  /** Daily Anthropic-call cap for /eval. Default 500. 0 disables. */
+  EVAL_DAILY_CALL_CAP?: string;
 
   // KV
   NOW_INPUTS: KVNamespace;

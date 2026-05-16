@@ -1,10 +1,10 @@
 ---
 title: Ingest pipeline cost
-hypothesis: The site-ingest worker can run under $0.50/month at current saving rates, as long as it doesn't re-summarize on every recompile.
+hypothesis: The AI behind this site stays under $5 a month at the rate I save things, as long as I don't keep re-summarizing what I've already summarized.
 status: live
 publishedDate: 2026-04-15T12:00:00-07:00
 lastRunDate: 2026-05-04T12:00:00-07:00
-tldr: Anthropic spend on /link, /recompile, and /synthesize, read directly from `compile_cost` in the corpus. Updated on every build.
+tldr: How much does the AI behind this site cost to run? Total spend so far, broken down by what it was spent on.
 headlineMetric:
   label: Spent so far
   value: $1.86
@@ -22,30 +22,34 @@ pre: |
   const total    = sum(records.map(r => r.cost_usd))
   const byDay    = bucketByPacificDate(records)
   const byModel  = bucketBy(records, r => r.model)
-post: The `compile_cost` field landed in PR #27 on 2026-05-01. The first /recompile-all run backfilled it across the reading and wiki corpus on 2026-05-03, which is the spike, not steady-state spend. Eval runs from [`/labs/citation-faithfulness`](/labs/citation-faithfulness) and the A/B from [`/labs/topic-stability`](/labs/topic-stability) also append to the series.
 ---
 
-The pipeline runs three priced calls. Each one writes its cost into the
-resulting markdown's frontmatter:
+When I save a link, an AI reads the page and writes a one-paragraph
+summary. When a few summaries pile up on the same topic, a different AI
+call compiles them into a wiki article. Both of those calls cost money —
+fractions of a cent to a few cents each. This cell tracks the total.
 
-- `/link` fetches and summarizes a saved URL, then writes the reading
-  entry.
-- `/recompile` re-summarizes an existing entry (when the prompt changes
-  or to compare model versions).
-- `/synthesize` compiles per-concept wiki articles from clusters of
-  reading entries that share a topic.
+The chart shows daily spend since I started recording it. Three kinds of
+work account for nearly all of it:
 
-Each call's `CostRecord` is snapshotted into the entry's `compile_cost`,
-including the pricing table at the moment of the call. Historical numbers
-stay reproducible across price-table updates. The aggregator buckets
-those records by Pacific date for the daily series; the sidecar JSON
-also carries weekly and per-model breakdowns for cells that want a
-different cut.
+- **Summarizing a saved link.** The most common call, fires every time
+  I save a URL.
+- **Re-summarizing an existing entry.** Only runs when I change the
+  prompt or want to compare model versions across the same article.
+- **Compiling a wiki article.** Less frequent; only fires when enough
+  sources accumulate on the same topic to be worth synthesizing.
+
+Every call snapshots its own cost into the resulting markdown,
+including the price table at the moment the call was made. Historical
+numbers stay reproducible even when prices change underneath.
 
 Reading the chart: the headline is total spend so far, not a monthly
-run-rate. The hypothesis is about steady-state monthly cost. That's the
-line to watch as routine `/link` calls accumulate week over week and the
-bulk-recompile spike fades into the background. The two other labs
-([citation-faithfulness](/labs/citation-faithfulness) and
-[topic-stability](/labs/topic-stability)) both add to this rollup, so
-their per-run cost is visible here too.
+run-rate. The hypothesis is about steady-state monthly cost. So what's
+worth watching is whether the daily line settles into a low, quiet
+background once the early bulk re-summarize spike fades — that's the
+shape of "under $5/month at current saving rates" if the bet pays off.
+The dashed line on the cumulative chart is that target.
+
+The two other labs ([Citation faithfulness](/labs/citation-faithfulness)
+and [Topic stability](/labs/topic-stability)) also append to this
+rollup, so their per-run cost shows up here too.

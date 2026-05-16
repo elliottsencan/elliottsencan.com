@@ -1308,32 +1308,33 @@
   ],
   "comparison": {
     "legend": {
-      "left": "WITH PRIORS",
-      "right": "WITHOUT PRIORS"
+      "left": "without anchor",
+      "right": "with anchor list"
     },
     "metrics": [
       {
-        "label": "Recovery rate",
+        "label": "Tag recovery",
         "with_priors": 0.4222,
         "without_priors": 0.225,
         "format": "percent",
         "better": "higher",
-        "caption": "share of original slugs recovered"
+        "caption": "share of original tags the AI gets back"
       },
       {
-        "label": "Distinct slugs",
+        "label": "Tag vocabulary",
         "with_priors": 32,
         "without_priors": 53,
         "format": "int",
-        "better": "lower"
+        "better": "lower",
+        "caption": "distinct tags invented across the sample (lower = tighter)"
       },
       {
-        "label": "Per-URL Jaccard",
+        "label": "Per-article overlap",
         "with_priors": 0.2156,
         "without_priors": null,
         "format": "decimal",
         "single": true,
-        "caption": "set overlap between cells"
+        "caption": "tag overlap between the two runs"
       }
     ],
     "samples": [
@@ -1428,6 +1429,6 @@
         "without_priors": 0
       }
     ],
-    "stripLabel": "Per-sample recovery (n=18)"
+    "stripLabel": "Per-article tag recovery (n=18)"
   }
 }

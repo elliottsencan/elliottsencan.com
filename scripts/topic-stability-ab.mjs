@@ -438,37 +438,42 @@ async function main() {
   const comparisonMetrics = [];
   if (avgRecoveryOn !== null && avgRecoveryOff !== null) {
     comparisonMetrics.push({
-      label: "Recovery rate",
+      label: "Tag recovery",
       with_priors: avgRecoveryOn,
       without_priors: avgRecoveryOff,
       format: "percent",
       better: "higher",
-      caption: "share of original slugs recovered",
+      caption: "share of original tags the AI gets back",
     });
   }
   comparisonMetrics.push({
-    label: "Distinct slugs",
+    label: "Tag vocabulary",
     with_priors: distinctOn.length,
     without_priors: distinctOff.length,
     format: "int",
     better: "lower",
+    caption: "distinct tags invented across the sample (lower = tighter)",
   });
   if (avgJaccard !== null) {
     comparisonMetrics.push({
-      label: "Per-URL Jaccard",
+      label: "Per-article overlap",
       with_priors: avgJaccard,
       without_priors: null,
       format: "decimal",
       single: true,
-      caption: "set overlap between cells",
+      caption: "tag overlap between the two runs",
     });
   }
 
   const comparison = {
-    legend: { left: "WITH PRIORS", right: "WITHOUT PRIORS" },
+    // Slope/callout convention is "from → to" — left is the baseline
+    // (without anchor), right is the bet (with anchor list). Swapped from
+    // the older "WITH PRIORS / WITHOUT PRIORS" legend so the chart axis
+    // reads in the same direction the prose does.
+    legend: { left: "without anchor", right: "with anchor list" },
     metrics: comparisonMetrics,
     samples: recoverySamples,
-    stripLabel: `Per-sample recovery (n=${recoverySamples.length})`,
+    stripLabel: `Per-article tag recovery (n=${recoverySamples.length})`,
   };
 
   const sidecar = {

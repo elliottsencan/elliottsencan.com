@@ -1,0 +1,75 @@
+name: Auto-eval on wiki change
+
+# Fires when a wiki PR merges to main. POSTs /eval with the default scope;
+# the worker's (slug, content_hash, judge_model, rubric_version) skip key
+# short-circuits articles whose body hasn't changed.
+#
+# /eval writes only the labs/data/ sidecar, not wiki/**, so the response does
+# not re-trigger this workflow.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/content/wiki/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: auto-eval
+  cancel-in-progress: true
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check kill switch
+        env:
+          ENABLED: ${{ vars.AUTO_TRIGGERS_ENABLED }}
+        run: |
+          set -euo pipefail
+          if [[ "${ENABLED:-true}" == "false" ]]; then
+            echo "AUTO_TRIGGERS_ENABLED=false — skipping."
+            exit 0
+          fi
+          echo "kill-switch=ok" >> "$GITHUB_OUTPUT"
+        id: killswitch
+
+      - name: Call worker /eval
+        if: steps.killswitch.outputs.kill-switch == 'ok'
+        env:
+          WORKER_URL: ${{ secrets.SITE_INGEST_URL }}
+          API_TOKEN: ${{ secrets.SITE_INGEST_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${WORKER_URL:-}" || -z "${API_TOKEN:-}" ]]; then
+            echo "::error::SITE_INGEST_URL and SITE_INGEST_API_TOKEN must be set."
+            exit 1
+          fi
+          # Default scope: max_articles=20, max_claims_per_article=10, both
+          # judges. 20 * 10 * 2 = 400 calls — under the 500 hard cap.
+          STATUS=$(curl --silent --show-error --output /tmp/resp.json \
+            --write-out '%{http_code}' \
+            -X POST "${WORKER_URL%/}/eval" \
+            -H "Authorization: Bearer $API_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{"dry_run":false,"max_articles":20,"max_claims_per_article":10}')
+          echo "HTTP $STATUS"
+          cat /tmp/resp.json | jq . 2>/dev/null || cat /tmp/resp.json
+          echo
+          if [[ "$STATUS" == "429" ]]; then
+            echo "::notice::Worker throttled (cooldown or daily budget) — treating as success-noop."
+            exit 0
+          fi
+          if [[ "$STATUS" -lt 200 || "$STATUS" -ge 300 ]]; then
+            echo "::error::/eval returned HTTP $STATUS"
+            exit 1
+          fi
+          # /eval response carries call_count + total_cost_usd_by_judge
+          # (per-judge totals, not the aggregateCost shape /synthesize returns).
+          jq -r '"call_count: \(.call_count // 0) " +
+                 "cost_by_judge: \(.total_cost_usd_by_judge // {} | tostring) " +
+                 "evaluated: \(.articles_evaluated // 0)/\(.total_claims // 0)"' \
+            /tmp/resp.json || true

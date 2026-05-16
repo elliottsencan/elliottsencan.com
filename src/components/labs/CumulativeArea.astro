@@ -1,0 +1,118 @@
+---
+/**
+ * Cumulative area — running total over time with an optional dashed
+ * budget line for headline charts where the question is "are we under
+ * X by Y." Renders as a single-stroke line + a 6%-opacity area fill in
+ * `currentColor`, matching the Sparkline's editorial vocabulary so the
+ * two chart types feel like siblings, not cousins.
+ *
+ * The budget line uses `var(--accent)` to flag intent ("this is the
+ * line we're trying to stay under"); the label rides at the right end
+ * of the line so it never collides with the area.
+ *
+ * Fluid on mobile via SVG viewBox + preserveAspectRatio. No JS island.
+ */
+type Point = { date: string; cost_usd: number };
+type Props = {
+  data: Point[];
+  height?: number;
+  /** Optional horizontal target — drawn as a dashed accent line. */
+  budget?: number;
+  budgetLabel?: string;
+};
+
+const { data, height = 200, budget, budgetLabel } = Astro.props;
+const width = 600;
+
+let acc = 0;
+const cum = data.map((d) => {
+  acc += d.cost_usd;
+  return { date: d.date, total: acc };
+});
+
+const lastTotal = cum.length > 0 ? cum[cum.length - 1].total : 0;
+const max = Math.max(lastTotal, budget ?? 0, 0.0001);
+const n = cum.length;
+
+const xFor = (i: number) => (n <= 1 ? width / 2 : (i * width) / (n - 1));
+const yFor = (v: number) => height - (v / max) * (height - 18) - 8;
+
+const linePath = cum
+  .map((d, i) => `${i === 0 ? "M" : "L"} ${xFor(i).toFixed(1)} ${yFor(d.total).toFixed(1)}`)
+  .join(" ");
+const areaPath = n >= 2 ? `${linePath} L ${width} ${height} L 0 ${height} Z` : null;
+
+function formatUsd(v: number): string {
+  if (v < 0.01) {
+    return `$${v.toFixed(4)}`;
+  }
+  if (v < 1) {
+    return `$${v.toFixed(3)}`;
+  }
+  return `$${v.toFixed(2)}`;
+}
+function shortDate(iso: string): string {
+  const [, m, d] = iso.split("-");
+  return `${m}·${d}`;
+}
+---
+
+<div class="flex flex-col gap-2 text-black/85 dark:text-white/85">
+  <svg
+    width="100%"
+    height={height}
+    viewBox={`0 0 ${width} ${height}`}
+    preserveAspectRatio="none"
+    role="img"
+    aria-label={`Cumulative cost over ${n} days`}
+    style="display: block;"
+  >
+    {
+      budget !== undefined && (
+        <g>
+          <line
+            x1="0"
+            y1={yFor(budget)}
+            x2={width}
+            y2={yFor(budget)}
+            stroke="var(--accent)"
+            stroke-width="0.8"
+            stroke-dasharray="4 4"
+            opacity="0.75"
+          />
+          <text
+            x={width - 6}
+            y={yFor(budget) - 5}
+            text-anchor="end"
+            font-family="var(--font-mono)"
+            font-size="10"
+            fill="var(--accent)"
+          >
+            {budgetLabel ?? `budget · ${formatUsd(budget)}`}
+          </text>
+        </g>
+      )
+    }
+    {areaPath && <path d={areaPath} fill="currentColor" opacity="0.07" />}
+    {n >= 2 && <path d={linePath} fill="none" stroke="currentColor" stroke-width="1.4" />}
+    {
+      cum.map((d, i) => (
+        <circle
+          cx={xFor(i)}
+          cy={yFor(d.total)}
+          r="2.2"
+          fill="currentColor"
+          opacity="0.55"
+        >
+          <title>{`${d.date} · cumulative ${formatUsd(d.total)}`}</title>
+        </circle>
+      ))
+    }
+  </svg>
+
+  <div class="flex items-baseline justify-between font-mono text-[0.65rem] text-black/55 dark:text-white/55">
+    <span>{n > 0 && shortDate(cum[0].date)}</span>
+    <span>cumulative · {formatUsd(lastTotal)}</span>
+    <span>{n > 0 && shortDate(cum[n - 1].date)}</span>
+  </div>
+</div>

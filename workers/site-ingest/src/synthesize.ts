@@ -54,6 +54,12 @@ import {
   type Strategy,
 } from "./pipeline.ts";
 import { WIKI_SYNTHESIS_SYSTEM } from "./prompts.ts";
+import {
+  checkGuard,
+  DEFAULTS as GUARD_DEFAULTS,
+  markRun,
+  parseEnvNumber,
+} from "./runtime-guard.ts";
 import { type AliasFilterResult, filterProposedAliases, loadCorpusSlugList } from "./topics.ts";
 import type { Env, Result, WikiArticle } from "./types.ts";
 import { jsonResponse, log, readingSlugFromPath } from "./util.ts";
@@ -506,6 +512,44 @@ export async function handle(request: Request, env: Env, ctx: ExecutionContext):
   const req = validation.data;
   const strategy = makeSynthesizeStrategy(req);
 
+  // Cooldown + daily-budget guard. Skipped on dry_run (no Anthropic spend)
+  // and on force=true for cooldown (force is the manual-override escape
+  // hatch); the daily budget is always enforced because it's a financial
+  // safety, not a debounce.
+  if (!req.dry_run) {
+    const cooldownSec = req.force
+      ? 0
+      : parseEnvNumber(
+          env.SYNTHESIZE_COOLDOWN_SECONDS,
+          GUARD_DEFAULTS.synthesize.cooldown_seconds,
+          "SYNTHESIZE_COOLDOWN_SECONDS",
+        );
+    const dailyCap = parseEnvNumber(
+      env.SYNTHESIZE_DAILY_CALL_CAP,
+      GUARD_DEFAULTS.synthesize.daily_call_cap,
+      "SYNTHESIZE_DAILY_CALL_CAP",
+    );
+    const guard = await checkGuard(env.NOW_INPUTS, "synthesize", {
+      cooldown_seconds: cooldownSec,
+      daily_call_cap: dailyCap,
+    });
+    if (!guard.ok) {
+      log.info("synthesize", "guard", "throttled", {
+        reason: guard.reason,
+        details: guard.details,
+      });
+      return jsonResponse(
+        {
+          ok: false,
+          throttled: guard.reason,
+          details: guard.details,
+          retry_after_seconds: guard.retry_after_seconds,
+        },
+        guard.status,
+      );
+    }
+  }
+
   if (req.dry_run) {
     const planned = await strategy.plan({ env }, env);
     if (!planned.ok) {
@@ -551,6 +595,10 @@ export async function handle(request: Request, env: Env, ctx: ExecutionContext):
     return jsonResponse({ ok: false, error: result.error }, result.status);
   }
   const summary = result.summary;
+  // Record cooldown + daily-call counter in the background. Best-effort —
+  // markRun swallows its own errors; a KV blip won't fail the run.
+  const callCount = summary?.run_cost?.records?.length ?? 0;
+  ctx.waitUntil(markRun(env.NOW_INPUTS, "synthesize", callCount));
   return jsonResponse({
     ok: true,
     dry_run: false,
