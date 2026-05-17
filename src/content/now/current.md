@@ -1,20 +1,28 @@
 ---
 title: "Now"
 description: "What I'm working on right now."
-updated: 2026-05-03
-standfirst: "Engineer in San Diego. Building Grupblox, advising at ShopTickets.net, the Same Same But Different Festival app, and a Karpathy LLM-wiki pipeline for this site."
+updated: 2026-05-17
+standfirst: "Festival season bearing down, portfolio and platform work running in parallel, and this site slowly becoming its own research tool"
 ---
 
 ## Building
 
-I've been spending time outside of work trying to combine a Karpathy LLM wiki with the reading list ingestion pipeline I've been working on. The work in progress is at the wiki link above
+The SSBD festival platform is the most time-pressured thing on the board right now. It's a backend-first mobile app for Same Same But Different, and August 24 is a hard festival-day deadline. Currently in the maps and notifications milestone, working toward a complete attendee experience: schedules, venue maps, push notifications. The clock is real.
+
+The portfolio site is also in flight. The framing is architectural judgment and product thinking through writing and case studies, not a resume dressed up in nice type. Currently working through an eval layer for the site's LLM-wiki pipeline. Tier 1 (citation-faithfulness evals) shipped recently; Tier 2, synthesis-quality scoring, is next. The open question is whether per-claim sidecar scores actually surface the failure modes I notice by eye when the wiki recompiles.
+
+## Thinking about
+
+High standards exist to make difficult things simple.
 
 ## Reading / Listening
 
-Working through Chip Huyen's *AI Engineering: Building Applications with Foundation Models*. Dense and practical in equal measure. Also mid-way through *Kantovan Vault* by Joel Shepherd, which is the kind of hard sci-fi that makes a long reading session disappear.
+A few essays worth lingering on lately. The piece on why senior developers fail to communicate their expertise lands on something real: the instinct to simplify is right, but framing it as complexity management instead of uncertainty reduction is where the influence bleeds out. The Galloway piece arguing the AI job apocalypse is a capital-attraction narrative rather than a forecast is worth a read, especially alongside the TLA+ benchmarking work showing LLMs recite textbook protocols instead of faithfully modeling real systems.
 
-Nine Inch Nails' new record is an album-of-the-year contender. Heavy rotation.
+Still working through Chip Huyen's *AI Engineering*. Dense and practical in equal measure.
+
+Nine Inch Nails' new record remains heavy rotation.
 
 ## Making
 
-Lineup drop week at Same Same But Different.
+Same Same But Different lineup is out. Now the work shifts from announcement to delivery, which is where the platform build and the festival operations start pulling in the same direction.
