@@ -28,6 +28,8 @@ sources:
   - >-
     2026-05/2026-05-12t215147-running-claude-code-with-a-local-model-via-lm-studio
   - 2026-05/2026-05-14t222554-piyush-mishra-00helply
+  - >-
+    2026-05/2026-05-18t095002-if-youre-running-claude-code-please-run-it-in-a-box
 aliases:
   - developer-tooling
 compiled_at: 2026-05-04T03:35:58.825Z
@@ -47,7 +49,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.025026
-last_source_added: '2026-05-15T05:25:54.540Z'
+last_source_added: '2026-05-18T16:50:02.620Z'
 ---
 Developer tools are the layer between an engineer's intent and working software. The sources here span a wide range of that layer, from low-level execution infrastructure to high-level AI-assisted coding environments, and together sketch how tooling has shifted as AI agents enter the picture.
 
