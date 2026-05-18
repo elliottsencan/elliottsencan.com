@@ -22,6 +22,7 @@ sources:
     2026-05/2026-05-14t190300-opus-47-low-vs-medium-vs-high-vs-xhigh-vs-max-the-reasoning
   - >-
     2026-05/2026-05-14t223612-the-perils-of-ai-to-the-software-engineering-profession
+  - 2026-05/2026-05-17t204925-why-most-developers-cant-use-ai-effectively
 compiled_at: 2026-05-04T04:08:56.031Z
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -39,7 +40,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.018531
-last_source_added: '2026-05-15T05:36:12.497Z'
+last_source_added: '2026-05-18T03:49:25.430Z'
 ---
 LLM engineering sits at the intersection of software architecture and model behavior: the discipline of designing systems that use language models reliably, at scale, and without accumulating hidden failure modes.
 

@@ -19,6 +19,7 @@ sources:
     2026-05/2026-05-13t060018-why-senior-developers-fail-to-communicate-their-expertise
   - >-
     2026-05/2026-05-14t190300-opus-47-low-vs-medium-vs-high-vs-xhigh-vs-max-the-reasoning
+  - 2026-05/2026-05-17t204925-why-most-developers-cant-use-ai-effectively
 aliases:
   - developer-experience
   - developer-tooling
@@ -39,7 +40,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.015708
-last_source_added: '2026-05-15T02:03:00.097Z'
+last_source_added: '2026-05-18T03:49:25.430Z'
 ---
 Productivity for software engineers is not a single lever. The sources here each address a different surface: how developers interact with AI, how they manage test feedback, how they maintain documentation, and how they move efficiently at the command line.
 
