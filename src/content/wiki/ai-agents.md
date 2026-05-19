@@ -44,6 +44,7 @@ sources:
   - 2026-05/2026-05-09t110721-ai-control-plane-architecture-and-vendors
   - >-
     2026-05/2026-05-10t140531-agent-observability-needs-feedback-to-power-learning
+  - 2026-05/2026-05-18t221205-walkinglabslearn-harness-engineering
 compiled_at: 2026-05-06T04:00:21.862Z
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -61,7 +62,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.041529
-last_source_added: '2026-05-10T21:05:31.636Z'
+last_source_added: '2026-05-19T05:12:05.445Z'
 ---
 An AI agent, in the current practical sense, is a system where a language model drives a loop of reasoning and action: it observes some environment, selects tools or sub-tasks, executes them, and feeds results back into its next decision. The concept sounds clean in definition and proves messy in deployment.
 

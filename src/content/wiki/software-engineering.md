@@ -43,6 +43,7 @@ sources:
   - 2026-05/2026-05-15t120337-playwright-testing-in-staging-vs-production
   - 2026-05/2026-05-17t204925-why-most-developers-cant-use-ai-effectively
   - 2026-05/2026-05-18t113714-yaml-thats-norway-problem
+  - 2026-05/2026-05-18t221205-walkinglabslearn-harness-engineering
 compiled_at: '2026-05-06T16:17:24.293Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -60,7 +61,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.030135
-last_source_added: '2026-05-18T18:37:14.908Z'
+last_source_added: '2026-05-19T05:12:05.445Z'
 ---
 Software engineering as a discipline shows up in these sources less as a unified theory and more as a collection of recurring pressures: how to structure systems so they stay maintainable, how to choose tools that don't create new dependencies, and how to preserve the human judgment that holds everything together.
 
