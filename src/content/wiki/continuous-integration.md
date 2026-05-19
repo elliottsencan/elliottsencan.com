@@ -15,6 +15,7 @@ sources:
     2026-05/2026-05-05t135218-designing-playwright-tests-that-survive-ui-refactors
   - 2026-05/2026-05-10t205349-github-is-sinking
   - 2026-05/2026-05-15t120337-playwright-testing-in-staging-vs-production
+  - 2026-05/2026-05-19t110000-building-ci-with-lambda-durable-functions
 aliases:
   - software-verification
 compiled_at: 2026-05-06T04:25:22.632Z
@@ -34,7 +35,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.019488
-last_source_added: '2026-05-15T19:03:37.024Z'
+last_source_added: '2026-05-19T18:00:00.056Z'
 ---
 The mechanics of running builds and tests on every commit are well understood. What the sources here illuminate is the operational surface that grows once a CI system is under real load.
 

@@ -22,6 +22,7 @@ sources:
     2026-05/2026-05-03t150555-what-happens-if-a-merge-queue-builds-on-the-wrong-commit
   - 2026-05/2026-05-05t135637-reddit-rdevops
   - 2026-05/2026-05-08t175639-can-llms-model-real-world-systems-in-tla
+  - 2026-05/2026-05-19t110000-building-ci-with-lambda-durable-functions
 compiled_at: '2026-05-06T16:09:08.196Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -39,7 +40,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.020418
-last_source_added: '2026-05-09T00:56:39.862Z'
+last_source_added: '2026-05-19T18:00:00.056Z'
 ---
 The core challenge distributed systems pose is deceptively simple: multiple processes share state and must coordinate, and the ways they can fail are numerous, often silent, and hard to classify. Three distinct bodies of work in recent reading converge on this problem from different angles.
 
