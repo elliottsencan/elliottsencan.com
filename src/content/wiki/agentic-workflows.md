@@ -23,6 +23,7 @@ sources:
   - 2026-05/2026-05-18t221205-walkinglabslearn-harness-engineering
   - 2026-05/2026-05-19t174452-humanlayer12-factor-agents
   - 2026-05/2026-05-19t193626-slow-mode
+  - 2026-05/2026-05-19t221035-effective-harnesses-for-long-running-agents
 compiled_at: 2026-05-04T03:36:22.698Z
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -40,7 +41,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.016995
-last_source_added: '2026-05-20T02:36:26.075Z'
+last_source_added: '2026-05-20T05:10:35.226Z'
 ---
 Agentic workflows are pipelines in which an AI model takes sequences of actions, using tools, memory, and external services, to complete tasks that unfold over multiple steps. The design decisions made at each layer, tool access, memory architecture, [orchestration topology, and observability](/wiki/systems-design), determine whether the system performs reliably or compounds failures.
 
