@@ -1,20 +1,20 @@
 ---
 title: Multimodal AI
 summary: >-
-  AI systems that process or generate across multiple modalities, including
-  text, images, audio, and video, with recent advances spanning any-to-any
-  architectures, vision-language models, video understanding, and generative
-  asset pipelines.
+  Multimodal AI systems process and generate across multiple input and output
+  types, including text, images, audio, and video; recent advances show these
+  models getting smaller, faster, and embedded in production tooling.
 sources:
   - 2026-04/2026-04-29t171532-vision-language-models-better-faster-stronger
   - 2026-04/2026-04-30t231206-poolday
+  - 2026-05/2026-05-05t071908-oobaboogatextgen
   - 2026-05/2026-05-14t222554-piyush-mishra-00helply
-compiled_at: '2026-05-04T03:38:43.583Z'
+compiled_at: '2026-05-20T15:02:22.778Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 2285
-    output_tokens: 445
+    input_tokens: 2623
+    output_tokens: 472
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -25,11 +25,12 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.01353
-last_source_added: '2026-05-15T05:25:54.540Z'
+  cost_usd: 0.014949
 ---
-Multimodal AI refers to models and systems that work across more than one data type, most commonly combining vision and language but increasingly extending to audio, video, and robotic action. The 2025 VLM landscape survey from Hugging Face [VLMs 2025](/reading/2026-04/2026-04-29t171532-vision-language-models-better-faster-stronger) maps the pace of this expansion: architectures have moved from single-modality specialists toward any-to-any models capable of accepting and producing arbitrary combinations of input and output types. The same survey documents parallel advances in mixture-of-experts (MoE) designs, vision-language-action (VLA) models for robotics, small multimodal models that run efficiently at reduced scale, multimodal RAG, and video understanding, all emerging in roughly a twelve-month window.
+Multimodal AI refers to models and systems that operate across more than one data modality, most commonly pairing vision with language but increasingly extending to audio, video, and action outputs. The 2025 VLM landscape [survey](/reading/2026-04/2026-04-29t171532-vision-language-models-better-faster-stronger) documents how far the field moved in a single year: architectures now span any-to-any models, mixture-of-experts designs, vision-language-action models for robotics, and dedicated video understanding pipelines. Smaller models have closed much of the gap with frontier ones, making multimodal capability viable in constrained environments.
 
-Safety and alignment are active concerns in this space. The Hugging Face survey calls out dedicated safety models and alignment techniques specific to multimodal contexts, where jailbreaks and misuse vectors differ from text-only systems.
+That shift toward smaller, local deployment shows up directly in [oobabooga/textgen](/reading/2026-05/2026-05-05t071908-oobaboogatextgen), a local desktop app that supports vision inputs alongside standard text inference, all offline with no telemetry. Multimodal capability is no longer a cloud-only feature.
 
-On the applied side, Poolday's Creator-1 platform [Poolday](/reading/2026-04/2026-04-30t231206-poolday) illustrates what multimodal pipelines look like in production: a multi-agent system orchestrates more than a hundred generative models to execute video edits end-to-end, handling cutting, trimming, and AI asset generation, then outputting fully editable projects. This kind of orchestration treats multimodal generation as infrastructure rather than a research artifact, composing specialized models rather than relying on a single general one.
+On the production side, [Poolday's Creator-1](/reading/2026-04/2026-04-30t231206-poolday) platform orchestrates over 100 generative models to handle video editing end-to-end, cutting and generating assets across modalities in a multi-agent pipeline. And [Helply](/reading/2026-05/2026-05-14t222554-piyush-mishra-00helply) combines real-time audio transcription with language model responses, a narrower but practical pairing of speech and text modalities for live meeting assistance.
+
+Taken together, the sources trace a consistent pattern: multimodal capability is moving from research benchmarks into local tooling, autonomous production pipelines, and user-facing applications.
