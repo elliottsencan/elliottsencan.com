@@ -17,6 +17,8 @@ sources:
   - 2026-05/2026-05-20t073125-how-to-cut-llm-inference-costs-with-kv-caching
   - >-
     2026-05/2026-05-20t073144-maximizing-llm-efficiency-granular-prompt-caching-with-pure
+  - >-
+    2026-05/2026-05-20t073157-20x-faster-inference-with-the-first-kv-cache-for-s3-and-nfs
 aliases:
   - infrastructure
 compiled_at: '2026-05-04T03:37:09.740Z'
@@ -36,7 +38,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.01659
-last_source_added: '2026-05-20T14:31:44.720Z'
+last_source_added: '2026-05-20T14:31:57.941Z'
 ---
 AI infrastructure refers to the layer of systems that makes AI agents operable in production: orchestration, memory, observability, and the primitives that connect models to real-world actions. The sources here collectively argue that these choices carry more long-term weight than model selection itself.
 
