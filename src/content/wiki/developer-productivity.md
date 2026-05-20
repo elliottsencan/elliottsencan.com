@@ -22,6 +22,7 @@ sources:
   - 2026-05/2026-05-17t204925-why-most-developers-cant-use-ai-effectively
   - >-
     2026-05/2026-05-19t110710-the-tacit-dimension-why-your-best-engineers-cant-tell-you
+  - 2026-05/2026-05-19t193626-slow-mode
 aliases:
   - developer-experience
   - developer-tooling
@@ -42,7 +43,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.015708
-last_source_added: '2026-05-19T18:07:10.659Z'
+last_source_added: '2026-05-20T02:36:26.075Z'
 ---
 Productivity for software engineers is not a single lever. The sources here each address a different surface: how developers interact with AI, how they manage test feedback, how they maintain documentation, and how they move efficiently at the command line.
 
