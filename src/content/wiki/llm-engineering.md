@@ -26,6 +26,8 @@ sources:
   - 2026-05/2026-05-19t174452-humanlayer12-factor-agents
   - 2026-05/2026-05-19t193626-slow-mode
   - 2026-05/2026-05-20t073125-how-to-cut-llm-inference-costs-with-kv-caching
+  - >-
+    2026-05/2026-05-20t073144-maximizing-llm-efficiency-granular-prompt-caching-with-pure
 compiled_at: 2026-05-04T04:08:56.031Z
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -43,7 +45,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.018531
-last_source_added: '2026-05-20T14:31:25.555Z'
+last_source_added: '2026-05-20T14:31:44.720Z'
 ---
 LLM engineering sits at the intersection of software architecture and model behavior: the discipline of designing systems that use language models reliably, at scale, and without accumulating hidden failure modes.
 

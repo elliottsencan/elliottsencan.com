@@ -22,6 +22,8 @@ sources:
   - >-
     2026-05/2026-05-19t221631-scaling-managed-agents-decoupling-the-brain-from-the-hands
   - 2026-05/2026-05-20t073125-how-to-cut-llm-inference-costs-with-kv-caching
+  - >-
+    2026-05/2026-05-20t073144-maximizing-llm-efficiency-granular-prompt-caching-with-pure
 compiled_at: '2026-05-04T03:37:55.731Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -39,7 +41,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.019617
-last_source_added: '2026-05-20T14:31:25.555Z'
+last_source_added: '2026-05-20T14:31:44.720Z'
 ---
 Context engineering is the practice of deciding what information an LLM sees, when it sees it, and in what form. It treats the context window not as a passive receptacle but as a surface to be designed, the same way an API schema or a database index is designed.
 

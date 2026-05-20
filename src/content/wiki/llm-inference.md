@@ -22,6 +22,8 @@ sources:
     2026-05/2026-05-14t190300-opus-47-low-vs-medium-vs-high-vs-xhigh-vs-max-the-reasoning
   - 2026-05/2026-05-14t222554-piyush-mishra-00helply
   - 2026-05/2026-05-20t073125-how-to-cut-llm-inference-costs-with-kv-caching
+  - >-
+    2026-05/2026-05-20t073144-maximizing-llm-efficiency-granular-prompt-caching-with-pure
 aliases:
   - local-ai
   - local-llm
@@ -42,7 +44,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.020061
-last_source_added: '2026-05-20T14:31:25.555Z'
+last_source_added: '2026-05-20T14:31:44.720Z'
 ---
 Running a language model in practice involves decisions at every layer: hardware fit, quantization level, runtime choice, and serving architecture. These concerns are distinct from training or fine-tuning but intersect with all of them.
 
