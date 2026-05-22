@@ -27,6 +27,7 @@ sources:
   - >-
     2026-05/2026-05-19t110710-the-tacit-dimension-why-your-best-engineers-cant-tell-you
   - 2026-05/2026-05-19t193626-slow-mode
+  - 2026-05/2026-05-22t091746-when-code-is-cheap-does-quality-still-matter
 compiled_at: '2026-05-20T15:01:18.268Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -44,6 +45,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.028065
+last_source_added: '2026-05-22T16:17:46.954Z'
 ---
 The word "productivity" in software development usually means writing more code faster. A cluster of recent thinking challenges that framing by pointing to where the actual bottlenecks live.
 

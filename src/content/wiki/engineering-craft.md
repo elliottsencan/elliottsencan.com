@@ -24,6 +24,7 @@ sources:
   - 2026-05/2026-05-18t113714-yaml-thats-norway-problem
   - >-
     2026-05/2026-05-19t110710-the-tacit-dimension-why-your-best-engineers-cant-tell-you
+  - 2026-05/2026-05-22t091746-when-code-is-cheap-does-quality-still-matter
 compiled_at: 2026-05-04T04:07:42.371Z
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -41,7 +42,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.017049
-last_source_added: '2026-05-19T18:07:10.659Z'
+last_source_added: '2026-05-22T16:17:46.954Z'
 ---
 Engineering craft covers the habits, patterns, and safeguards that separate code that works from code that holds up. The sources here approach it from four distinct angles, but share a common thread: precision in design pays forward.
 
