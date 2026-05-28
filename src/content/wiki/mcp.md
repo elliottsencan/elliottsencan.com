@@ -11,6 +11,7 @@ sources:
   - 2026-05/2026-05-09t110721-ai-control-plane-architecture-and-vendors
   - 2026-05/2026-05-11t155625-storybloqstorybloq
   - 2026-05/2026-05-19t193626-slow-mode
+  - 2026-05/2026-05-27t181732-build-a-desktop-extension-with-mcpb
 aliases:
   - mcp-server
 compiled_at: '2026-05-04T03:35:41.359Z'
@@ -30,7 +31,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.01491
-last_source_added: '2026-05-20T02:36:26.075Z'
+last_source_added: '2026-05-28T01:17:32.940Z'
 ---
 MCP (Model Context Protocol) standardizes how AI agents discover and invoke external tools and context at runtime. Three sources frame it differently, and the tension between them is instructive.
 

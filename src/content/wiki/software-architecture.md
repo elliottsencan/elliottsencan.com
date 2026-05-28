@@ -23,6 +23,7 @@ sources:
     2026-05/2026-05-19t110710-the-tacit-dimension-why-your-best-engineers-cant-tell-you
   - 2026-05/2026-05-19t174452-humanlayer12-factor-agents
   - 2026-05/2026-05-22t091746-when-code-is-cheap-does-quality-still-matter
+  - 2026-05/2026-05-27t181732-build-a-desktop-extension-with-mcpb
 compiled_at: '2026-05-06T16:16:36.433Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -40,7 +41,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.018903
-last_source_added: '2026-05-22T16:17:46.954Z'
+last_source_added: '2026-05-28T01:17:32.940Z'
 ---
 The through-line across these sources is boundary management: where a system makes decisions about data shape, state, and responsibility determines how much it degrades under pressure.
 
