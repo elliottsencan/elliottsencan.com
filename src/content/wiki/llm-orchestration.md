@@ -13,6 +13,7 @@ sources:
   - 2026-05/2026-05-19t221035-effective-harnesses-for-long-running-agents
   - >-
     2026-05/2026-05-19t221631-scaling-managed-agents-decoupling-the-brain-from-the-hands
+  - 2026-05/2026-05-28t140143-introducing-dynamic-workflows-in-claude-code
 compiled_at: '2026-05-04T04:08:00.148Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -30,7 +31,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.013566
-last_source_added: '2026-05-20T05:16:31.650Z'
+last_source_added: '2026-05-28T21:01:43.756Z'
 ---
 LLM orchestration refers to the coordination of multiple language model agents through defined roles and control flow, rather than relying on a single model to handle an entire task end-to-end. The two sources here converge on a GAN-inspired decomposition: a planner that breaks work into subtasks, generators that execute in parallel, and evaluators that critique outputs before they advance downstream.
 

@@ -21,6 +21,7 @@ sources:
     2026-05/2026-05-03t110130-getting-up-to-speed-on-multi-agent-systems-part-8-open
   - >-
     2026-05/2026-05-19t221631-scaling-managed-agents-decoupling-the-brain-from-the-hands
+  - 2026-05/2026-05-28t140143-introducing-dynamic-workflows-in-claude-code
 compiled_at: 2026-05-04T04:09:53.805Z
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -38,7 +39,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.023523
-last_source_added: '2026-05-20T05:16:31.650Z'
+last_source_added: '2026-05-28T21:01:43.756Z'
 ---
 Multi-agent systems (MAS) in the LLM era involve networks of AI agents assigned specialized roles, communicating to complete tasks too large or complex for a single model context. Christopher Meiklejohn's eight-part series maps the field's development across two waves [Getting Up to Speed, Part 1](/reading/2026-05/2026-05-03t110011-getting-up-to-speed-on-multi-agent-systems-part-1-the).
 
