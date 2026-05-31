@@ -26,6 +26,8 @@ sources:
     2026-05/2026-05-20t073144-maximizing-llm-efficiency-granular-prompt-caching-with-pure
   - >-
     2026-05/2026-05-20t073157-20x-faster-inference-with-the-first-kv-cache-for-s3-and-nfs
+  - >-
+    2026-05/2026-05-31t072101-the-ai-model-pricing-war-is-here-and-your-margins-depend-on
 aliases:
   - local-ai
   - local-llm
@@ -46,7 +48,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.020061
-last_source_added: '2026-05-20T14:31:57.941Z'
+last_source_added: '2026-05-31T14:21:01.371Z'
 ---
 Running a language model in practice involves decisions at every layer: hardware fit, quantization level, runtime choice, and serving architecture. These concerns are distinct from training or fine-tuning but intersect with all of them.
 

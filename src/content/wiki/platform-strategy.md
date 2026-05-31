@@ -12,6 +12,8 @@ sources:
   - 2026-05/2026-05-06t204115-platform-engineering-end-to-end
   - 2026-05/2026-05-08t131438-apocalypse-no
   - 2026-05/2026-05-10t205349-github-is-sinking
+  - >-
+    2026-05/2026-05-31t072101-the-ai-model-pricing-war-is-here-and-your-margins-depend-on
 aliases:
   - startup-ecosystem
 compiled_at: '2026-05-04T03:37:21.522Z'
@@ -31,7 +33,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.015531
-last_source_added: '2026-05-11T03:53:49.265Z'
+last_source_added: '2026-05-31T14:21:01.371Z'
 ---
 Platform strategy describes how a product or company positions itself as a substrate that others depend on, rather than a feature among competing features. The sources here illustrate three distinct angles on that idea.
 

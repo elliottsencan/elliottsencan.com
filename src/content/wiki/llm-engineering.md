@@ -30,6 +30,8 @@ sources:
   - 2026-05/2026-05-20t073125-how-to-cut-llm-inference-costs-with-kv-caching
   - >-
     2026-05/2026-05-20t073144-maximizing-llm-efficiency-granular-prompt-caching-with-pure
+  - >-
+    2026-05/2026-05-31t072101-the-ai-model-pricing-war-is-here-and-your-margins-depend-on
 aliases:
   - large-language-models
 compiled_at: '2026-05-20T15:02:11.760Z'
@@ -49,6 +51,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.038964
+last_source_added: '2026-05-31T14:21:01.371Z'
 ---
 LLM engineering is the set of practices for designing, building, and operating software systems built around large language models. The sources here span several interrelated concerns: how to structure knowledge for LLM consumption, how to wire agent behavior reliably, how to manage inference costs, and what happens when the discipline is applied carelessly.
 
