@@ -50,6 +50,7 @@ sources:
   - 2026-05/2026-05-22t091746-when-code-is-cheap-does-quality-still-matter
   - >-
     2026-05/2026-05-27t181744-ruby-vs-java-vs-typescript-my-experience-on-building-a
+  - 2026-05/2026-05-30t210309-90percent-of-the-t-distribution
 compiled_at: '2026-05-06T16:17:24.293Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -67,7 +68,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.030135
-last_source_added: '2026-05-28T01:17:44.069Z'
+last_source_added: '2026-05-31T04:03:09.218Z'
 ---
 Software engineering as a discipline shows up in these sources less as a unified theory and more as a collection of recurring pressures: how to structure systems so they stay maintainable, how to choose tools that don't create new dependencies, and how to preserve the human judgment that holds everything together.
 
