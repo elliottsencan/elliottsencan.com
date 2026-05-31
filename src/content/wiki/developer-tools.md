@@ -39,6 +39,7 @@ sources:
   - 2026-05/2026-05-18t222802-raellioctowiz
   - 2026-05/2026-05-19t110000-building-ci-with-lambda-durable-functions
   - 2026-05/2026-05-27t181732-build-a-desktop-extension-with-mcpb
+  - 2026-05/2026-05-31t164554-jj-vcsjj
 compiled_at: '2026-05-20T15:01:47.219Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -56,7 +57,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.038373
-last_source_added: '2026-05-28T01:17:32.940Z'
+last_source_added: '2026-05-31T23:45:54.242Z'
 ---
 Developer tools now span a continuum from foundational infrastructure to AI-augmented coding environments, and the sources here illustrate nearly every layer of that stack.
 
