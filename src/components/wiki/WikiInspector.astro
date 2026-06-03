@@ -161,5 +161,9 @@
       r.addEventListener("focusin", () => fill(r));
     }
     list.addEventListener("mouseleave", hide);
+    list.addEventListener("focusout", (e) => {
+      const next = (e as FocusEvent).relatedTarget as Node | null;
+      if (!next || !list.contains(next)) hide();
+    });
   })();
 </script>
