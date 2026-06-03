@@ -6,6 +6,22 @@
  * the same way, and consumers don't need to pre-check for null.
  */
 
+import { SITE_TIMEZONE } from "./utils";
+
+// Long human date in day-first order ("3 May 2026") for provenance/datelines.
+// Single source of truth so every "compiled / summarized / last-run / updated"
+// timestamp reads identically across the site (ProvenanceBadge, datelines).
+const longDateFormatter = new Intl.DateTimeFormat("en-GB", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+  timeZone: SITE_TIMEZONE,
+});
+
+export function formatLongDate(date: Date): string {
+  return longDateFormatter.format(date);
+}
+
 export function formatUsd(value: number | null): string {
   if (value === null) {
     return "—";
