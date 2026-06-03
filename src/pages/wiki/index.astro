@@ -1,45 +1,52 @@
 ---
 import { getCollection } from "astro:content";
 import EditorialRule from "@components/EditorialRule.astro";
+import LabeledRule from "@components/LabeledRule.astro";
 import Link from "@components/Link.astro";
+import ProvenanceBadge from "@components/ProvenanceBadge.astro";
 import ConstellationStrip from "@components/wiki/ConstellationStrip.astro";
 import constellationLayout from "@data/constellation-layout.json";
 import Layout from "@layouts/Layout.astro";
-import { SITE_TIMEZONE } from "@lib/utils";
 
-// Wiki index — concept-indexed synthesis. The constellation hero handles
-// the topic-spatial visualization, so the grid below is a single flat
-// alphabetical browse of every concept. Each card carries the title,
-// summary, and source-count signal; the topic surfaces through the
-// constellation, not as a per-card chip.
+// Wiki index — concept-indexed synthesis. The constellation is promoted to a
+// hero band below the title; the browse below is grouped by neighbourhood
+// (the same clusters the constellation draws) rather than a flat A–Z grid.
 const wiki = (await getCollection("wiki")).sort((a, b) => a.data.title.localeCompare(b.data.title));
 
-// Last-compiled date for the hero meta cell — most recent compiled_at
+// Last-compiled date for the provenance badge — most recent compiled_at
 // across the corpus. Distinct reading entries that contribute = total
 // unique slugs across all `sources[]`.
 const lastCompiledMs =
   wiki.length > 0 ? Math.max(...wiki.map((c) => c.data.compiled_at.getTime())) : null;
+const lastCompiled = lastCompiledMs ? new Date(lastCompiledMs) : null;
 const readingSourceCount = new Set(wiki.flatMap((c) => c.data.sources)).size;
-const dateFormatter = new Intl.DateTimeFormat("en-US", {
-  day: "numeric",
-  month: "short",
-  year: "numeric",
-  timeZone: SITE_TIMEZONE,
-});
-const lastCompiledFormatted = lastCompiledMs
-  ? dateFormatter.format(new Date(lastCompiledMs))
-  : null;
 
-// Constellation summary numbers — moved out of the SVG so the caption can
-// grid-align with the col-1 EditorialRule below. Mirrors the
-// clusterGroups computation in ConstellationStrip (a "neighborhood" is a
-// cluster with at least two members). Same Record<string, …> coercions
-// the strip uses, since the JSON is typed with its literal keys.
+// Neighbourhood grouping — map each concept to its cluster via the same
+// clusterById the constellation uses, then emit clusters in the curated JSON
+// order. A trailing "Other" group carries any unclustered concepts so nothing
+// drops out of the browse. (A "neighbourhood" in the caption = a cluster with
+// ≥2 members, matching the constellation's drawn regions.)
+type Cluster = { id: string; title: string; short: string; hue: number };
 const constellationNodes: { id: string }[] = constellationLayout.global.nodes;
-const constellationClusters: { id: string }[] = constellationLayout.clusters;
-const constellationClusterById: Record<string, string | null> = constellationLayout.clusterById;
-const constellationNeighborhoodCount = constellationClusters.filter(
-  (cl) => constellationNodes.filter((n) => constellationClusterById[n.id] === cl.id).length >= 2,
+const clusters: Cluster[] = constellationLayout.clusters;
+const clusterById: Record<string, string | null> = constellationLayout.clusterById;
+
+const conceptGroups = [
+  ...clusters.map((cl) => ({
+    label: cl.title,
+    concepts: wiki.filter((c) => clusterById[c.id] === cl.id),
+  })),
+  {
+    label: "Other",
+    concepts: wiki.filter((c) => {
+      const id = clusterById[c.id];
+      return id == null || !clusters.some((cl) => cl.id === id);
+    }),
+  },
+].filter((g) => g.concepts.length > 0);
+
+const constellationNeighborhoodCount = clusters.filter(
+  (cl) => constellationNodes.filter((n) => clusterById[n.id] === cl.id).length >= 2,
 ).length;
 const constellationConceptCount = constellationNodes.length;
 const constellationTieCount = constellationLayout.global.edges.length;
@@ -57,124 +64,96 @@ const constellationTieCount = constellationLayout.global.edges.length;
     >
       
 
-      {/*
-        Hero — 3-row grid at md+. Column 1 holds the editorial rails:
-          row 1: top rule
-          row 2: prose + meta cell, flex-col justify-between so the prose
-                 anchors at the top and the meta cell at the bottom of the
-                 row
-          row 3: bottom rule
-        Column 2 holds only the constellation (with its MAP eyebrow); it
-        spans all three rows, so the constellation's top and bottom edges
-        align with the col-1 rules. On mobile (no grid columns) items fall
-        back to source order: top rule → content → bottom rule → const.
-      */}
-      <div
-        class="grid items-stretch gap-x-8 gap-y-3 md:grid-cols-[minmax(0,1fr)_auto] md:gap-x-10 md:[grid-template-rows:auto_1fr_auto]"
-      >
-        <!-- <EditorialRule compact class="md:col-start-1 md:row-start-1" /> -->
-
-        <div
-          class="flex min-w-0 max-w-[62ch] flex-col justify-between gap-4 md:col-start-1 md:row-start-2"
-        >
-          <div class="flex flex-col gap-3">
-            <h1 class="font-heading text-xl font-semibold tracking-tight text-black dark:text-white">
-              Wiki
-            </h1>
-            <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
-              Concept-indexed synthesis articles. Each article compiles across
-              multiple sources from the <Link href="/reading">reading log</Link>;
-              one article per concept that has at least two contributing
-              sources.
-            </p>
-            <p
-              class="inline-flex w-fit items-center gap-2 rounded-sm border border-[color:var(--accent)]/35 px-2.5 py-1 font-mono text-xs text-[color:var(--accent)]"
-            >
-              <span class="flex gap-[2px]" aria-hidden="true">
-                {Array.from({ length: Math.min(wiki.length, 8) }).map((_, i) => (
-                  <span
-                    class="block h-1 w-1 rounded-full bg-current"
-                    style={`opacity: ${0.7 + i * 0.04};`}
-                  />
-                ))}
-              </span>
-              <span>
-                {readingSourceCount} source{readingSourceCount === 1 ? "" : "s"}
-                {lastCompiledFormatted ? ` · ${lastCompiledFormatted}` : ""}
-              </span>
-            </p>
-          </div>
-
-          <p class="text-xs text-black/55 dark:text-white/55">
-            Compiled by Claude
-            {" · "}
-            <Link href="/wiki/how-this-works">How this works →</Link>
-          </p>
-        </div>
-
-        <EditorialRule compact class="md:col-start-1 md:row-start-3" />
-
-        {
-          wiki.length > 0 && (
-            <div class="md:col-start-2 md:row-start-1 md:row-end-3">
-              <ConstellationStrip />
-            </div>
-          )
-        }
-
-        {/* Caption sits in col 2 row 3 so it lines up horizontally with the
-            col-1 EditorialRule. Same row → guaranteed alignment. */}
-        <p
-          class="font-mono text-xs text-black/55 dark:text-white/55 md:col-start-2 md:row-start-3"
-        >
-          {constellationNeighborhoodCount} neighborhoods
-          {" · "}
-          {constellationConceptCount} concepts
-          {" · "}
-          {constellationTieCount} ties
+      {/* Head — title, summary, provenance. The constellation follows as a
+          full-width hero band directly below (not a sidebar column). */}
+      <div class="flex max-w-[62ch] flex-col gap-4">
+        <h1 class="font-heading text-display font-normal leading-[1.06] tracking-tight text-black dark:text-white">
+          Wiki
+        </h1>
+        <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
+          Concept-indexed synthesis articles. Each article compiles across
+          multiple sources from the <Link href="/reading">reading log</Link>;
+          one article per concept that has at least two contributing sources.
         </p>
+        <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
+          {
+            lastCompiled && (
+              <ProvenanceBadge action="Compiled by Claude" date={lastCompiled} link />
+            )
+          }
+          <span class="inline-flex w-fit items-center gap-2 whitespace-nowrap font-mono text-xs text-black/55 dark:text-white/55">
+            <span class="flex gap-[2px]" aria-hidden="true">
+              {Array.from({ length: Math.min(wiki.length, 8) }).map((_, i) => (
+                <span
+                  class="block h-1 w-1 rounded-full bg-[color:var(--accent)]"
+                  style={`opacity: ${0.7 + i * 0.04};`}
+                />
+              ))}
+            </span>
+            <span>
+              {readingSourceCount} source{readingSourceCount === 1 ? "" : "s"}
+            </span>
+          </span>
+        </div>
       </div>
 
-      <!-- <EditorialRule /> -->
+      {/* Constellation hero band — the existing ConstellationStrip promoted
+          out of the sidebar to a contained, full-width band below the title.
+          Placement/size only; the component itself is unchanged. */}
+      {
+        wiki.length > 0 && (
+          <div class="flex flex-col gap-3">
+            <div class="flex w-full justify-center">
+              <ConstellationStrip width={960} />
+            </div>
+            <p class="font-mono text-xs whitespace-nowrap text-black/55 dark:text-white/55">
+              {constellationNeighborhoodCount} neighbourhoods
+              {" · "}
+              {constellationConceptCount} concepts
+              {" · "}
+              {constellationTieCount} ties
+            </p>
+          </div>
+        )
+      }
+
+      <EditorialRule />
 
       {
         wiki.length > 0 ? (
-          <ul class="not-prose grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-x-6 gap-y-7">
-            {wiki.map((concept) => {
-              const sourceCount = concept.data.sources.length;
-              // Cap the dot row so high-source cards don't crowd the
-              // footer label. Beyond MAX_DOTS the dots saturate; the
-              // text "{n} src" still carries the precise count.
-              const MAX_DOTS = 8;
-              const visibleDots = Math.min(sourceCount, MAX_DOTS);
-              return (
-                <li class="border-t border-black/10 pt-2 dark:border-white/10">
-                  <a
-                    href={`/wiki/${concept.id}/`}
-                    class="-mx-2 flex h-full flex-col gap-2 rounded-sm px-2 pt-2 pb-2 no-underline transition-colors hover:bg-[color-mix(in_oklch,var(--accent)_10%,transparent)] focus-visible:bg-[color-mix(in_oklch,var(--accent)_10%,transparent)]"
-                  >
-                    <span class="font-heading text-base font-medium text-black dark:text-white">
-                      {concept.data.title}
-                    </span>
-                    <p class="text-sm leading-relaxed text-black/75 dark:text-white/75">
-                      {concept.data.summary}
-                    </p>
-                    <div class="mt-auto flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55">
-                      <span class="flex gap-1" aria-hidden="true">
-                        {Array.from({ length: visibleDots }).map((_, i) => (
-                          <span
-                            class="block h-1 w-1 rounded-full bg-[color:var(--accent)]"
-                            style={`opacity: ${0.55 + (i / visibleDots) * 0.45};`}
-                          />
-                        ))}
-                      </span>
-                      <span>{sourceCount} src</span>
-                    </div>
-                  </a>
-                </li>
-              );
-            })}
-          </ul>
+          <div class="flex flex-col gap-12">
+            {conceptGroups.map((group) => (
+              <div class="flex flex-col gap-2">
+                <LabeledRule as="h2">{group.label}</LabeledRule>
+                <ul class="not-prose flex flex-col divide-y divide-black/10 dark:divide-white/10">
+                  {group.concepts.map((concept) => (
+                    <li>
+                      <a
+                        href={`/wiki/${concept.id}/`}
+                        class="group flex items-start justify-between gap-6 py-5 no-underline"
+                      >
+                        <span class="flex min-w-0 flex-col gap-1.5">
+                          <span class="font-heading text-lg font-medium tracking-[-0.011em] text-black transition-colors duration-300 ease-in-out group-hover:text-[color:var(--accent)] group-focus-visible:text-[color:var(--accent)] dark:text-white">
+                            {concept.data.title}
+                          </span>
+                          <span class="max-w-[60ch] text-sm leading-relaxed text-black/75 dark:text-white/75">
+                            {concept.data.summary}
+                          </span>
+                        </span>
+                        <span
+                          class="shrink-0 whitespace-nowrap font-heading text-2xl font-normal tabular-nums text-black/55 dark:text-white/55"
+                          style="font-variant-numeric: tabular-nums;"
+                          title={`${concept.data.sources.length} source${concept.data.sources.length === 1 ? "" : "s"}`}
+                        >
+                          {concept.data.sources.length}
+                        </span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
         ) : (
           <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
             Nothing here yet. Wiki articles materialise when at least two
