@@ -94,7 +94,7 @@ const heroMetaLabel = `${entries.length} source${entries.length === 1 ? "" : "s"
 >
   <Container>
     <div
-      class="space-y-10"
+      class="space-y-12"
       data-pagefind-body
       data-pagefind-filter="type:Reading"
     >
@@ -134,7 +134,7 @@ const heroMetaLabel = `${entries.length} source${entries.length === 1 ? "" : "s"
       {
         buckets.length > 0 ? (
           buckets.map((bucket, bucketIndex) => (
-            <section class="space-y-6">
+            <section class="space-y-8">
               <h2
                 class="font-heading text-sm font-medium text-black/65 dark:text-white/65"
               >
@@ -147,7 +147,7 @@ const heroMetaLabel = `${entries.length} source${entries.length === 1 ? "" : "s"
                     .join(", ");
                   const citings = citingByEntry.get(entry.id) ?? [];
                   return (
-                    <li class="group relative flex flex-col gap-2 py-2 md:flex-row md:items-baseline md:gap-4 md:py-3">
+                    <li class="group relative flex flex-col gap-2 py-3 md:flex-row md:items-baseline md:gap-4 md:py-4">
                       {/* Desktop date column. Hidden below md so the mobile
                           variant can promote the date into the caption strip
                           where it belongs. */}

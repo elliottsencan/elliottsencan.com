@@ -162,7 +162,7 @@ const trails = [
 
 <Layout title={HOME.TITLE} description={HOME.DESCRIPTION}>
   <Container>
-    <div class="space-y-10">
+    <div class="space-y-12">
       <Masthead standfirst={standfirst} />
 
       {
@@ -204,7 +204,7 @@ const trails = [
         <ol class="not-prose flex flex-col">
           {
             trails.map((trail) => (
-              <li class="group relative grid grid-cols-1 items-baseline gap-x-8 gap-y-3 border-t border-black/10 py-6 md:grid-cols-[minmax(0,1fr)_auto] dark:border-white/10">
+              <li class="group relative grid grid-cols-1 items-baseline gap-x-10 gap-y-4 border-t border-black/10 py-8 md:grid-cols-[minmax(0,1fr)_auto] dark:border-white/10">
                 <div class="flex flex-col gap-1.5">
                   {/* Stretched-link slug. The ::before pseudo extends the
                       click target across the entire <li> (positioned

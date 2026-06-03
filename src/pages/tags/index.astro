@@ -12,7 +12,7 @@ const tags = [...new Set(posts.flatMap((post) => post.data.tags || []))].sort();
 
 <Layout title="Tags" description="List of tags used.">
   <Container>
-    <div class="space-y-10" data-pagefind-ignore>
+    <div class="space-y-12" data-pagefind-ignore>
       <PageHero>
         <Fragment slot="title">Tags</Fragment>
         <Fragment slot="summary">
