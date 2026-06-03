@@ -1,0 +1,141 @@
+---
+import type { CollectionEntry } from "astro:content";
+
+// Two-column scannable directory of wiki concepts, grouped by neighbourhood.
+// Titles are the scan target; the source count is a faint trailing figure.
+// Each row exposes data-* for the bottom-right WikiInspector, and a
+// mobile-only one-line summary (hidden on desktop where the inspector serves
+// the same role).
+type Group = {
+  label: string;
+  short: string;
+  concepts: CollectionEntry<"wiki">[];
+};
+
+type Props = { groups: Group[] };
+
+const { groups } = Astro.props;
+---
+
+<div id="wiki-list" class="wd not-prose">
+  {
+    groups.map((group) => (
+      <div class="wd-group">
+        <p class="wd-nb font-mono">{group.label}</p>
+        <div class="wd-grid">
+          {group.concepts.map((c) => (
+            <a
+              class="wd-row"
+              href={`/wiki/${c.id}/`}
+              data-nb={group.short}
+              data-ct={c.data.sources.length}
+              data-su={c.data.summary}
+            >
+              <span class="wd-top">
+                <span class="wd-nm font-heading">{c.data.title}</span>
+                <span class="wd-ct font-mono">{c.data.sources.length}</span>
+              </span>
+              <span class="wd-mob">{c.data.summary}</span>
+            </a>
+          ))}
+        </div>
+      </div>
+    ))
+  }
+</div>
+
+<style>
+  .wd {
+    background: var(--panel);
+    border: 1px solid rgb(0 0 0 / 0.06);
+    border-radius: 0.75rem;
+    padding: 1.5rem 1.625rem;
+  }
+  :global(.dark) .wd {
+    border-color: rgb(255 255 255 / 0.07);
+  }
+  .wd-group + .wd-group {
+    margin-top: 1.625rem;
+  }
+  .wd-nb {
+    margin: 0 0 0.5rem;
+    font-size: 0.6875rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: rgb(0 0 0 / 0.45);
+  }
+  :global(.dark) .wd-nb {
+    color: rgb(255 255 255 / 0.45);
+  }
+  .wd-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 2.75rem;
+  }
+  .wd-row {
+    display: flex;
+    flex-direction: column;
+    padding: 0.5625rem 0;
+    border-top: 1px solid rgb(0 0 0 / 0.07);
+    color: inherit;
+    text-decoration: none;
+  }
+  :global(.dark) .wd-row {
+    border-top-color: rgb(255 255 255 / 0.08);
+  }
+  .wd-top {
+    display: flex;
+    width: 100%;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1.125rem;
+  }
+  .wd-nm {
+    font-size: 1rem;
+    font-weight: 500;
+    letter-spacing: -0.011em;
+    color: #000;
+    transition: color 300ms ease;
+  }
+  :global(.dark) .wd-nm {
+    color: #fff;
+  }
+  .wd-row:hover .wd-nm,
+  .wd-row:focus-visible .wd-nm,
+  .wd-row[data-live] .wd-nm {
+    color: var(--accent);
+  }
+  .wd-ct {
+    flex: none;
+    font-size: 0.6875rem;
+    color: rgb(0 0 0 / 0.36);
+  }
+  :global(.dark) .wd-ct {
+    color: rgb(255 255 255 / 0.36);
+  }
+  .wd-mob {
+    display: none;
+  }
+  @media (max-width: 640px) {
+    .wd-grid {
+      grid-template-columns: 1fr;
+      column-gap: 0;
+    }
+    .wd-row {
+      padding: 0.75rem 0;
+    }
+    .wd-mob {
+      display: block;
+      overflow: hidden;
+      margin-top: 0.1875rem;
+      font-size: 0.8125rem;
+      line-height: 1.45;
+      color: rgb(0 0 0 / 0.6);
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    :global(.dark) .wd-mob {
+      color: rgb(255 255 255 / 0.6);
+    }
+  }
+</style>
