@@ -7,7 +7,7 @@ lastRunDate: 2026-05-04T12:00:00-07:00
 tldr: What does the AI behind this site cost to run? Total spend so far, split by what it went on.
 headlineMetric:
   label: Spent so far
-  value: $1.86
+  value: $2.78
 tags:
   - cost
   - infra
@@ -18,10 +18,15 @@ pre: |
   // src/content/labs/data/ingest-pipeline-cost.json is regenerated on
   // every build by scripts/labs-aggregate.mjs. Buckets are computed in
   // Pacific time so a Pacific laptop and a UTC CI runner agree.
-  const records  = corpus.flatMap(e => e.compile_cost ?? [])
-  const total    = sum(records.map(r => r.cost_usd))
-  const byDay    = bucketByPacificDate(records)
-  const byModel  = bucketBy(records, r => r.model)
+  const summarize = corpus.flatMap(e => e.compile_cost ?? [])  // /link + /synthesize
+  const evals     = citationSidecar.articles
+    .flatMap(a => a.judges.map(j => j.summary.total_cost_usd)) // /eval judges
+  const topics    = topicSidecar.per_url
+    .flatMap(u => [u.cost_usd.priors_on, u.cost_usd.priors_off])
+  const records   = [...summarize, ...evals, ...topics]
+  const total     = sum(records.map(r => r.cost_usd))
+  const byDay     = bucketByPacificDate(records)
+  const bySource  = bucketBy(records, r => r.source)           // what it went on
 ---
 
 Save a link and an AI reads the page and writes a one-paragraph summary.
@@ -50,5 +55,7 @@ baseline that keeps creeping up means it isn't. The dashed line on the
 cumulative chart is the target.
 
 The other two labs ([Citation faithfulness](/labs/citation-faithfulness)
-and [Topic stability](/labs/topic-stability)) write into this same
-rollup, so whatever they spend per run shows up here too.
+and [Topic stability](/labs/topic-stability)) feed this same rollup, so
+their spend shows up here too. Both re-run in place, so they contribute
+their most recent run's cost; the summarize and compile costs above
+accumulate per entry instead.
