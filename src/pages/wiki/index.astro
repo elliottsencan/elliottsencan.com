@@ -58,27 +58,17 @@ const constellationTieCount = constellationLayout.global.edges.length;
       
 
       {/*
-        Hero — 3-row grid at md+. Column 1 holds the editorial rails:
-          row 1: top rule
-          row 2: prose + meta cell, flex-col justify-between so the prose
-                 anchors at the top and the meta cell at the bottom of the
-                 row
-          row 3: bottom rule
-        Column 2 holds only the constellation (with its MAP eyebrow); it
-        spans all three rows, so the constellation's top and bottom edges
-        align with the col-1 rules. On mobile (no grid columns) items fall
-        back to source order: top rule → content → bottom rule → const.
+        Hero — title, summary, and source meta stacked full-width, then the
+        constellation promoted from a right-column sidebar strip to a centred
+        hero centrepiece directly below. It stays contained (the component is
+        width-capped and caps again at the column on narrow viewports), not
+        full-bleed, so the page announces itself first. The A–Z concept grid
+        follows below.
       */}
-      <div
-        class="grid items-stretch gap-x-8 gap-y-3 md:grid-cols-[minmax(0,1fr)_auto] md:gap-x-10 md:[grid-template-rows:auto_1fr_auto]"
-      >
-        <!-- <EditorialRule compact class="md:col-start-1 md:row-start-1" /> -->
-
-        <div
-          class="flex min-w-0 max-w-[62ch] flex-col justify-between gap-4 md:col-start-1 md:row-start-2"
-        >
+      <div class="space-y-8">
+        <div class="flex min-w-0 max-w-[62ch] flex-col gap-4">
           <div class="flex flex-col gap-3">
-            <h1 class="font-heading text-xl font-semibold tracking-tight text-black dark:text-white">
+            <h1 class="font-heading text-display font-normal tracking-tight leading-[1.06] text-black dark:text-white">
               Wiki
             </h1>
             <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
@@ -112,27 +102,20 @@ const constellationTieCount = constellationLayout.global.edges.length;
           </p>
         </div>
 
-        <EditorialRule compact class="md:col-start-1 md:row-start-3" />
-
         {
           wiki.length > 0 && (
-            <div class="md:col-start-2 md:row-start-1 md:row-end-3">
-              <ConstellationStrip />
-            </div>
+            <figure class="m-0 flex flex-col items-center gap-3">
+              <ConstellationStrip width={760} />
+              <figcaption class="font-mono text-xs text-black/55 dark:text-white/55">
+                {constellationNeighborhoodCount} neighborhoods
+                {" · "}
+                {constellationConceptCount} concepts
+                {" · "}
+                {constellationTieCount} ties
+              </figcaption>
+            </figure>
           )
         }
-
-        {/* Caption sits in col 2 row 3 so it lines up horizontally with the
-            col-1 EditorialRule. Same row → guaranteed alignment. */}
-        <p
-          class="font-mono text-xs text-black/55 dark:text-white/55 md:col-start-2 md:row-start-3"
-        >
-          {constellationNeighborhoodCount} neighborhoods
-          {" · "}
-          {constellationConceptCount} concepts
-          {" · "}
-          {constellationTieCount} ties
-        </p>
       </div>
 
       <!-- <EditorialRule /> -->
@@ -151,9 +134,9 @@ const constellationTieCount = constellationLayout.global.edges.length;
                 <li class="border-t border-black/10 pt-2 dark:border-white/10">
                   <a
                     href={`/wiki/${concept.id}/`}
-                    class="-mx-2 flex h-full flex-col gap-2 rounded-sm px-2 pt-2 pb-2 no-underline transition-colors hover:bg-[color-mix(in_oklch,var(--accent)_10%,transparent)] focus-visible:bg-[color-mix(in_oklch,var(--accent)_10%,transparent)]"
+                    class="group -mx-2 flex h-full flex-col gap-2 rounded-sm px-2 pt-2 pb-2 no-underline transition-colors"
                   >
-                    <span class="font-heading text-base font-medium text-black dark:text-white">
+                    <span class="font-heading text-lg font-medium tracking-[-0.011em] text-black transition-colors group-hover:text-[color:var(--accent)] dark:text-white">
                       {concept.data.title}
                     </span>
                     <p class="text-sm leading-relaxed text-black/75 dark:text-white/75">

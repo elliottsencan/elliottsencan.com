@@ -125,8 +125,7 @@ const breadcrumbs = [
 type ConstellationCluster = { id: string; title: string; short: string; hue: number };
 const constellationClusters: ConstellationCluster[] = constellationLayout.clusters;
 const constellationClusterById: Record<string, string | null> = constellationLayout.clusterById;
-const constellationLocal: Record<string, { nodes: { id: string }[] }> =
-  constellationLayout.local;
+const constellationLocal: Record<string, { nodes: { id: string }[] }> = constellationLayout.local;
 
 const localData = constellationLocal[concept.id];
 const hasLocal = !!localData && localData.nodes.length > 1;
@@ -180,7 +179,7 @@ const neighborCount = hasLocal ? localData.nodes.length - 1 : 0;
           class="flex min-w-0 max-w-[62ch] flex-col justify-between gap-4 md:col-start-1 md:row-start-2"
         >
           <div class="flex flex-col gap-3">
-            <h1 class="font-heading text-xl font-semibold tracking-tight text-black dark:text-white">
+            <h1 class="font-heading text-display font-normal tracking-tight leading-[1.06] text-black dark:text-white">
               {concept.data.title}
             </h1>
             <p class="text-base leading-relaxed text-black/85 dark:text-white/85">

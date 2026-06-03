@@ -8,6 +8,22 @@
 
 @font-face {
   font-family: "Neue Montreal";
+  src: url("/fonts/PPNeueMontreal-Thin.woff2") format("woff2");
+  font-weight: 200;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Neue Montreal";
+  src: url("/fonts/PPNeueMontreal-Book.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Neue Montreal";
   src: url("/fonts/PPNeueMontreal-Medium.woff2") format("woff2");
   font-weight: 500;
   font-style: normal;
@@ -55,9 +71,17 @@
 }
 
 @font-face {
-  font-family: "JetBrains Mono";
-  src: url("/fonts/JetBrainsMono-Regular.woff2") format("woff2");
+  font-family: "Spline Sans Mono";
+  src: url("/fonts/SplineSansMono-Regular.woff2") format("woff2");
   font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Spline Sans Mono";
+  src: url("/fonts/SplineSansMono-Medium.woff2") format("woff2");
+  font-weight: 500;
   font-style: normal;
   font-display: swap;
 }
@@ -70,7 +94,7 @@
     "Segoe UI Symbol", "Noto Color Emoji";
   --font-heading: "Neue Montreal", "Satoshi", ui-sans-serif, system-ui, sans-serif;
   --font-mono:
-    "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Spline Sans Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
     "Courier New", monospace;
 
   /* Fluid type scale (320px → 1280px viewport).
@@ -86,6 +110,14 @@
   --text-2xl: clamp(1.875rem, 1.58rem + 1.46vw, 2.75rem);
   --text-3xl: clamp(2.375rem, 1.92rem + 2.29vw, 3.75rem);
   --text-4xl: clamp(3rem, 2.5rem + 2.5vw, 4.5rem);
+
+  /* Display step for page titles. Set between xl and 2xl so a title in
+     Neue Montreal Book 400 reads as a size-led headline without jumping to
+     the article-H2 tier. Paired with leading-[1.06] at the usage site. */
+  --text-display: clamp(2rem, 1.55rem + 1.9vw, 2.85rem);
+  /* Stat-numeral display step — big tabular figures (labs stats, trail
+     counts) set in Book 400 so the number carries, not the weight. */
+  --text-stat: clamp(2.9rem, 1.9rem + 3.4vw, 4.5rem);
 }
 
 /*
