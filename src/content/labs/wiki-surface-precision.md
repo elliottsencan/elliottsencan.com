@@ -11,7 +11,7 @@ headlineMetric:
 tags:
   - eval
   - wiki
-kind: chart
+kind: sweep
 dataPath: data/wiki-surface-precision.json
 methodology:
   steps:
@@ -28,7 +28,7 @@ methodology:
 
 The wiki surfacer has two surfaces: an on-demand `/wiki` command you invoke
 deliberately, and an auto-surface hook that injects a relevant-concept note on
-*every* prompt. The command only costs tokens when you ask for it. The hook
+_every_ prompt. The command only costs tokens when you ask for it. The hook
 spends them unprompted — so it's only a net win if the concept it surfaces is
 actually relevant. Fire it on a prompt about sourdough and it's pure noise:
 context tokens burned, attention split, nothing gained. That failure mode —

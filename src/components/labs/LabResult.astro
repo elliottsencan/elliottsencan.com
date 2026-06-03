@@ -27,9 +27,10 @@ import ResultCell from "./ResultCell.astro";
 import Scatter from "./Scatter.astro";
 import Sparkline from "./Sparkline.astro";
 import StatGrid from "./StatGrid.astro";
+import WikiSweep from "./WikiSweep.astro";
 
 type Props = {
-  kind?: "chart" | "table" | "barchart" | "stat" | "calendar" | "scatter" | "comparison";
+  kind?: "chart" | "table" | "barchart" | "stat" | "calendar" | "scatter" | "comparison" | "sweep";
   data: unknown;
   /** Visualization detail level — controls heights for charts/scatters. */
   size?: "compact" | "full";
@@ -198,6 +199,57 @@ const hasComparison =
   comparisonData !== null &&
   (comparisonData.metrics.length > 0 || comparisonData.samples.length > 0);
 
+// ── sweep kind (wiki-surface relevance lab) ──
+// Threshold sweep + per-prompt rows. Validated here so WikiSweep can stay
+// a pure presenter; element-level checks mirror isMetric/isSample/isDay.
+type SweepPoint = {
+  threshold: number;
+  precision_at_1: number;
+  recall_at_3: number;
+  false_positive_rate: number;
+};
+type PromptRow = {
+  prompt: string;
+  relevant: string[];
+  off_topic: boolean;
+  results: { slug: string; score: number }[];
+};
+function isSweepPoint(v: unknown): v is SweepPoint {
+  return (
+    isObject(v) &&
+    typeof v.threshold === "number" &&
+    typeof v.precision_at_1 === "number" &&
+    typeof v.recall_at_3 === "number" &&
+    typeof v.false_positive_rate === "number"
+  );
+}
+function isPromptRow(v: unknown): v is PromptRow {
+  return (
+    isObject(v) &&
+    typeof v.prompt === "string" &&
+    Array.isArray(v.relevant) &&
+    typeof v.off_topic === "boolean" &&
+    Array.isArray(v.results)
+  );
+}
+
+const sweepData =
+  kind === "sweep" &&
+  isObject(data) &&
+  Array.isArray(data.sweep) &&
+  data.sweep.every(isSweepPoint) &&
+  Array.isArray(data.per_prompt) &&
+  data.per_prompt.every(isPromptRow) &&
+  typeof data.recommended_threshold === "number"
+    ? {
+        sweep: data.sweep as SweepPoint[],
+        perPrompt: data.per_prompt as PromptRow[],
+        recommendedThreshold: data.recommended_threshold as number,
+        nOnTopic: typeof data.n_on_topic === "number" ? (data.n_on_topic as number) : 0,
+        nOffTopic: typeof data.n_off_topic === "number" ? (data.n_off_topic as number) : 0,
+      }
+    : null;
+
 const matched =
   chartData ??
   tableData ??
@@ -205,6 +257,7 @@ const matched =
   statData ??
   calendarData ??
   scatterData ??
+  sweepData ??
   (hasComparison ? comparisonData : null);
 
 const sparkHeight = size === "compact" ? 60 : 120;
@@ -310,6 +363,17 @@ const cumHeight = size === "compact" ? 130 : 200;
         samples={comparisonData.samples}
         legend={comparisonData.legend}
         stripLabel={comparisonData.stripLabel}
+      />
+    )
+  }
+  {
+    sweepData && (
+      <WikiSweep
+        sweep={sweepData.sweep}
+        perPrompt={sweepData.perPrompt}
+        recommendedThreshold={sweepData.recommendedThreshold}
+        nOnTopic={sweepData.nOnTopic}
+        nOffTopic={sweepData.nOffTopic}
       />
     )
   }
