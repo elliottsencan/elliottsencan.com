@@ -293,9 +293,9 @@ const neighborCount = hasLocal ? localData.nodes.length - 1 : 0;
                   <li>
                     <a
                       href={`/wiki/${slug}/`}
-                      class="flex h-full flex-col gap-1.5 rounded-sm bg-black/5 px-3.5 py-3 no-underline transition-colors hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10"
+                      class="group flex h-full flex-col gap-1.5 rounded-sm bg-black/5 px-3.5 py-3 no-underline dark:bg-white/5"
                     >
-                      <span class="font-heading text-sm font-medium leading-tight tracking-tight text-black dark:text-white">
+                      <span class="font-heading text-sm font-medium leading-tight tracking-tight text-black transition-colors duration-300 ease-in-out group-hover:text-[color:var(--accent)] group-focus-visible:text-[color:var(--accent)] dark:text-white">
                         {rc.data.title} →
                       </span>
                       <span class="text-xs leading-relaxed text-black/55 dark:text-white/55">

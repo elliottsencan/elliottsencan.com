@@ -349,7 +349,7 @@ const judgeBars = [HAIKU, SONNET].map((m) => {
           <div class="flex flex-col gap-px overflow-hidden rounded-sm">
             {allDisagreements.map((d, i) => (
               <details class="group bg-black/[0.03] dark:bg-white/[0.05]" open={i === 0}>
-                <summary class="flex cursor-pointer list-none flex-col gap-2 p-3 hover:bg-black/[0.02] md:flex-row md:items-start md:gap-4 dark:hover:bg-white/[0.03]">
+                <summary class="flex cursor-pointer list-none flex-col gap-2 p-3 transition-colors duration-300 ease-in-out hover:text-black md:flex-row md:items-start md:gap-4 dark:hover:text-white">
                   <p class="min-w-0 flex-1 text-sm leading-snug text-black/80 dark:text-white/80">
                     {d.claim}
                   </p>
