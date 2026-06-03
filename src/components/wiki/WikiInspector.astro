@@ -156,6 +156,29 @@
       }, 120);
     };
 
+    // Lift the card above the footer's Back-to-top button when it scrolls
+    // into view, so the fixed bottom-right card never collides with the
+    // footer chrome. Tracks the anchor on scroll so the card stays pinned
+    // just above it; falls back to base offset when nothing's in the way.
+    const liftAnchor =
+      document.getElementById("back-to-top") ?? document.querySelector("footer");
+    const BASE_BOTTOM = 24;
+    let liftRaf = 0;
+    const reflowLift = () => {
+      liftRaf = 0;
+      if (!liftAnchor) return;
+      const overlap = window.innerHeight - liftAnchor.getBoundingClientRect().top;
+      insp.style.bottom = `${BASE_BOTTOM + (overlap > 0 ? overlap + 16 : 0)}px`;
+    };
+    if (liftAnchor) {
+      const onScrollLift = () => {
+        if (!liftRaf) liftRaf = requestAnimationFrame(reflowLift);
+      };
+      window.addEventListener("scroll", onScrollLift, { passive: true });
+      window.addEventListener("resize", onScrollLift, { passive: true });
+      reflowLift();
+    }
+
     for (const r of rows) {
       r.addEventListener("mouseenter", () => fill(r));
       r.addEventListener("focusin", () => fill(r));

@@ -90,12 +90,13 @@
 
 @theme {
   --font-sans:
-    "Satoshi", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
-    "Segoe UI Symbol", "Noto Color Emoji";
-  --font-heading: "Neue Montreal", "Satoshi", ui-sans-serif, system-ui, sans-serif;
+    "Satoshi", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-heading:
+    "Neue Montreal", "Satoshi", ui-sans-serif, system-ui, sans-serif;
   --font-mono:
-    "Spline Sans Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
-    "Courier New", monospace;
+    "Spline Sans Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
 
   /* Fluid type scale (320px → 1280px viewport).
      Retuned for editorial legibility: body lands at 17→20px, heads scale
@@ -186,6 +187,11 @@
     @apply fixed left-0 right-0 top-0 z-50 py-6 md:py-7;
     @apply bg-[#f6f4ef]/75 dark:bg-[#18161a]/75;
     @apply backdrop-blur-xs;
+    /* Hairline separating the chrome from the page beneath it. */
+    border-bottom: 1px solid rgb(0 0 0 / 0.08);
+  }
+  html.dark header {
+    border-bottom-color: rgb(255 255 255 / 0.08);
   }
 
   /* Approximate masthead/footer heights; downstream consumers (TOC right
@@ -370,11 +376,21 @@ body::after {
   /* Solid canvas behind the footer chrome so the fade runs into it
      seamlessly; the 4rem above the footer carries the visible transition
      from transparent content into canvas. */
-  background: linear-gradient(to top, #f6f4ef, #f6f4ef var(--footer-height), transparent);
+  background: linear-gradient(
+    to top,
+    #f6f4ef,
+    #f6f4ef var(--footer-height),
+    transparent
+  );
 }
 
 html.dark body::after {
-  background: linear-gradient(to top, #18161a, #18161a var(--footer-height), transparent);
+  background: linear-gradient(
+    to top,
+    #18161a,
+    #18161a var(--footer-height),
+    transparent
+  );
 }
 
 @supports (animation-timeline: scroll()) {
@@ -469,7 +485,11 @@ html.dark .dot-rule {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background-image: radial-gradient(circle, currentColor 0.5px, transparent 0.5px);
+  background-image: radial-gradient(
+    circle,
+    currentColor 0.5px,
+    transparent 0.5px
+  );
   background-size: 6px 1px;
   background-repeat: repeat-x;
   background-position: center;

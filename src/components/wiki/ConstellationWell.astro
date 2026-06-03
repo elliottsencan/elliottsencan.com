@@ -37,10 +37,17 @@ const { width = 600, conceptCount, neighbourhoodCount, tieCount } = Astro.props;
   :global(.dark) .cw {
     border-color: rgb(255 255 255 / 0.06);
   }
+  /* The strip's viewBox bakes in ~96px of symmetric top/bottom padding, so
+     it renders portrait-tall. Cap the height and let the centred strip
+     overflow equally top + bottom — overflow:hidden then trims that empty
+     padding, not the nodes (which sit in the centred band). */
   .cw-graph {
     display: flex;
     width: 100%;
+    max-height: 24rem;
+    align-items: center;
     justify-content: center;
+    overflow: hidden;
   }
   .cw-cap {
     position: absolute;
