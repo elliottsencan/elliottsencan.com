@@ -16,6 +16,7 @@ sources:
   - >-
     2026-05/2026-05-18t095002-if-youre-running-claude-code-please-run-it-in-a-box
   - 2026-05/2026-05-27t181732-build-a-desktop-extension-with-mcpb
+  - 2026-06/2026-06-02t212937-no-mcp-is-definitely-not-dead-the-nsa-agrees
 compiled_at: '2026-05-06T16:12:27.740Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -33,7 +34,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.01911
-last_source_added: '2026-05-28T01:17:32.940Z'
+last_source_added: '2026-06-03T04:29:37.253Z'
 ---
 LLM tooling covers the software layer between raw model weights and useful outputs: runtimes that serve models locally, platforms that structure knowledge for LLM consumption, and utilities that manage the context passed to a model at query time.
 

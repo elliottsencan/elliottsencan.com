@@ -14,6 +14,7 @@ sources:
   - >-
     2026-05/2026-05-19t221631-scaling-managed-agents-decoupling-the-brain-from-the-hands
   - 2026-05/2026-05-28t140143-introducing-dynamic-workflows-in-claude-code
+  - 2026-06/2026-06-02t212937-no-mcp-is-definitely-not-dead-the-nsa-agrees
 compiled_at: '2026-05-04T04:08:00.148Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -31,7 +32,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.013566
-last_source_added: '2026-05-28T21:01:43.756Z'
+last_source_added: '2026-06-03T04:29:37.253Z'
 ---
 LLM orchestration refers to the coordination of multiple language model agents through defined roles and control flow, rather than relying on a single model to handle an entire task end-to-end. The two sources here converge on a GAN-inspired decomposition: a planner that breaks work into subtasks, generators that execute in parallel, and evaluators that critique outputs before they advance downstream.
 
