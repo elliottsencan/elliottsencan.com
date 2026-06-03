@@ -1,0 +1,54 @@
+---
+import ConstellationStrip from "@components/wiki/ConstellationStrip.astro";
+
+// Recessed flat "well" that contains the concept graph so it reads as a
+// deliberate object rather than a full-bleed hero. The strip component is
+// unchanged; this only frames and captions it.
+type Props = {
+  width?: number;
+  conceptCount: number;
+  neighbourhoodCount: number;
+  tieCount: number;
+};
+
+const { width = 600, conceptCount, neighbourhoodCount, tieCount } = Astro.props;
+---
+
+<div class="cw">
+  <div class="cw-graph">
+    <ConstellationStrip width={width} />
+  </div>
+  <p class="cw-cap font-mono text-xs">
+    {conceptCount} concepts &middot; {neighbourhoodCount} neighbourhoods &middot; {tieCount} ties
+  </p>
+</div>
+
+<style>
+  .cw {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--well);
+    border: 1px solid rgb(0 0 0 / 0.05);
+    border-radius: 1rem;
+    padding: 1.5rem 1.5rem 2.75rem;
+  }
+  :global(.dark) .cw {
+    border-color: rgb(255 255 255 / 0.06);
+  }
+  .cw-graph {
+    display: flex;
+    width: 100%;
+    justify-content: center;
+  }
+  .cw-cap {
+    position: absolute;
+    bottom: 1.125rem;
+    left: 1.5rem;
+    color: rgb(0 0 0 / 0.4);
+  }
+  :global(.dark) .cw-cap {
+    color: rgb(255 255 255 / 0.4);
+  }
+</style>
