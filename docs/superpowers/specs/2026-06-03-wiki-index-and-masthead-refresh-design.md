@@ -99,7 +99,7 @@ Replaces the summary-carrying grouped list. New component
   label), `data-ct` (count), `data-su` (summary). All sourced from existing
   frontmatter — **no new data**.
 - The directory sits in a light flat panel (`--panel` / `#faf8f3` light) with a
-  hairline border, mirroring the well. (Optional; approved in mock.)
+  hairline border, mirroring the well.
 
 ### 1.4 Bottom-right inspector (desktop)
 
@@ -112,8 +112,7 @@ toggles attributes, CSS does the rest).
   summary · footer line (source dot-ramp + `{n} sources` + `open →`).
 - **Surface:** `--card` fill, hairline border, soft shadow
   (`0 8px 30px rgb(0 0 0 / .08)`) — the one permitted bit of lift, to read as an
-  "inspector" floating above the page. _(Open question for review: keep the
-  shadow, or hairline-only?)_
+  "inspector" floating above the page. **Decided: keep the soft shadow.**
 - **Behavior:**
   - **Resting state: hidden** (`opacity:0; pointer-events:none`) until a row is
     hovered or keyboard-focused; populates from that row's `data-*`; tracks the
@@ -186,9 +185,8 @@ Edit `src/components/Header.astro` only. Same two-row-under-`sm` structure.
 - Spot-check the agent surfaces are unaffected (`/wiki.json`, `/wiki.txt`,
   `/llms.txt`) — this is presentation-only, no data contract change.
 
-## Open questions for review
+## Resolved decisions
 
-1. Inspector surface: soft shadow (as mocked) vs hairline-only — which fits the
-   flat aesthetic better?
-2. Directory panel: keep the light flat panel around the directory, or let it sit
-   directly on the canvas (panel only around the well)?
+1. **Inspector surface:** keep the soft shadow (the one permitted bit of lift).
+2. **Directory panel:** keep the light flat panel around the directory (well and
+   directory both paneled).
