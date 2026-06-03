@@ -2267,9 +2267,6 @@
   "totals": {
     "articles_evaluated": 20,
     "total_claims": 103,
-    "total_cost_usd_by_judge": {
-      "claude-haiku-4-5": 0.1429,
-      "claude-sonnet-4-6": 0.4048
-    }
+    "total_cost_usd_by_judge": {}
   }
 }
