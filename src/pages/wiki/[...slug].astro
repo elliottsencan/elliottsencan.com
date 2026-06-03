@@ -1,8 +1,10 @@
 ---
 import { type CollectionEntry, getCollection, render } from "astro:content";
+import Breadcrumb from "@components/Breadcrumb.astro";
 import EditorialRule from "@components/EditorialRule.astro";
 import LabeledRule from "@components/LabeledRule.astro";
 import Link from "@components/Link.astro";
+import ProvenanceBadge from "@components/ProvenanceBadge.astro";
 import ConstellationLocal from "@components/wiki/ConstellationLocal.astro";
 import constellationLayout from "@data/constellation-layout.json";
 import Layout from "@layouts/Layout.astro";
@@ -101,13 +103,6 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
   timeZone: SITE_TIMEZONE,
 });
 
-const longDateFormatter = new Intl.DateTimeFormat("en-US", {
-  day: "numeric",
-  month: "short",
-  year: "numeric",
-  timeZone: SITE_TIMEZONE,
-});
-
 // Citations point at the contributing /reading/<slug> entries — search engines
 // read this as "this synthesis cites these sources." Absolute URLs because
 // schema.org `citation` items should be dereferenceable.
@@ -171,8 +166,8 @@ const neighborCount = hasLocal ? localData.nodes.length - 1 : 0;
         class="grid items-stretch gap-x-8 gap-y-3 md:grid-cols-[minmax(0,1fr)_auto] md:gap-x-10 md:[grid-template-rows:auto_1fr_auto]"
       >
         <div class="md:col-start-1 md:row-start-1">
-          <LabeledRule>
-            <Link href="/wiki/">Wiki</Link>
+          <LabeledRule as="p">
+            <Breadcrumb parent={{ label: "Wiki", href: "/wiki/" }} />
           </LabeledRule>
         </div>
 
@@ -197,19 +192,13 @@ const neighborCount = hasLocal ? localData.nodes.length - 1 : 0;
                   />
                 ))}
               </span>
-              <span class="tracking-wider">
+              <span class="whitespace-nowrap tracking-wider">
                 {sources.length} source{sources.length === 1 ? "" : "s"}
-                {" · "}
-                {longDateFormatter.format(concept.data.compiled_at)}
               </span>
             </p>
           </div>
 
-          <p class="text-xs text-black/55 dark:text-white/55">
-            Compiled by Claude
-            {" · "}
-            <Link href="/wiki/how-this-works">How this works →</Link>
-          </p>
+          <ProvenanceBadge action="Compiled by Claude" date={concept.data.compiled_at} link />
         </div>
 
         <EditorialRule compact class="md:col-start-1 md:row-start-3" />

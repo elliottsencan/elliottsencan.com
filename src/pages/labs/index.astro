@@ -7,9 +7,9 @@ import Link from "@components/Link.astro";
 import CodeCell from "@components/labs/CodeCell.astro";
 import Sparkline from "@components/labs/Sparkline.astro";
 import PageHero from "@components/PageHero.astro";
+import ProvenanceBadge from "@components/ProvenanceBadge.astro";
 import Layout from "@layouts/Layout.astro";
 import { loadLabData } from "@lib/lab-data";
-import { SITE_TIMEZONE } from "@lib/utils";
 
 // /labs — the measurement layer. Each cell stamps "what was the question,
 // what's the number, what does it mean." The index lists every cell in
@@ -30,32 +30,9 @@ for (const cell of cells) {
 const liveCount = cells.filter((c) => c.data.status === "live").length;
 const pendingCount = cells.filter((c) => c.data.status === "draft").length;
 
-const dateFormatter = new Intl.DateTimeFormat("en-US", {
-  year: "numeric",
-  month: "2-digit",
-  day: "2-digit",
-  timeZone: SITE_TIMEZONE,
-});
-
-const heroMetaFormatter = new Intl.DateTimeFormat("en-US", {
-  day: "numeric",
-  month: "short",
-  year: "numeric",
-  timeZone: SITE_TIMEZONE,
-});
 const lastRun = cells[0]?.data.lastRunDate;
-const heroMetaLabel = lastRun
-  ? `${cells.length} ${cells.length === 1 ? "cell" : "cells"} · ${heroMetaFormatter.format(lastRun)}`
-  : `${cells.length} ${cells.length === 1 ? "cell" : "cells"}`;
-
-function formatLastRun(date: Date): string {
-  // ISO-style YYYY-MM-DD reads as a build identifier, not a sentence.
-  const parts = dateFormatter.formatToParts(date);
-  const y = parts.find((p) => p.type === "year")?.value ?? "";
-  const m = parts.find((p) => p.type === "month")?.value ?? "";
-  const d = parts.find((p) => p.type === "day")?.value ?? "";
-  return `${y}-${m}-${d}`;
-}
+// Count-only cell — the date moves to the provenance badge (see meta slot).
+const heroMetaLabel = `${cells.length} ${cells.length === 1 ? "cell" : "cells"}`;
 
 function statusLabel(status: string): string {
   if (status === "draft") {
@@ -86,7 +63,10 @@ function statusLabel(status: string): string {
         </Fragment>
         {
           cells.length > 0 && (
-            <HeroMeta slot="meta" count={cells.length} label={heroMetaLabel} />
+            <div slot="meta" class="flex flex-wrap items-center gap-x-3 gap-y-2">
+              <HeroMeta count={cells.length} label={heroMetaLabel} />
+              {lastRun && <ProvenanceBadge action="Last run" date={lastRun} />}
+            </div>
           )
         }
       </PageHero>
@@ -156,11 +136,15 @@ function statusLabel(status: string): string {
                         >
                           {statusLabel(cell.data.status)}
                         </span>
-                        <span class="text-black/55 dark:text-white/55">
-                          {isPending
-                            ? "methodology shipped"
-                            : `last run · ${formatLastRun(cell.data.lastRunDate)}`}
-                        </span>
+                        {isPending ? (
+                          <span class="text-black/55 dark:text-white/55">
+                            methodology shipped
+                          </span>
+                        ) : (
+                          <span class="relative z-10">
+                            <ProvenanceBadge action="Last run" date={cell.data.lastRunDate} />
+                          </span>
+                        )}
                         {cell.data.blogPostSlug && (
                           <span class="text-black/55 dark:text-white/55">
                             cited by{" "}

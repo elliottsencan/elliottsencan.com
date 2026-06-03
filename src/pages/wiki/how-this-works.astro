@@ -2,6 +2,7 @@
 import Container from "@components/Container.astro";
 import EditorialRule from "@components/EditorialRule.astro";
 import Link from "@components/Link.astro";
+import Breadcrumb from "@components/Breadcrumb.astro";
 import PageHero from "@components/PageHero.astro";
 import { REPO, SITE } from "@consts";
 import Layout from "@layouts/Layout.astro";
@@ -22,7 +23,7 @@ const mailtoHref = `mailto:${SITE.EMAIL}`;
     >
       <PageHero breadcrumb>
         <Fragment slot="breadcrumb">
-          <Link href="/wiki/">Wiki</Link> / How this works
+          <Breadcrumb parent={{ label: "Wiki", href: "/wiki/" }} current="How this works" />
         </Fragment>
         <Fragment slot="title">How the wiki works</Fragment>
         <Fragment slot="summary">

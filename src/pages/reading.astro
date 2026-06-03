@@ -5,6 +5,7 @@ import EditorialRule from "@components/EditorialRule.astro";
 import HeroMeta from "@components/HeroMeta.astro";
 import Link from "@components/Link.astro";
 import PageHero from "@components/PageHero.astro";
+import ProvenanceBadge from "@components/ProvenanceBadge.astro";
 import Layout from "@layouts/Layout.astro";
 import { monthKey, SITE_TIMEZONE } from "@lib/utils";
 
@@ -83,15 +84,8 @@ const compactDateFormatter = new Intl.DateTimeFormat("en-US", {
 });
 
 const lastAdded = entries[0]?.data.added;
-const heroMetaFormatter = new Intl.DateTimeFormat("en-US", {
-  day: "numeric",
-  month: "short",
-  year: "numeric",
-  timeZone: SITE_TIMEZONE,
-});
-const heroMetaLabel = lastAdded
-  ? `${entries.length} source${entries.length === 1 ? "" : "s"} · ${heroMetaFormatter.format(lastAdded)}`
-  : `${entries.length} source${entries.length === 1 ? "" : "s"}`;
+// Count-only cell — the date moves to the provenance badge (see meta slot).
+const heroMetaLabel = `${entries.length} source${entries.length === 1 ? "" : "s"}`;
 ---
 
 <Layout
@@ -112,7 +106,10 @@ const heroMetaLabel = lastAdded
           the <Link href="/wiki">wiki</Link>, where any concept with two or
           more contributing sources gets a compiled article.
         </Fragment>
-        <HeroMeta slot="meta" count={entries.length} label={heroMetaLabel} />
+        <div slot="meta" class="flex flex-wrap items-center gap-x-3 gap-y-2">
+          <HeroMeta count={entries.length} label={heroMetaLabel} />
+          {lastAdded && <ProvenanceBadge action="Summarized by Claude" date={lastAdded} />}
+        </div>
       </PageHero>
 
       {

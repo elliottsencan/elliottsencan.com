@@ -2,9 +2,9 @@
 import { getEntry, render } from "astro:content";
 import Container from "@components/Container.astro";
 import EditorialRule from "@components/EditorialRule.astro";
-import HeroMeta from "@components/HeroMeta.astro";
 import Link from "@components/Link.astro";
 import PageHero from "@components/PageHero.astro";
+import ProvenanceBadge from "@components/ProvenanceBadge.astro";
 import Layout from "@layouts/Layout.astro";
 
 // Source of truth: src/content/now/current.md. The site-ingest worker
@@ -19,7 +19,6 @@ if (!entry) {
 const { Content } = await render(entry);
 
 const updated = entry.data.updated;
-const lastUpdated = `${updated.toLocaleString("en-US", { month: "long", timeZone: "UTC" })} ${updated.getUTCFullYear()}`;
 const lastUpdatedISO = updated.toISOString().slice(0, 10);
 ---
 
@@ -33,7 +32,7 @@ const lastUpdatedISO = updated.toISOString().slice(0, 10);
     >
       <PageHero>
         <Fragment slot="title">Now</Fragment>
-        <HeroMeta slot="meta" label={`Updated ${lastUpdated}`} />
+        <ProvenanceBadge slot="meta" action="Updated" date={updated} />
       </PageHero>
 
       <section

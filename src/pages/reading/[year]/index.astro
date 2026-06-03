@@ -4,6 +4,7 @@ import Container from "@components/Container.astro";
 import EditorialRule from "@components/EditorialRule.astro";
 import HeroMeta from "@components/HeroMeta.astro";
 import Link from "@components/Link.astro";
+import Breadcrumb from "@components/Breadcrumb.astro";
 import PageHero from "@components/PageHero.astro";
 import Layout from "@layouts/Layout.astro";
 import { monthKey, SITE_TIMEZONE } from "@lib/utils";
@@ -80,7 +81,7 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
     >
       <PageHero breadcrumb>
         <Fragment slot="breadcrumb">
-          <Link href="/reading/">Reading</Link> / {year}
+          <Breadcrumb parent={{ label: "Reading", href: "/reading/" }} current={year} />
         </Fragment>
         <Fragment slot="title">{year}</Fragment>
         <Fragment slot="summary">

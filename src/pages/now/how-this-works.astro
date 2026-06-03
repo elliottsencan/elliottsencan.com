@@ -2,6 +2,7 @@
 import Container from "@components/Container.astro";
 import EditorialRule from "@components/EditorialRule.astro";
 import Link from "@components/Link.astro";
+import Breadcrumb from "@components/Breadcrumb.astro";
 import PageHero from "@components/PageHero.astro";
 import Layout from "@layouts/Layout.astro";
 import { Code } from "astro-expressive-code/components";
@@ -30,7 +31,7 @@ Cron (weekly) ─▶ Worker ┼─▶ Linear API  (active projects)
     >
       <PageHero breadcrumb>
         <Fragment slot="breadcrumb">
-          <Link href="/now">Now</Link> / How this page works
+          <Breadcrumb parent={{ label: "Now", href: "/now" }} current="How this page works" />
         </Fragment>
         <Fragment slot="title">How /now stays up to date</Fragment>
       </PageHero>

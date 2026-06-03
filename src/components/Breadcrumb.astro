@@ -1,0 +1,37 @@
+---
+// Canonical breadcrumb trail. Matches the wiki concept-index eyebrow style:
+// mono, uppercase, letter-spacing 0.14em, accent. Designed to sit inside a
+// LabeledRule (left of the dot-rule) — it carries no rule of its own.
+//
+//   ← {parent}  /  {current}
+//
+// Parent link is the accent and the only hover target (underline, no bg).
+// The `/` separator is faint; the current page is muted and not a link, so
+// position in the trail is unambiguous. Never wraps mid-segment.
+
+type Props = {
+  parent: { label: string; href: string };
+  current?: string;
+};
+
+const { parent, current } = Astro.props;
+---
+
+<span class="flex flex-none items-center gap-2 whitespace-nowrap font-mono text-xs uppercase tracking-[0.14em]">
+  <a
+    href={parent.href}
+    class="text-[color:var(--accent)] no-underline transition-colors duration-300 ease-in-out hover:underline focus-visible:underline"
+  >
+    &larr; {parent.label}
+  </a>
+  {
+    current && (
+      <>
+        <span aria-hidden="true" class="text-black/40 dark:text-white/40">
+          /
+        </span>
+        <span class="text-black/55 dark:text-white/60">{current}</span>
+      </>
+    )
+  }
+</span>

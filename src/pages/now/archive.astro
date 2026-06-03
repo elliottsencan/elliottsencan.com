@@ -4,6 +4,7 @@ import Container from "@components/Container.astro";
 import EditorialRule from "@components/EditorialRule.astro";
 import HeroMeta from "@components/HeroMeta.astro";
 import Link from "@components/Link.astro";
+import Breadcrumb from "@components/Breadcrumb.astro";
 import PageHero from "@components/PageHero.astro";
 import Layout from "@layouts/Layout.astro";
 
@@ -34,7 +35,7 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
     >
       <PageHero breadcrumb>
         <Fragment slot="breadcrumb">
-          <Link href="/now">Now</Link> / Archive
+          <Breadcrumb parent={{ label: "Now", href: "/now" }} current="Archive" />
         </Fragment>
         <Fragment slot="title">Archive</Fragment>
         {

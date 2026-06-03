@@ -8,6 +8,7 @@ import LabeledRule from "@components/LabeledRule.astro";
 import Link from "@components/Link.astro";
 import Sparkline from "@components/labs/Sparkline.astro";
 import Masthead from "@components/Masthead.astro";
+import ProvenanceBadge from "@components/ProvenanceBadge.astro";
 import { HOME } from "@consts";
 import Layout from "@layouts/Layout.astro";
 import { loadLabData } from "@lib/lab-data";
@@ -36,13 +37,6 @@ const compactDate = new Intl.DateTimeFormat("en-US", {
   month: "short",
   timeZone: SITE_TIMEZONE,
 });
-const isoFormatter = new Intl.DateTimeFormat("en-CA", {
-  year: "numeric",
-  month: "2-digit",
-  day: "2-digit",
-  timeZone: SITE_TIMEZONE,
-});
-const toIso = (d: Date) => isoFormatter.format(d);
 
 const reading = await getCollection("reading");
 const wiki = await getCollection("wiki");
@@ -109,8 +103,6 @@ const labSparkValues =
   Array.isArray((labSparkData as { values?: unknown }).values)
     ? (labSparkData as { values: number[] }).values
     : null;
-const lastRunIso = latestLab ? toIso(latestLab.data.lastRunDate) : null;
-const wikiCompiledIso = latestWiki ? toIso(latestWiki.data.compiled_at) : null;
 
 const trails = [
   {
@@ -119,10 +111,10 @@ const trails = [
     blurb:
       "Concept-indexed synthesis. One article per topic with two or more contributing sources from the reading log, recompiled per batch with a citation-faithfulness sidecar attached.",
     latest: latestWiki ? { title: latestWiki.data.title, href: `/wiki/${latestWiki.id}/` } : null,
-    meta: [
-      wikiCompiledIso ? `compiled · ${wikiCompiledIso}` : null,
-      `${wikiCitationCount} ${wikiCitationCount === 1 ? "citation" : "citations"}`,
-    ].filter((s): s is string => s !== null),
+    provenance: latestWiki
+      ? { action: "Compiled by Claude" as const, date: latestWiki.data.compiled_at }
+      : null,
+    meta: [`${wikiCitationCount} ${wikiCitationCount === 1 ? "citation" : "citations"}`],
     stat: {
       n: wiki.length.toString(),
       unit: wiki.length === 1 ? "concept" : "concepts",
@@ -135,6 +127,9 @@ const trails = [
       "Per-source citation log. One file per URL I've saved from my phone, summarized and topic-tagged at ingest. The raw input the wiki compiles over.",
     latest: latestReading
       ? { title: latestReading.data.title, href: `/reading/${latestReading.id}/` }
+      : null,
+    provenance: latestReading
+      ? { action: "Summarized by Claude" as const, date: latestReading.data.added }
       : null,
     meta: [
       thisWeekCount > 0 ? `+${thisWeekCount} this week` : "0 this week",
@@ -151,10 +146,10 @@ const trails = [
     blurb:
       "Numbers behind the posts. Cost breakdowns, eval runs, telemetry — each cell names a question and reports a measurement against it.",
     latest: latestLab ? { title: latestLab.data.title, href: `/labs/${latestLab.id}/` } : null,
-    meta: [
-      lastRunIso ? `last run · ${lastRunIso}` : null,
-      `${labs.length} ${labs.length === 1 ? "cell" : "cells"}`,
-    ].filter((s): s is string => s !== null),
+    provenance: latestLab
+      ? { action: "Last run" as const, date: latestLab.data.lastRunDate }
+      : null,
+    meta: [`${labs.length} ${labs.length === 1 ? "cell" : "cells"}`],
     stat: latestLab
       ? {
           n: latestLab.data.headlineMetric.value,
@@ -222,7 +217,15 @@ const trails = [
                   >
                     /{trail.key}
                   </Link>
-                  <div class="flex flex-wrap items-center gap-x-3 gap-y-0.5 font-mono text-xs text-black/55 dark:text-white/55">
+                  <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5 font-mono text-xs text-black/55 dark:text-white/55">
+                    {trail.provenance && (
+                      <span class="relative z-10">
+                        <ProvenanceBadge
+                          action={trail.provenance.action}
+                          date={trail.provenance.date}
+                        />
+                      </span>
+                    )}
                     {trail.meta.map((m) => (
                       <span>{m}</span>
                     ))}

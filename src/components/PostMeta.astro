@@ -6,6 +6,7 @@
  * `<RevisionHistory />`, so the header stays a compact "when + how long" glance.
  */
 import type { CollectionEntry } from "astro:content";
+import ProvenanceBadge from "@components/ProvenanceBadge.astro";
 import { readingTime } from "@lib/utils";
 
 type Props = {
@@ -25,7 +26,6 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
 });
 
 const publishedFormatted = dateFormatter.format(post.data.date);
-const updatedFormatted = post.data.updated ? dateFormatter.format(post.data.updated) : null;
 
 const readingTimeFormatted = readingTime(post.body ?? "");
 ---
@@ -40,10 +40,7 @@ const readingTimeFormatted = readingTime(post.body ?? "");
     </>
   )}
 
-  {updatedFormatted && (
-    <>
-      <span aria-hidden="true" class="text-black/30 dark:text-white/30">&middot;</span>
-      <span>Updated {updatedFormatted}</span>
-    </>
+  {post.data.updated && (
+    <ProvenanceBadge action="Updated" date={post.data.updated} machine={false} />
   )}
 </div>
