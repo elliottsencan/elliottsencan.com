@@ -200,10 +200,20 @@
        chip when a source is hovered. Brighter in dark for readability
        at low surface contrast. */
     --accent: oklch(0.5 0.09 35);
+
+    /* Flat surface tones for /wiki — recessed "well" behind the
+       constellation, light panel behind the directory, lifted inspector
+       card. Flat fills, not textures. */
+    --well: #efece4;
+    --panel: #faf8f3;
+    --card: #fbf9f4;
   }
 
   html.dark {
     --accent: oklch(0.78 0.1 62);
+    --well: #201e22;
+    --panel: #1d1b1f;
+    --card: #232024;
   }
 
   @media (min-width: 768px) {
