@@ -2,6 +2,10 @@
 import Container from "@components/Container.astro";
 import Link from "@components/Link.astro";
 import SignatureLogo from "./SignatureLogo.astro";
+
+const path = Astro.url.pathname;
+// True when the current URL is this section or a child of it.
+const isActive = (href: string) => path === href || path.startsWith(`${href}/`);
 ---
 
 <header transition:persist>
@@ -19,11 +23,11 @@ import SignatureLogo from "./SignatureLogo.astro";
         class="header-links flex items-center text-sm sm:justify-end sm:gap-x-5"
       >
         <!-- <Link href="/writing">writing</Link> -->
-        <Link href="/now">now</Link>
-        <Link href="/reading">reading</Link>
-        <Link href="/wiki">wiki</Link>
-        <Link href="/labs">labs</Link>
-        <Link href="/about">about</Link>
+        <Link href="/now" aria-current={isActive("/now") ? "page" : undefined}>now</Link>
+        <Link href="/reading" aria-current={isActive("/reading") ? "page" : undefined}>reading</Link>
+        <Link href="/wiki" aria-current={isActive("/wiki") ? "page" : undefined}>wiki</Link>
+        <Link href="/labs" aria-current={isActive("/labs") ? "page" : undefined}>labs</Link>
+        <Link href="/about" aria-current={isActive("/about") ? "page" : undefined}>about</Link>
       </nav>
       <div class="header-utility flex items-center gap-x-3.5">
         <a
@@ -134,6 +138,19 @@ import SignatureLogo from "./SignatureLogo.astro";
   }
   :global(.dark) .header-links {
     border-top-color: rgb(255 255 255 / 0.1);
+  }
+  :global(.header-links a[aria-current="page"]) {
+    position: relative;
+    color: var(--accent);
+  }
+  :global(.header-links a[aria-current="page"])::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -3px;
+    height: 2px;
+    background: var(--accent);
   }
   .header-utility {
     grid-area: utility;
