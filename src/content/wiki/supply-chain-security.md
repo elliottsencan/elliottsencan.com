@@ -1,23 +1,23 @@
 ---
-title: Supply-chain security
+title: Supply chain security
 summary: >-
-  Attackers compromise open-source packages and repositories to distribute
-  malicious code through trusted channels, using techniques like invisible
-  Unicode characters and self-propagating payloads that defeat standard review
-  and analysis tools.
+  Attackers compromise software supply chains by poisoning packages, hiding
+  payloads in invisible Unicode characters, and harvesting credentials from
+  developer environments; SSH key hygiene and code signing are among the
+  defensive countermeasures.
 sources:
   - >-
     2026-04/2026-04-30t231634-supply-chain-attack-using-invisible-code-hits-github-and
   - >-
     2026-05/2026-05-01t102345-sap-related-npm-packages-compromised-in-credential-stealing
-aliases:
-  - software-security
-compiled_at: '2026-05-04T04:08:34.469Z'
+  - >-
+    2026-05/2026-05-04t231548-using-ssh-keys-to-make-connectivity-simpler-and-secure
+compiled_at: '2026-05-22T16:18:29.655Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 2429
-    output_tokens: 448
+    input_tokens: 2665
+    output_tokens: 428
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -28,12 +28,12 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.014007
+  cost_usd: 0.014415
 ---
-Supply-chain attacks target the trust developers place in third-party packages, repositories, and tooling. Rather than attacking a target directly, adversaries poison upstream dependencies so malicious code arrives pre-installed.
+Supply chain attacks target the packages and tools developers trust rather than the applications themselves. Two recent incidents illustrate how varied the attack surface has become.
 
-Two recent campaigns illustrate how sophisticated these attacks have become. Researchers at Aikido Security discovered 151 malicious packages across GitHub, npm, and the VS Code marketplace that concealed payloads inside invisible Unicode variation-selector characters [Supply-chain attack using invisible code](/reading/2026-04/2026-04-30t231634-supply-chain-attack-using-invisible-code-hits-github-and). Because the characters are visually absent, both human code review and static analysis tools fail to flag them. The technique directly undermines the two most common defenses developers rely on before trusting a dependency.
+Researchers at Aikido Security discovered 151 malicious packages across GitHub, npm, and the VS Code marketplace that hid payloads inside invisible Unicode variation-selector characters [invisible-unicode-attack](/reading/2026-04/2026-04-30t231634-supply-chain-attack-using-invisible-code-hits-github-and). Because these characters render as nothing, normal code review and most static analysis tooling pass over them entirely, making detection dependent on tools that specifically inspect raw byte sequences.
 
-A separate campaign targeted the SAP ecosystem specifically. The threat actor TeamPCP compromised four SAP-related npm packages with a credential-stealing payload that harvests cloud secrets and browser passwords, then exfiltrates them via GitHub [SAP-related npm packages compromised](/reading/2026-05/2026-05-01t102345-sap-related-npm-packages-compromised-in-credential-stealing). The payload was also self-propagating and used Claude Code and VS Code configuration files as persistence vectors, meaning compromise could spread to developer machines that had nothing to do with the original target packages.
+A separate campaign attributed to the TeamPCP threat actor poisoned four SAP-ecosystem npm packages with a self-propagating credential-stealing payload [sap-npm-attack](/reading/2026-05/2026-05-01t102345-sap-related-npm-packages-compromised-in-credential-stealing). The malware harvested cloud secrets and browser passwords, exfiltrated them via GitHub, and used Claude Code and VS Code configuration files as persistence vectors, showing how AI coding tools can become unintended footholds.
 
-Taken together, the two cases show attackers moving up the trust stack. Package registries, code editors, and AI coding tools are all now viable delivery mechanisms. Standard mitigations like reading diffs or running linters are insufficient when payloads hide in invisible characters or piggyback on trusted tool configurations.
+On the defensive side, replacing token-based authentication with SSH key pairs and using SSH-signed commits reduces the credential attack surface that both campaigns exploited [ssh-keys](/reading/2026-05/2026-05-04t231548-using-ssh-keys-to-make-connectivity-simpler-and-secure). Commit signing in particular creates a verifiable identity chain that makes unsigned or tampered commits detectable before they reach downstream consumers.

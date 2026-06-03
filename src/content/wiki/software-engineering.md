@@ -41,6 +41,18 @@ sources:
   - >-
     2026-05/2026-05-14t223612-the-perils-of-ai-to-the-software-engineering-profession
   - 2026-05/2026-05-15t120337-playwright-testing-in-staging-vs-production
+  - 2026-05/2026-05-17t204925-why-most-developers-cant-use-ai-effectively
+  - 2026-05/2026-05-18t113714-yaml-thats-norway-problem
+  - 2026-05/2026-05-18t221205-walkinglabslearn-harness-engineering
+  - >-
+    2026-05/2026-05-19t110710-the-tacit-dimension-why-your-best-engineers-cant-tell-you
+  - 2026-05/2026-05-19t221035-effective-harnesses-for-long-running-agents
+  - 2026-05/2026-05-22t091746-when-code-is-cheap-does-quality-still-matter
+  - >-
+    2026-05/2026-05-27t181744-ruby-vs-java-vs-typescript-my-experience-on-building-a
+  - 2026-05/2026-05-30t210309-90percent-of-the-t-distribution
+  - 2026-05/2026-05-31t164252-reviewing-large-changes-with-jujutsu
+  - 2026-05/2026-05-31t164554-jj-vcsjj
 compiled_at: '2026-05-06T16:17:24.293Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -58,7 +70,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.030135
-last_source_added: '2026-05-15T19:03:37.024Z'
+last_source_added: '2026-05-31T23:45:54.242Z'
 ---
 Software engineering as a discipline shows up in these sources less as a unified theory and more as a collection of recurring pressures: how to structure systems so they stay maintainable, how to choose tools that don't create new dependencies, and how to preserve the human judgment that holds everything together.
 
