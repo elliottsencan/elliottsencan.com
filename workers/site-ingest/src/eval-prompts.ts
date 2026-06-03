@@ -10,6 +10,13 @@
  * prompt or the Zod schema below change. The sidecar JSON keys verdicts on
  * `(slug, content_hash, judge_model, rubric_version)` so prior scores stay
  * comparable to themselves and don't get cross-contaminated by a prompt edit.
+ *
+ * Exception: the 2026-06-03 change that raised the `justification` cap from 200
+ * to 500 chars (and relaxed the matching prompt line) intentionally did NOT bump
+ * the rubric. It only loosens a length bound that was rejecting valid verdicts as
+ * structured-output parse failures; verdict semantics are unchanged, so the good
+ * v1.0 verdicts stay cached and only the previously-failed `partial` claims
+ * re-run on the next /eval pass.
  */
 
 import { z } from "zod";
