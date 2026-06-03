@@ -2,19 +2,28 @@
 /**
  * labs-aggregate — derive corpus-backed labs data files at build time.
  *
- * Reads `compile_cost` from every reading + wiki entry and writes the
- * aggregated measurements that corpus-derived lab cells read at build.
+ * The ingest-pipeline-cost rollup is the site's all-in AI-spend ledger. It
+ * folds three sources of Anthropic cost:
+ *   1. `compile_cost` frontmatter on every reading entry (`/link` summaries)
+ *      and wiki entry (`/synthesize` compiles) — immutable, one per entry.
+ *   2. Per-judge `summary.total_cost_usd` in the citation-faithfulness
+ *      sidecar (`/eval`).
+ *   3. Per-URL `cost_usd` in the topic-stability A/B sidecar.
+ * Sources (2) and (3) are sidecars that re-run in place, so they contribute
+ * their *most recent* run's cost (the sidecar only retains the latest), not
+ * every run ever — unlike the per-entry compile costs which accumulate.
  * Hand-snapshotted labs (e.g. human-judged evals) are untouched — this
  * script only writes JSON files it knows how to compute.
  *
  * Currently emits:
  *   src/content/labs/data/ingest-pipeline-cost.json
  *     Shape: {
- *       summary: { stats[], total_cost_usd, record_count, ... },
- *       by_day:   [{ date,       cost_usd, count }],
- *       by_week:  [{ week_start, cost_usd, count }],
- *       by_model: [{ model,      cost_usd, count }],
- *       values:   number[]   // daily cost series for the chart kind
+ *       summary:   { stats[], total_cost_usd, record_count, ... },
+ *       by_day:    [{ date,       cost_usd, count }],
+ *       by_week:   [{ week_start, cost_usd, count }],
+ *       by_model:  [{ model,      cost_usd, count }],
+ *       by_source: [{ source,     cost_usd, count }],  // summarize/compile/eval/topic-stability
+ *       values:    number[]   // daily cost series for the chart kind
  *     }
  *
  * Buckets are computed in Pacific time (`SITE_TIMEZONE`) so the output is
@@ -27,7 +36,13 @@
  * `pnpm predev` (so the file exists before astro dev imports it).
  */
 
-import { mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import {
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { startOfISOWeek } from "date-fns";
@@ -84,29 +99,138 @@ function pacificWeekStartStr(date) {
   return `${my}-${mm}-${md}`;
 }
 
-function collectCostRecords() {
+// `compile_cost` from reading (`/link` summaries) + wiki (`/synthesize`
+// compiles). One immutable record per entry, tagged by which surface produced
+// it so the rollup can break spend down "by what it went on".
+function collectCompileCostRecords() {
   const records = [];
-  for (const file of [...walkMd(READING_DIR), ...walkMd(WIKI_DIR)]) {
-    const fm = parseFrontmatter(readFileSync(file, "utf8"));
-    if (!fm) {
-      continue;
+  for (const [dir, source] of [
+    [READING_DIR, "reading-summary"],
+    [WIKI_DIR, "wiki-compile"],
+  ]) {
+    for (const file of walkMd(dir)) {
+      const fm = parseFrontmatter(readFileSync(file, "utf8"));
+      if (!fm) {
+        continue;
+      }
+      const cost = fm.compile_cost?.cost_usd;
+      if (typeof cost !== "number") {
+        continue;
+      }
+      const compiledAt = fm.compiled_at;
+      if (!compiledAt) {
+        continue;
+      }
+      const date =
+        compiledAt instanceof Date ? compiledAt : new Date(compiledAt);
+      if (Number.isNaN(date.valueOf())) {
+        continue;
+      }
+      const model = fm.compile_cost?.model ?? "unknown";
+      records.push({ cost_usd: cost, compiled_at: date, model, source });
     }
-    const cost = fm.compile_cost?.cost_usd;
-    if (typeof cost !== "number") {
-      continue;
-    }
-    const compiledAt = fm.compiled_at;
-    if (!compiledAt) {
-      continue;
-    }
-    const date = compiledAt instanceof Date ? compiledAt : new Date(compiledAt);
-    if (Number.isNaN(date.valueOf())) {
-      continue;
-    }
-    const model = fm.compile_cost?.model ?? "unknown";
-    records.push({ cost_usd: cost, compiled_at: date, model });
   }
   return records;
+}
+
+// Read a labs sidecar JSON best-effort. These are folded into the cost rollup
+// as an enrichment, so a missing/sentinel/malformed sidecar degrades to "no
+// records" rather than failing the build. (The sidecar's *own* lab cell still
+// validates loudly elsewhere — here we only want its cost numbers if present.)
+function readSidecarJson(name) {
+  let raw;
+  try {
+    raw = readFileSync(join(OUT_DIR, name), "utf8");
+  } catch (err) {
+    if (err && err.code === "ENOENT") {
+      return null;
+    }
+    console.warn(
+      `[labs-aggregate] cost-fold: skipping ${name} (${err?.message ?? err})`,
+    );
+    return null;
+  }
+  let json;
+  try {
+    json = JSON.parse(raw);
+  } catch (err) {
+    console.warn(
+      `[labs-aggregate] cost-fold: ${name} is not valid JSON (${err?.message ?? err})`,
+    );
+    return null;
+  }
+  return json && json.status === "no-data" ? null : json;
+}
+
+// Per-judge cost from the citation-faithfulness sidecar (`/eval`). Each
+// (article, judge) pair is one record, dated at the article's `evaluated_at`
+// and attributed to the judge model so it shows up in `by_model` too.
+function collectEvalCostRecords() {
+  const sidecar = readSidecarJson("citation-faithfulness.json");
+  if (!sidecar || !Array.isArray(sidecar.articles)) {
+    return [];
+  }
+  const records = [];
+  for (const article of sidecar.articles) {
+    const when = article.evaluated_at ?? sidecar.generated_at;
+    const date = when ? new Date(when) : null;
+    if (!date || Number.isNaN(date.valueOf())) {
+      continue;
+    }
+    for (const judge of article.judges ?? []) {
+      const cost = Number(judge.summary?.total_cost_usd ?? 0);
+      if (!(cost > 0)) {
+        continue;
+      }
+      records.push({
+        cost_usd: cost,
+        compiled_at: date,
+        model: judge.judge_model ?? "unknown",
+        source: "citation-eval",
+      });
+    }
+  }
+  return records;
+}
+
+// Per-URL cost from the topic-stability A/B sidecar (each URL is POSTed to
+// `/link` twice, priors on vs off). No model is recorded in that sidecar, so
+// these land under `model: "unknown"` — the `by_source` split is what makes
+// them legible. Dated at the run's `generated_at` (no per-URL timestamp).
+function collectTopicStabilityCostRecords() {
+  const sidecar = readSidecarJson("topic-stability.json");
+  if (!sidecar || !Array.isArray(sidecar.per_url)) {
+    return [];
+  }
+  const date = sidecar.generated_at ? new Date(sidecar.generated_at) : null;
+  if (!date || Number.isNaN(date.valueOf())) {
+    return [];
+  }
+  const records = [];
+  for (const entry of sidecar.per_url) {
+    const c = entry.cost_usd ?? {};
+    for (const cost of [c.priors_on, c.priors_off]) {
+      const n = Number(cost ?? 0);
+      if (!(n > 0)) {
+        continue;
+      }
+      records.push({
+        cost_usd: n,
+        compiled_at: date,
+        model: "unknown",
+        source: "topic-stability",
+      });
+    }
+  }
+  return records;
+}
+
+function collectCostRecords() {
+  return [
+    ...collectCompileCostRecords(),
+    ...collectEvalCostRecords(),
+    ...collectTopicStabilityCostRecords(),
+  ];
 }
 
 function bucketBy(records, keyFn) {
@@ -148,10 +272,12 @@ function writeIngestPipelineCost(records) {
   const byDay = bucketBy(records, (r) => pacificDateStr(r.compiled_at));
   const byWeek = bucketBy(records, (r) => pacificWeekStartStr(r.compiled_at));
   const byModel = bucketBy(records, (r) => r.model);
+  const bySource = bucketBy(records, (r) => r.source ?? "unknown");
 
   const dailyArr = bucketsAsArray(byDay, "date");
   const weeklyArr = bucketsAsArray(byWeek, "week_start");
   const modelArr = bucketsAsArray(byModel, "model");
+  const sourceArr = bucketsAsArray(bySource, "source");
 
   const total = records.reduce((s, r) => s + r.cost_usd, 0);
   const sortedTimes = records.map((r) => r.compiled_at).sort((a, b) => a - b);
@@ -162,7 +288,10 @@ function writeIngestPipelineCost(records) {
   // is suppressed when degenerate (single model = no signal).
   const stats = [
     { label: "Records", value: String(records.length) },
-    { label: "Avg / record", value: formatUsd(Math.round(avg * 10_000) / 10_000) },
+    {
+      label: "Avg / record",
+      value: formatUsd(Math.round(avg * 10_000) / 10_000),
+    },
   ];
   if (modelArr.length > 1) {
     stats.push({ label: "Models", value: String(modelArr.length) });
@@ -172,7 +301,7 @@ function writeIngestPipelineCost(records) {
   const payload = {
     generated_at: new Date().toISOString(),
     source:
-      "Aggregated from compile_cost in src/content/reading/**/*.md + src/content/wiki/*.md by scripts/labs-aggregate.mjs.",
+      "Aggregated by scripts/labs-aggregate.mjs from compile_cost in src/content/reading/**/*.md + src/content/wiki/*.md, plus per-judge cost in the citation-faithfulness sidecar (/eval) and per-URL cost in the topic-stability sidecar. Sidecar costs reflect their latest run; compile costs accumulate per entry.",
     // Hypothesis line — surfaces the dashed "$5/mo target" on the
     // cumulative chart. Static; if the budget assumption ever changes,
     // change the cell's hypothesis prose and this number in tandem.
@@ -191,6 +320,9 @@ function writeIngestPipelineCost(records) {
     by_day: dailyArr,
     by_week: weeklyArr,
     by_model: modelArr,
+    // Spend "by what it went on" — summarize vs compile vs eval vs
+    // topic-stability. The literal version of the cell's prose claim.
+    by_source: sourceArr,
     // Daily cost series — fed straight to the chart kind's sparkline so a
     // sparse few days still reads as motion rather than a single point.
     values: dailyArr.map((d) => d.cost_usd),
@@ -226,7 +358,11 @@ function writeCitationFaithfulness() {
         message:
           "POST /eval has not run yet — the sidecar will populate on the first non-dry-run pass.",
       };
-      writeFileSync(sidecarPath, `${JSON.stringify(sentinel, null, 2)}\n`, "utf8");
+      writeFileSync(
+        sidecarPath,
+        `${JSON.stringify(sentinel, null, 2)}\n`,
+        "utf8",
+      );
       return { out: sidecarPath, status: "sentinel" };
     }
     throw new Error(`failed to read ${sidecarPath}: ${err?.message ?? err}`);
@@ -280,7 +416,8 @@ function writeCitationFaithfulness() {
     .sort((a, b) => a.model.localeCompare(b.model))
     .map((j) => {
       const total = j.supported + j.partial + j.unsupported;
-      const accuracy = total === 0 ? 0 : ((j.supported + 0.5 * j.partial) / total) * 100;
+      const accuracy =
+        total === 0 ? 0 : ((j.supported + 0.5 * j.partial) / total) * 100;
       return {
         model: j.model,
         claims: j.claims,
@@ -292,7 +429,9 @@ function writeCitationFaithfulness() {
       };
     });
   const agreementPct =
-    totalAgreementClaims === 0 ? 0 : Math.round((totalAgree / totalAgreementClaims) * 10_000) / 100;
+    totalAgreementClaims === 0
+      ? 0
+      : Math.round((totalAgree / totalAgreementClaims) * 10_000) / 100;
   const enriched = {
     ...sidecar,
     derived: {
@@ -303,10 +442,18 @@ function writeCitationFaithfulness() {
   };
   const next = `${JSON.stringify(enriched, null, 2)}\n`;
   if (next === raw) {
-    return { out: sidecarPath, status: "unchanged", articles: sidecar.articles.length };
+    return {
+      out: sidecarPath,
+      status: "unchanged",
+      articles: sidecar.articles.length,
+    };
   }
   writeFileSync(sidecarPath, next, "utf8");
-  return { out: sidecarPath, status: "enriched", articles: sidecar.articles.length };
+  return {
+    out: sidecarPath,
+    status: "enriched",
+    articles: sidecar.articles.length,
+  };
 }
 
 /**
@@ -342,7 +489,8 @@ function syncLabHeadline(mdPath, newValue) {
   const fm = raw.slice(4, fmEnd);
   // headlineMetric: is a block scalar; its `value:` line is indented under it.
   // Match the indented `value: <text>` that follows headlineMetric:'s opening.
-  const pattern = /(headlineMetric:\n(?:[ \t]+\w+: [^\n]*\n)*?[ \t]+value: )([^\n]+)/;
+  const pattern =
+    /(headlineMetric:\n(?:[ \t]+\w+: [^\n]*\n)*?[ \t]+value: )([^\n]+)/;
   const m = pattern.exec(fm);
   if (!m) {
     return { status: "no-value-field" };
@@ -353,7 +501,10 @@ function syncLabHeadline(mdPath, newValue) {
   // Use a replacer function so $-tokens in `newValue` (like `$1.86`) aren't
   // interpreted as backreferences by String.replace. The string form would
   // corrupt the file.
-  const updatedFm = fm.replace(pattern, (_match, prefix) => `${prefix}${newValue}`);
+  const updatedFm = fm.replace(
+    pattern,
+    (_match, prefix) => `${prefix}${newValue}`,
+  );
   const updated = `---\n${updatedFm}${raw.slice(fmEnd)}`;
   writeFileSync(mdPath, updated, "utf8");
   return { status: "updated", from: m[2], to: newValue };
@@ -370,7 +521,9 @@ console.log(
 // with the freshly written sidecar so the page header and the chart match.
 const ingestMd = join(ROOT, "src/content/labs/ingest-pipeline-cost.md");
 const ingestSync = syncLabHeadline(ingestMd, payload.headlineValue);
-console.log(`[labs-aggregate] ingest-pipeline-cost headline: ${ingestSync.status}`);
+console.log(
+  `[labs-aggregate] ingest-pipeline-cost headline: ${ingestSync.status}`,
+);
 
 const cf = writeCitationFaithfulness();
 console.log(`[labs-aggregate] citation-faithfulness: ${cf.status} → ${cf.out}`);
@@ -382,6 +535,8 @@ if (cf.status === "enriched" || cf.status === "unchanged") {
   if (typeof pct === "number") {
     const cfMd = join(ROOT, "src/content/labs/citation-faithfulness.md");
     const cfSync = syncLabHeadline(cfMd, `${pct}%`);
-    console.log(`[labs-aggregate] citation-faithfulness headline: ${cfSync.status}`);
+    console.log(
+      `[labs-aggregate] citation-faithfulness headline: ${cfSync.status}`,
+    );
   }
 }
