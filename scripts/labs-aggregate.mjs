@@ -532,9 +532,18 @@ console.log(`[labs-aggregate] citation-faithfulness: ${cf.status} → ${cf.out}`
 if (cf.status === "enriched" || cf.status === "unchanged") {
   const cfRaw = JSON.parse(readFileSync(cf.out, "utf8"));
   const pct = cfRaw.derived?.headline_agreement_pct;
+  const claims = cfRaw.derived?.total_agreement_claims;
   if (typeof pct === "number") {
+    // Headline carries the denominator (e.g. "86% · 88 claims") so a high
+    // agreement rate over a thin comparable set reads honestly rather than
+    // as bare confidence. Round the percent to keep the header uncluttered;
+    // the cell's own stat row holds the precise figures.
+    const value =
+      typeof claims === "number" && claims > 0
+        ? `${Math.round(pct)}% · ${claims} claims`
+        : `${pct}%`;
     const cfMd = join(ROOT, "src/content/labs/citation-faithfulness.md");
-    const cfSync = syncLabHeadline(cfMd, `${pct}%`);
+    const cfSync = syncLabHeadline(cfMd, value);
     console.log(
       `[labs-aggregate] citation-faithfulness headline: ${cfSync.status}`,
     );
