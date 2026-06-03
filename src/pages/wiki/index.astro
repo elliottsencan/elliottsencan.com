@@ -1,31 +1,27 @@
 ---
 import { getCollection } from "astro:content";
-import EditorialRule from "@components/EditorialRule.astro";
-import LabeledRule from "@components/LabeledRule.astro";
 import Link from "@components/Link.astro";
 import ProvenanceBadge from "@components/ProvenanceBadge.astro";
-import ConstellationStrip from "@components/wiki/ConstellationStrip.astro";
+import ConstellationWell from "@components/wiki/ConstellationWell.astro";
+import WikiDirectory from "@components/wiki/WikiDirectory.astro";
+import WikiInspector from "@components/wiki/WikiInspector.astro";
 import constellationLayout from "@data/constellation-layout.json";
 import Layout from "@layouts/Layout.astro";
 
-// Wiki index — concept-indexed synthesis. The constellation is promoted to a
-// hero band below the title; the browse below is grouped by neighbourhood
-// (the same clusters the constellation draws) rather than a flat A–Z grid.
+// Wiki index — concept-indexed synthesis. The constellation sits in a
+// contained "well" below the header; the browse is a two-column directory
+// grouped by neighbourhood (the same clusters the constellation draws),
+// sorted by source count, with a hover/focus inspector for per-concept detail.
 const wiki = (await getCollection("wiki")).sort((a, b) => a.data.title.localeCompare(b.data.title));
 
-// Last-compiled date for the provenance badge — most recent compiled_at
-// across the corpus. Distinct reading entries that contribute = total
-// unique slugs across all `sources[]`.
 const lastCompiledMs =
   wiki.length > 0 ? Math.max(...wiki.map((c) => c.data.compiled_at.getTime())) : null;
 const lastCompiled = lastCompiledMs ? new Date(lastCompiledMs) : null;
-const readingSourceCount = new Set(wiki.flatMap((c) => c.data.sources)).size;
 
 // Neighbourhood grouping — map each concept to its cluster via the same
-// clusterById the constellation uses, then emit clusters in the curated JSON
-// order. A trailing "Other" group carries any unclustered concepts so nothing
-// drops out of the browse. (A "neighbourhood" in the caption = a cluster with
-// ≥2 members, matching the constellation's drawn regions.)
+// clusterById the constellation uses, emit clusters in curated order, sort
+// each group by source count desc, and carry a trailing "Other" group so no
+// concept drops out.
 type Cluster = { id: string; title: string; short: string; hue: number };
 const constellationNodes: { id: string }[] = constellationLayout.global.nodes;
 const clusters: Cluster[] = constellationLayout.clusters;
@@ -34,14 +30,20 @@ const clusterById: Record<string, string | null> = constellationLayout.clusterBy
 const conceptGroups = [
   ...clusters.map((cl) => ({
     label: cl.title,
-    concepts: wiki.filter((c) => clusterById[c.id] === cl.id),
+    short: cl.short,
+    concepts: wiki
+      .filter((c) => clusterById[c.id] === cl.id)
+      .sort((a, b) => b.data.sources.length - a.data.sources.length),
   })),
   {
     label: "Other",
-    concepts: wiki.filter((c) => {
-      const id = clusterById[c.id];
-      return id == null || !clusters.some((cl) => cl.id === id);
-    }),
+    short: "Other",
+    concepts: wiki
+      .filter((c) => {
+        const id = clusterById[c.id];
+        return id == null || !clusters.some((cl) => cl.id === id);
+      })
+      .sort((a, b) => b.data.sources.length - a.data.sources.length),
   },
 ].filter((g) => g.concepts.length > 0);
 
@@ -57,16 +59,12 @@ const constellationTieCount = constellationLayout.global.edges.length;
   description="Concept-indexed synthesis articles compiled from my reading log."
 >
   <div class="mx-auto max-w-5xl px-6 md:px-8">
-    <div
-      class="space-y-12"
-      data-pagefind-body
-      data-pagefind-filter="type:Wiki"
-    >
-      
-
-      {/* Head — title, summary, provenance. The constellation follows as a
-          full-width hero band directly below (not a sidebar column). */}
+    <div class="space-y-12" data-pagefind-body data-pagefind-filter="type:Wiki">
+      {/* Header — eyebrow, title, lede, meta row (concepts pill + provenance). */}
       <div class="flex max-w-[62ch] flex-col gap-4">
+        <p class="font-mono text-xs uppercase tracking-[0.16em] text-[color:var(--accent)]">
+          Wiki &middot; Concept index
+        </p>
         <h1 class="font-heading text-display font-normal leading-[1.06] tracking-tight text-black dark:text-white">
           Wiki
         </h1>
@@ -76,84 +74,43 @@ const constellationTieCount = constellationLayout.global.edges.length;
           one article per concept that has at least two contributing sources.
         </p>
         <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
+          <span class="inline-flex w-fit items-center gap-2 whitespace-nowrap rounded-sm border border-black/15 px-2.5 py-1 font-mono text-xs text-[color:var(--accent)] dark:border-white/20">
+            <span class="flex gap-[2px]" aria-hidden="true">
+              {Array.from({ length: Math.min(wiki.length, 8) }).map((_, i) => (
+                <span
+                  class="block h-1 w-1 rounded-full bg-[color:var(--accent)]"
+                  style={`opacity: ${0.55 + i * 0.05};`}
+                />
+              ))}
+            </span>
+            <span>
+              {wiki.length} concept{wiki.length === 1 ? "" : "s"}
+            </span>
+          </span>
           {
             lastCompiled && (
               <ProvenanceBadge action="Compiled by Claude" date={lastCompiled} link />
             )
           }
-          <span class="inline-flex w-fit items-center gap-2 whitespace-nowrap font-mono text-xs text-black/55 dark:text-white/55">
-            <span class="flex gap-[2px]" aria-hidden="true">
-              {Array.from({ length: Math.min(wiki.length, 8) }).map((_, i) => (
-                <span
-                  class="block h-1 w-1 rounded-full bg-[color:var(--accent)]"
-                  style={`opacity: ${0.7 + i * 0.04};`}
-                />
-              ))}
-            </span>
-            <span>
-              {readingSourceCount} source{readingSourceCount === 1 ? "" : "s"}
-            </span>
-          </span>
         </div>
       </div>
 
-      {/* Constellation hero band — the existing ConstellationStrip promoted
-          out of the sidebar to a contained, full-width band below the title.
-          Placement/size only; the component itself is unchanged. */}
+      {/* Contained constellation — framed in a recessed well, not a hero. */}
       {
         wiki.length > 0 && (
-          <div class="flex flex-col gap-3">
-            <div class="flex w-full justify-center">
-              <ConstellationStrip width={960} />
-            </div>
-            <p class="font-mono text-xs whitespace-nowrap text-black/55 dark:text-white/55">
-              {constellationNeighborhoodCount} neighbourhoods
-              {" · "}
-              {constellationConceptCount} concepts
-              {" · "}
-              {constellationTieCount} ties
-            </p>
-          </div>
+          <ConstellationWell
+            width={600}
+            conceptCount={constellationConceptCount}
+            neighbourhoodCount={constellationNeighborhoodCount}
+            tieCount={constellationTieCount}
+          />
         )
       }
 
-      <EditorialRule />
-
+      {/* Scannable directory + per-concept inspector. */}
       {
         wiki.length > 0 ? (
-          <div class="flex flex-col gap-12">
-            {conceptGroups.map((group) => (
-              <div class="flex flex-col gap-2">
-                <LabeledRule as="h2">{group.label}</LabeledRule>
-                <ul class="not-prose flex flex-col divide-y divide-black/10 dark:divide-white/10">
-                  {group.concepts.map((concept) => (
-                    <li>
-                      <a
-                        href={`/wiki/${concept.id}/`}
-                        class="group flex items-start justify-between gap-6 py-6 no-underline"
-                      >
-                        <span class="flex min-w-0 flex-col gap-1.5">
-                          <span class="font-heading text-lg font-medium tracking-[-0.011em] text-black transition-colors duration-300 ease-in-out group-hover:text-[color:var(--accent)] group-focus-visible:text-[color:var(--accent)] dark:text-white">
-                            {concept.data.title}
-                          </span>
-                          <span class="max-w-[60ch] text-sm leading-relaxed text-black/75 dark:text-white/75">
-                            {concept.data.summary}
-                          </span>
-                        </span>
-                        <span
-                          class="shrink-0 whitespace-nowrap font-heading text-2xl font-normal tabular-nums text-black/55 dark:text-white/55"
-                          style="font-variant-numeric: tabular-nums;"
-                          title={`${concept.data.sources.length} source${concept.data.sources.length === 1 ? "" : "s"}`}
-                        >
-                          {concept.data.sources.length}
-                        </span>
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
+          <WikiDirectory groups={conceptGroups} />
         ) : (
           <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
             Nothing here yet. Wiki articles materialise when at least two
@@ -162,11 +119,11 @@ const constellationTieCount = constellationLayout.global.edges.length;
         )
       }
 
-      <EditorialRule />
-
       <p class="text-xs text-black/55 dark:text-white/55">
-        <Link href="/reading">reading log →</Link>
+        <Link href="/reading">reading log &rarr;</Link>
       </p>
     </div>
   </div>
+
+  {wiki.length > 0 && <WikiInspector />}
 </Layout>
