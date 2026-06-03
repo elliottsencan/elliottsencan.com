@@ -1,0 +1,130 @@
+[
+  {
+    "prompt": "how do I keep my flaky tests from blocking CI",
+    "relevant": ["flaky-tests", "continuous-integration"]
+  },
+  {
+    "prompt": "my test suite passes locally but randomly fails on the build server, what's going on",
+    "relevant": ["flaky-tests"]
+  },
+  {
+    "prompt": "best way to set up a merge queue so the main branch stays green",
+    "relevant": ["continuous-integration"]
+  },
+  {
+    "prompt": "I want the model to pull in relevant docs at query time before answering",
+    "relevant": ["retrieval-augmented-generation"]
+  },
+  {
+    "prompt": "RAG keeps missing facts that span multiple documents, any alternatives",
+    "relevant": ["retrieval-augmented-generation", "context-engineering"]
+  },
+  {
+    "prompt": "how do I expose my tools and context to an AI agent over a standard protocol",
+    "relevant": ["mcp"]
+  },
+  {
+    "prompt": "wiring up a model context protocol server so the assistant can call my functions",
+    "relevant": ["mcp"]
+  },
+  {
+    "prompt": "the agent's context window keeps filling with junk, how do I budget tokens better",
+    "relevant": ["context-engineering"]
+  },
+  {
+    "prompt": "what should I think about when deciding what to stuff into the prompt",
+    "relevant": ["context-engineering"]
+  },
+  {
+    "prompt": "I need real-time visibility into what my cluster is actually doing",
+    "relevant": ["observability", "kubernetes"]
+  },
+  {
+    "prompt": "looking for a single-binary UI to see my k8s topology and helm releases",
+    "relevant": ["kubernetes"]
+  },
+  {
+    "prompt": "the model is being sycophantic and agreeing with everything, how do I constrain that at inference time",
+    "relevant": ["ai-safety"]
+  },
+  {
+    "prompt": "how do I design a narrow stable interface that hides the messy internals",
+    "relevant": ["api-design"]
+  },
+  {
+    "prompt": "making my type scale readable and keeping semantic HTML for screen readers",
+    "relevant": ["web-accessibility", "fluid-typography"]
+  },
+  {
+    "prompt": "I want my layout to adapt without writing a dozen media query breakpoints",
+    "relevant": ["responsive-design", "fluid-typography"]
+  },
+  {
+    "prompt": "using clamp to scale font sizes smoothly across viewport widths",
+    "relevant": ["fluid-typography", "responsive-design"]
+  },
+  {
+    "prompt": "which two typefaces pair well to give my design system contrast and hierarchy",
+    "relevant": ["font-pairing"]
+  },
+  {
+    "prompt": "worried about a malicious dependency sneaking through code review with hidden unicode",
+    "relevant": ["supply-chain-security"]
+  },
+  {
+    "prompt": "how do durable execution frameworks help with consistency in distributed systems",
+    "relevant": ["distributed-systems", "production-systems"]
+  },
+  {
+    "prompt": "coordinating several LLM agents that keep disagreeing on subtasks",
+    "relevant": ["agent-coordination", "multi-agent-systems"]
+  },
+  {
+    "prompt": "why do my multi-agent setups fail so often, is it the coordination or the synthesis",
+    "relevant": ["multi-agent-systems", "agent-coordination"]
+  },
+  {
+    "prompt": "worried AI coding assistants are atrophying my skills and hurting verification",
+    "relevant": ["ai-assisted-coding"]
+  },
+  {
+    "prompt": "running a quantized model locally but I'm hitting VRAM limits",
+    "relevant": ["llm-inference"]
+  },
+  {
+    "prompt": "what's a good sourdough hydration ratio for a crusty loaf",
+    "relevant": []
+  },
+  {
+    "prompt": "recommend a beginner-friendly hiking trail near Portland with a waterfall",
+    "relevant": []
+  },
+  {
+    "prompt": "how long should I marinate chicken thighs before grilling",
+    "relevant": []
+  },
+  {
+    "prompt": "what's the capital of Mongolia",
+    "relevant": []
+  },
+  {
+    "prompt": "tips for keeping a basil plant alive on a windowsill in winter",
+    "relevant": []
+  },
+  {
+    "prompt": "best way to remove a red wine stain from a wool rug",
+    "relevant": []
+  },
+  {
+    "prompt": "what year did the Beatles release Abbey Road",
+    "relevant": []
+  },
+  {
+    "prompt": "how do I change a flat bicycle tire on a road bike",
+    "relevant": []
+  },
+  {
+    "prompt": "is it cheaper to lease or buy a car for a 3 year horizon",
+    "relevant": []
+  }
+]

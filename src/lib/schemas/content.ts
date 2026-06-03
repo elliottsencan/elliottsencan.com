@@ -258,6 +258,7 @@ export const LabKinds = [
   "calendar",
   "scatter",
   "comparison",
+  "sweep",
 ] as const;
 export const LabKindSchema = z.enum(LabKinds);
 

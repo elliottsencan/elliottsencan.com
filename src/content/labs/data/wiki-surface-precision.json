@@ -1,0 +1,856 @@
+{
+  "status": "live",
+  "generated_at": "2026-06-03T05:11:40.544Z",
+  "scorer": "/Users/2ts/git/personal-dev/2ts-claude/plugins/2ts-claude/assets/wiki/wiki-query.cjs",
+  "scorer_version": "unknown",
+  "cost_usd": 0,
+  "n_on_topic": 23,
+  "n_off_topic": 9,
+  "sweep": [
+    {
+      "threshold": 0.15,
+      "precision_at_1": 0.7826,
+      "recall_at_3": 0.7391,
+      "false_positive_rate": 0
+    },
+    {
+      "threshold": 0.25,
+      "precision_at_1": 0.7826,
+      "recall_at_3": 0.4348,
+      "false_positive_rate": 0
+    },
+    {
+      "threshold": 0.35,
+      "precision_at_1": 0.7826,
+      "recall_at_3": 0.2609,
+      "false_positive_rate": 0
+    },
+    {
+      "threshold": 0.45,
+      "precision_at_1": 0.7826,
+      "recall_at_3": 0.087,
+      "false_positive_rate": 0
+    }
+  ],
+  "recommended_threshold": 0.15,
+  "recommended": {
+    "threshold": 0.15,
+    "precision_at_1": 0.7826,
+    "recall_at_3": 0.7391,
+    "false_positive_rate": 0
+  },
+  "per_prompt": [
+    {
+      "prompt": "how do I keep my flaky tests from blocking CI",
+      "relevant": [
+        "flaky-tests",
+        "continuous-integration"
+      ],
+      "off_topic": false,
+      "results": [
+        {
+          "slug": "flaky-tests",
+          "score": 0.5
+        },
+        {
+          "slug": "continuous-integration",
+          "score": 0.15
+        },
+        {
+          "slug": "ai-agents",
+          "score": 0.1
+        },
+        {
+          "slug": "developer-productivity",
+          "score": 0.1
+        },
+        {
+          "slug": "developer-tooling",
+          "score": 0.1
+        }
+      ]
+    },
+    {
+      "prompt": "my test suite passes locally but randomly fails on the build server, what's going on",
+      "relevant": [
+        "flaky-tests"
+      ],
+      "off_topic": false,
+      "results": [
+        {
+          "slug": "mcp",
+          "score": 0.1111
+        },
+        {
+          "slug": "continuous-integration",
+          "score": 0.0667
+        },
+        {
+          "slug": "developer-tools",
+          "score": 0.0667
+        },
+        {
+          "slug": "flaky-tests",
+          "score": 0.0667
+        },
+        {
+          "slug": "platform-strategy",
+          "score": 0.0667
+        }
+      ]
+    },
+    {
+      "prompt": "best way to set up a merge queue so the main branch stays green",
+      "relevant": [
+        "continuous-integration"
+      ],
+      "off_topic": false,
+      "results": [
+        {
+          "slug": "developer-tooling",
+          "score": 0.1333
+        },
+        {
+          "slug": "continuous-integration",
+          "score": 0.1111
+        },
+        {
+          "slug": "engineering-craft",
+          "score": 0.1111
+        },
+        {
+          "slug": "distributed-systems",
+          "score": 0.0889
+        },
+        {
+          "slug": "flaky-tests",
+          "score": 0.0444
+        }
+      ]
+    },
+    {
+      "prompt": "I want the model to pull in relevant docs at query time before answering",
+      "relevant": [
+        "retrieval-augmented-generation"
+      ],
+      "off_topic": false,
+      "results": [
+        {
+          "slug": "retrieval-augmented-generation",
+          "score": 0.1333
+        },
+        {
+          "slug": "llm-fine-tuning",
+          "score": 0.1111
+        },
+        {
+          "slug": "llm-tooling",
+          "score": 0.1111
+        },
+        {
+          "slug": "ai-safety",
+          "score": 0.0889
+        },
+        {
+          "slug": "ai-agents",
+          "score": 0.0667
+        }
+      ]
+    },
+    {
+      "prompt": "RAG keeps missing facts that span multiple documents, any alternatives",
+      "relevant": [
+        "retrieval-augmented-generation",
+        "context-engineering"
+      ],
+      "off_topic": false,
+      "results": [
+        {
+          "slug": "retrieval-augmented-generation",
+          "score": 0.175
+        },
+        {
+          "slug": "multimodal-ai",
+          "score": 0.1
+        },
+        {
+          "slug": "agent-coordination",
+          "score": 0.075
+        },
+        {
+          "slug": "llm-orchestration",
+          "score": 0.075
+        },
+        {
+          "slug": "production-systems",
+          "score": 0.075
+        }
+      ]
+    },
+    {
+      "prompt": "how do I expose my tools and context to an AI agent over a standard protocol",
+      "relevant": [
+        "mcp"
+      ],
+      "off_topic": false,
+      "results": [
+        {
+          "slug": "mcp",
+          "score": 0.3
+        },
+        {
+          "slug": "developer-tools",
+          "score": 0.2333
+        },
+        {
+          "slug": "context-engineering",
+          "score": 0.2
+        },
+        {
+          "slug": "multi-agent-systems",
+          "score": 0.2
+        },
+        {
+          "slug": "agent-coordination",
+          "score": 0.1667
+        }
+      ]
+    },
+    {
+      "prompt": "wiring up a model context protocol server so the assistant can call my functions",
+      "relevant": [
+        "mcp"
+      ],
+      "off_topic": false,
+      "results": [
+        {
+          "slug": "mcp",
+          "score": 0.375
+        },
+        {
+          "slug": "context-engineering",
+          "score": 0.15
+        },
+        {
+          "slug": "llm-fine-tuning",
+          "score": 0.125
+        },
+        {
+          "slug": "llm-orchestration",
+          "score": 0.1
+        },
+        {
+          "slug": "ai-assisted-coding",
+          "score": 0.075
+        }
+      ]
+    },
+    {
+      "prompt": "the agent's context window keeps filling with junk, how do I budget tokens better",
+      "relevant": [
+        "context-engineering"
+      ],
+      "off_topic": false,
+      "results": [
+        {
+          "slug": "context-engineering",
+          "score": 0.2
+        },
+        {
+          "slug": "agent-coordination",
+          "score": 0.1333
+        },
+        {
+          "slug": "agentic-workflows",
+          "score": 0.1333
+        },
+        {
+          "slug": "llm-tooling",
+          "score": 0.1333
+        },
+        {
+          "slug": "mcp",
+          "score": 0.1333
+        }
+      ]
+    },
+    {
+      "prompt": "what should I think about when deciding what to stuff into the prompt",
+      "relevant": [
+        "context-engineering"
+      ],
+      "off_topic": false,
+      "results": [
+        {
+          "slug": "ai-agents",
+          "score": 0.05
+        },
+        {
+          "slug": "ai-assisted-coding",
+          "score": 0.05
+        },
+        {
+          "slug": "context-engineering",
+          "score": 0.05
+        },
+        {
+          "slug": "llm-engineering",
+          "score": 0.05
+        },
+        {
+          "slug": "software-engineering",
+          "score": 0.05
+        }
+      ]
+    },
+    {
+      "prompt": "I need real-time visibility into what my cluster is actually doing",
+      "relevant": [
+        "observability",
+        "kubernetes"
+      ],
+      "off_topic": false,
+      "results": [
+        {
+          "slug": "observability",
+          "score": 0.1714
+        },
+        {
+          "slug": "kubernetes",
+          "score": 0.1429
+        },
+        {
+          "slug": "ai-infrastructure",
+          "score": 0.1143
+        },
+        {
+          "slug": "ai-agents",
+          "score": 0.0857
+        },
+        {
+          "slug": "api-design",
+          "score": 0.0857
+        }
+      ]
+    },
+    {
+      "prompt": "looking for a single-binary UI to see my k8s topology and helm releases",
+      "relevant": [
+        "kubernetes"
+      ],
+      "off_topic": false,
+      "results": [
+        {
+          "slug": "kubernetes",
+          "score": 0.225
+        },
+        {
+          "slug": "developer-tools",
+          "score": 0.1
+        },
+        {
+          "slug": "observability",
+          "score": 0.1
+        },
+        {
+          "slug": "agentic-workflows",
+          "score": 0.075
+        },
+        {
+          "slug": "ai-agents",
+          "score": 0.05
+        }
+      ]
+    },
+    {
+      "prompt": "the model is being sycophantic and agreeing with everything, how do I constrain that at inference time",
+      "relevant": [
+        "ai-safety"
+      ],
+      "off_topic": false,
+      "results": [
+        {
+          "slug": "ai-safety",
+          "score": 0.25
+        },
+        {
+          "slug": "llm-inference",
+          "score": 0.175
+        },
+        {
+          "slug": "llm-fine-tuning",
+          "score": 0.15
+        },
+        {
+          "slug": "ai-agents",
+          "score": 0.1
+        },
+        {
+          "slug": "llm-tooling",
+          "score": 0.1
+        }
+      ]
+    },
+    {
+      "prompt": "how do I design a narrow stable interface that hides the messy internals",
+      "relevant": [
+        "api-design"
+      ],
+      "off_topic": false,
+      "results": [
+        {
+          "slug": "api-design",
+          "score": 0.3429
+        },
+        {
+          "slug": "systems-design",
+          "score": 0.2286
+        },
+        {
+          "slug": "font-pairing",
+          "score": 0.1429
+        },
+        {
+          "slug": "responsive-design",
+          "score": 0.1429
+        },
+        {
+          "slug": "ai-agents",
+          "score": 0.0857
+        }
+      ]
+    },
+    {
+      "prompt": "making my type scale readable and keeping semantic HTML for screen readers",
+      "relevant": [
+        "web-accessibility",
+        "fluid-typography"
+      ],
+      "off_topic": false,
+      "results": [
+        {
+          "slug": "web-accessibility",
+          "score": 0.2444
+        },
+        {
+          "slug": "fluid-typography",
+          "score": 0.0889
+        },
+        {
+          "slug": "responsive-design",
+          "score": 0.0889
+        },
+        {
+          "slug": "ai-agents",
+          "score": 0.0667
+        },
+        {
+          "slug": "continuous-integration",
+          "score": 0.0667
+        }
+      ]
+    },
+    {
+      "prompt": "I want my layout to adapt without writing a dozen media query breakpoints",
+      "relevant": [
+        "responsive-design",
+        "fluid-typography"
+      ],
+      "off_topic": false,
+      "results": [
+        {
+          "slug": "responsive-design",
+          "score": 0.2
+        },
+        {
+          "slug": "fluid-typography",
+          "score": 0.1111
+        },
+        {
+          "slug": "llm-tooling",
+          "score": 0.0667
+        },
+        {
+          "slug": "retrieval-augmented-generation",
+          "score": 0.0667
+        },
+        {
+          "slug": "context-engineering",
+          "score": 0.0444
+        }
+      ]
+    },
+    {
+      "prompt": "using clamp to scale font sizes smoothly across viewport widths",
+      "relevant": [
+        "fluid-typography",
+        "responsive-design"
+      ],
+      "off_topic": false,
+      "results": [
+        {
+          "slug": "fluid-typography",
+          "score": 0.4
+        },
+        {
+          "slug": "responsive-design",
+          "score": 0.2
+        },
+        {
+          "slug": "font-pairing",
+          "score": 0.15
+        },
+        {
+          "slug": "web-accessibility",
+          "score": 0.1
+        },
+        {
+          "slug": "enterprise-software",
+          "score": 0.075
+        }
+      ]
+    },
+    {
+      "prompt": "which two typefaces pair well to give my design system contrast and hierarchy",
+      "relevant": [
+        "font-pairing"
+      ],
+      "off_topic": false,
+      "results": [
+        {
+          "slug": "font-pairing",
+          "score": 0.26
+        },
+        {
+          "slug": "responsive-design",
+          "score": 0.16
+        },
+        {
+          "slug": "systems-design",
+          "score": 0.14
+        },
+        {
+          "slug": "api-design",
+          "score": 0.12
+        },
+        {
+          "slug": "agentic-workflows",
+          "score": 0.1
+        }
+      ]
+    },
+    {
+      "prompt": "worried about a malicious dependency sneaking through code review with hidden unicode",
+      "relevant": [
+        "supply-chain-security"
+      ],
+      "off_topic": false,
+      "results": [
+        {
+          "slug": "supply-chain-security",
+          "score": 0.2444
+        },
+        {
+          "slug": "llm-engineering",
+          "score": 0.0889
+        },
+        {
+          "slug": "llm-orchestration",
+          "score": 0.0889
+        },
+        {
+          "slug": "developer-tooling",
+          "score": 0.0667
+        },
+        {
+          "slug": "llm-fine-tuning",
+          "score": 0.0667
+        }
+      ]
+    },
+    {
+      "prompt": "how do durable execution frameworks help with consistency in distributed systems",
+      "relevant": [
+        "distributed-systems",
+        "production-systems"
+      ],
+      "off_topic": false,
+      "results": [
+        {
+          "slug": "distributed-systems",
+          "score": 0.5143
+        },
+        {
+          "slug": "production-systems",
+          "score": 0.2857
+        },
+        {
+          "slug": "systems-design",
+          "score": 0.2857
+        },
+        {
+          "slug": "multi-agent-systems",
+          "score": 0.2
+        },
+        {
+          "slug": "software-architecture",
+          "score": 0.2
+        }
+      ]
+    },
+    {
+      "prompt": "coordinating several LLM agents that keep disagreeing on subtasks",
+      "relevant": [
+        "agent-coordination",
+        "multi-agent-systems"
+      ],
+      "off_topic": false,
+      "results": [
+        {
+          "slug": "llm-orchestration",
+          "score": 0.2286
+        },
+        {
+          "slug": "ai-agents",
+          "score": 0.2
+        },
+        {
+          "slug": "llm-inference",
+          "score": 0.1714
+        },
+        {
+          "slug": "llm-tooling",
+          "score": 0.1714
+        },
+        {
+          "slug": "ai-safety",
+          "score": 0.1429
+        }
+      ]
+    },
+    {
+      "prompt": "why do my multi-agent setups fail so often, is it the coordination or the synthesis",
+      "relevant": [
+        "multi-agent-systems",
+        "agent-coordination"
+      ],
+      "off_topic": false,
+      "results": [
+        {
+          "slug": "agent-coordination",
+          "score": 0.4
+        },
+        {
+          "slug": "multi-agent-systems",
+          "score": 0.4
+        },
+        {
+          "slug": "distributed-systems",
+          "score": 0.2571
+        },
+        {
+          "slug": "agentic-workflows",
+          "score": 0.2286
+        },
+        {
+          "slug": "ai-infrastructure",
+          "score": 0.1714
+        }
+      ]
+    },
+    {
+      "prompt": "worried AI coding assistants are atrophying my skills and hurting verification",
+      "relevant": [
+        "ai-assisted-coding"
+      ],
+      "off_topic": false,
+      "results": [
+        {
+          "slug": "ai-assisted-coding",
+          "score": 0.3714
+        },
+        {
+          "slug": "continuous-integration",
+          "score": 0.1429
+        },
+        {
+          "slug": "developer-tools",
+          "score": 0.1429
+        },
+        {
+          "slug": "ai-agents",
+          "score": 0.0857
+        },
+        {
+          "slug": "developer-productivity",
+          "score": 0.0571
+        }
+      ]
+    },
+    {
+      "prompt": "running a quantized model locally but I'm hitting VRAM limits",
+      "relevant": [
+        "llm-inference"
+      ],
+      "off_topic": false,
+      "results": [
+        {
+          "slug": "llm-fine-tuning",
+          "score": 0.1714
+        },
+        {
+          "slug": "llm-inference",
+          "score": 0.1143
+        },
+        {
+          "slug": "llm-orchestration",
+          "score": 0.1143
+        },
+        {
+          "slug": "llm-tooling",
+          "score": 0.1143
+        },
+        {
+          "slug": "llm-engineering",
+          "score": 0.0857
+        }
+      ]
+    },
+    {
+      "prompt": "what's a good sourdough hydration ratio for a crusty loaf",
+      "relevant": [],
+      "off_topic": true,
+      "results": [
+        {
+          "slug": "api-design",
+          "score": 0.0667
+        },
+        {
+          "slug": "software-architecture",
+          "score": 0.0667
+        },
+        {
+          "slug": "font-pairing",
+          "score": 0.0333
+        },
+        {
+          "slug": "platform-strategy",
+          "score": 0.0333
+        },
+        {
+          "slug": "systems-design",
+          "score": 0.0333
+        }
+      ]
+    },
+    {
+      "prompt": "recommend a beginner-friendly hiking trail near Portland with a waterfall",
+      "relevant": [],
+      "off_topic": true,
+      "results": []
+    },
+    {
+      "prompt": "how long should I marinate chicken thighs before grilling",
+      "relevant": [],
+      "off_topic": true,
+      "results": [
+        {
+          "slug": "llm-orchestration",
+          "score": 0.1
+        },
+        {
+          "slug": "ai-agents",
+          "score": 0.0667
+        },
+        {
+          "slug": "software-architecture",
+          "score": 0.0667
+        },
+        {
+          "slug": "agentic-workflows",
+          "score": 0.0333
+        },
+        {
+          "slug": "ai-assisted-coding",
+          "score": 0.0333
+        }
+      ]
+    },
+    {
+      "prompt": "what's the capital of Mongolia",
+      "relevant": [],
+      "off_topic": true,
+      "results": []
+    },
+    {
+      "prompt": "tips for keeping a basil plant alive on a windowsill in winter",
+      "relevant": [],
+      "off_topic": true,
+      "results": [
+        {
+          "slug": "ai-agents",
+          "score": 0.0286
+        }
+      ]
+    },
+    {
+      "prompt": "best way to remove a red wine stain from a wool rug",
+      "relevant": [],
+      "off_topic": true,
+      "results": [
+        {
+          "slug": "developer-tooling",
+          "score": 0.05
+        },
+        {
+          "slug": "api-design",
+          "score": 0.025
+        },
+        {
+          "slug": "context-engineering",
+          "score": 0.025
+        },
+        {
+          "slug": "engineering-craft",
+          "score": 0.025
+        },
+        {
+          "slug": "fluid-typography",
+          "score": 0.025
+        }
+      ]
+    },
+    {
+      "prompt": "what year did the Beatles release Abbey Road",
+      "relevant": [],
+      "off_topic": true,
+      "results": [
+        {
+          "slug": "kubernetes",
+          "score": 0.0333
+        }
+      ]
+    },
+    {
+      "prompt": "how do I change a flat bicycle tire on a road bike",
+      "relevant": [],
+      "off_topic": true,
+      "results": []
+    },
+    {
+      "prompt": "is it cheaper to lease or buy a car for a 3 year horizon",
+      "relevant": [],
+      "off_topic": true,
+      "results": [
+        {
+          "slug": "context-engineering",
+          "score": 0.0333
+        },
+        {
+          "slug": "llm-fine-tuning",
+          "score": 0.0333
+        }
+      ]
+    }
+  ]
+}

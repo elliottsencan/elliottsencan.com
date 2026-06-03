@@ -1,0 +1,366 @@
+---
+/**
+ * Wiki-surface sweep cell — the visualization behind the wiki-surface
+ * relevance lab. Two stacked regions, sharing the editorial vocabulary of
+ * the other lab primitives (SVG + CSS, `var(--accent)`, mono uppercase
+ * labels, tabular-nums, no animation/texture):
+ *
+ *   1. Threshold sweep (SVG line chart). x = the firing thresholds; two
+ *      series — precision@1 (accent) and recall@3 (muted) — with the
+ *      recommended threshold marked by a dashed accent rule. The
+ *      false-positive line is flat at 0, so it reads as a caption under
+ *      the chart rather than an invisible line on the floor. Answers
+ *      "why fire at this threshold."
+ *
+ *   2. Per-prompt gate strip (HTML/CSS bars). One row per labeled prompt
+ *      on a shared score axis with a vertical gate at the recommended
+ *      threshold. On-topic prompts first, then off-topic — so the proof
+ *      of the headline (every off-topic prompt sits left of the gate =
+ *      0% nag) reads visually. Bar color encodes the outcome.
+ *
+ * Mobile-first: the sweep SVG is fluid via viewBox; the strip is a
+ * percent-width grid that fluids down without horizontal scroll.
+ */
+type SweepPoint = {
+  threshold: number;
+  precision_at_1: number;
+  recall_at_3: number;
+  false_positive_rate: number;
+};
+type PromptResult = { slug: string; score: number };
+type PromptRow = {
+  prompt: string;
+  relevant: string[];
+  off_topic: boolean;
+  results: PromptResult[];
+};
+
+type Props = {
+  sweep: SweepPoint[];
+  perPrompt: PromptRow[];
+  recommendedThreshold: number;
+  nOnTopic: number;
+  nOffTopic: number;
+};
+
+const { sweep, perPrompt, recommendedThreshold, nOnTopic, nOffTopic } = Astro.props;
+
+// ── Region 1: sweep line chart geometry ──
+const VB = { w: 600, h: 240 };
+const PAD = { l: 34, r: 18, t: 20, b: 30 };
+const plotW = VB.w - PAD.l - PAD.r;
+const plotH = VB.h - PAD.t - PAD.b;
+
+const sweepSorted = [...sweep].sort((a, b) => a.threshold - b.threshold);
+const lastIdx = Math.max(sweepSorted.length - 1, 1);
+const xFor = (i: number) => PAD.l + (i / lastIdx) * plotW;
+// precision/recall are fractions in [0,1]; pin the domain so the curves
+// read against a stable 0→1 frame rather than auto-scaling to the data.
+const yFor = (v: number) => PAD.t + (1 - v) * plotH;
+
+const pathFor = (key: "precision_at_1" | "recall_at_3") =>
+  sweepSorted
+    .map((p, i) => `${i === 0 ? "M" : "L"} ${xFor(i).toFixed(1)} ${yFor(p[key]).toFixed(1)}`)
+    .join(" ");
+
+const precisionPath = pathFor("precision_at_1");
+const recallPath = pathFor("recall_at_3");
+
+const recIdx = sweepSorted.findIndex((p) => p.threshold === recommendedThreshold);
+const recX = recIdx >= 0 ? xFor(recIdx) : null;
+
+const fmtPct = (v: number) => `${Math.round(v * 100)}%`;
+const fmtThresh = (v: number) => v.toFixed(2);
+const allFpZero = sweepSorted.every((p) => p.false_positive_rate === 0);
+
+// Faint horizontal gridlines at 0 / 0.5 / 1.0 for a sense of altitude.
+const gridLines = [0, 0.5, 1];
+
+// ── Region 2: per-prompt gate strip ──
+type StripRow = {
+  prompt: string;
+  topScore: number;
+  offTopic: boolean;
+  hit: boolean; // on-topic: top concept genuinely relevant
+  nag: boolean; // off-topic: fired anyway (crosses the gate)
+};
+
+const stripRows: StripRow[] = perPrompt.map((row) => {
+  const top = row.results[0];
+  const topScore = top?.score ?? 0;
+  const fired = topScore >= recommendedThreshold;
+  const topRelevant = top ? row.relevant.includes(top.slug) : false;
+  return {
+    prompt: row.prompt,
+    topScore,
+    offTopic: row.off_topic,
+    hit: !row.off_topic && topRelevant,
+    nag: row.off_topic && fired,
+  };
+});
+
+const onTopicRows = stripRows.filter((r) => !r.offTopic).sort((a, b) => b.topScore - a.topScore);
+const offTopicRows = stripRows.filter((r) => r.offTopic).sort((a, b) => b.topScore - a.topScore);
+
+// Score axis domain: 0 → just above the highest observed top score, with a
+// 0.5 floor so the gate at the recommended threshold lands well inside the
+// frame (clear left/right separation) even on a low-scoring corpus.
+const maxTop = stripRows.reduce((m, r) => Math.max(m, r.topScore), 0);
+const domainMax = Math.max(0.5, Math.ceil(maxTop * 20) / 20);
+const pct = (v: number) => `${(v / domainMax) * 100}%`;
+const gateLeft = pct(recommendedThreshold);
+
+const nagCount = offTopicRows.filter((r) => r.nag).length;
+---
+
+<div class="flex flex-col gap-8 text-black/85 md:gap-10 dark:text-white/85">
+  {/* ── Region 1: threshold sweep ── */}
+  <div class="flex flex-col gap-3">
+    <div class="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+      <span class="font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55">
+        Threshold sweep · precision vs recall
+      </span>
+      <div class="flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-[0.65rem] uppercase tracking-widest">
+        <span class="flex items-center gap-1.5 text-black/65 dark:text-white/65">
+          <span class="inline-block h-[2px] w-4 bg-[color:var(--accent)]"></span>
+          precision@1
+        </span>
+        <span class="flex items-center gap-1.5 text-black/65 dark:text-white/65">
+          <span class="inline-block h-[2px] w-4 bg-black/55 dark:bg-white/45"></span>
+          recall@3
+        </span>
+      </div>
+    </div>
+
+    <svg
+      width="100%"
+      viewBox={`0 0 ${VB.w} ${VB.h}`}
+      preserveAspectRatio="xMidYMid meet"
+      role="img"
+      aria-label="Precision@1 and recall@3 across firing thresholds"
+      style="display: block; height: auto;"
+    >
+      {/* gridlines + y labels */}
+      {
+        gridLines.map((g) => (
+          <g>
+            <line
+              x1={PAD.l}
+              y1={yFor(g)}
+              x2={VB.w - PAD.r}
+              y2={yFor(g)}
+              stroke="currentColor"
+              stroke-width="0.5"
+              opacity={g === 0 ? 0.25 : 0.1}
+            />
+            <text
+              x={PAD.l - 8}
+              y={yFor(g) + 3}
+              text-anchor="end"
+              font-family="var(--font-mono)"
+              font-size="9"
+              fill="currentColor"
+              opacity="0.4"
+            >
+              {g.toFixed(1)}
+            </text>
+          </g>
+        ))
+      }
+
+      {/* recommended-threshold rule */}
+      {
+        recX !== null && (
+          <g>
+            <line
+              x1={recX}
+              y1={PAD.t - 6}
+              x2={recX}
+              y2={VB.h - PAD.b}
+              stroke="var(--accent)"
+              stroke-width="1"
+              stroke-dasharray="3 3"
+              opacity="0.8"
+            />
+            <text
+              x={recX + 6}
+              y={PAD.t - 0}
+              font-family="var(--font-mono)"
+              font-size="9.5"
+              fill="var(--accent)"
+            >
+              fires here
+            </text>
+          </g>
+        )
+      }
+
+      {/* recall@3 (muted) */}
+      <path d={recallPath} fill="none" stroke="currentColor" stroke-width="1.4" opacity="0.55" />
+      {/* precision@1 (accent) */}
+      <path d={precisionPath} fill="none" stroke="var(--accent)" stroke-width="1.6" />
+
+      {/* dots + value labels */}
+      {
+        sweepSorted.map((p, i) => (
+          <g>
+            <circle cx={xFor(i)} cy={yFor(p.recall_at_3)} r="2.6" fill="currentColor" opacity="0.55" />
+            <circle cx={xFor(i)} cy={yFor(p.precision_at_1)} r="2.8" fill="var(--accent)" />
+            <text
+              x={xFor(i)}
+              y={yFor(p.recall_at_3) + 15}
+              text-anchor="middle"
+              font-family="var(--font-mono)"
+              font-size="9"
+              fill="currentColor"
+              opacity="0.5"
+            >
+              {fmtPct(p.recall_at_3)}
+            </text>
+            {/* x-axis threshold tick */}
+            <text
+              x={xFor(i)}
+              y={VB.h - PAD.b + 18}
+              text-anchor="middle"
+              font-family="var(--font-mono)"
+              font-size="10"
+              fill="currentColor"
+              opacity={p.threshold === recommendedThreshold ? 0.85 : 0.5}
+            >
+              {fmtThresh(p.threshold)}
+            </text>
+          </g>
+        ))
+      }
+      {/* single precision label (flat line — annotate once at the right) */}
+      <text
+        x={xFor(lastIdx)}
+        y={yFor(sweepSorted[sweepSorted.length - 1].precision_at_1) - 7}
+        text-anchor="end"
+        font-family="var(--font-mono)"
+        font-size="9.5"
+        fill="var(--accent)"
+      >
+        {fmtPct(sweepSorted[sweepSorted.length - 1].precision_at_1)}
+      </text>
+    </svg>
+
+    <p class="font-mono text-[0.7rem] text-black/55 dark:text-white/55">
+      {
+        allFpZero
+          ? "False-positive (nag) rate · 0% across all thresholds — the off-topic prompts never cross the bar."
+          : "False-positive (nag) rate varies across thresholds — see the gate strip below."
+      }
+    </p>
+  </div>
+
+  {/* ── Region 2: per-prompt gate strip ── */}
+  <div class="flex flex-col gap-4 border-t border-black/10 pt-6 dark:border-white/10">
+    <div class="flex items-baseline justify-between gap-3">
+      <span class="font-mono text-xs uppercase tracking-widest text-black/65 dark:text-white/65">
+        Per-prompt · top concept vs gate
+      </span>
+      <span
+        class="hidden font-mono text-[0.65rem] uppercase tracking-widest text-black/45 sm:inline dark:text-white/45"
+      >
+        gate · {fmtThresh(recommendedThreshold)} →
+      </span>
+    </div>
+
+    {/* on-topic group */}
+    <div class="flex flex-col gap-2">
+      <span class="font-mono text-[0.65rem] uppercase tracking-widest text-black/45 dark:text-white/45">
+        On-topic · n={nOnTopic}
+      </span>
+      <div class="flex flex-col gap-1">
+        {
+          onTopicRows.map((r) => (
+            <div class="grid grid-cols-[minmax(0,1fr)_minmax(120px,260px)_5.5rem] items-center gap-3 md:gap-4">
+              <span class="truncate font-mono text-[0.7rem] text-black/65 dark:text-white/65" title={r.prompt}>
+                {r.prompt}
+              </span>
+              <div class="relative h-2.5">
+                <div class="absolute inset-y-0 left-0 w-full bg-black/[0.04] dark:bg-white/[0.06]" />
+                <div
+                  class:list={[
+                    "absolute inset-y-0 left-0",
+                    r.hit ? "bg-[color:var(--accent)]" : "bg-black/45 dark:bg-white/35",
+                  ]}
+                  style={`width: ${pct(r.topScore)};`}
+                />
+                <div
+                  class="absolute inset-y-[-2px] w-px bg-black/35 dark:bg-white/35"
+                  style={`left: ${gateLeft};`}
+                />
+              </div>
+              <span class="flex items-baseline justify-end gap-1.5 text-right">
+                <span
+                  class="font-mono text-[0.65rem] tabular-nums text-black/55 dark:text-white/55"
+                  style="font-variant-numeric: tabular-nums;"
+                >
+                  {r.topScore.toFixed(2)}
+                </span>
+                <span
+                  class:list={[
+                    "font-mono text-[0.6rem] uppercase tracking-widest",
+                    r.hit ? "text-[color:var(--accent)]" : "text-black/40 dark:text-white/40",
+                  ]}
+                >
+                  {r.hit ? "hit" : "miss"}
+                </span>
+              </span>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+
+    {/* off-topic group */}
+    <div class="flex flex-col gap-2 border-t border-black/[0.06] pt-3 dark:border-white/[0.06]">
+      <span class="font-mono text-[0.65rem] uppercase tracking-widest text-black/45 dark:text-white/45">
+        Off-topic · n={nOffTopic} · {nagCount === 0 ? "0 nags" : `${nagCount} nag${nagCount === 1 ? "" : "s"}`}
+      </span>
+      <div class="flex flex-col gap-1">
+        {
+          offTopicRows.map((r) => (
+            <div class="grid grid-cols-[minmax(0,1fr)_minmax(120px,260px)_5.5rem] items-center gap-3 md:gap-4">
+              <span class="truncate font-mono text-[0.7rem] text-black/55 dark:text-white/55" title={r.prompt}>
+                {r.prompt}
+              </span>
+              <div class="relative h-2.5">
+                <div class="absolute inset-y-0 left-0 w-full bg-black/[0.04] dark:bg-white/[0.06]" />
+                <div
+                  class:list={[
+                    "absolute inset-y-0 left-0",
+                    r.nag ? "bg-[color:var(--accent)]" : "bg-black/25 dark:bg-white/20",
+                  ]}
+                  style={`width: ${pct(r.topScore)};`}
+                />
+                <div
+                  class="absolute inset-y-[-2px] w-px bg-black/35 dark:bg-white/35"
+                  style={`left: ${gateLeft};`}
+                />
+              </div>
+              <span class="flex items-baseline justify-end gap-1.5 text-right">
+                <span
+                  class="font-mono text-[0.65rem] tabular-nums text-black/55 dark:text-white/55"
+                  style="font-variant-numeric: tabular-nums;"
+                >
+                  {r.topScore.toFixed(2)}
+                </span>
+                <span
+                  class:list={[
+                    "font-mono text-[0.6rem] uppercase tracking-widest",
+                    r.nag ? "text-[color:var(--accent)]" : "text-black/40 dark:text-white/40",
+                  ]}
+                >
+                  {r.nag ? "nag" : "silent"}
+                </span>
+              </span>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,10 +1,10 @@
 ---
 title: Topic stability
-hypothesis: Showing the AI which topic tags are already in use keeps it from inventing new ones for articles it's seen before. Without that nudge, the same article could get tagged differently on different runs, and the wiki layer (which clusters articles by tag) would fragment.
+hypothesis: Show the AI the topic tags already in use and it stops inventing new ones for articles it's seen before. Skip that nudge and the same article picks up different tags run to run, fragmenting the wiki layer that clusters by tag.
 status: live
 publishedDate: 2026-05-15T12:00:00-07:00
 lastRunDate: 2026-05-15T13:23:00-07:00
-tldr: When the AI tags a saved article with topics, do those tags stay stable over time? The chart compares tagging the same article with and without a list of existing tags as an anchor.
+tldr: Do the AI's topic tags stay stable when it re-tags the same article? The chart compares re-tagging with and without a list of existing tags as an anchor.
 headlineMetric:
   label: Tag recovery
   value: 42.2%
@@ -16,53 +16,50 @@ kind: comparison
 dataPath: data/topic-stability.json
 ---
 
-The wiki layer of this site clusters my saved articles by topic, then
-writes a synthesis paragraph for each cluster. That falls apart if the
-AI tags the same article inconsistently — `ai-coding` one week,
-`agentic-coding` the next, `claude-code` the week after — because the
-clusters fragment and no single topic ever accumulates enough sources
-to be worth synthesizing.
+The wiki layer clusters my saved articles by topic, then writes one
+synthesis paragraph per cluster. It only works if the tags are
+consistent. Tag the same article `ai-coding` one week and
+`agentic-coding` the next and the clusters splinter; no single topic
+ever gathers enough sources to be worth writing up.
 
-The pipeline's working bet is that showing the AI a list of tags
-already in use is enough to keep it anchored. This eval tests the bet
-directly.
+The pipeline bets that a list of tags already in use is enough to keep
+the model anchored. This tests that.
 
-For each sampled article the script asks the AI to re-tag it twice:
+For each sampled article the script re-tags it twice:
 
-- **with the anchor list**: the AI sees every tag currently active
-  across the whole corpus and is told to reuse where reasonable.
-- **without the anchor list**: the AI sees only the article's title and
-  excerpt and tags freely.
+- **with the anchor list** — the model sees every tag active across the
+  corpus and is told to reuse where it can.
+- **without the anchor list** — the model sees only the title and
+  excerpt, and tags from scratch.
 
-Two things get measured per run:
+Each run measures two things:
 
-1. **Recovery against the original tags.** Each sampled article was
-   already tagged when I originally saved it, and those original tags
-   are treated as ground truth. The chart shows what fraction the AI
-   gets back in each cell. If with-anchor recovery is materially higher
-   than without-anchor, the bet pays off.
-2. **Vocabulary breadth.** How many distinct tags the AI invents across
-   the whole sample. Lower is better — fewer total tags means tighter
+1. **Recovery against the original tags.** Every sampled article already
+   had tags from when I saved it; those are the ground truth. The chart
+   shows the fraction the model recovers in each cell. With-anchor
+   recovery well above without-anchor is the result the bet needs.
+2. **Vocabulary breadth.** How many distinct tags the model coins across
+   the sample. Fewer is better: a smaller vocabulary means tighter
    clusters downstream.
 
-If the two cells come out about the same, the anchor list is theatre
-and clusters drift no matter what. The right move then would be a
-different mechanism for stability — not a longer prompt, but something
-deterministic outside the model.
+If the two cells land in the same place, the anchor list is theatre — it
+isn't doing the work, and the clusters will drift whatever the prompt
+says. Then a longer prompt won't fix it. The fix has to be deterministic
+and live outside the model: canonical tags enforced in code, not
+requested politely.
 
-This eval is upstream of [Citation faithfulness](/labs/citation-faithfulness):
-faithful citations don't matter much if the wiki article is built on a
-fragmented topic to begin with.
+This sits upstream of [Citation faithfulness](/labs/citation-faithfulness):
+faithful citations don't count for much if the article they're in was
+built on a fragmented topic.
 
-Reading the chart: recovery is the share of an article's original tags
-the AI gets back on a re-run (higher is better — the "with anchor wins"
-line). Distinct-tag count is how many different tags the AI invents
-across the whole sample (lower is better, since the wiki layer needs
-tag stability to compile). Jaccard is per-article overlap between the
-two runs, so it has no winner side. The per-sample strip splits
-recovery per article, sorted with the biggest with-anchor wins first
-and regressions last.
+How to read it: recovery is the share of an article's original tags the
+model gets back on a re-run; higher is better, and the slope marked "with
+anchor wins" is the one to watch. Distinct-tag count is how many
+different tags it coins across the sample; lower is better, since the
+wiki layer needs stable tags to compile. Jaccard is the per-article
+overlap between the two runs, so it has no winning side. The per-sample
+strip breaks recovery out article by article, biggest with-anchor wins
+first, regressions last.
 
-The runs are dry — no entries get committed — but the AI calls still
-cost money, and that spend lands in
-[Ingest pipeline cost](/labs/ingest-pipeline-cost).
+The runs are dry; nothing gets committed. The AI calls still cost money,
+and that spend lands in [Ingest pipeline cost](/labs/ingest-pipeline-cost).

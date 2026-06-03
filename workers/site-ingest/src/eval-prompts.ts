@@ -16,7 +16,7 @@ import { z } from "zod";
 
 export const JudgeVerdictSchema = z.object({
   verdict: z.enum(["supported", "partial", "unsupported"]),
-  justification: z.string().min(1).max(200),
+  justification: z.string().min(1).max(500),
 });
 
 export type JudgeVerdict = z.infer<typeof JudgeVerdictSchema>;
@@ -34,7 +34,7 @@ Hard rules:
 - Do not reward topical adjacency. A source about the same general subject is not automatic support for a specific claim about that subject.
 
 Justification:
-- ONE sentence, 200 characters or fewer.
+- One or two sentences, 500 characters or fewer.
 - For "supported" or "partial", quote or paraphrase the relevant passage in the source so a reviewer can locate it.
 - For "unsupported", state what is missing or where the source diverges from the claim.
 - Plain framing. No em-dashes. No flourish verbs.
