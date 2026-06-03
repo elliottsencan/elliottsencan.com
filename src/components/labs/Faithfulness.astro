@@ -79,6 +79,8 @@ type VerdictPair = {
   source: string;
   haiku: Verdict;
   sonnet: Verdict;
+  haikuWhy: string;
+  sonnetWhy: string;
   step: number; // verdict-rank distance: 1 = adjacent, 2 = hard flip
 };
 
@@ -134,6 +136,8 @@ for (const article of data.articles) {
           source: hc.cited_source_slug,
           haiku: hc.verdict as Verdict,
           sonnet: sc.verdict as Verdict,
+          haikuWhy: hc.justification,
+          sonnetWhy: sc.justification,
           step: Math.abs(RANK[hc.verdict as Verdict] - RANK[sc.verdict as Verdict]),
         });
       }
@@ -164,7 +168,22 @@ const partialPct = judged > 0 ? Math.round((pooled.partial / judged) * 100) : 0;
 const unsupportedPct = judged > 0 ? Math.round((pooled.unsupported / judged) * 100) : 0;
 const agreePct = comparable > 0 ? Math.round((agree / comparable) * 100) : 0;
 const hardFlips = allDisagreements.filter((d) => d.step >= 2).length;
-const boundaryCalls = allDisagreements.length - hardFlips;
+
+// Which verdict line the splits mostly fall on (unordered pair), so the
+// framing names the actual seam — typically supported vs partial.
+const pairCounts = new Map<string, number>();
+for (const d of allDisagreements) {
+  const key = [d.haiku, d.sonnet].sort().join(" / ");
+  pairCounts.set(key, (pairCounts.get(key) ?? 0) + 1);
+}
+let topPair = "";
+let topPairCount = 0;
+for (const [key, n] of pairCounts) {
+  if (n > topPairCount) {
+    topPair = key;
+    topPairCount = n;
+  }
+}
 
 const haikuCost = data.totals.total_cost_usd_by_judge[HAIKU] ?? 0;
 const sonnetCost = data.totals.total_cost_usd_by_judge[SONNET] ?? 0;
@@ -319,41 +338,61 @@ const judgeBars = [HAIKU, SONNET].map((m) => {
     {
       allDisagreements.length > 0 ? (
         <div class="flex flex-col gap-3">
-          {boundaryCalls > 0 && (
-            <p class="text-sm leading-snug text-black/70 dark:text-white/70">
-              {hardFlips === 0 ? "Every" : `${boundaryCalls} of ${allDisagreements.length}`}{" "}
-              disagreement{boundaryCalls === 1 && hardFlips > 0 ? " is" : "s are"} one verdict apart
-              — a boundary call, not a flat contradiction.
-              {hardFlips > 0 &&
-                ` Only ${hardFlips} ${hardFlips === 1 ? "is" : "are"} a hard supported↔unsupported flip.`}
-            </p>
-          )}
+          <p class="max-w-[64ch] text-sm leading-relaxed text-black/70 dark:text-white/70">
+            {topPairCount} of {allDisagreements.length} splits land on the{" "}
+            <span class="font-medium text-black/85 dark:text-white/85">{topPair}</span> line — both
+            judges read the source as on-topic but split on how much it backs.
+            {hardFlips > 0 &&
+              ` Only ${hardFlips} ${hardFlips === 1 ? "is" : "are"} a hard supported↔unsupported flip.`}{" "}
+            Open a row to read each judge's reasoning side by side.
+          </p>
           <div class="flex flex-col gap-px overflow-hidden rounded-sm">
-            {allDisagreements.map((d) => (
-              <div class="flex flex-col gap-2 bg-black/[0.03] p-3 dark:bg-white/[0.05] md:flex-row md:items-start md:gap-4">
-                <p class="min-w-0 flex-1 text-sm leading-snug text-black/80 dark:text-white/80">
-                  {d.claim}
-                </p>
-                <div class="flex shrink-0 items-center gap-2 font-mono text-[0.65rem] uppercase tracking-widest">
-                  <span class="inline-flex items-center gap-1.5">
-                    <span class="text-black/40 dark:text-white/40">H</span>
-                    <span class:list={["inline-block h-2 w-2 rounded-[1px]", VERDICT_CLS[d.haiku]]} />
-                    {d.haiku}
-                  </span>
-                  <span class="text-black/30 dark:text-white/30">→</span>
-                  <span class="inline-flex items-center gap-1.5">
-                    <span class="text-black/40 dark:text-white/40">S</span>
-                    <span class:list={["inline-block h-2 w-2 rounded-[1px]", VERDICT_CLS[d.sonnet]]} />
-                    {d.sonnet}
-                  </span>
+            {allDisagreements.map((d, i) => (
+              <details class="group bg-black/[0.03] dark:bg-white/[0.05]" open={i === 0}>
+                <summary class="flex cursor-pointer list-none flex-col gap-2 p-3 hover:bg-black/[0.02] md:flex-row md:items-start md:gap-4 dark:hover:bg-white/[0.03]">
+                  <p class="min-w-0 flex-1 text-sm leading-snug text-black/80 dark:text-white/80">
+                    {d.claim}
+                  </p>
+                  <div class="flex shrink-0 items-center gap-2 font-mono text-[0.65rem] uppercase tracking-widest">
+                    <span class="inline-flex items-center gap-1.5">
+                      <span class="text-black/40 dark:text-white/40">H</span>
+                      <span class:list={["inline-block h-2 w-2 rounded-[1px]", VERDICT_CLS[d.haiku]]} />
+                      {d.haiku}
+                    </span>
+                    <span class="text-black/30 dark:text-white/30">→</span>
+                    <span class="inline-flex items-center gap-1.5">
+                      <span class="text-black/40 dark:text-white/40">S</span>
+                      <span class:list={["inline-block h-2 w-2 rounded-[1px]", VERDICT_CLS[d.sonnet]]} />
+                      {d.sonnet}
+                    </span>
+                    <span class="di-closed ml-1 text-black/40 dark:text-white/40">▸</span>
+                    <span class="di-open ml-1 text-black/40 dark:text-white/40">▾</span>
+                  </div>
+                </summary>
+                <div class="grid gap-4 border-t border-black/[0.06] px-3 pt-3 pb-3 md:grid-cols-2 dark:border-white/[0.08]">
+                  {[
+                    { who: "Haiku", v: d.haiku, why: d.haikuWhy },
+                    { who: "Sonnet", v: d.sonnet, why: d.sonnetWhy },
+                  ].map((col) => (
+                    <div class="flex flex-col gap-1.5 border-l-2 border-black/10 pl-3 dark:border-white/15">
+                      <span class="flex items-center gap-1.5 font-mono text-[0.65rem] uppercase tracking-widest text-black/55 dark:text-white/55">
+                        {col.who}
+                        <span class:list={["inline-block h-2 w-2 rounded-[1px]", VERDICT_CLS[col.v]]} />
+                        {col.v}
+                      </span>
+                      <p class="text-[0.8rem] leading-relaxed text-black/65 dark:text-white/65">
+                        {col.why}
+                      </p>
+                    </div>
+                  ))}
                   <a
                     href={`/reading/${d.source}/`}
-                    class="ml-1 text-black/40 underline decoration-black/20 underline-offset-2 hover:text-[color:var(--accent)] dark:text-white/40 dark:decoration-white/20"
+                    class="font-mono text-[0.65rem] text-black/45 underline decoration-black/20 underline-offset-2 hover:text-[color:var(--accent)] md:col-span-2 dark:text-white/45 dark:decoration-white/20"
                   >
-                    ↗
+                    read the cited source ↗
                   </a>
                 </div>
-              </div>
+              </details>
             ))}
           </div>
         </div>
@@ -469,3 +508,23 @@ const judgeBars = [HAIKU, SONNET].map((m) => {
     </div>
   </section>
 </div>
+
+<style>
+  /* Native disclosure for the disagreement reasoning — no JS, no animation,
+     just a caret that swaps with the open state. */
+  details > summary {
+    list-style: none;
+  }
+  details > summary::-webkit-details-marker {
+    display: none;
+  }
+  .di-open {
+    display: none;
+  }
+  details[open] .di-open {
+    display: inline;
+  }
+  details[open] .di-closed {
+    display: none;
+  }
+</style>
