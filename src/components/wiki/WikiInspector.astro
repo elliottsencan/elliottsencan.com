@@ -1,0 +1,165 @@
+---
+// Fixed bottom-right inspector for the wiki directory. Hidden until a
+// directory row (#wiki-list .wd-row) is hovered or keyboard-focused, then it
+// shows that concept's neighbourhood / title / summary / source count. Pure
+// data-attribute toggling — same philosophy as ConstellationStrip.
+//
+// Contract: reads data-nb / data-ct / data-su and the row's `.wd-nm` text
+// from rows rendered by WikiDirectory.astro.
+---
+
+<aside id="wiki-inspector" aria-hidden="true">
+  <p class="wi-nb font-mono" id="wi-nb"></p>
+  <p class="wi-ti font-heading" id="wi-ti"></p>
+  <p class="wi-su" id="wi-su"></p>
+  <div class="wi-meta font-mono">
+    <span class="wi-dots" id="wi-dots" aria-hidden="true"></span>
+    <span id="wi-ct"></span>
+    <span class="wi-go">open &rarr;</span>
+  </div>
+</aside>
+
+<style>
+  #wiki-inspector {
+    position: fixed;
+    right: 1.5rem;
+    bottom: 1.5rem;
+    z-index: 40;
+    width: 20.625rem;
+    padding: 1.125rem 1.25rem 1rem;
+    background: var(--card);
+    border: 1px solid rgb(0 0 0 / 0.1);
+    border-radius: 0.875rem;
+    box-shadow: 0 8px 30px rgb(0 0 0 / 0.08);
+    opacity: 0;
+    transform: translateY(6px);
+    pointer-events: none;
+    transition:
+      opacity 130ms ease,
+      transform 130ms ease;
+  }
+  :global(.dark) #wiki-inspector {
+    border-color: rgb(255 255 255 / 0.1);
+    box-shadow: 0 8px 30px rgb(0 0 0 / 0.35);
+  }
+  #wiki-inspector[data-show] {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .wi-nb {
+    margin: 0 0 0.5rem;
+    font-size: 0.65625rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .wi-ti {
+    margin: 0;
+    font-size: 1.1875rem;
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: -0.012em;
+    color: #000;
+  }
+  :global(.dark) .wi-ti {
+    color: #fff;
+  }
+  .wi-su {
+    margin: 0.5rem 0 0;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: rgb(0 0 0 / 0.72);
+  }
+  :global(.dark) .wi-su {
+    color: rgb(255 255 255 / 0.72);
+  }
+  .wi-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.875rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgb(0 0 0 / 0.08);
+    font-size: 0.6875rem;
+    color: rgb(0 0 0 / 0.5);
+  }
+  :global(.dark) .wi-meta {
+    border-top-color: rgb(255 255 255 / 0.08);
+    color: rgb(255 255 255 / 0.5);
+  }
+  .wi-dots {
+    display: inline-flex;
+    gap: 2px;
+  }
+  .wi-dots :global(i) {
+    display: block;
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  .wi-go {
+    margin-left: auto;
+    color: var(--accent);
+  }
+  @media (max-width: 640px) {
+    #wiki-inspector {
+      display: none;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #wiki-inspector {
+      transition: opacity 80ms linear;
+    }
+    #wiki-inspector,
+    #wiki-inspector[data-show] {
+      transform: none;
+    }
+  }
+</style>
+
+<script>
+  (() => {
+    const insp = document.getElementById("wiki-inspector");
+    const list = document.getElementById("wiki-list");
+    const nb = document.getElementById("wi-nb");
+    const ti = document.getElementById("wi-ti");
+    const su = document.getElementById("wi-su");
+    const ct = document.getElementById("wi-ct");
+    const dots = document.getElementById("wi-dots");
+    if (!insp || !list || !nb || !ti || !su || !ct || !dots) return;
+
+    const rows = Array.from(list.querySelectorAll<HTMLElement>(".wd-row"));
+    let hideT = 0;
+
+    const fill = (r: HTMLElement) => {
+      clearTimeout(hideT);
+      nb.textContent = r.dataset.nb ?? "";
+      ti.textContent = r.querySelector(".wd-nm")?.textContent ?? "";
+      su.textContent = r.dataset.su ?? "";
+      const n = Number.parseInt(r.dataset.ct ?? "0", 10);
+      ct.textContent = `${n} source${n === 1 ? "" : "s"}`;
+      let d = "";
+      for (let i = 0; i < Math.min(n, 6); i++) {
+        d += `<i style="opacity:${0.5 + i * 0.08}"></i>`;
+      }
+      dots.innerHTML = d;
+      insp.setAttribute("data-show", "");
+      for (const x of rows) x.removeAttribute("data-live");
+      r.setAttribute("data-live", "");
+    };
+
+    const hide = () => {
+      hideT = window.setTimeout(() => {
+        insp.removeAttribute("data-show");
+        for (const x of rows) x.removeAttribute("data-live");
+      }, 120);
+    };
+
+    for (const r of rows) {
+      r.addEventListener("mouseenter", () => fill(r));
+      r.addEventListener("focusin", () => fill(r));
+    }
+    list.addEventListener("mouseleave", hide);
+  })();
+</script>
