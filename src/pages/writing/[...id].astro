@@ -1,5 +1,6 @@
 ---
 import { type CollectionEntry, getCollection, render } from "astro:content";
+import Breadcrumb from "@components/Breadcrumb.astro";
 import Container from "@components/Container.astro";
 import PostBadges from "@components/PostBadges.astro";
 import PostMeta from "@components/PostMeta.astro";
@@ -53,7 +54,8 @@ const { Content, headings } = await render(post);
 <PostLayout post={post}>
   <Container>
     <div class="mb-10 pt-6 md:pt-8">
-      <h1 class="mb-1.5 font-heading text-3xl font-medium tracking-tight text-black md:text-4xl dark:text-white">
+      <Breadcrumb parent={{ label: "Writing", href: "/writing/" }} />
+      <h1 class="mb-1.5 mt-4 font-heading text-3xl font-medium tracking-tight text-black md:text-4xl dark:text-white">
         {post.data.title}
       </h1>
       <PostMeta post={post} />
