@@ -1,8 +1,8 @@
 ---
+import Breadcrumb from "@components/Breadcrumb.astro";
 import Container from "@components/Container.astro";
 import EditorialRule from "@components/EditorialRule.astro";
 import Link from "@components/Link.astro";
-import Breadcrumb from "@components/Breadcrumb.astro";
 import PageHero from "@components/PageHero.astro";
 import { SITE } from "@consts";
 import Layout from "@layouts/Layout.astro";
@@ -29,9 +29,10 @@ import Layout from "@layouts/Layout.astro";
         </Fragment>
         <Fragment slot="title">Colophon</Fragment>
         <Fragment slot="summary">
-          Set in <em>Neue Montreal</em> for headings and interface text,
-          <em>Satoshi</em> for running copy, and <em>JetBrains Mono</em> for
-          code and small typographic marks. All three self-hosted as WOFF2.
+          Display titles are <em>Neue Montreal Book</em> (400); the same family
+          runs Medium (500) for labels and list titles. <em>Satoshi</em> sets the
+          running copy. <em>Spline Sans Mono</em> handles code and the small
+          typographic marks. Self-hosted as WOFF2.
         </Fragment>
       </PageHero>
 

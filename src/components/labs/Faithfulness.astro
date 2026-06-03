@@ -155,9 +155,7 @@ for (const article of data.articles) {
 }
 
 // Disagreements first, then by claim volume, then alphabetical.
-rows.sort(
-  (a, b) => b.disagree - a.disagree || b.total - a.total || a.slug.localeCompare(b.slug),
-);
+rows.sort((a, b) => b.disagree - a.disagree || b.total - a.total || a.slug.localeCompare(b.slug));
 // Hard flips (step 2) before boundary calls (step 1), so the sharpest
 // disagreement reads first.
 allDisagreements.sort((a, b) => b.step - a.step);
