@@ -165,9 +165,7 @@ const neighborCount = hasLocal ? localData.nodes.length - 1 : 0;
         class="grid items-stretch gap-x-8 gap-y-3 md:grid-cols-[minmax(0,1fr)_auto] md:gap-x-10 md:[grid-template-rows:auto_1fr_auto]"
       >
         <div class="md:col-start-1 md:row-start-1">
-          <LabeledRule as="p">
-            <Breadcrumb parent={{ label: "Wiki", href: "/wiki/" }} />
-          </LabeledRule>
+          <Breadcrumb parent={{ label: "Wiki", href: "/wiki/" }} />
         </div>
 
         <div

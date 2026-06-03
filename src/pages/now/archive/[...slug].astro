@@ -36,7 +36,7 @@ const archivedISO = archivedDate.toISOString().slice(0, 10);
     >
       <PageHero breadcrumb>
         <Fragment slot="breadcrumb">
-          <Breadcrumb parent={{ label: "Now / Archive", href: "/now/archive" }} current={entry.id} />
+          <Breadcrumb parent={{ label: "Archive", href: "/now/archive/" }} />
         </Fragment>
         <Fragment slot="title">{entry.data.title}</Fragment>
         <HeroMeta slot="meta" label={`Archived ${formatted}`} />

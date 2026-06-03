@@ -1,37 +1,31 @@
 ---
-// Canonical breadcrumb trail. Matches the wiki concept-index eyebrow style:
-// mono, uppercase, letter-spacing 0.14em, accent. Designed to sit inside a
-// LabeledRule (left of the dot-rule) — it carries no rule of its own.
+// Canonical breadcrumb — pure up-navigation to the immediate parent. The
+// current page is NEVER shown (the h1 directly below already names it).
 //
-//   ← {parent}  /  {current}
+//   ← {parent}  ·············································
 //
-// Parent link is the accent and the only hover target (underline, no bg).
-// The `/` separator is faint; the current page is muted and not a link, so
-// position in the trail is unambiguous. Never wraps mid-segment.
+// Self-contained: it carries its own dotted filler (same `.dot-rule` recipe
+// and background as LabeledRule/EditorialRule) so the cursor-halo script in
+// Layout.astro reaches it with one selector, AND so every page drops a single
+// <Breadcrumb /> tag and renders identically — impossible to misalign one
+// page against another. The outer `flex items-center gap-4` + filler skeleton
+// matches LabeledRule exactly, so it grid-aligns wherever LabeledRule did.
+//
+// The parent link is the accent and the only hover target (underline, no bg).
 
 type Props = {
   parent: { label: string; href: string };
-  current?: string;
 };
 
-const { parent, current } = Astro.props;
+const { parent } = Astro.props;
 ---
 
-<span class="flex flex-none items-center gap-2 whitespace-nowrap font-mono text-xs uppercase tracking-[0.14em]">
+<nav aria-label="Breadcrumb" class="flex items-center gap-4">
   <a
     href={parent.href}
-    class="text-[color:var(--accent)] no-underline transition-colors duration-300 ease-in-out hover:underline focus-visible:underline"
+    class="shrink-0 whitespace-nowrap font-mono text-xs uppercase tracking-[0.14em] text-[color:var(--accent)] no-underline transition-colors duration-300 ease-in-out hover:underline focus-visible:underline"
   >
-    &larr; {parent.label}
+    <span aria-hidden="true">&larr;</span> {parent.label}
   </a>
-  {
-    current && (
-      <>
-        <span aria-hidden="true" class="text-black/40 dark:text-white/40">
-          /
-        </span>
-        <span class="text-black/55 dark:text-white/60">{current}</span>
-      </>
-    )
-  }
-</span>
+  <div role="presentation" aria-hidden="true" class="dot-rule h-px flex-1 py-2"></div>
+</nav>
