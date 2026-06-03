@@ -1,4 +1,1207 @@
 {
-  "status": "no-data",
-  "message": "POST /eval has not run yet — the sidecar will populate on the first non-dry-run pass."
+  "rubric_version": "v1.0",
+  "generated_at": "2026-06-03T05:44:18.489Z",
+  "articles": [
+    {
+      "wiki_slug": "agent-coordination",
+      "content_hash": "bfd9c0d0f777c052384c50c101f4cd79dc8de938ed2a5ef609b7565399d8732f",
+      "evaluated_at": "2026-06-03T05:44:18.489Z",
+      "judges": [
+        {
+          "judge_model": "claude-haiku-4-5",
+          "claims": [
+            {
+              "claim_text": "[Meiklejohn's survey of MAST, MAS-FIRE, and Silo-Bench](/reading/2026-05/2026-05-03t110046-getting-up-to-speed-on-multi-agent-systems-part-4-wave-2) found that multi-agent LLM systems fail 41-87% of the time across 1,600 traced runs.",
+              "cited_source_slug": "2026-05/2026-05-03t110046-getting-up-to-speed-on-multi-agent-systems-part-4-wave-2",
+              "verdict": "supported",
+              "justification": "The source summary states that the survey shows \"multi-agent LLM systems fail 41–87% of the time\" across \"1,600 traces,\" matching the claim's core assertion about failure rates and trace count.",
+              "cost_usd": 0.001351
+            },
+            {
+              "claim_text": "[Meiklejohn's follow-up](/reading/2026-05/2026-05-03t110055-getting-up-to-speed-on-multi-agent-systems-part-5-debate) surveys convergent debate, adversarial debate, shared-notebook state management, and the CALM theorem from distributed systems.",
+              "cited_source_slug": "2026-05/2026-05-03t110055-getting-up-to-speed-on-multi-agent-systems-part-5-debate",
+              "verdict": "supported",
+              "justification": "The source summary explicitly lists all four topics mentioned in the claim: convergent debate, adversarial debate, shared-notebook state, and the CALM theorem from distributed systems.",
+              "cost_usd": 0.001248
+            },
+            {
+              "claim_text": "The cost of getting this wrong is quantified by [Dickson's survey of Stanford and Google/MIT research](/reading/2026-05/2026-05-03t115608-how-to-choose-between-single-and-multi-agent-solutions): multi-agent orchestration can amplify errors up to 17x and cut tool-handling efficiency by 2-6x relative to a single-agent baseline.",
+              "cited_source_slug": "2026-05/2026-05-03t115608-how-to-choose-between-single-and-multi-agent-solutions",
+              "verdict": "supported",
+              "justification": "The source summary explicitly states that multi-agent orchestration 'can amplify errors up to 17x and cut tool-handling efficiency by 2–6x', directly matching the claim's quantified figures.",
+              "cost_usd": 0.001292
+            },
+            {
+              "claim_text": "[openagentd](/reading/2026-05/2026-05-03t173528-lthoanggopenagentd) is one example of a self-hosted agent runtime that builds in OpenTelemetry tracing alongside persistent memory and scheduling, treating coordination transparency as a first-class concern rather than an afterthought.",
+              "cited_source_slug": "2026-05/2026-05-03t173528-lthoanggopenagentd",
+              "verdict": "supported",
+              "justification": "Source describes openagentd as self-hosted agent runtime with built-in OpenTelemetry observability, persistent memory, and scheduling, supporting the claim's core assertions about these features.",
+              "cost_usd": 0.001227
+            }
+          ],
+          "summary": {
+            "supported": 4,
+            "partial": 0,
+            "unsupported": 0,
+            "synthetic_count": 0,
+            "accuracy_pct": 100,
+            "total_cost_usd": 0.0051
+          }
+        },
+        {
+          "judge_model": "claude-sonnet-4-6",
+          "claims": [
+            {
+              "claim_text": "[Meiklejohn's survey of MAST, MAS-FIRE, and Silo-Bench](/reading/2026-05/2026-05-03t110046-getting-up-to-speed-on-multi-agent-systems-part-4-wave-2) found that multi-agent LLM systems fail 41-87% of the time across 1,600 traced runs.",
+              "cited_source_slug": "2026-05/2026-05-03t110046-getting-up-to-speed-on-multi-agent-systems-part-4-wave-2",
+              "verdict": "supported",
+              "justification": "The source summary explicitly states 'multi-agent LLM systems fail 41–87% of the time' across '1,600 traces', covering MAST, MAS-FIRE, and Silo-Bench.",
+              "cost_usd": 0.004056
+            },
+            {
+              "claim_text": "[Meiklejohn's follow-up](/reading/2026-05/2026-05-03t110055-getting-up-to-speed-on-multi-agent-systems-part-5-debate) surveys convergent debate, adversarial debate, shared-notebook state management, and the CALM theorem from distributed systems.",
+              "cited_source_slug": "2026-05/2026-05-03t110055-getting-up-to-speed-on-multi-agent-systems-part-5-debate",
+              "verdict": "supported",
+              "justification": "Source summary explicitly lists convergent debate, adversarial debate, shared-notebook state, and the CALM theorem as the four topics surveyed.",
+              "cost_usd": 0.003612
+            },
+            {
+              "claim_text": "The cost of getting this wrong is quantified by [Dickson's survey of Stanford and Google/MIT research](/reading/2026-05/2026-05-03t115608-how-to-choose-between-single-and-multi-agent-solutions): multi-agent orchestration can amplify errors up to 17x and cut tool-handling efficiency by 2-6x relative to a single-agent baseline.",
+              "cited_source_slug": "2026-05/2026-05-03t115608-how-to-choose-between-single-and-multi-agent-solutions",
+              "verdict": "supported",
+              "justification": "Source states multi-agent orchestration 'can amplify errors up to 17x and cut tool-handling efficiency by 2–6x,' directly matching the claim's figures.",
+              "cost_usd": 0.003744
+            }
+          ],
+          "summary": {
+            "supported": 3,
+            "partial": 0,
+            "unsupported": 0,
+            "synthetic_count": 0,
+            "accuracy_pct": 100,
+            "total_cost_usd": 0.0114
+          },
+          "partial": true,
+          "failed_claims": 1
+        }
+      ],
+      "judge_agreement": {
+        "total_claims": 3,
+        "agree": 3,
+        "disagree": 0,
+        "agreement_pct": 100
+      }
+    },
+    {
+      "wiki_slug": "agentic-workflows",
+      "content_hash": "7744fbaecf90671b47aa781b0f6c343937506910d9c8d2fb1c8a7dafa66bda00",
+      "evaluated_at": "2026-06-03T05:44:18.489Z",
+      "judges": [
+        {
+          "judge_model": "claude-haiku-4-5",
+          "claims": [],
+          "summary": {
+            "supported": 0,
+            "partial": 0,
+            "unsupported": 0,
+            "synthetic_count": 0,
+            "accuracy_pct": 0,
+            "total_cost_usd": 0
+          },
+          "partial": true,
+          "failed_claims": 4
+        },
+        {
+          "judge_model": "claude-sonnet-4-6",
+          "claims": [
+            {
+              "claim_text": "[Your Agent Loves MCP](/reading/2026-04/2026-04-23t150424-your-agent-loves-mcp-as-much-as-you-love-guis) argues that loading MCP tool definitions into context each session is [expensive in tokens and non-composable](/wiki/context-engineering), analogous to forcing a programmer to read a GUI manual before every task.",
+              "cited_source_slug": "2026-04/2026-04-23t150424-your-agent-loves-mcp-as-much-as-you-love-guis",
+              "verdict": "supported",
+              "justification": "Source summary states MCP is 'token-expensive, and non-composable' with 'tool definitions loaded into context each session', matching the claim; GUI analogy is explicit in title and summary.",
+              "cost_usd": 0.003816
+            }
+          ],
+          "summary": {
+            "supported": 1,
+            "partial": 0,
+            "unsupported": 0,
+            "synthetic_count": 0,
+            "accuracy_pct": 100,
+            "total_cost_usd": 0.0038
+          },
+          "partial": true,
+          "failed_claims": 3
+        }
+      ],
+      "judge_agreement": {
+        "total_claims": 0,
+        "agree": 0,
+        "disagree": 0,
+        "agreement_pct": 0
+      }
+    },
+    {
+      "wiki_slug": "ai-agents",
+      "content_hash": "8f586c5145ab876044660b8329492f33b6c7b5c17d9f6804bf9f8f3e8f0a0364",
+      "evaluated_at": "2026-06-03T05:44:18.489Z",
+      "judges": [
+        {
+          "judge_model": "claude-haiku-4-5",
+          "claims": [],
+          "summary": {
+            "supported": 0,
+            "partial": 0,
+            "unsupported": 0,
+            "synthetic_count": 0,
+            "accuracy_pct": 0,
+            "total_cost_usd": 0
+          },
+          "partial": true,
+          "failed_claims": 10
+        },
+        {
+          "judge_model": "claude-sonnet-4-6",
+          "claims": [],
+          "summary": {
+            "supported": 0,
+            "partial": 0,
+            "unsupported": 0,
+            "synthetic_count": 0,
+            "accuracy_pct": 0,
+            "total_cost_usd": 0
+          },
+          "partial": true,
+          "failed_claims": 10
+        }
+      ],
+      "judge_agreement": {
+        "total_claims": 0,
+        "agree": 0,
+        "disagree": 0,
+        "agreement_pct": 0
+      }
+    },
+    {
+      "wiki_slug": "ai-assisted-coding",
+      "content_hash": "83e14cfba9bd861aa2c89e6f9c54da420a86f6128eac72bbed4688b991ff8894",
+      "evaluated_at": "2026-06-03T05:44:18.489Z",
+      "judges": [
+        {
+          "judge_model": "claude-haiku-4-5",
+          "claims": [],
+          "summary": {
+            "supported": 0,
+            "partial": 0,
+            "unsupported": 0,
+            "synthetic_count": 0,
+            "accuracy_pct": 0,
+            "total_cost_usd": 0
+          },
+          "partial": true,
+          "failed_claims": 8
+        },
+        {
+          "judge_model": "claude-sonnet-4-6",
+          "claims": [
+            {
+              "claim_text": "Anthropic's own engineering describes a GAN-inspired planner-generator-evaluator architecture that sustains coherent full-stack work without collapsing under context pressure [harness design](/reading/2026-05/2026-05-01t104137-harness-design-for-long-running-application-development).",
+              "cited_source_slug": "2026-05/2026-05-01t104137-harness-design-for-long-running-application-development",
+              "verdict": "supported",
+              "justification": "Source describes 'a GAN-inspired multi-agent architecture--planner, generator, and evaluator--that overcomes context anxiety' for full-stack applications, directly matching the claim.",
+              "cost_usd": 0.003678
+            },
+            {
+              "claim_text": "Tools like Claude Code and Cursor have accumulated enough adoption that purpose-built extension layers now exist: Databricks ships an MCP server and skill pack that grounds these assistants in verified Spark and Databricks patterns [ai-dev-kit](/reading/2026-04/2026-04-27t113526-databricks-solutionsai-dev-kit), and community plugins can turn a single prompt into a multi-agent pipeline with parallel execution and architectural review boards [orchestrator-supaconductor](/reading/2026-04/2026-04-30t231239-ibrahim-3dorchestrator-supaconductor).",
+              "cited_source_slug": "2026-04/2026-04-27t113526-databricks-solutionsai-dev-kit",
+              "verdict": "supported",
+              "justification": "Source describes 'an MCP server and skill pack that give AI coding assistants (Claude Code, Cursor...) trusted Databricks patterns,' directly matching the claim.",
+              "cost_usd": 0.003846
+            },
+            {
+              "claim_text": "Tools like Claude Code and Cursor have accumulated enough adoption that purpose-built extension layers now exist: Databricks ships an MCP server and skill pack that grounds these assistants in verified Spark and Databricks patterns [ai-dev-kit](/reading/2026-04/2026-04-27t113526-databricks-solutionsai-dev-kit), and community plugins can turn a single prompt into a multi-agent pipeline with parallel execution and architectural review boards [orchestrator-supaconductor](/reading/2026-04/2026-04-30t231239-ibrahim-3dorchestrator-supaconductor).",
+              "cited_source_slug": "2026-04/2026-04-30t231239-ibrahim-3dorchestrator-supaconductor",
+              "verdict": "supported",
+              "justification": "Source describes a Claude Code plugin that turns a single command into a multi-agent pipeline with parallel execution and a virtual Board of Directors for architectural decisions, matching the claim.",
+              "cost_usd": 0.003768
+            }
+          ],
+          "summary": {
+            "supported": 3,
+            "partial": 0,
+            "unsupported": 0,
+            "synthetic_count": 0,
+            "accuracy_pct": 100,
+            "total_cost_usd": 0.0113
+          },
+          "partial": true,
+          "failed_claims": 5
+        }
+      ],
+      "judge_agreement": {
+        "total_claims": 0,
+        "agree": 0,
+        "disagree": 0,
+        "agreement_pct": 0
+      }
+    },
+    {
+      "wiki_slug": "ai-infrastructure",
+      "content_hash": "09fe954bc00e041d210c6c3fb80f4b8b4bbc4c7854e0f99f73d89457eb8afc9e",
+      "evaluated_at": "2026-06-03T05:44:18.489Z",
+      "judges": [
+        {
+          "judge_model": "claude-haiku-4-5",
+          "claims": [
+            {
+              "claim_text": "[The Orchestrator Isn't Your Moat](/reading/2026-04/2026-04-27t113354-the-orchestrator-isnt-your-moat) makes the case that custom LLM orchestration harnesses are a liability.",
+              "cited_source_slug": "2026-04/2026-04-27t113354-the-orchestrator-isnt-your-moat",
+              "verdict": "supported",
+              "justification": "The source summary states that custom LLM orchestration harnesses 'decay with each model upgrade,' framing them as problematic and implicitly a liability that teams should avoid building.",
+              "cost_usd": 0.001216
+            }
+          ],
+          "summary": {
+            "supported": 1,
+            "partial": 0,
+            "unsupported": 0,
+            "synthetic_count": 0,
+            "accuracy_pct": 100,
+            "total_cost_usd": 0.0012
+          },
+          "partial": true,
+          "failed_claims": 3
+        },
+        {
+          "judge_model": "claude-sonnet-4-6",
+          "claims": [
+            {
+              "claim_text": "[The Orchestrator Isn't Your Moat](/reading/2026-04/2026-04-27t113354-the-orchestrator-isnt-your-moat) makes the case that custom LLM orchestration harnesses are a liability.",
+              "cited_source_slug": "2026-04/2026-04-27t113354-the-orchestrator-isnt-your-moat",
+              "verdict": "supported",
+              "justification": "The summary explicitly states teams should avoid 'building custom LLM orchestration harnesses that decay with each model upgrade,' supporting the claim they are a liability.",
+              "cost_usd": 0.003531
+            },
+            {
+              "claim_text": "[Ben Dickson's analysis](/reading/2026-05/2026-05-03t115608-how-to-choose-between-single-and-multi-agent-solutions) draws on Stanford and Google/MIT research to show that multi-agent orchestration introduces a coordination tax: errors can amplify up to 17x across agent hops, and tool-handling efficiency drops 2 to 6x compared to single-agent setups.",
+              "cited_source_slug": "2026-05/2026-05-03t115608-how-to-choose-between-single-and-multi-agent-solutions",
+              "verdict": "supported",
+              "justification": "Source states multi-agent orchestration introduces a hidden coordination tax that can amplify errors up to 17x and cut tool-handling efficiency by 2-6x, drawing on Stanford and Google/MIT research.",
+              "cost_usd": 0.003852
+            },
+            {
+              "claim_text": "[vectorize-io/hindsight](/reading/2026-05/2026-05-03t173422-vectorize-iohindsight) addresses this with biomimetic data structures and multi-strategy retrieval, achieving state-of-the-art scores on LongMemEval.",
+              "cited_source_slug": "2026-05/2026-05-03t173422-vectorize-iohindsight",
+              "verdict": "supported",
+              "justification": "Source states hindsight uses 'biomimetic data structures and multi-strategy retrieval' and achieves 'state-of-the-art scores on LongMemEval', directly matching the claim.",
+              "cost_usd": 0.003714
+            }
+          ],
+          "summary": {
+            "supported": 3,
+            "partial": 0,
+            "unsupported": 0,
+            "synthetic_count": 0,
+            "accuracy_pct": 100,
+            "total_cost_usd": 0.0111
+          },
+          "partial": true,
+          "failed_claims": 1
+        }
+      ],
+      "judge_agreement": {
+        "total_claims": 1,
+        "agree": 1,
+        "disagree": 0,
+        "agreement_pct": 100
+      }
+    },
+    {
+      "wiki_slug": "ai-safety",
+      "content_hash": "f227220854272a81bddd94aac5d274f39b98451b37eb39de01b81db04b828954",
+      "evaluated_at": "2026-06-03T05:44:18.489Z",
+      "judges": [
+        {
+          "judge_model": "claude-haiku-4-5",
+          "claims": [],
+          "summary": {
+            "supported": 0,
+            "partial": 0,
+            "unsupported": 0,
+            "synthetic_count": 0,
+            "accuracy_pct": 0,
+            "total_cost_usd": 0
+          },
+          "partial": true,
+          "failed_claims": 2
+        },
+        {
+          "judge_model": "claude-sonnet-4-6",
+          "claims": [],
+          "summary": {
+            "supported": 0,
+            "partial": 0,
+            "unsupported": 0,
+            "synthetic_count": 0,
+            "accuracy_pct": 0,
+            "total_cost_usd": 0
+          },
+          "partial": true,
+          "failed_claims": 2
+        }
+      ],
+      "judge_agreement": {
+        "total_claims": 0,
+        "agree": 0,
+        "disagree": 0,
+        "agreement_pct": 0
+      }
+    },
+    {
+      "wiki_slug": "api-design",
+      "content_hash": "b39f1b4dc8bc9bc7be7e60a2a757bc104654c7003a33d0fd2308bbd695a8127f",
+      "evaluated_at": "2026-06-03T05:44:18.489Z",
+      "judges": [
+        {
+          "judge_model": "claude-haiku-4-5",
+          "claims": [],
+          "summary": {
+            "supported": 0,
+            "partial": 0,
+            "unsupported": 0,
+            "synthetic_count": 0,
+            "accuracy_pct": 0,
+            "total_cost_usd": 0
+          },
+          "partial": true,
+          "failed_claims": 4
+        },
+        {
+          "judge_model": "claude-sonnet-4-6",
+          "claims": [
+            {
+              "claim_text": "[Zod-based response validation](/reading/2026-04/2026-04-30t230851-from-flaky-to-flawless-angular-api-response-management-with) addresses the external API surface: when a backend response deviates from the expected shape, runtime errors surface in production rather than at dev time.",
+              "cited_source_slug": "2026-04/2026-04-30t230851-from-flaky-to-flawless-angular-api-response-management-with",
+              "verdict": "partial",
+              "justification": "Source says Zod catches unexpected shapes 'at dev time before they cause runtime errors', which is the opposite of the claim that errors surface 'in production rather than at dev time'.",
+              "cost_usd": 0.003657
+            },
+            {
+              "claim_text": "[Conductor](/reading/2026-04/2026-04-30t231709-conductor) illustrates what a well-designed API can replace: decades of qbXML and SOAP complexity collapsed into a typed Python, Node.js, and REST interface covering 130+ QuickBooks objects.",
+              "cited_source_slug": "2026-04/2026-04-30t231709-conductor",
+              "verdict": "supported",
+              "justification": "Source states Conductor provides a typed API via Python, Node.js, and REST, abstracting qbXML and SOAP, covering 130+ QuickBooks objects, matching the claim's key details.",
+              "cost_usd": 0.003678
+            },
+            {
+              "claim_text": "The component-level analogue appears in [Angular component composition](/reading/2026-04/2026-04-30t232001-a-better-way-to-build-angular-components-from-inputs-to): components with dozens of inputs are effectively wide APIs.",
+              "cited_source_slug": "2026-04/2026-04-30t232001-a-better-way-to-build-angular-components-from-inputs-to",
+              "verdict": "supported",
+              "justification": "Source states Angular components 'bloated with dozens of inputs' have APIs that become unclean, directly supporting the claim that components with dozens of inputs are effectively wide APIs.",
+              "cost_usd": 0.003582
+            }
+          ],
+          "summary": {
+            "supported": 2,
+            "partial": 1,
+            "unsupported": 0,
+            "synthetic_count": 0,
+            "accuracy_pct": 83.3333,
+            "total_cost_usd": 0.0109
+          },
+          "partial": true,
+          "failed_claims": 1
+        }
+      ],
+      "judge_agreement": {
+        "total_claims": 0,
+        "agree": 0,
+        "disagree": 0,
+        "agreement_pct": 0
+      }
+    },
+    {
+      "wiki_slug": "benchmarks",
+      "content_hash": "d7ecad8c1634300591e600f4ac52e69fc04920a23011cbe753d28bd190a4c6f6",
+      "evaluated_at": "2026-06-03T05:44:18.489Z",
+      "judges": [
+        {
+          "judge_model": "claude-haiku-4-5",
+          "claims": [],
+          "summary": {
+            "supported": 0,
+            "partial": 0,
+            "unsupported": 0,
+            "synthetic_count": 0,
+            "accuracy_pct": 0,
+            "total_cost_usd": 0
+          },
+          "partial": true,
+          "failed_claims": 3
+        },
+        {
+          "judge_model": "claude-sonnet-4-6",
+          "claims": [],
+          "summary": {
+            "supported": 0,
+            "partial": 0,
+            "unsupported": 0,
+            "synthetic_count": 0,
+            "accuracy_pct": 0,
+            "total_cost_usd": 0
+          },
+          "partial": true,
+          "failed_claims": 3
+        }
+      ],
+      "judge_agreement": {
+        "total_claims": 0,
+        "agree": 0,
+        "disagree": 0,
+        "agreement_pct": 0
+      }
+    },
+    {
+      "wiki_slug": "context-engineering",
+      "content_hash": "5a9fd45e60c7cdee973524f771eab40e65da4726b88425f2d3eb126d832530db",
+      "evaluated_at": "2026-06-03T05:44:18.489Z",
+      "judges": [
+        {
+          "judge_model": "claude-haiku-4-5",
+          "claims": [],
+          "summary": {
+            "supported": 0,
+            "partial": 0,
+            "unsupported": 0,
+            "synthetic_count": 0,
+            "accuracy_pct": 0,
+            "total_cost_usd": 0
+          },
+          "partial": true,
+          "failed_claims": 5
+        },
+        {
+          "judge_model": "claude-sonnet-4-6",
+          "claims": [
+            {
+              "claim_text": "[One implementation guide](/reading/2026-04/2026-04-30t232052-how-to-implement-karpathys-llm-knowledge-base) describes ingesting sources, having the model build and maintain the wiki, and running health checks to prevent drift.",
+              "cited_source_slug": "2026-04/2026-04-30t232052-how-to-implement-karpathys-llm-knowledge-base",
+              "verdict": "supported",
+              "justification": "Source explicitly mentions ingesting raw documents, having the model build and maintain structured files, and running health checks to prevent knowledge drift.",
+              "cost_usd": 0.003465
+            },
+            {
+              "claim_text": "[A developer who built this end-to-end](/reading/2026-04/2026-04-30t232201-building-karpathys-llm-wiki-honest-takeaways) found that cross-document synthesis genuinely outperforms RAG for curated research, but that hallucinations baked in at ingest propagate structurally, making the lint step non-negotiable.",
+              "cited_source_slug": "2026-04/2026-04-30t232201-building-karpathys-llm-wiki-honest-takeaways",
+              "verdict": "supported",
+              "justification": "Source states cross-document synthesis is superior to RAG, hallucinations baked in at ingest propagate structurally, and the lint step is non-negotiable, matching the claim directly.",
+              "cost_usd": 0.003822
+            },
+            {
+              "claim_text": "A zero-dependency CLI described in [LostWarrior/knowledge-base](/reading/2026-04/2026-04-30t232126-lostwarriorknowledge-base) organizes project context as tiered Markdown files with a machine-readable manifest so agents can navigate a knowledge base without burning excess tokens on irrelevant content.",
+              "cited_source_slug": "2026-04/2026-04-30t232126-lostwarriorknowledge-base",
+              "verdict": "supported",
+              "justification": "Source states it is a zero-dependency bash CLI organizing project context as tiered markdown files with a machine-readable manifest.json so AI agents can navigate without burning excess tokens.",
+              "cost_usd": 0.003597
+            },
+            {
+              "claim_text": "At the infrastructure level, Anthropic's Managed Agents architecture [decouples the agent harness, session log, and sandbox](/reading/2026-04/2026-04-27t114138-scaling-managed-agents-decoupling-the-brain-from-the-hands) into independent interfaces, cutting p50 time-to-first-token by roughly 60 percent and p95 by over 90 percent.",
+              "cited_source_slug": "2026-04/2026-04-27t114138-scaling-managed-agents-decoupling-the-brain-from-the-hands",
+              "verdict": "supported",
+              "justification": "Source states Anthropic's Managed Agents separates the harness, session log, and sandbox into independent interfaces, cutting p50 TTFT by ~60% and p95 by over 90%.",
+              "cost_usd": 0.003885
+            }
+          ],
+          "summary": {
+            "supported": 4,
+            "partial": 0,
+            "unsupported": 0,
+            "synthetic_count": 0,
+            "accuracy_pct": 100,
+            "total_cost_usd": 0.0148
+          },
+          "partial": true,
+          "failed_claims": 1
+        }
+      ],
+      "judge_agreement": {
+        "total_claims": 0,
+        "agree": 0,
+        "disagree": 0,
+        "agreement_pct": 0
+      }
+    },
+    {
+      "wiki_slug": "continuous-integration",
+      "content_hash": "27ed9b09f901443d567f86c08e20fafb8b3b56d44cb22a5a941a2aede2d1ed6b",
+      "evaluated_at": "2026-06-03T05:44:18.489Z",
+      "judges": [
+        {
+          "judge_model": "claude-haiku-4-5",
+          "claims": [],
+          "summary": {
+            "supported": 0,
+            "partial": 0,
+            "unsupported": 0,
+            "synthetic_count": 0,
+            "accuracy_pct": 0,
+            "total_cost_usd": 0
+          },
+          "partial": true,
+          "failed_claims": 5
+        },
+        {
+          "judge_model": "claude-sonnet-4-6",
+          "claims": [
+            {
+              "claim_text": "[Mendral's analysis of PostHog's monorepo](/reading/2026-04/2026-04-30t195531-what-ci-actually-looks-like-at-a-100-person-team) processed 1.18 billion log lines and 33 million weekly test executions, and the finding was that log ingestion speed and smart failure routing mattered more than the AI diagnosis layer on top.",
+              "cited_source_slug": "2026-04/2026-04-30t195531-what-ci-actually-looks-like-at-a-100-person-team",
+              "verdict": "supported",
+              "justification": "Source states the agent processed 1.18B log lines and 33M weekly test executions, and that 'log ingestion speed and smart routing matter more than the AI diagnosis itself.'",
+              "cost_usd": 0.003825
+            },
+            {
+              "claim_text": "[TestDino](/reading/2026-04/2026-04-30t231348-testdino) approaches the same problem from a product angle, auto-categorizing failures as bugs, flaky tests, or UI changes and claiming 6-8 hours of weekly savings per engineer.",
+              "cited_source_slug": "2026-04/2026-04-30t231348-testdino",
+              "verdict": "supported",
+              "justification": "Source states TestDino 'auto-categorizes failures as bugs, flaky tests, or UI changes, and claims to save engineers 6–8 hours weekly,' directly matching the claim.",
+              "cost_usd": 0.003591
+            },
+            {
+              "claim_text": "[Currents.dev argues](/reading/2026-05/2026-05-05t135218-designing-playwright-tests-that-survive-ui-refactors) that Playwright suites break during UI refactors because tests couple to CSS classes and DOM structure rather than semantic roles and explicit test attributes.",
+              "cited_source_slug": "2026-05/2026-05-05t135218-designing-playwright-tests-that-survive-ui-refactors",
+              "verdict": "supported",
+              "justification": "The summary explicitly states suites break 'from coupling to CSS classes, DOM structure, and text content rather than semantic roles, labels, and explicit test attributes,' matching the claim.",
+              "cost_usd": 0.00366
+            },
+            {
+              "claim_text": "[Trunk's post-mortem on a GitHub merge queue bug](/reading/2026-05/2026-05-03t150555-what-happens-if-a-merge-queue-builds-on-the-wrong-commit) describes how GitHub's implementation silently rewrote main by constructing temporary branches from stale divergence points rather than HEAD.",
+              "cited_source_slug": "2026-05/2026-05-03t150555-what-happens-if-a-merge-queue-builds-on-the-wrong-commit",
+              "verdict": "supported",
+              "justification": "Source summary states GitHub merge queue 'silently rewrote main branches by constructing temp branches from stale divergence points rather than HEAD', directly matching the claim.",
+              "cost_usd": 0.003654
+            },
+            {
+              "claim_text": "The [SAP npm supply chain compromise](/reading/2026-05/2026-05-01t102345-sap-related-npm-packages-compromised-in-credential-stealing) involved poisoned packages that harvested cloud secrets and browser passwords, with exfiltration routed through GitHub.",
+              "cited_source_slug": "2026-05/2026-05-01t102345-sap-related-npm-packages-compromised-in-credential-stealing",
+              "verdict": "supported",
+              "justification": "Source states the payload 'harvests cloud secrets and browser passwords, exfiltrates them via GitHub,' directly matching the claim's wording.",
+              "cost_usd": 0.003558
+            }
+          ],
+          "summary": {
+            "supported": 5,
+            "partial": 0,
+            "unsupported": 0,
+            "synthetic_count": 0,
+            "accuracy_pct": 100,
+            "total_cost_usd": 0.0183
+          }
+        }
+      ],
+      "judge_agreement": {
+        "total_claims": 0,
+        "agree": 0,
+        "disagree": 0,
+        "agreement_pct": 0
+      }
+    },
+    {
+      "wiki_slug": "developer-productivity",
+      "content_hash": "dd1b305cd0eb12ced065b176987ce7d5f420850d9641093868fc9f74d0571678",
+      "evaluated_at": "2026-06-03T05:44:18.489Z",
+      "judges": [
+        {
+          "judge_model": "claude-haiku-4-5",
+          "claims": [],
+          "summary": {
+            "supported": 0,
+            "partial": 0,
+            "unsupported": 0,
+            "synthetic_count": 0,
+            "accuracy_pct": 0,
+            "total_cost_usd": 0
+          },
+          "partial": true,
+          "failed_claims": 10
+        },
+        {
+          "judge_model": "claude-sonnet-4-6",
+          "claims": [],
+          "summary": {
+            "supported": 0,
+            "partial": 0,
+            "unsupported": 0,
+            "synthetic_count": 0,
+            "accuracy_pct": 0,
+            "total_cost_usd": 0
+          },
+          "partial": true,
+          "failed_claims": 10
+        }
+      ],
+      "judge_agreement": {
+        "total_claims": 0,
+        "agree": 0,
+        "disagree": 0,
+        "agreement_pct": 0
+      }
+    },
+    {
+      "wiki_slug": "developer-tooling",
+      "content_hash": "b549a26cd5c7c31d3abadac229d250cceb67cb2d2487c4b94347ef47605f4e2f",
+      "evaluated_at": "2026-06-03T05:44:18.489Z",
+      "judges": [
+        {
+          "judge_model": "claude-haiku-4-5",
+          "claims": [],
+          "summary": {
+            "supported": 0,
+            "partial": 0,
+            "unsupported": 0,
+            "synthetic_count": 0,
+            "accuracy_pct": 0,
+            "total_cost_usd": 0
+          },
+          "partial": true,
+          "failed_claims": 8
+        },
+        {
+          "judge_model": "claude-sonnet-4-6",
+          "claims": [],
+          "summary": {
+            "supported": 0,
+            "partial": 0,
+            "unsupported": 0,
+            "synthetic_count": 0,
+            "accuracy_pct": 0,
+            "total_cost_usd": 0
+          },
+          "partial": true,
+          "failed_claims": 8
+        }
+      ],
+      "judge_agreement": {
+        "total_claims": 0,
+        "agree": 0,
+        "disagree": 0,
+        "agreement_pct": 0
+      }
+    },
+    {
+      "wiki_slug": "developer-tools",
+      "content_hash": "e34f1ad315ce036cd3b6cb616ac6ceeca870e0cc5425ae08121670d3e7649644",
+      "evaluated_at": "2026-06-03T05:44:18.489Z",
+      "judges": [
+        {
+          "judge_model": "claude-haiku-4-5",
+          "claims": [],
+          "summary": {
+            "supported": 0,
+            "partial": 0,
+            "unsupported": 0,
+            "synthetic_count": 0,
+            "accuracy_pct": 0,
+            "total_cost_usd": 0
+          },
+          "partial": true,
+          "failed_claims": 10
+        },
+        {
+          "judge_model": "claude-sonnet-4-6",
+          "claims": [
+            {
+              "claim_text": "[A hands-on Linux tutorial](/reading/2026-05/2026-05-04t231858-how-container-filesystem-works-building-a-docker-like) shows how Docker-style filesystem isolation works by composing mount namespaces and `pivot_root`, making the mechanics visible rather than magical.",
+              "cited_source_slug": "2026-05/2026-05-04t231858-how-container-filesystem-works-building-a-docker-like",
+              "verdict": "supported",
+              "justification": "Source summary describes a step-by-step tutorial using mount namespaces and pivot_root to show how container filesystem isolation works, directly matching the claim.",
+              "cost_usd": 0.003543
+            },
+            {
+              "claim_text": "Alongside that, [a DevOps guide on SSH keys](/reading/2026-05/2026-05-04t231548-using-ssh-keys-to-make-connectivity-simpler-and-secure) covers OpenSSH key pairs, agent forwarding, and SSH-based commit signing as the practical glue for authentication across machines.",
+              "cited_source_slug": "2026-05/2026-05-04t231548-using-ssh-keys-to-make-connectivity-simpler-and-secure",
+              "verdict": "supported",
+              "justification": "Source summary explicitly mentions OpenSSH key pairs, ssh-agent forwarding, and SSH-based commit signing, directly matching all three elements in the claim.",
+              "cost_usd": 0.003567
+            },
+            {
+              "claim_text": "Version control platforms themselves are under scrutiny: [David Bushell argues](/reading/2026-05/2026-05-10t205349-github-is-sinking) that GitHub has degraded under Microsoft through AI noise and unreliability, and recommends alternatives like Codeberg or self-hosted Forgejo.",
+              "cited_source_slug": "2026-05/2026-05-10t205349-github-is-sinking",
+              "verdict": "supported",
+              "justification": "Source summary states Microsoft's acquisition degraded GitHub through AI slop and unreliability, and urges migration to alternatives like Codeberg and Forgejo, matching the claim directly.",
+              "cost_usd": 0.0036
+            },
+            {
+              "claim_text": "[A JavaScript library roundup](/reading/2026-05/2026-05-12t165232-seven-cool-javascript-libraries-you-should-know-about) highlights tools like Knip for dead-code detection, Zod for schema validation, Biome for linting, and Orval for API codegen.",
+              "cited_source_slug": "2026-05/2026-05-12t165232-seven-cool-javascript-libraries-you-should-know-about",
+              "verdict": "supported",
+              "justification": "The source lists Knip, Zod, Biome, and Orval among its seven libraries, describing them as solving dead code, schema validation, linting, and API codegen respectively.",
+              "cost_usd": 0.003762
+            },
+            {
+              "claim_text": "[Conductor](/reading/2026-04/2026-04-30t231709-conductor) takes a similar ergonomic angle at the enterprise end, providing a fully-typed Python and Node.js API over QuickBooks Desktop that abstracts away qbXML and SOAP entirely.",
+              "cited_source_slug": "2026-04/2026-04-30t231709-conductor",
+              "verdict": "supported",
+              "justification": "Source states Conductor provides a fully-typed API via Python and Node.js abstracting away qbXML and SOAP, directly matching the claim.",
+              "cost_usd": 0.003492
+            },
+            {
+              "claim_text": "[Temporal](/reading/2026-04/2026-04-30t231511-temporal) offers durable execution that persists workflow state at every step, removing manual failure-recovery logic from distributed applications.",
+              "cited_source_slug": "2026-04/2026-04-30t231511-temporal",
+              "verdict": "supported",
+              "justification": "Source states Temporal 'persists workflow state at every step, letting distributed applications automatically recover from failures without manual reconciliation logic,' directly matching the claim.",
+              "cost_usd": 0.003348
+            },
+            {
+              "claim_text": "[Mintlify](/reading/2026-04/2026-04-30t231435-mintlify) positions itself as AI-native, supporting llms.txt and MCP so that knowledge can be served to both human readers and LLM agents.",
+              "cited_source_slug": "2026-04/2026-04-30t231435-mintlify",
+              "verdict": "supported",
+              "justification": "Source describes Mintlify as 'AI-native' with 'support for llms.txt, MCP' that serves knowledge to 'both human users and LLMs', directly entailing the claim.",
+              "cost_usd": 0.003642
+            },
+            {
+              "claim_text": "[MarkdownLM](/reading/2026-04/2026-04-30t231319-markdownlm) takes a stricter stance, centralizing architectural rules and security policies into a living knowledge base with Git-layer enforcement that blocks non-compliant code before it merges.",
+              "cited_source_slug": "2026-04/2026-04-30t231319-markdownlm",
+              "verdict": "supported",
+              "justification": "Source states MarkdownLM centralizes architectural rules and security policies into a living knowledge base with enforcement at the Git layer to block non-compliant code before it merges.",
+              "cost_usd": 0.003534
+            }
+          ],
+          "summary": {
+            "supported": 8,
+            "partial": 0,
+            "unsupported": 0,
+            "synthetic_count": 0,
+            "accuracy_pct": 100,
+            "total_cost_usd": 0.0285
+          },
+          "partial": true,
+          "failed_claims": 2
+        }
+      ],
+      "judge_agreement": {
+        "total_claims": 0,
+        "agree": 0,
+        "disagree": 0,
+        "agreement_pct": 0
+      }
+    },
+    {
+      "wiki_slug": "distributed-systems",
+      "content_hash": "a24491f0b75dddc08572f73c343818f5db3064dd661639d7d46c79173157ece8",
+      "evaluated_at": "2026-06-03T05:44:18.489Z",
+      "judges": [
+        {
+          "judge_model": "claude-haiku-4-5",
+          "claims": [
+            {
+              "claim_text": "Jack Vanlightly's taxonomy of durable execution [The Three Durable Function Forms](/reading/2026-05/2026-05-01t112302-the-three-durable-function-forms) maps stateless functions, sessions, and actors onto a behavior-state continuum across Temporal, Restate, DBOS, and Resonate.",
+              "cited_source_slug": "2026-05/2026-05-01t112302-the-three-durable-function-forms",
+              "verdict": "supported",
+              "justification": "The source summary explicitly states the taxonomy proposes three forms (stateless functions, sessions, actors) mapped onto a behavior-state continuum across the four platforms named in the claim.",
+              "cost_usd": 0.001229
+            }
+          ],
+          "summary": {
+            "supported": 1,
+            "partial": 0,
+            "unsupported": 0,
+            "synthetic_count": 0,
+            "accuracy_pct": 100,
+            "total_cost_usd": 0.0012
+          },
+          "partial": true,
+          "failed_claims": 4
+        },
+        {
+          "judge_model": "claude-sonnet-4-6",
+          "claims": [
+            {
+              "claim_text": "Jack Vanlightly's taxonomy of durable execution [The Three Durable Function Forms](/reading/2026-05/2026-05-01t112302-the-three-durable-function-forms) maps stateless functions, sessions, and actors onto a behavior-state continuum across Temporal, Restate, DBOS, and Resonate.",
+              "cited_source_slug": "2026-05/2026-05-01t112302-the-three-durable-function-forms",
+              "verdict": "supported",
+              "justification": "Source summary states the taxonomy maps stateless functions, sessions, and actors onto a behavior-state continuum with comparisons across Temporal, Restate, DBOS, and Resonate.",
+              "cost_usd": 0.003705
+            },
+            {
+              "claim_text": "Part 5 [on debate, state, and coordination](/reading/2026-05/2026-05-03t110055-getting-up-to-speed-on-multi-agent-systems-part-5-debate) invokes the CALM theorem and shared-notebook state to show that coordination structure must match task structure.",
+              "cited_source_slug": "2026-05/2026-05-03t110055-getting-up-to-speed-on-multi-agent-systems-part-5-debate",
+              "verdict": "supported",
+              "justification": "Source summary explicitly states the piece covers CALM theorem and shared-notebook state, arguing coordination structure must match task structure.",
+              "cost_usd": 0.003516
+            },
+            {
+              "claim_text": "Part 4 [on Wave 2 failures](/reading/2026-05/2026-05-03t110046-getting-up-to-speed-on-multi-agent-systems-part-4-wave-2) reports failure rates of 41-87% across empirical studies, attributing the bottleneck to information synthesis rather than raw coordination.",
+              "cited_source_slug": "2026-05/2026-05-03t110046-getting-up-to-speed-on-multi-agent-systems-part-4-wave-2",
+              "verdict": "supported",
+              "justification": "Source summary states systems fail 41-87% of the time and that information synthesis, not coordination, is the core bottleneck, directly matching both parts of the claim.",
+              "cost_usd": 0.003789
+            }
+          ],
+          "summary": {
+            "supported": 3,
+            "partial": 0,
+            "unsupported": 0,
+            "synthetic_count": 0,
+            "accuracy_pct": 100,
+            "total_cost_usd": 0.011
+          },
+          "partial": true,
+          "failed_claims": 2
+        }
+      ],
+      "judge_agreement": {
+        "total_claims": 1,
+        "agree": 1,
+        "disagree": 0,
+        "agreement_pct": 100
+      }
+    },
+    {
+      "wiki_slug": "engineering-craft",
+      "content_hash": "a96739daae0e9f3636c3147a84e2a30f62d5726a24e29c36262ef3094707398a",
+      "evaluated_at": "2026-06-03T05:44:18.489Z",
+      "judges": [
+        {
+          "judge_model": "claude-haiku-4-5",
+          "claims": [],
+          "summary": {
+            "supported": 0,
+            "partial": 0,
+            "unsupported": 0,
+            "synthetic_count": 0,
+            "accuracy_pct": 0,
+            "total_cost_usd": 0
+          },
+          "partial": true,
+          "failed_claims": 4
+        },
+        {
+          "judge_model": "claude-sonnet-4-6",
+          "claims": [
+            {
+              "claim_text": "[Crafting Interpreters](/reading/2026-04/2026-04-30t231027-munificentcraftinginterpreters) represents craft at its most foundational.",
+              "cited_source_slug": "2026-04/2026-04-30t231027-munificentcraftinginterpreters",
+              "verdict": "unsupported",
+              "justification": "The source describes the repository contents but makes no claim about craft being 'foundational' or representing craft at any level.",
+              "cost_usd": 0.003378
+            }
+          ],
+          "summary": {
+            "supported": 0,
+            "partial": 0,
+            "unsupported": 1,
+            "synthetic_count": 0,
+            "accuracy_pct": 0,
+            "total_cost_usd": 0.0034
+          },
+          "partial": true,
+          "failed_claims": 3
+        }
+      ],
+      "judge_agreement": {
+        "total_claims": 0,
+        "agree": 0,
+        "disagree": 0,
+        "agreement_pct": 0
+      }
+    },
+    {
+      "wiki_slug": "enterprise-software",
+      "content_hash": "f972a5927d25a8fe4aaeb74bc7c0f0b717efbd3cd458d7a22138cafed8a27d90",
+      "evaluated_at": "2026-06-03T05:44:18.489Z",
+      "judges": [
+        {
+          "judge_model": "claude-haiku-4-5",
+          "claims": [],
+          "summary": {
+            "supported": 0,
+            "partial": 0,
+            "unsupported": 0,
+            "synthetic_count": 0,
+            "accuracy_pct": 0,
+            "total_cost_usd": 0
+          },
+          "partial": true,
+          "failed_claims": 4
+        },
+        {
+          "judge_model": "claude-sonnet-4-6",
+          "claims": [
+            {
+              "claim_text": "[Mintlify](/reading/2026-04/2026-04-30t231435-mintlify) positions its documentation platform partly on enterprise readiness, offering SSO, access controls, and the kind of governance that teams shipping internal and external docs at scale actually need.",
+              "cited_source_slug": "2026-04/2026-04-30t231435-mintlify",
+              "verdict": "partial",
+              "justification": "The source confirms Mintlify is a documentation platform for teams but does not mention SSO, access controls, or enterprise governance features specifically.",
+              "cost_usd": 0.003396
+            }
+          ],
+          "summary": {
+            "supported": 0,
+            "partial": 1,
+            "unsupported": 0,
+            "synthetic_count": 0,
+            "accuracy_pct": 50,
+            "total_cost_usd": 0.0034
+          },
+          "partial": true,
+          "failed_claims": 3
+        }
+      ],
+      "judge_agreement": {
+        "total_claims": 0,
+        "agree": 0,
+        "disagree": 0,
+        "agreement_pct": 0
+      }
+    },
+    {
+      "wiki_slug": "flaky-tests",
+      "content_hash": "60b066802c9968bed23c28789beffe74a83c2a4918e13974853bdbf25a2553e5",
+      "evaluated_at": "2026-06-03T05:44:18.489Z",
+      "judges": [
+        {
+          "judge_model": "claude-haiku-4-5",
+          "claims": [
+            {
+              "claim_text": "At PostHog's scale, Mendral's AI agent processed 33 million weekly test executions and auto-diagnosed flaky tests, opened fix PRs, and routed alerts [What CI Actually Looks Like at a 100-Person Team](/reading/2026-04/2026-04-30t195531-what-ci-actually-looks-like-at-a-100-person-team).",
+              "cited_source_slug": "2026-04/2026-04-30t195531-what-ci-actually-looks-like-at-a-100-person-team",
+              "verdict": "supported",
+              "justification": "The source states that Mendral's AI agent processed 33 million weekly test executions and auto-diagnosed flaky tests, opened fix PRs, and routed alerts, matching the claim's core assertions.",
+              "cost_usd": 0.001306
+            },
+            {
+              "claim_text": "TestDino targets Playwright users with an analytics layer that auto-categorizes failures as bugs, flaky tests, or UI changes [TestDino](/reading/2026-04/2026-04-30t231348-testdino).",
+              "cited_source_slug": "2026-04/2026-04-30t231348-testdino",
+              "verdict": "supported",
+              "justification": "Source states TestDino is an 'AI-powered reporting and analytics layer for Playwright' that 'auto-categorizes failures as bugs, flaky tests, or UI changes,' directly supporting the claim.",
+              "cost_usd": 0.001216
+            }
+          ],
+          "summary": {
+            "supported": 2,
+            "partial": 0,
+            "unsupported": 0,
+            "synthetic_count": 0,
+            "accuracy_pct": 100,
+            "total_cost_usd": 0.0025
+          },
+          "partial": true,
+          "failed_claims": 2
+        },
+        {
+          "judge_model": "claude-sonnet-4-6",
+          "claims": [
+            {
+              "claim_text": "At PostHog's scale, Mendral's AI agent processed 33 million weekly test executions and auto-diagnosed flaky tests, opened fix PRs, and routed alerts [What CI Actually Looks Like at a 100-Person Team](/reading/2026-04/2026-04-30t195531-what-ci-actually-looks-like-at-a-100-person-team).",
+              "cited_source_slug": "2026-04/2026-04-30t195531-what-ci-actually-looks-like-at-a-100-person-team",
+              "verdict": "supported",
+              "justification": "Source states Mendral's AI agent processed 33 million weekly test executions and auto-diagnosed flaky tests, opened fix PRs, and routed failure alerts on PostHog's monorepo.",
+              "cost_usd": 0.003876
+            },
+            {
+              "claim_text": "TestDino targets Playwright users with an analytics layer that auto-categorizes failures as bugs, flaky tests, or UI changes [TestDino](/reading/2026-04/2026-04-30t231348-testdino).",
+              "cited_source_slug": "2026-04/2026-04-30t231348-testdino",
+              "verdict": "supported",
+              "justification": "Source summary states TestDino is an analytics layer for Playwright that 'auto-categorizes failures as bugs, flaky tests, or UI changes', directly matching the claim.",
+              "cost_usd": 0.003501
+            },
+            {
+              "claim_text": "The Currents.dev piece on Playwright selector strategy addresses the root cause most within a team's direct control [Designing Playwright Tests That Survive UI Refactors](/reading/2026-05/2026-05-05t135218-designing-playwright-tests-that-survive-ui-refactors).",
+              "cited_source_slug": "2026-05/2026-05-05t135218-designing-playwright-tests-that-survive-ui-refactors",
+              "verdict": "partial",
+              "justification": "The source argues tests break due to selector coupling, which is within a team's control, but it does not explicitly frame this as 'the root cause most within a team's direct control.'",
+              "cost_usd": 0.003696
+            },
+            {
+              "claim_text": "The merge-queue piece is adjacent: a GitHub bug that silently constructed temp branches from stale divergence points rather than HEAD [What Happens If a Merge Queue Builds on the Wrong Commit](/reading/2026-05/2026-05-03t150555-what-happens-if-a-merge-queue-builds-on-the-wrong-commit) is not flakiness in the test sense, but it produces the same symptom: a CI result that does not reflect the actual code state.",
+              "cited_source_slug": "2026-05/2026-05-03t150555-what-happens-if-a-merge-queue-builds-on-the-wrong-commit",
+              "verdict": "supported",
+              "justification": "Source states a GitHub merge queue bug constructed temp branches from stale divergence points rather than HEAD, directly matching the claim's description of the bug.",
+              "cost_usd": 0.003678
+            }
+          ],
+          "summary": {
+            "supported": 3,
+            "partial": 1,
+            "unsupported": 0,
+            "synthetic_count": 0,
+            "accuracy_pct": 87.5,
+            "total_cost_usd": 0.0148
+          }
+        }
+      ],
+      "judge_agreement": {
+        "total_claims": 2,
+        "agree": 2,
+        "disagree": 0,
+        "agreement_pct": 100
+      }
+    },
+    {
+      "wiki_slug": "fluid-typography",
+      "content_hash": "c268aad1ee4dfccddd14350e13b771224ae6d7d5a8c5171d6411d917457f0743",
+      "evaluated_at": "2026-06-03T05:44:18.489Z",
+      "judges": [
+        {
+          "judge_model": "claude-haiku-4-5",
+          "claims": [],
+          "summary": {
+            "supported": 0,
+            "partial": 0,
+            "unsupported": 0,
+            "synthetic_count": 0,
+            "accuracy_pct": 0,
+            "total_cost_usd": 0
+          },
+          "partial": true,
+          "failed_claims": 3
+        },
+        {
+          "judge_model": "claude-sonnet-4-6",
+          "claims": [
+            {
+              "claim_text": "[Adrian Bece's breakdown](/reading/2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp) covers the math in detail: the preferred parameter is derived from a linear equation relating viewport width to font size, and using `rem` units for the min and max values (rather than `px`) preserves browser-level text zoom, which is critical for accessibility.",
+              "cited_source_slug": "2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp",
+              "verdict": "supported",
+              "justification": "The summary explicitly states the source covers 'the math behind preferred-value parameters' and 'rem-based accessibility fixes', directly supporting both parts of the claim.",
+              "cost_usd": 0.003618
+            }
+          ],
+          "summary": {
+            "supported": 1,
+            "partial": 0,
+            "unsupported": 0,
+            "synthetic_count": 0,
+            "accuracy_pct": 100,
+            "total_cost_usd": 0.0036
+          },
+          "partial": true,
+          "failed_claims": 2
+        }
+      ],
+      "judge_agreement": {
+        "total_claims": 0,
+        "agree": 0,
+        "disagree": 0,
+        "agreement_pct": 0
+      }
+    },
+    {
+      "wiki_slug": "font-pairing",
+      "content_hash": "5e366585cb74c8877f2271f5b2ecf34170edfa2b7b042c2004ad96646ecb7886",
+      "evaluated_at": "2026-06-03T05:44:18.489Z",
+      "judges": [
+        {
+          "judge_model": "claude-haiku-4-5",
+          "claims": [],
+          "summary": {
+            "supported": 0,
+            "partial": 0,
+            "unsupported": 0,
+            "synthetic_count": 0,
+            "accuracy_pct": 0,
+            "total_cost_usd": 0
+          },
+          "partial": true,
+          "failed_claims": 2
+        },
+        {
+          "judge_model": "claude-sonnet-4-6",
+          "claims": [],
+          "summary": {
+            "supported": 0,
+            "partial": 0,
+            "unsupported": 0,
+            "synthetic_count": 0,
+            "accuracy_pct": 0,
+            "total_cost_usd": 0
+          },
+          "partial": true,
+          "failed_claims": 2
+        }
+      ],
+      "judge_agreement": {
+        "total_claims": 0,
+        "agree": 0,
+        "disagree": 0,
+        "agreement_pct": 0
+      }
+    },
+    {
+      "wiki_slug": "kubernetes",
+      "content_hash": "80af96f417054f047eea7cb0604ad9151f0dc5fc5b1b509951e3c58dbf2a8a6a",
+      "evaluated_at": "2026-06-03T05:44:18.489Z",
+      "judges": [
+        {
+          "judge_model": "claude-haiku-4-5",
+          "claims": [
+            {
+              "claim_text": "Both the [Product Hunt listing](/reading/2026-05/2026-05-03t105219-radar-open-source-kubernetes-ui) and the [Radar product site](/reading/2026-05/2026-05-03t105238-radar-or-the-missing-open-source-kubernetes-ui) describe it as an open-source, Apache 2.0 binary that runs locally or self-hosted inside the cluster, with no cloud account or external agents required.",
+              "cited_source_slug": "2026-05/2026-05-03t105219-radar-open-source-kubernetes-ui",
+              "verdict": "partial",
+              "justification": "The source confirms open-source, single-binary, no cloud account or agents required, but does not explicitly state the Apache 2.0 license or that it runs locally/self-hosted inside the cluster.",
+              "cost_usd": 0.001286
+            },
+            {
+              "claim_text": "Both the [Product Hunt listing](/reading/2026-05/2026-05-03t105219-radar-open-source-kubernetes-ui) and the [Radar product site](/reading/2026-05/2026-05-03t105238-radar-or-the-missing-open-source-kubernetes-ui) describe it as an open-source, Apache 2.0 binary that runs locally or self-hosted inside the cluster, with no cloud account or external agents required.",
+              "cited_source_slug": "2026-05/2026-05-03t105238-radar-or-the-missing-open-source-kubernetes-ui",
+              "verdict": "supported",
+              "justification": "The source describes Radar as an open-source, Apache 2.0 binary that runs locally or self-hosted in the cluster, matching the claim's characterization of the product site description.",
+              "cost_usd": 0.001282
+            }
+          ],
+          "summary": {
+            "supported": 1,
+            "partial": 1,
+            "unsupported": 0,
+            "synthetic_count": 0,
+            "accuracy_pct": 75,
+            "total_cost_usd": 0.0026
+          }
+        },
+        {
+          "judge_model": "claude-sonnet-4-6",
+          "claims": [
+            {
+              "claim_text": "Both the [Product Hunt listing](/reading/2026-05/2026-05-03t105219-radar-open-source-kubernetes-ui) and the [Radar product site](/reading/2026-05/2026-05-03t105238-radar-or-the-missing-open-source-kubernetes-ui) describe it as an open-source, Apache 2.0 binary that runs locally or self-hosted inside the cluster, with no cloud account or external agents required.",
+              "cited_source_slug": "2026-05/2026-05-03t105219-radar-open-source-kubernetes-ui",
+              "verdict": "partial",
+              "justification": "Source confirms single-binary, open-source, no cloud account or agents required, but does not explicitly state Apache 2.0 license or that it runs locally or self-hosted inside the cluster.",
+              "cost_usd": 0.003786
+            },
+            {
+              "claim_text": "Both the [Product Hunt listing](/reading/2026-05/2026-05-03t105219-radar-open-source-kubernetes-ui) and the [Radar product site](/reading/2026-05/2026-05-03t105238-radar-or-the-missing-open-source-kubernetes-ui) describe it as an open-source, Apache 2.0 binary that runs locally or self-hosted inside the cluster, with no cloud account or external agents required.",
+              "cited_source_slug": "2026-05/2026-05-03t105238-radar-or-the-missing-open-source-kubernetes-ui",
+              "verdict": "supported",
+              "justification": "Source states Radar is 'open-source, Apache 2.0' and 'a single binary you can run locally or self-host in your cluster,' matching the claim's key assertions.",
+              "cost_usd": 0.003819
+            }
+          ],
+          "summary": {
+            "supported": 1,
+            "partial": 1,
+            "unsupported": 0,
+            "synthetic_count": 0,
+            "accuracy_pct": 75,
+            "total_cost_usd": 0.0076
+          }
+        }
+      ],
+      "judge_agreement": {
+        "total_claims": 2,
+        "agree": 2,
+        "disagree": 0,
+        "agreement_pct": 100
+      }
+    }
+  ],
+  "totals": {
+    "articles_evaluated": 20,
+    "total_claims": 10,
+    "total_cost_usd_by_judge": {
+      "claude-haiku-4-5": 0.0126,
+      "claude-sonnet-4-6": 0.1539
+    }
+  }
 }
