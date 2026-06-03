@@ -1,4 +1,5 @@
 ---
+import { CitationFaithfulnessSidecarSchema } from "@lib/schemas/content";
 /**
  * Result dispatcher — picks the viz primitive based on the cell's `kind`
  * and the shape of the loaded JSON measurements. Two notable upgrades
@@ -21,6 +22,7 @@ import CalendarHeatmap from "./CalendarHeatmap.astro";
 import ComparisonBars from "./ComparisonBars.astro";
 import CumulativeArea from "./CumulativeArea.astro";
 import DailyBars from "./DailyBars.astro";
+import Faithfulness from "./Faithfulness.astro";
 import LabTable from "./LabTable.astro";
 import PendingMethodology from "./PendingMethodology.astro";
 import ResultCell from "./ResultCell.astro";
@@ -30,7 +32,16 @@ import StatGrid from "./StatGrid.astro";
 import WikiSweep from "./WikiSweep.astro";
 
 type Props = {
-  kind?: "chart" | "table" | "barchart" | "stat" | "calendar" | "scatter" | "comparison" | "sweep";
+  kind?:
+    | "chart"
+    | "table"
+    | "barchart"
+    | "stat"
+    | "calendar"
+    | "scatter"
+    | "comparison"
+    | "sweep"
+    | "faithfulness";
   data: unknown;
   /** Visualization detail level — controls heights for charts/scatters. */
   size?: "compact" | "full";
@@ -250,6 +261,13 @@ const sweepData =
       }
     : null;
 
+// ── faithfulness kind (citation-faithfulness eval) ──
+// Reuse the Zod sidecar schema rather than re-rolling element guards — it
+// already models the articles/judges/claims shape the worker writes.
+const faithfulnessParse =
+  kind === "faithfulness" ? CitationFaithfulnessSidecarSchema.safeParse(data) : null;
+const faithfulnessData = faithfulnessParse?.success ? faithfulnessParse.data : null;
+
 const matched =
   chartData ??
   tableData ??
@@ -258,6 +276,7 @@ const matched =
   calendarData ??
   scatterData ??
   sweepData ??
+  faithfulnessData ??
   (hasComparison ? comparisonData : null);
 
 const sparkHeight = size === "compact" ? 60 : 120;
@@ -377,6 +396,7 @@ const cumHeight = size === "compact" ? 130 : 200;
       />
     )
   }
+  {faithfulnessData && <Faithfulness data={faithfulnessData} />}
   {
     !isNoData && !matched && (
       <pre class="m-0 overflow-x-auto font-mono text-xs leading-relaxed text-black/85 dark:text-white/85">

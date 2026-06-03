@@ -3,16 +3,16 @@ title: Citation faithfulness
 hypothesis: When the wiki cites a source, the source backs the claim. And cheap Haiku agrees with pricier Sonnet often enough that routine checks don't need Sonnet at all.
 status: live
 publishedDate: 2026-05-07T12:00:00-07:00
-lastRunDate: 2026-05-07T12:00:00-07:00
+lastRunDate: 2026-06-02T23:06:25-07:00
 tldr: Does the wiki say what its sources say? Two AI judges grade every citation; the headline is how often they agree.
 headlineMetric:
   label: Judge agreement
-  value: TBD
+  value: 86% · 88 claims
 tags:
   - eval
   - anthropic
   - wiki
-kind: chart
+kind: faithfulness
 dataPath: data/citation-faithfulness.json
 methodology:
   steps:

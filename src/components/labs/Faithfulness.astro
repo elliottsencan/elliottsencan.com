@@ -1,0 +1,530 @@
+---
+/**
+ * Citation-faithfulness cell — the visualization behind the Tier 1 eval.
+ * Pure presenter (all aggregation happens here at build time); shares the
+ * editorial vocabulary of the other lab primitives: SVG/CSS only,
+ * `var(--accent)`, mono uppercase labels, tabular-nums, no animation, no
+ * texture.
+ *
+ * The hypothesis has two clauses, so the cell has two halves — each with
+ * ONE visual and ONE clearly stated denominator, so the reader never has
+ * to reconcile competing counts:
+ *
+ *   A. Faithfulness — "does the source back the claim?" Two stacked bars,
+ *      one per judge, over each judge's own claims. Reading them aligned
+ *      answers the faithfulness question and previews the agreement one
+ *      (the two profiles look alike).
+ *   B. Agreement — "does cheap Haiku agree with pricier Sonnet?" One bar
+ *      over the claims BOTH judges scored (these are fewer than the total,
+ *      because each judge extracts citing sentences slightly differently —
+ *      stated inline so the gap never reads as a mistake). Then the
+ *      disagreements, listed as Haiku → Sonnet verdict pairs.
+ *   C. The cost bet — what the agreement buys: Haiku is ~3× cheaper, so at
+ *      this agreement rate routine passes can run Haiku alone and kick only
+ *      the splits to Sonnet + a human.
+ *   D. Per-article strip — one row per wiki article: a micro verdict bar
+ *      and an agreement chip, disagreements-first so the interesting
+ *      articles read at the top.
+ */
+import type { CitationFaithfulnessSidecar, JudgeModel } from "@lib/schemas/content";
+
+type Props = { data: CitationFaithfulnessSidecar };
+const { data } = Astro.props;
+
+const HAIKU: JudgeModel = "claude-haiku-4-5";
+const SONNET: JudgeModel = "claude-sonnet-4-6";
+const SHORT: Record<string, string> = {
+  "claude-haiku-4-5": "Haiku",
+  "claude-sonnet-4-6": "Sonnet",
+};
+
+// Verdict palette — reuses existing tokens, no new colors. Supported reads
+// as the accent; the failure tail darkens toward the strongest neutral.
+type Verdict = "supported" | "partial" | "unsupported";
+const VERDICTS: Verdict[] = ["supported", "partial", "unsupported"];
+const VERDICT_CLS: Record<Verdict, string> = {
+  supported: "bg-[color:var(--accent)]",
+  partial: "bg-black/30 dark:bg-white/30",
+  unsupported: "bg-black/70 dark:bg-white/65",
+};
+// Verdict severity, for measuring how far apart a disagreement is.
+const RANK: Record<Verdict, number> = { unsupported: 0, partial: 1, supported: 2 };
+
+// ── Strip markdown from claim text so the ledger reads as prose, not source.
+// Claims arrive with `[label](/reading/...)`, `**bold**`, `_em_`, `` `code` ``.
+function plainClaim(s: string): string {
+  return s
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1") // links → label
+    .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/(^|[^a-zA-Z0-9])_([^_]+)_/g, "$1$2")
+    .trim();
+}
+
+// ── Aggregates ──
+// Per-judge verdict tallies (each judge over its own claims).
+const perJudge: Record<string, { n: number; counts: Record<Verdict, number> }> = {
+  [HAIKU]: { n: 0, counts: { supported: 0, partial: 0, unsupported: 0 } },
+  [SONNET]: { n: 0, counts: { supported: 0, partial: 0, unsupported: 0 } },
+};
+// Pooled verdict tally (both judges), for the supported-share headline.
+const pooled: Record<Verdict, number> = { supported: 0, partial: 0, unsupported: 0 };
+// Agreement, over claims both judges scored.
+let comparable = 0;
+let agree = 0;
+let disagree = 0;
+
+type VerdictPair = {
+  claim: string;
+  source: string;
+  haiku: Verdict;
+  sonnet: Verdict;
+  haikuWhy: string;
+  sonnetWhy: string;
+  step: number; // verdict-rank distance: 1 = adjacent, 2 = hard flip
+};
+
+type ArticleRow = {
+  slug: string;
+  counts: Record<Verdict, number>; // pooled across both judges
+  total: number;
+  comparable: number;
+  agree: number;
+  disagree: number;
+};
+
+const rows: ArticleRow[] = [];
+const allDisagreements: VerdictPair[] = [];
+
+for (const article of data.articles) {
+  const ja = article.judge_agreement;
+  if (ja) {
+    comparable += ja.total_claims;
+    agree += ja.agree;
+    disagree += ja.disagree;
+  }
+
+  const byModel: Record<string, (typeof article.judges)[number] | undefined> = {};
+  const rowCounts: Record<Verdict, number> = { supported: 0, partial: 0, unsupported: 0 };
+  let rowTotal = 0;
+  for (const judge of article.judges) {
+    byModel[judge.judge_model] = judge;
+    const bucket = perJudge[judge.judge_model];
+    for (const claim of judge.claims) {
+      const v = claim.verdict as Verdict;
+      pooled[v] += 1;
+      rowCounts[v] += 1;
+      rowTotal += 1;
+      if (bucket) {
+        bucket.n += 1;
+        bucket.counts[v] += 1;
+      }
+    }
+  }
+
+  // Pair claims the two judges share (key = claim text + cited source) to
+  // surface the specific disagreements behind the agreement count.
+  const h = byModel[HAIKU];
+  const s = byModel[SONNET];
+  if (h && s) {
+    const sMap = new Map(s.claims.map((c) => [`${c.claim_text}::${c.cited_source_slug}`, c]));
+    for (const hc of h.claims) {
+      const sc = sMap.get(`${hc.claim_text}::${hc.cited_source_slug}`);
+      if (sc && sc.verdict !== hc.verdict) {
+        allDisagreements.push({
+          claim: plainClaim(hc.claim_text),
+          source: hc.cited_source_slug,
+          haiku: hc.verdict as Verdict,
+          sonnet: sc.verdict as Verdict,
+          haikuWhy: hc.justification,
+          sonnetWhy: sc.justification,
+          step: Math.abs(RANK[hc.verdict as Verdict] - RANK[sc.verdict as Verdict]),
+        });
+      }
+    }
+  }
+
+  rows.push({
+    slug: article.wiki_slug,
+    counts: rowCounts,
+    total: rowTotal,
+    comparable: ja?.total_claims ?? 0,
+    agree: ja?.agree ?? 0,
+    disagree: ja?.disagree ?? 0,
+  });
+}
+
+// Disagreements first, then by claim volume, then alphabetical.
+rows.sort(
+  (a, b) => b.disagree - a.disagree || b.total - a.total || a.slug.localeCompare(b.slug),
+);
+// Hard flips (step 2) before boundary calls (step 1), so the sharpest
+// disagreement reads first.
+allDisagreements.sort((a, b) => b.step - a.step);
+
+const judged = pooled.supported + pooled.partial + pooled.unsupported;
+const supportedPct = judged > 0 ? Math.round((pooled.supported / judged) * 100) : 0;
+const partialPct = judged > 0 ? Math.round((pooled.partial / judged) * 100) : 0;
+const unsupportedPct = judged > 0 ? Math.round((pooled.unsupported / judged) * 100) : 0;
+const agreePct = comparable > 0 ? Math.round((agree / comparable) * 100) : 0;
+const hardFlips = allDisagreements.filter((d) => d.step >= 2).length;
+
+// Which verdict line the splits mostly fall on (unordered pair), so the
+// framing names the actual seam — typically supported vs partial.
+const pairCounts = new Map<string, number>();
+for (const d of allDisagreements) {
+  const key = [d.haiku, d.sonnet].sort().join(" / ");
+  pairCounts.set(key, (pairCounts.get(key) ?? 0) + 1);
+}
+let topPair = "";
+let topPairCount = 0;
+for (const [key, n] of pairCounts) {
+  if (n > topPairCount) {
+    topPair = key;
+    topPairCount = n;
+  }
+}
+
+const haikuCost = data.totals.total_cost_usd_by_judge[HAIKU] ?? 0;
+const sonnetCost = data.totals.total_cost_usd_by_judge[SONNET] ?? 0;
+const costMultiple = haikuCost > 0 ? sonnetCost / haikuCost : 0;
+const maxCost = Math.max(haikuCost, sonnetCost, 1e-9);
+
+const fmtCost = (v: number) => `$${v.toFixed(2)}`;
+const pct = (n: number, d: number) => (d > 0 ? (n / d) * 100 : 0);
+
+// Per-judge bars, computed once and rendered aligned so the two profiles
+// read against the same baseline.
+const judgeBars = [HAIKU, SONNET].map((m) => {
+  const b = perJudge[m];
+  return {
+    name: SHORT[m],
+    n: b.n,
+    counts: b.counts,
+    supportedPct: b.n > 0 ? Math.round((b.counts.supported / b.n) * 100) : 0,
+  };
+});
+---
+
+<div class="flex flex-col gap-10 text-black/85 md:gap-12 dark:text-white/85">
+  {/* ── A · Faithfulness — does the source back the claim? ── */}
+  <section class="flex flex-col gap-5">
+    <div class="flex flex-col gap-1.5">
+      <span
+        class="font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55"
+      >
+        Faithfulness · does the source back the claim?
+      </span>
+      <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        <span
+          class="font-heading text-4xl font-medium leading-none tracking-tight text-black md:text-5xl dark:text-white"
+          style="font-variant-numeric: tabular-nums;"
+        >
+          {supportedPct}%
+        </span>
+        <span class="font-mono text-[0.7rem] text-black/55 dark:text-white/55">
+          supported · {partialPct}% partial · {unsupportedPct}% unsupported
+          <span class="text-black/40 dark:text-white/40">
+            ({judged} claims, both judges)</span
+          >
+        </span>
+      </div>
+    </div>
+
+    {/* Two aligned per-judge bars — same 0–100% baseline, so similar
+        profiles confirm the agreement story before we even measure it. */}
+    <div class="flex flex-col gap-3">
+      {
+        judgeBars.map((jb) => (
+          <div class="grid grid-cols-[3.5rem_minmax(0,1fr)] items-center gap-3">
+            <span class="font-mono text-[0.7rem] uppercase tracking-widest text-black/55 dark:text-white/55">
+              {jb.name}
+            </span>
+            <div class="flex items-center gap-3">
+              <div class="flex h-4 flex-1 overflow-hidden rounded-sm bg-black/[0.04] dark:bg-white/[0.06]">
+                {VERDICTS.map(
+                  (v) =>
+                    jb.counts[v] > 0 && (
+                      <div
+                        class={VERDICT_CLS[v]}
+                        style={`width: ${pct(jb.counts[v], jb.n)}%;`}
+                        title={`${v}: ${jb.counts[v]}`}
+                      />
+                    ),
+                )}
+              </div>
+              <span
+                class="w-24 shrink-0 text-right font-mono text-[0.7rem] text-black/55 dark:text-white/55"
+                style="font-variant-numeric: tabular-nums;"
+              >
+                {jb.supportedPct}% · {jb.n} claims
+              </span>
+            </div>
+          </div>
+        ))
+      }
+    </div>
+
+    <div
+      class="flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-[0.65rem] uppercase tracking-widest text-black/65 dark:text-white/65"
+    >
+      {
+        VERDICTS.map((v) => (
+          <span class="flex items-center gap-1.5">
+            <span class:list={["inline-block h-2 w-2 rounded-[1px]", VERDICT_CLS[v]]} />
+            {v}
+          </span>
+        ))
+      }
+      <span class="ml-auto normal-case tracking-normal text-black/45 dark:text-white/45">
+        paraphrase counts; inference past the source doesn't
+      </span>
+    </div>
+  </section>
+
+  {/* ── B · Agreement — does cheap Haiku agree with pricier Sonnet? ── */}
+  <section class="flex flex-col gap-4 border-t border-black/10 pt-7 dark:border-white/10">
+    <div class="flex flex-col gap-1.5">
+      <span
+        class="font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55"
+      >
+        Agreement · do the two judges return the same verdict?
+      </span>
+      <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        <span
+          class="font-heading text-4xl font-medium leading-none tracking-tight text-black md:text-5xl dark:text-white"
+          style="font-variant-numeric: tabular-nums;"
+        >
+          {agreePct}%
+        </span>
+        <span class="font-mono text-[0.7rem] text-black/55 dark:text-white/55">
+          {agree} agree · {disagree} disagree
+          <span class="text-black/40 dark:text-white/40">
+            (of {comparable} claims both judges scored)</span
+          >
+        </span>
+      </div>
+    </div>
+
+    {/* Agree / disagree bar over the comparable set. */}
+    <div class="flex h-4 w-full overflow-hidden rounded-sm bg-black/[0.04] dark:bg-white/[0.06]">
+      {
+        agree > 0 && (
+          <div
+            class="bg-[color:var(--accent)]"
+            style={`width: ${pct(agree, comparable)}%;`}
+            title={`agree: ${agree}`}
+          />
+        )
+      }
+      {
+        disagree > 0 && (
+          <div
+            class="bg-black/70 dark:bg-white/65"
+            style={`width: ${pct(disagree, comparable)}%;`}
+            title={`disagree: ${disagree}`}
+          />
+        )
+      }
+    </div>
+
+    {/* Why comparable (88) < judged (189): the two judges extract citing
+        sentences slightly differently; only exact matches can be paired. */}
+    <p class="font-mono text-[0.7rem] leading-relaxed text-black/45 dark:text-white/45">
+      Each judge pulls its own citing sentences, so only the {comparable} both happened
+      to extract can be compared head-to-head.
+    </p>
+
+    {
+      allDisagreements.length > 0 ? (
+        <div class="flex flex-col gap-3">
+          <p class="max-w-[64ch] text-sm leading-relaxed text-black/70 dark:text-white/70">
+            {topPairCount} of {allDisagreements.length} splits land on the{" "}
+            <span class="font-medium text-black/85 dark:text-white/85">{topPair}</span> line — both
+            judges read the source as on-topic but split on how much it backs.
+            {hardFlips > 0 &&
+              ` Only ${hardFlips} ${hardFlips === 1 ? "is" : "are"} a hard supported↔unsupported flip.`}{" "}
+            Open a row to read each judge's reasoning side by side.
+          </p>
+          <div class="flex flex-col gap-px overflow-hidden rounded-sm">
+            {allDisagreements.map((d, i) => (
+              <details class="group bg-black/[0.03] dark:bg-white/[0.05]" open={i === 0}>
+                <summary class="flex cursor-pointer list-none flex-col gap-2 p-3 hover:bg-black/[0.02] md:flex-row md:items-start md:gap-4 dark:hover:bg-white/[0.03]">
+                  <p class="min-w-0 flex-1 text-sm leading-snug text-black/80 dark:text-white/80">
+                    {d.claim}
+                  </p>
+                  <div class="flex shrink-0 items-center gap-2 font-mono text-[0.65rem] uppercase tracking-widest">
+                    <span class="inline-flex items-center gap-1.5">
+                      <span class="text-black/40 dark:text-white/40">H</span>
+                      <span class:list={["inline-block h-2 w-2 rounded-[1px]", VERDICT_CLS[d.haiku]]} />
+                      {d.haiku}
+                    </span>
+                    <span class="text-black/30 dark:text-white/30">→</span>
+                    <span class="inline-flex items-center gap-1.5">
+                      <span class="text-black/40 dark:text-white/40">S</span>
+                      <span class:list={["inline-block h-2 w-2 rounded-[1px]", VERDICT_CLS[d.sonnet]]} />
+                      {d.sonnet}
+                    </span>
+                    <span class="di-closed ml-1 text-black/40 dark:text-white/40">▸</span>
+                    <span class="di-open ml-1 text-black/40 dark:text-white/40">▾</span>
+                  </div>
+                </summary>
+                <div class="grid gap-4 border-t border-black/[0.06] px-3 pt-3 pb-3 md:grid-cols-2 dark:border-white/[0.08]">
+                  {[
+                    { who: "Haiku", v: d.haiku, why: d.haikuWhy },
+                    { who: "Sonnet", v: d.sonnet, why: d.sonnetWhy },
+                  ].map((col) => (
+                    <div class="flex flex-col gap-1.5 border-l-2 border-black/10 pl-3 dark:border-white/15">
+                      <span class="flex items-center gap-1.5 font-mono text-[0.65rem] uppercase tracking-widest text-black/55 dark:text-white/55">
+                        {col.who}
+                        <span class:list={["inline-block h-2 w-2 rounded-[1px]", VERDICT_CLS[col.v]]} />
+                        {col.v}
+                      </span>
+                      <p class="text-[0.8rem] leading-relaxed text-black/65 dark:text-white/65">
+                        {col.why}
+                      </p>
+                    </div>
+                  ))}
+                  <a
+                    href={`/reading/${d.source}/`}
+                    class="font-mono text-[0.65rem] text-black/45 underline decoration-black/20 underline-offset-2 hover:text-[color:var(--accent)] md:col-span-2 dark:text-white/45 dark:decoration-white/20"
+                  >
+                    read the cited source ↗
+                  </a>
+                </div>
+              </details>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <p class="font-mono text-[0.7rem] text-black/55 dark:text-white/55">
+          0 disagreements across {comparable} comparable claims — the two judges returned the
+          same verdict every time.
+        </p>
+      )
+    }
+  </section>
+
+  {/* ── C · The cost bet — what the agreement buys ── */}
+  <section class="flex flex-col gap-4 border-t border-black/10 pt-7 dark:border-white/10">
+    <span
+      class="font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55"
+    >
+      The cost bet · what the agreement buys
+    </span>
+    <div class="flex flex-col gap-2.5">
+      {
+        [
+          { name: "Haiku", cost: haikuCost },
+          { name: "Sonnet", cost: sonnetCost },
+        ].map((c) => (
+          <div class="grid grid-cols-[3.5rem_minmax(0,1fr)] items-center gap-3">
+            <span class="font-mono text-[0.7rem] uppercase tracking-widest text-black/55 dark:text-white/55">
+              {c.name}
+            </span>
+            <div class="flex items-center gap-3">
+              <div class="h-4 flex-1 overflow-hidden rounded-sm bg-black/[0.04] dark:bg-white/[0.06]">
+                <div
+                  class={c.name === "Haiku" ? "h-full bg-[color:var(--accent)]" : "h-full bg-black/70 dark:bg-white/65"}
+                  style={`width: ${pct(c.cost, maxCost)}%;`}
+                />
+              </div>
+              <span
+                class="w-12 shrink-0 text-right font-mono text-[0.7rem] text-black/65 dark:text-white/65"
+                style="font-variant-numeric: tabular-nums;"
+              >
+                {fmtCost(c.cost)}
+              </span>
+            </div>
+          </div>
+        ))
+      }
+    </div>
+    <p class="max-w-[58ch] text-sm leading-relaxed text-black/70 dark:text-white/70">
+      Haiku grades the same claims for {fmtCost(haikuCost)} against Sonnet's {fmtCost(sonnetCost)}
+      {costMultiple > 0 && <> — about {costMultiple.toFixed(1)}× cheaper</>}. At {agreePct}%
+      agreement, routine passes can run Haiku alone and route only the {disagree} splits to
+      Sonnet and a human.
+    </p>
+  </section>
+
+  {/* ── D · Per-article strip ── */}
+  <section class="flex flex-col gap-3 border-t border-black/10 pt-7 dark:border-white/10">
+    <div class="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+      <span
+        class="font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55"
+      >
+        Per-article · {data.articles.length} wiki concepts
+      </span>
+      <span class="font-mono text-[0.65rem] text-black/45 dark:text-white/45">
+        disagreements first
+      </span>
+    </div>
+    <div class="flex flex-col">
+      {
+        rows.map((r, i) => (
+          <div
+            class:list={[
+              "grid grid-cols-[minmax(0,1fr)_5rem_4.5rem] items-center gap-x-4 border-t border-black/[0.06] py-2.5 dark:border-white/[0.08]",
+              i === 0 && "border-t-0",
+            ]}
+          >
+            <a
+              href={`/wiki/${r.slug}/`}
+              class="truncate font-mono text-[0.8rem] text-black/80 hover:text-[color:var(--accent)] dark:text-white/80"
+              title={r.slug}
+            >
+              {r.slug}
+            </a>
+
+            {/* Micro verdict bar (pooled). Surfaces the unsupported tail at
+                a glance — the darkest segment is the unfaithful share. */}
+            <div
+              class="flex h-2.5 overflow-hidden rounded-[2px] bg-black/[0.04] dark:bg-white/[0.06]"
+              title={`${r.counts.supported} supported · ${r.counts.partial} partial · ${r.counts.unsupported} unsupported`}
+            >
+              {VERDICTS.map(
+                (v) =>
+                  r.counts[v] > 0 && (
+                    <div class={VERDICT_CLS[v]} style={`width: ${pct(r.counts[v], r.total)}%;`} />
+                  ),
+              )}
+            </div>
+
+            <span
+              class:list={[
+                "justify-self-end font-mono text-[0.65rem] uppercase tracking-widest",
+                r.disagree > 0
+                  ? "text-[color:var(--accent)]"
+                  : "text-black/40 dark:text-white/40",
+              ]}
+              style="font-variant-numeric: tabular-nums;"
+            >
+              {r.comparable === 0 ? "—" : r.disagree > 0 ? `${r.disagree} split` : "agree"}
+            </span>
+          </div>
+        ))
+      }
+    </div>
+  </section>
+</div>
+
+<style>
+  /* Native disclosure for the disagreement reasoning — no JS, no animation,
+     just a caret that swaps with the open state. */
+  details > summary {
+    list-style: none;
+  }
+  details > summary::-webkit-details-marker {
+    display: none;
+  }
+  .di-open {
+    display: none;
+  }
+  details[open] .di-open {
+    display: inline;
+  }
+  details[open] .di-closed {
+    display: none;
+  }
+</style>
