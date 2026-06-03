@@ -11,19 +11,20 @@
  * `(slug, content_hash, judge_model, rubric_version)` so prior scores stay
  * comparable to themselves and don't get cross-contaminated by a prompt edit.
  *
- * Exception: the 2026-06-03 change that raised the `justification` cap from 200
- * to 500 chars (and relaxed the matching prompt line) intentionally did NOT bump
- * the rubric. It only loosens a length bound that was rejecting valid verdicts as
- * structured-output parse failures; verdict semantics are unchanged, so the good
- * v1.0 verdicts stay cached and only the previously-failed `partial` claims
- * re-run on the next /eval pass.
+ * Exception: the 2026-06-03 changes that raised the `justification` cap (200 ->
+ * 500 -> 1000 chars, in two passes — Haiku kept overflowing 500 on a few
+ * articles, so it never fully converged) and relaxed the matching prompt line
+ * intentionally did NOT bump the rubric. They only loosen a length bound that
+ * was rejecting valid verdicts as structured-output parse failures; verdict
+ * semantics are unchanged, so the good v1.0 verdicts stay cached and only the
+ * previously-failed `partial` claims re-run on the next /eval pass.
  */
 
 import { z } from "zod";
 
 export const JudgeVerdictSchema = z.object({
   verdict: z.enum(["supported", "partial", "unsupported"]),
-  justification: z.string().min(1).max(500),
+  justification: z.string().min(1).max(1000),
 });
 
 export type JudgeVerdict = z.infer<typeof JudgeVerdictSchema>;
@@ -41,7 +42,7 @@ Hard rules:
 - Do not reward topical adjacency. A source about the same general subject is not automatic support for a specific claim about that subject.
 
 Justification:
-- One or two sentences, 500 characters or fewer.
+- One or two sentences. Aim for under 400 characters; never exceed 1000.
 - For "supported" or "partial", quote or paraphrase the relevant passage in the source so a reviewer can locate it.
 - For "unsupported", state what is missing or where the source diverges from the claim.
 - Plain framing. No em-dashes. No flourish verbs.

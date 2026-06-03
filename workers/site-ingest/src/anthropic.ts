@@ -358,11 +358,11 @@ export async function judgeCitation(
     const response = await withRetries("judge-citation", () =>
       client(env.ANTHROPIC_API_KEY).messages.parse({
         model: args.judgeModel,
-        // verdict + a justification of up to 500 chars (~130 tokens) plus the
-        // JSON wrapper fits comfortably under 512; the ceiling stops the model
+        // verdict + a justification of up to 1000 chars (~260 tokens) plus the
+        // JSON wrapper fits comfortably under 768; the ceiling stops the model
         // writing paragraphs while leaving headroom so the JSON never truncates
         // mid-string (which would itself fail the structured-output parse).
-        max_tokens: 512,
+        max_tokens: 768,
         system: CITATION_JUDGE_SYSTEM,
         messages: [{ role: "user", content: userMessage }],
         output_config: { format: zodOutputFormat(JudgeVerdictSchema) },
