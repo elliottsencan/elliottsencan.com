@@ -1,11 +1,11 @@
 ---
 import { getCollection } from "astro:content";
-import Container from "@components/Container.astro";
 import EditorialList from "@components/EditorialList.astro";
 import EditorialListItem from "@components/EditorialListItem.astro";
 import EditorialRule from "@components/EditorialRule.astro";
 import HeroMeta from "@components/HeroMeta.astro";
 import Link from "@components/Link.astro";
+import PageBody from "@components/PageBody.astro";
 import PageHero from "@components/PageHero.astro";
 import Layout from "@layouts/Layout.astro";
 
@@ -35,66 +35,60 @@ const heroMetaLabel = lastPublished
 ---
 
 <Layout title="Writing" description="Essays, notes, and longer pieces.">
-  <Container>
-    <div
-      class="space-y-12"
-      data-pagefind-body
-      data-pagefind-filter="type:Writing"
-    >
-      <PageHero>
-        <Fragment slot="title">Writing</Fragment>
-        <Fragment slot="summary">
-          Essays, notes, and longer pieces. The home page also lists these —
-          this is the flat archive.
-        </Fragment>
-        {posts.length > 0 && <HeroMeta slot="meta" count={posts.length} label={heroMetaLabel} />}
-      </PageHero>
+  <PageBody data-pagefind-body data-pagefind-filter="type:Writing">
+    <PageHero>
+      <Fragment slot="title">Writing</Fragment>
+      <Fragment slot="summary">
+        Essays, notes, and longer pieces. The home page also lists these —
+        this is the flat archive.
+      </Fragment>
+      {posts.length > 0 && <HeroMeta slot="meta" count={posts.length} label={heroMetaLabel} />}
+    </PageHero>
 
-      {
-        years.length > 1 && (
-          <nav
-            class="flex flex-wrap items-baseline gap-x-3 gap-y-1 font-mono text-xs uppercase tracking-wider text-black/55 dark:text-white/55"
-            aria-label="Archive by year"
-          >
-            <span>Archive:</span>
-            {years.map((y, i) => (
-              <>
-                <Link href={`/writing/${y}/`} class="font-sans text-xs">
-                  {y}
-                </Link>
-                {i < years.length - 1 && <span aria-hidden="true">·</span>}
-              </>
-            ))}
-          </nav>
-        )
-      }
+    {
+      years.length > 1 && (
+        <nav
+          class="flex flex-wrap items-baseline gap-x-3 gap-y-1 font-mono text-xs uppercase tracking-wider text-black/55 dark:text-white/55"
+          aria-label="Archive by year"
+        >
+          <span>Archive:</span>
+          {years.map((y, i) => (
+            <>
+              <Link href={`/writing/${y}/`} class="font-sans text-xs">
+                {y}
+              </Link>
+              {i < years.length - 1 && <span aria-hidden="true">·</span>}
+            </>
+          ))}
+        </nav>
+      )
+    }
 
-      {
-        posts.length > 0 ? (
-          <EditorialList>
-            {posts.map((post) => (
-              <EditorialListItem
-                title={post.data.title}
-                href={`/writing/${post.id}`}
-                meta={dateFormatter.format(post.data.date)}
-                metaDateTime={post.data.date.toISOString()}
-              >
-                {post.data.description}
-              </EditorialListItem>
-            ))}
-          </EditorialList>
-        ) : (
-          <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
-            No published posts yet.
-          </p>
-        )
-      }
+    {
+      posts.length > 0 ? (
+        <EditorialList>
+          {posts.map((post) => (
+            <EditorialListItem
+              title={post.data.title}
+              href={`/writing/${post.id}`}
+              meta={dateFormatter.format(post.data.date)}
+              metaDateTime={post.data.date.toISOString()}
+            >
+              {post.data.description}
+            </EditorialListItem>
+          ))}
+        </EditorialList>
+      ) : (
+        <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
+          No published posts yet.
+        </p>
+      )
+    }
 
-      <EditorialRule />
+    <EditorialRule />
 
-      <p class="text-xs text-black/55 dark:text-white/55">
-        <Link href="/tags">tags →</Link>
-      </p>
-    </div>
-  </Container>
+    <p class="text-xs text-black/55 dark:text-white/55">
+      <Link href="/tags">tags →</Link>
+    </p>
+  </PageBody>
 </Layout>

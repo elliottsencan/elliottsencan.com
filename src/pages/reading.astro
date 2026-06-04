@@ -1,9 +1,9 @@
 ---
 import { type CollectionEntry, getCollection } from "astro:content";
-import Container from "@components/Container.astro";
 import EditorialRule from "@components/EditorialRule.astro";
 import HeroMeta from "@components/HeroMeta.astro";
 import Link from "@components/Link.astro";
+import PageBody from "@components/PageBody.astro";
 import PageHero from "@components/PageHero.astro";
 import ProvenanceBadge from "@components/ProvenanceBadge.astro";
 import Layout from "@layouts/Layout.astro";
@@ -92,165 +92,159 @@ const heroMetaLabel = `${entries.length} source${entries.length === 1 ? "" : "s"
   title="Reading"
   description="Articles, essays, and books I've been reading."
 >
-  <Container>
-    <div
-      class="space-y-12"
-      data-pagefind-body
-      data-pagefind-filter="type:Reading"
-    >
-      <PageHero>
-        <Fragment slot="title">Reading</Fragment>
-        <Fragment slot="summary">
-          Per-source citation index. Each entry is one URL with a short
-          AI-compiled summary and topic tags. Cross-source synthesis lives at
-          the <Link href="/wiki">wiki</Link>, where any concept with two or
-          more contributing sources gets a compiled article.
-        </Fragment>
-        <div slot="meta" class="flex flex-wrap items-center gap-x-3 gap-y-2">
-          <HeroMeta count={entries.length} label={heroMetaLabel} />
-          {lastAdded && <ProvenanceBadge action="Summarized by Claude" date={lastAdded} />}
-        </div>
-      </PageHero>
+  <PageBody data-pagefind-body data-pagefind-filter="type:Reading">
+    <PageHero>
+      <Fragment slot="title">Reading</Fragment>
+      <Fragment slot="summary">
+        Per-source citation index. Each entry is one URL with a short
+        AI-compiled summary and topic tags. Cross-source synthesis lives at
+        the <Link href="/wiki">wiki</Link>, where any concept with two or
+        more contributing sources gets a compiled article.
+      </Fragment>
+      <div slot="meta" class="flex flex-wrap items-center gap-x-3 gap-y-2">
+        <HeroMeta count={entries.length} label={heroMetaLabel} />
+        {lastAdded && <ProvenanceBadge action="Summarized by Claude" date={lastAdded} />}
+      </div>
+    </PageHero>
 
-      {
-        years.length > 1 && (
-          <nav
-            class="flex flex-wrap items-baseline gap-x-3 gap-y-1 font-mono text-xs uppercase tracking-wider text-black/55 dark:text-white/55"
-            aria-label="Archive by year"
-          >
-            <span>Archive:</span>
-            {years.map((y, i) => (
-              <>
-                <Link href={`/reading/${y}/`} class="font-sans text-xs">
-                  {y}
-                </Link>
-                {i < years.length - 1 && <span aria-hidden="true">·</span>}
-              </>
-            ))}
-          </nav>
-        )
-      }
+    {
+      years.length > 1 && (
+        <nav
+          class="flex flex-wrap items-baseline gap-x-3 gap-y-1 font-mono text-xs uppercase tracking-wider text-black/55 dark:text-white/55"
+          aria-label="Archive by year"
+        >
+          <span>Archive:</span>
+          {years.map((y, i) => (
+            <>
+              <Link href={`/reading/${y}/`} class="font-sans text-xs">
+                {y}
+              </Link>
+              {i < years.length - 1 && <span aria-hidden="true">·</span>}
+            </>
+          ))}
+        </nav>
+      )
+    }
 
-      {
-        buckets.length > 0 ? (
-          buckets.map((bucket, bucketIndex) => (
-            <section class="space-y-8">
-              <h2
-                class="font-heading text-sm font-medium text-black/65 dark:text-white/65"
-              >
-                {bucket.label}
-              </h2>
-              <ul class="not-prose flex flex-col gap-3 text-sm md:gap-3">
-                {bucket.entries.map((entry) => {
-                  const sourceLine = [entry.data.author, entry.data.source]
-                    .filter(Boolean)
-                    .join(", ");
-                  const citings = citingByEntry.get(entry.id) ?? [];
-                  return (
-                    <li class="group relative flex flex-col gap-2 py-3 md:flex-row md:items-baseline md:gap-4 md:py-4">
-                      {/* Desktop date column. Hidden below md so the mobile
-                          variant can promote the date into the caption strip
-                          where it belongs. */}
-                      <time
-                        datetime={entry.data.added.toISOString()}
-                        class="hidden w-32 shrink-0 font-sans text-xs text-black/50 md:block dark:text-white/60"
-                      >
-                        {dateFormatter.format(entry.data.added)}
-                      </time>
-                      <div class="flex-1 space-y-1.5">
-                        {/* Mobile: title-led row with the source pinned to
-                            the right (truncated). On md+ the source drops
-                            back to its own line under the title. */}
-                        <div class="flex items-baseline justify-between gap-3 md:block">
-                          {/* Title carries the stretched-link pseudo: clicking
-                              anywhere on the row routes to the source URL
-                              (same destination as the title text). The cited-
-                              in links below opt out via relative z-10 so
-                              they remain independently clickable. */}
-                          <Link
-                            href={entry.data.url}
-                            external
-                            class="font-heading text-lg font-medium tracking-[-0.011em] text-black transition-colors duration-300 ease-in-out hover:text-[color:var(--accent)] focus-visible:text-[color:var(--accent)] before:absolute before:inset-y-0 before:-inset-x-3 before:rounded-md before:content-[''] md:before:-inset-x-4 dark:text-white"
-                          >
-                            {entry.data.title}
-                          </Link>
-                          {sourceLine && (
-                            <span class="max-w-[40%] shrink-0 truncate text-xs text-black/55 md:hidden dark:text-white/60">
-                              {sourceLine}
-                            </span>
-                          )}
-                        </div>
+    {
+      buckets.length > 0 ? (
+        buckets.map((bucket, bucketIndex) => (
+          <section class="space-y-8">
+            <h2
+              class="font-heading text-sm font-medium text-black/65 dark:text-white/65"
+            >
+              {bucket.label}
+            </h2>
+            <ul class="not-prose flex flex-col gap-3 text-sm md:gap-3">
+              {bucket.entries.map((entry) => {
+                const sourceLine = [entry.data.author, entry.data.source]
+                  .filter(Boolean)
+                  .join(", ");
+                const citings = citingByEntry.get(entry.id) ?? [];
+                return (
+                  <li class="group relative flex flex-col gap-2 py-3 md:flex-row md:items-baseline md:gap-4 md:py-4">
+                    {/* Desktop date column. Hidden below md so the mobile
+                        variant can promote the date into the caption strip
+                        where it belongs. */}
+                    <time
+                      datetime={entry.data.added.toISOString()}
+                      class="hidden w-32 shrink-0 font-sans text-xs text-black/50 md:block dark:text-white/60"
+                    >
+                      {dateFormatter.format(entry.data.added)}
+                    </time>
+                    <div class="flex-1 space-y-1.5">
+                      {/* Mobile: title-led row with the source pinned to
+                          the right (truncated). On md+ the source drops
+                          back to its own line under the title. */}
+                      <div class="flex items-baseline justify-between gap-3 md:block">
+                        {/* Title carries the stretched-link pseudo: clicking
+                            anywhere on the row routes to the source URL
+                            (same destination as the title text). The cited-
+                            in links below opt out via relative z-10 so
+                            they remain independently clickable. */}
+                        <Link
+                          href={entry.data.url}
+                          external
+                          class="font-heading text-lg font-medium tracking-[-0.011em] text-black transition-colors duration-300 ease-in-out hover:text-[color:var(--accent)] focus-visible:text-[color:var(--accent)] before:absolute before:inset-y-0 before:-inset-x-3 before:rounded-md before:content-[''] md:before:-inset-x-4 dark:text-white"
+                        >
+                          {entry.data.title}
+                        </Link>
                         {sourceLine && (
-                          <p class="hidden text-xs text-black/55 md:block dark:text-white/60">
+                          <span class="max-w-[40%] shrink-0 truncate text-xs text-black/55 md:hidden dark:text-white/60">
                             {sourceLine}
-                          </p>
+                          </span>
                         )}
-                        <p class="leading-relaxed text-black/75 dark:text-white/75">
-                          {entry.data.summary}
-                        </p>
-                        {/* Mobile caption strip: monospace, dot-separated.
-                            Promotes date into the row, keeps the cited-in
-                            link as the accent-tinted final segment. */}
-                        <div class="flex flex-wrap items-center gap-x-2.5 gap-y-1 pt-1 font-mono text-xs tracking-wider text-black/55 md:hidden dark:text-white/55">
-                          <time datetime={entry.data.added.toISOString()}>
-                            {compactDateFormatter.format(entry.data.added)}
-                          </time>
-                          <span aria-hidden="true" class="size-0.5 rounded-full bg-black/40 dark:bg-white/40" />
-                          <span class="lowercase text-black/65 dark:text-white/65">
-                            {entry.data.category}
-                          </span>
-                          {citings.map((ref) => (
-                            <>
-                              <span aria-hidden="true" class="size-0.5 rounded-full bg-black/40 dark:bg-white/40" />
-                              <a
-                                href={`/wiki/${ref.id}/`}
-                                class="relative z-10 text-[color:var(--accent)] no-underline hover:underline"
-                              >
-                                cited in /wiki/{ref.id}
-                              </a>
-                            </>
-                          ))}
-                        </div>
-                        {/* Desktop meta row keeps the existing chip + arrow
-                            treatment. Hidden on mobile in favour of the
-                            mono caption above. */}
-                        <div class="hidden flex-wrap items-center gap-x-3 gap-y-1.5 pt-1 md:flex">
-                          <span class="inline-flex items-center rounded-sm bg-black/5 px-2 py-0.5 text-xs capitalize text-black/65 dark:bg-white/5 dark:text-white/65">
-                            {entry.data.category}
-                          </span>
-                          {citings.map((ref) => (
-                            <span class="inline-flex items-baseline gap-1 font-mono text-xs text-[color:var(--accent)]">
-                              <span aria-hidden="true">→</span>
-                              <a
-                                href={`/wiki/${ref.id}/`}
-                                class="relative z-10 font-sans text-xs underline decoration-[color:var(--accent)]/40 underline-offset-[3px] hover:decoration-[color:var(--accent)]"
-                              >
-                                cited in /wiki/{ref.id}
-                              </a>
-                            </span>
-                          ))}
-                        </div>
                       </div>
-                    </li>
-                  );
-                })}
-              </ul>
-              {bucketIndex < buckets.length - 1 && <EditorialRule />}
-            </section>
-          ))
-        ) : (
-          <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
-            Nothing here yet. The pipeline is wired up — as soon as I start
-            saving links from my phone, they'll appear here.
-          </p>
-        )
-      }
+                      {sourceLine && (
+                        <p class="hidden text-xs text-black/55 md:block dark:text-white/60">
+                          {sourceLine}
+                        </p>
+                      )}
+                      <p class="leading-relaxed text-black/75 dark:text-white/75">
+                        {entry.data.summary}
+                      </p>
+                      {/* Mobile caption strip: monospace, dot-separated.
+                          Promotes date into the row, keeps the cited-in
+                          link as the accent-tinted final segment. */}
+                      <div class="flex flex-wrap items-center gap-x-2.5 gap-y-1 pt-1 font-mono text-xs tracking-wider text-black/55 md:hidden dark:text-white/55">
+                        <time datetime={entry.data.added.toISOString()}>
+                          {compactDateFormatter.format(entry.data.added)}
+                        </time>
+                        <span aria-hidden="true" class="size-0.5 rounded-full bg-black/40 dark:bg-white/40" />
+                        <span class="lowercase text-black/65 dark:text-white/65">
+                          {entry.data.category}
+                        </span>
+                        {citings.map((ref) => (
+                          <>
+                            <span aria-hidden="true" class="size-0.5 rounded-full bg-black/40 dark:bg-white/40" />
+                            <a
+                              href={`/wiki/${ref.id}/`}
+                              class="relative z-10 text-[color:var(--accent)] no-underline hover:underline"
+                            >
+                              cited in /wiki/{ref.id}
+                            </a>
+                          </>
+                        ))}
+                      </div>
+                      {/* Desktop meta row keeps the existing chip + arrow
+                          treatment. Hidden on mobile in favour of the
+                          mono caption above. */}
+                      <div class="hidden flex-wrap items-center gap-x-3 gap-y-1.5 pt-1 md:flex">
+                        <span class="inline-flex items-center rounded-sm bg-black/5 px-2 py-0.5 text-xs capitalize text-black/65 dark:bg-white/5 dark:text-white/65">
+                          {entry.data.category}
+                        </span>
+                        {citings.map((ref) => (
+                          <span class="inline-flex items-baseline gap-1 font-mono text-xs text-[color:var(--accent)]">
+                            <span aria-hidden="true">→</span>
+                            <a
+                              href={`/wiki/${ref.id}/`}
+                              class="relative z-10 font-sans text-xs underline decoration-[color:var(--accent)]/40 underline-offset-[3px] hover:decoration-[color:var(--accent)]"
+                            >
+                              cited in /wiki/{ref.id}
+                            </a>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+            {bucketIndex < buckets.length - 1 && <EditorialRule />}
+          </section>
+        ))
+      ) : (
+        <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
+          Nothing here yet. The pipeline is wired up — as soon as I start
+          saving links from my phone, they'll appear here.
+        </p>
+      )
+    }
 
-      <EditorialRule />
+    <EditorialRule />
 
-      <p class="text-xs text-black/55 dark:text-white/55">
-        <Link href="/wiki">wiki →</Link>
-      </p>
-    </div>
-  </Container>
+    <p class="text-xs text-black/55 dark:text-white/55">
+      <Link href="/wiki">wiki →</Link>
+    </p>
+  </PageBody>
 </Layout>

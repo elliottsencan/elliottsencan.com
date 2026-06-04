@@ -1,12 +1,12 @@
 ---
 import { type CollectionEntry, getCollection } from "astro:content";
 import Breadcrumb from "@components/Breadcrumb.astro";
-import Container from "@components/Container.astro";
 import EditorialList from "@components/EditorialList.astro";
 import EditorialListItem from "@components/EditorialListItem.astro";
 import EditorialRule from "@components/EditorialRule.astro";
 import HeroMeta from "@components/HeroMeta.astro";
 import Link from "@components/Link.astro";
+import PageBody from "@components/PageBody.astro";
 import PageHero from "@components/PageHero.astro";
 import Layout from "@layouts/Layout.astro";
 
@@ -43,47 +43,41 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
     { name: year, url: `/writing/${year}/` },
   ]}
 >
-  <Container>
-    <div
-      class="space-y-12"
-      data-pagefind-body
-      data-pagefind-filter="type:Writing"
-    >
-      <PageHero breadcrumb>
-        <Fragment slot="breadcrumb">
-          <Breadcrumb parent={{ label: "Writing", href: "/writing/" }} />
-        </Fragment>
-        <Fragment slot="title">{year}</Fragment>
-        <Fragment slot="summary">
-          {posts.length} post{posts.length === 1 ? "" : "s"} from {year}.
-        </Fragment>
-        <HeroMeta
-          slot="meta"
-          count={posts.length}
-          label={`${posts.length} post${posts.length === 1 ? "" : "s"}`}
-        />
-      </PageHero>
+  <PageBody data-pagefind-body data-pagefind-filter="type:Writing">
+    <PageHero breadcrumb>
+      <Fragment slot="breadcrumb">
+        <Breadcrumb parent={{ label: "Writing", href: "/writing/" }} />
+      </Fragment>
+      <Fragment slot="title">{year}</Fragment>
+      <Fragment slot="summary">
+        {posts.length} post{posts.length === 1 ? "" : "s"} from {year}.
+      </Fragment>
+      <HeroMeta
+        slot="meta"
+        count={posts.length}
+        label={`${posts.length} post${posts.length === 1 ? "" : "s"}`}
+      />
+    </PageHero>
 
-      <EditorialList>
-        {
-          posts.map((post) => (
-            <EditorialListItem
-              title={post.data.title}
-              href={`/writing/${post.id}`}
-              meta={dateFormatter.format(post.data.date)}
-              metaDateTime={post.data.date.toISOString()}
-            >
-              {post.data.description}
-            </EditorialListItem>
-          ))
-        }
-      </EditorialList>
+    <EditorialList>
+      {
+        posts.map((post) => (
+          <EditorialListItem
+            title={post.data.title}
+            href={`/writing/${post.id}`}
+            meta={dateFormatter.format(post.data.date)}
+            metaDateTime={post.data.date.toISOString()}
+          >
+            {post.data.description}
+          </EditorialListItem>
+        ))
+      }
+    </EditorialList>
 
-      <EditorialRule />
+    <EditorialRule />
 
-      <p class="text-xs text-black/55 dark:text-white/55">
-        <Link href="/writing">back to /writing</Link>
-      </p>
-    </div>
-  </Container>
+    <p class="text-xs text-black/55 dark:text-white/55">
+      <Link href="/writing">back to /writing</Link>
+    </p>
+  </PageBody>
 </Layout>

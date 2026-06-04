@@ -1,9 +1,9 @@
 ---
 import Breadcrumb from "@components/Breadcrumb.astro";
-import Container from "@components/Container.astro";
 import EditorialRule from "@components/EditorialRule.astro";
 import LabeledRule from "@components/LabeledRule.astro";
 import Link from "@components/Link.astro";
+import PageBody from "@components/PageBody.astro";
 import PageHero from "@components/PageHero.astro";
 import Layout from "@layouts/Layout.astro";
 
@@ -50,89 +50,83 @@ const levels = [
     { name: "Process", url: "/about/process/" },
   ]}
 >
-  <Container>
-    <div
-      class="space-y-12"
-      data-pagefind-body
-      data-pagefind-filter="type:Process"
-    >
-      <PageHero breadcrumb>
-        <Fragment slot="breadcrumb">
-          <Breadcrumb parent={{ label: "About", href: "/about/" }} />
-        </Fragment>
-        <Fragment slot="title">Process</Fragment>
-        <Fragment slot="summary">
-          {/* TODO: one- or two-paragraph opener. The point: every post on this
-          site carries a self-declared AI-assistance level; this page is what
-          those labels mean and how posts actually get made. */}
-          TODO — opener.
-        </Fragment>
-      </PageHero>
+  <PageBody data-pagefind-body data-pagefind-filter="type:Process">
+    <PageHero breadcrumb>
+      <Fragment slot="breadcrumb">
+        <Breadcrumb parent={{ label: "About", href: "/about/" }} />
+      </Fragment>
+      <Fragment slot="title">Process</Fragment>
+      <Fragment slot="summary">
+        {/* TODO: one- or two-paragraph opener. The point: every post on this
+        site carries a self-declared AI-assistance level; this page is what
+        those labels mean and how posts actually get made. */}
+        TODO — opener.
+      </Fragment>
+    </PageHero>
 
       
 
-      <section class="space-y-4">
-        <LabeledRule>How a post gets made</LabeledRule>
-        <div class="space-y-4 text-base leading-relaxed text-black/85 dark:text-white/85">
-          <p>
-            {/* TODO: voice memo (10–15 min), Whisper transcription, Claude
-            structures into an outline, I write/edit the draft myself, final
-            read-aloud pass. */}
-            TODO — workflow walkthrough.
-          </p>
-        </div>
-      </section>
-
-
-
-      <section class="space-y-4">
-        <LabeledRule>Where AI fits</LabeledRule>
-        <div class="space-y-4 text-base leading-relaxed text-black/85 dark:text-white/85">
-          <p>
-            {/* TODO: research, brainstorming, outlining, code generation,
-            editing passes. */}
-            TODO — where AI helps.
-          </p>
-        </div>
-      </section>
-
-      <section class="space-y-4">
-        <LabeledRule>Where AI doesn't fit</LabeledRule>
-        <div class="space-y-4 text-base leading-relaxed text-black/85 dark:text-white/85">
-          <p>
-            {/* TODO: voice, argument structure, final prose, editorial
-            judgment. The thinking is the signal — AI doesn't get to fake it. */}
-            TODO — where AI doesn't help.
-          </p>
-        </div>
-      </section>
-
-
-      <section class="space-y-4">
-        <LabeledRule>AI-assistance levels</LabeledRule>
-        <p class="text-sm text-black/70 dark:text-white/70">
-          Every post on <Link href="/">writing</Link> is tagged with one of
-          these. The badge links back to the matching definition here.
+    <section class="space-y-4">
+      <LabeledRule>How a post gets made</LabeledRule>
+      <div class="space-y-4 text-base leading-relaxed text-black/85 dark:text-white/85">
+        <p>
+          {/* TODO: voice memo (10–15 min), Whisper transcription, Claude
+          structures into an outline, I write/edit the draft myself, final
+          read-aloud pass. */}
+          TODO — workflow walkthrough.
         </p>
-        <ul class="not-prose flex flex-col gap-4 text-sm">
-          {
-            levels.map((level) => (
-              <li id={level.id} class="space-y-1 scroll-mt-24">
-                <span class="font-medium text-black dark:text-white">
-                  AI &middot; {level.label}
-                </span>
-                <p class="text-black/70 dark:text-white/70">{level.blurb}</p>
-              </li>
-            ))
-          }
-        </ul>
-      </section>
+      </div>
+    </section>
 
-      <EditorialRule />
 
-      <p class="text-xs text-black/55 dark:text-white/55">
-        <Link href="/about">back to /about</Link>
+
+    <section class="space-y-4">
+      <LabeledRule>Where AI fits</LabeledRule>
+      <div class="space-y-4 text-base leading-relaxed text-black/85 dark:text-white/85">
+        <p>
+          {/* TODO: research, brainstorming, outlining, code generation,
+          editing passes. */}
+          TODO — where AI helps.
+        </p>
+      </div>
+    </section>
+
+    <section class="space-y-4">
+      <LabeledRule>Where AI doesn't fit</LabeledRule>
+      <div class="space-y-4 text-base leading-relaxed text-black/85 dark:text-white/85">
+        <p>
+          {/* TODO: voice, argument structure, final prose, editorial
+          judgment. The thinking is the signal — AI doesn't get to fake it. */}
+          TODO — where AI doesn't help.
+        </p>
+      </div>
+    </section>
+
+
+    <section class="space-y-4">
+      <LabeledRule>AI-assistance levels</LabeledRule>
+      <p class="text-sm text-black/70 dark:text-white/70">
+        Every post on <Link href="/">writing</Link> is tagged with one of
+        these. The badge links back to the matching definition here.
       </p>
-    </div>
-  </Container>
+      <ul class="not-prose flex flex-col gap-4 text-sm">
+        {
+          levels.map((level) => (
+            <li id={level.id} class="space-y-1 scroll-mt-24">
+              <span class="font-medium text-black dark:text-white">
+                AI &middot; {level.label}
+              </span>
+              <p class="text-black/70 dark:text-white/70">{level.blurb}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <EditorialRule />
+
+    <p class="text-xs text-black/55 dark:text-white/55">
+      <Link href="/about">back to /about</Link>
+    </p>
+  </PageBody>
 </Layout>

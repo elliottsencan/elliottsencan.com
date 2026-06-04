@@ -1,8 +1,8 @@
 ---
 import Breadcrumb from "@components/Breadcrumb.astro";
-import Container from "@components/Container.astro";
 import EditorialRule from "@components/EditorialRule.astro";
 import Link from "@components/Link.astro";
+import PageBody from "@components/PageBody.astro";
 import PageHero from "@components/PageHero.astro";
 import Layout from "@layouts/Layout.astro";
 import { Code } from "astro-expressive-code/components";
@@ -119,92 +119,86 @@ const configs: ConfigBlock[] = [
     { name: "Uses", url: "/about/uses/" },
   ]}
 >
-  <Container>
-    <div
-      class="space-y-12"
-      data-pagefind-body
-      data-pagefind-filter="type:Uses"
-    >
-      <PageHero breadcrumb>
-        <Fragment slot="breadcrumb">
-          <Breadcrumb parent={{ label: "About", href: "/about/" }} />
-        </Fragment>
-        <Fragment slot="title">Uses</Fragment>
-        <Fragment slot="summary">
-          {/* TODO: one-paragraph opener. The premise: if you want to know what
-          I actually use, read the configs. The /uses convention (uses.tech),
-          but done the hacker-blog way — files over marketing. */}
-          TODO — opener.
-        </Fragment>
-      </PageHero>
+  <PageBody data-pagefind-body data-pagefind-filter="type:Uses">
+    <PageHero breadcrumb>
+      <Fragment slot="breadcrumb">
+        <Breadcrumb parent={{ label: "About", href: "/about/" }} />
+      </Fragment>
+      <Fragment slot="title">Uses</Fragment>
+      <Fragment slot="summary">
+        {/* TODO: one-paragraph opener. The premise: if you want to know what
+        I actually use, read the configs. The /uses convention (uses.tech),
+        but done the hacker-blog way — files over marketing. */}
+        TODO — opener.
+      </Fragment>
+    </PageHero>
 
-      {
-        configs.map((config) => (
-          <>
-            <EditorialRule />
-            <section id={config.id} class="space-y-3 scroll-mt-24">
-              {config.purpose && (
-                <p class="text-sm text-black/60 dark:text-white/60">
-                  {config.purpose}
-                </p>
-              )}
-              <Code code={config.code} lang={config.lang} title={config.path} />
-            </section>
-          </>
-        ))
-      }
+    {
+      configs.map((config) => (
+        <>
+          <EditorialRule />
+          <section id={config.id} class="space-y-3 scroll-mt-24">
+            {config.purpose && (
+              <p class="text-sm text-black/60 dark:text-white/60">
+                {config.purpose}
+              </p>
+            )}
+            <Code code={config.code} lang={config.lang} title={config.path} />
+          </section>
+        </>
+      ))
+    }
 
-      <EditorialRule />
+    <EditorialRule />
 
-      <section class="space-y-4">
-        <h2
-          id="browser"
-          class="font-heading text-sm font-medium text-black/65 dark:text-white/65"
-        >
-          Browser
-        </h2>
-        <ul class="not-prose flex flex-col gap-4 text-sm">
-          <li class="space-y-1">
-            <span class="font-medium text-black dark:text-white">TODO — browser of choice</span>
-            <p class="text-black/70 dark:text-white/70">TODO — why.</p>
-          </li>
-          <li class="space-y-1">
-            <span class="font-medium text-black dark:text-white">TODO — extensions that earn their keep</span>
-            <p class="text-black/70 dark:text-white/70">TODO — one line each.</p>
-          </li>
-        </ul>
-      </section>
+    <section class="space-y-4">
+      <h2
+        id="browser"
+        class="font-heading text-sm font-medium text-black/65 dark:text-white/65"
+      >
+        Browser
+      </h2>
+      <ul class="not-prose flex flex-col gap-4 text-sm">
+        <li class="space-y-1">
+          <span class="font-medium text-black dark:text-white">TODO — browser of choice</span>
+          <p class="text-black/70 dark:text-white/70">TODO — why.</p>
+        </li>
+        <li class="space-y-1">
+          <span class="font-medium text-black dark:text-white">TODO — extensions that earn their keep</span>
+          <p class="text-black/70 dark:text-white/70">TODO — one line each.</p>
+        </li>
+      </ul>
+    </section>
 
-      <EditorialRule />
+    <EditorialRule />
 
-      <section class="space-y-4">
-        <h2
-          id="hardware"
-          class="font-heading text-sm font-medium text-black/65 dark:text-white/65"
-        >
-          Hardware
-        </h2>
-        <ul class="not-prose flex flex-col gap-4 text-sm">
-          <li class="space-y-1">
-            <span class="font-medium text-black dark:text-white">TODO — machine</span>
-            <p class="text-black/70 dark:text-white/70">TODO.</p>
-          </li>
-          <li class="space-y-1">
-            <span class="font-medium text-black dark:text-white">TODO — display</span>
-            <p class="text-black/70 dark:text-white/70">TODO.</p>
-          </li>
-          <li class="space-y-1">
-            <span class="font-medium text-black dark:text-white">TODO — keyboard</span>
-            <p class="text-black/70 dark:text-white/70">TODO.</p>
-          </li>
-        </ul>
-      </section>
+    <section class="space-y-4">
+      <h2
+        id="hardware"
+        class="font-heading text-sm font-medium text-black/65 dark:text-white/65"
+      >
+        Hardware
+      </h2>
+      <ul class="not-prose flex flex-col gap-4 text-sm">
+        <li class="space-y-1">
+          <span class="font-medium text-black dark:text-white">TODO — machine</span>
+          <p class="text-black/70 dark:text-white/70">TODO.</p>
+        </li>
+        <li class="space-y-1">
+          <span class="font-medium text-black dark:text-white">TODO — display</span>
+          <p class="text-black/70 dark:text-white/70">TODO.</p>
+        </li>
+        <li class="space-y-1">
+          <span class="font-medium text-black dark:text-white">TODO — keyboard</span>
+          <p class="text-black/70 dark:text-white/70">TODO.</p>
+        </li>
+      </ul>
+    </section>
 
-      <EditorialRule />
+    <EditorialRule />
 
-      <p class="text-xs text-black/55 dark:text-white/55">
-        <Link href="/about">back to /about</Link>
-      </p>
-    </div>
-  </Container>
+    <p class="text-xs text-black/55 dark:text-white/55">
+      <Link href="/about">back to /about</Link>
+    </p>
+  </PageBody>
 </Layout>

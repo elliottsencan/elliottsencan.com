@@ -1,10 +1,10 @@
 ---
-import Container from "@components/Container.astro";
 import EditorialList from "@components/EditorialList.astro";
 import EditorialListItem from "@components/EditorialListItem.astro";
 import EditorialRule from "@components/EditorialRule.astro";
 import LabeledRule from "@components/LabeledRule.astro";
 import Link from "@components/Link.astro";
+import PageBody from "@components/PageBody.astro";
 import PageHero from "@components/PageHero.astro";
 import { SITE } from "@consts";
 import Layout from "@layouts/Layout.astro";
@@ -85,132 +85,126 @@ const projectBlurbs: Array<{
 ---
 
 <Layout title="About" description={SITE.DESCRIPTION} includePersonSchema>
-  <Container>
-    <div
-      class="space-y-12"
-      data-pagefind-body
-      data-pagefind-filter="type:About"
-    >
-      <PageHero>
-        <Fragment slot="title">About</Fragment>
-        <Fragment slot="summary">
-          Hi, I'm Elliott, an engineer in San Diego. Currently
-          Principal Engineer at GrupBlox; previously Staff at Transposit, and
-          before that eight years at ServiceNow across IC and
-          engineering-management tracks.
-        </Fragment>
-      </PageHero>
+  <PageBody data-pagefind-body data-pagefind-filter="type:About">
+    <PageHero>
+      <Fragment slot="title">About</Fragment>
+      <Fragment slot="summary">
+        Hi, I'm Elliott, an engineer in San Diego. Currently
+        Principal Engineer at GrupBlox; previously Staff at Transposit, and
+        before that eight years at ServiceNow across IC and
+        engineering-management tracks.
+      </Fragment>
+    </PageHero>
 
-      <section class="space-y-4">
-        <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
-          This site is where I write about software engineering, architecture,
-          and craft. If you want to see what I'm thinking about right now, the
-          <Link href="/now">/now page</Link> is more current than this one.
-        </p>
-        <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
-          Outside of software, I co-own
-          <Link href="https://ssbdfest.com" external>Same Same But Different</Link>,
-          a 7,500-person music festival in Lake Perris, CA, and produce music as
-          Hollywood Principle (100M+ Spotify streams, video game placements).
-        </p>
-      </section>
-
-      <section class="space-y-4">
-        <LabeledRule>Career</LabeledRule>
-        <EditorialList>
-          {
-            career.map((role) => (
-              <EditorialListItem meta={role.dates}>
-                <Fragment slot="title">
-                  {role.role}
-                  {" at "}
-                  {role.url ? (
-                    <Link href={role.url} external>
-                      {role.company}
-                    </Link>
-                  ) : (
-                    role.company
-                  )}
-                </Fragment>
-                {role.blurb}
-              </EditorialListItem>
-            ))
-          }
-        </EditorialList>
-      </section>
-
-
-      <section class="space-y-4">
-        <LabeledRule>Projects</LabeledRule>
-        <EditorialList>
-          {
-            projectBlurbs.map((project) => (
-              <EditorialListItem
-                title={project.title}
-                href={project.href}
-                external={project.external}
-                meta={project.status}
-              >
-                {project.blurb}
-              </EditorialListItem>
-            ))
-          }
-        </EditorialList>
-      </section>
-
-      <section class="space-y-4">
-        <LabeledRule>Elsewhere</LabeledRule>
-        <ul class="not-prose flex flex-col gap-2 text-sm">
-          <li class="flex items-baseline gap-4">
-            <span
-              aria-hidden="true"
-              class="shrink-0 text-xs text-black/50 dark:text-white/50"
-            >
-              &middot;
-            </span>
-            <span>
-              <Link href="/about/colophon">colophon</Link>
-              <span class="text-black/60 dark:text-white/60">
-                {" — "}typography, stack, and credits.
-              </span>
-            </span>
-          </li>
-          <li class="flex items-baseline gap-4">
-            <span
-              aria-hidden="true"
-              class="shrink-0 text-xs text-black/50 dark:text-white/50"
-            >
-              &middot;
-            </span>
-            <span>
-              <Link href="/about/process">process</Link>
-              <span class="text-black/60 dark:text-white/60">
-                {" — "}writing workflow and what AI assistance means on each post.
-              </span>
-            </span>
-          </li>
-          <li class="flex items-baseline gap-4">
-            <span
-              aria-hidden="true"
-              class="shrink-0 text-xs text-black/50 dark:text-white/50"
-            >
-              &middot;
-            </span>
-            <span>
-              <Link href="/about/uses">uses</Link>
-              <span class="text-black/60 dark:text-white/60">
-                {" — "}tools, hardware, and workflow I actually reach for.
-              </span>
-            </span>
-          </li>
-        </ul>
-      </section>
-
-      <EditorialRule />
-
-      <p class="text-xs text-black/55 dark:text-white/55">
-        <Link href="/now">now →</Link>
+    <section class="space-y-4">
+      <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
+        This site is where I write about software engineering, architecture,
+        and craft. If you want to see what I'm thinking about right now, the
+        <Link href="/now">/now page</Link> is more current than this one.
       </p>
-    </div>
-  </Container>
+      <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
+        Outside of software, I co-own
+        <Link href="https://ssbdfest.com" external>Same Same But Different</Link>,
+        a 7,500-person music festival in Lake Perris, CA, and produce music as
+        Hollywood Principle (100M+ Spotify streams, video game placements).
+      </p>
+    </section>
+
+    <section class="space-y-4">
+      <LabeledRule>Career</LabeledRule>
+      <EditorialList>
+        {
+          career.map((role) => (
+            <EditorialListItem meta={role.dates}>
+              <Fragment slot="title">
+                {role.role}
+                {" at "}
+                {role.url ? (
+                  <Link href={role.url} external>
+                    {role.company}
+                  </Link>
+                ) : (
+                  role.company
+                )}
+              </Fragment>
+              {role.blurb}
+            </EditorialListItem>
+          ))
+        }
+      </EditorialList>
+    </section>
+
+
+    <section class="space-y-4">
+      <LabeledRule>Projects</LabeledRule>
+      <EditorialList>
+        {
+          projectBlurbs.map((project) => (
+            <EditorialListItem
+              title={project.title}
+              href={project.href}
+              external={project.external}
+              meta={project.status}
+            >
+              {project.blurb}
+            </EditorialListItem>
+          ))
+        }
+      </EditorialList>
+    </section>
+
+    <section class="space-y-4">
+      <LabeledRule>Elsewhere</LabeledRule>
+      <ul class="not-prose flex flex-col gap-2 text-sm">
+        <li class="flex items-baseline gap-4">
+          <span
+            aria-hidden="true"
+            class="shrink-0 text-xs text-black/50 dark:text-white/50"
+          >
+            &middot;
+          </span>
+          <span>
+            <Link href="/about/colophon">colophon</Link>
+            <span class="text-black/60 dark:text-white/60">
+              {" — "}typography, stack, and credits.
+            </span>
+          </span>
+        </li>
+        <li class="flex items-baseline gap-4">
+          <span
+            aria-hidden="true"
+            class="shrink-0 text-xs text-black/50 dark:text-white/50"
+          >
+            &middot;
+          </span>
+          <span>
+            <Link href="/about/process">process</Link>
+            <span class="text-black/60 dark:text-white/60">
+              {" — "}writing workflow and what AI assistance means on each post.
+            </span>
+          </span>
+        </li>
+        <li class="flex items-baseline gap-4">
+          <span
+            aria-hidden="true"
+            class="shrink-0 text-xs text-black/50 dark:text-white/50"
+          >
+            &middot;
+          </span>
+          <span>
+            <Link href="/about/uses">uses</Link>
+            <span class="text-black/60 dark:text-white/60">
+              {" — "}tools, hardware, and workflow I actually reach for.
+            </span>
+          </span>
+        </li>
+      </ul>
+    </section>
+
+    <EditorialRule />
+
+    <p class="text-xs text-black/55 dark:text-white/55">
+      <Link href="/now">now →</Link>
+    </p>
+  </PageBody>
 </Layout>

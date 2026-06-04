@@ -1,8 +1,8 @@
 ---
 import Breadcrumb from "@components/Breadcrumb.astro";
-import Container from "@components/Container.astro";
 import EditorialRule from "@components/EditorialRule.astro";
 import Link from "@components/Link.astro";
+import PageBody from "@components/PageBody.astro";
 import PageHero from "@components/PageHero.astro";
 import { SITE } from "@consts";
 import Layout from "@layouts/Layout.astro";
@@ -17,45 +17,39 @@ import Layout from "@layouts/Layout.astro";
     { name: "Colophon", url: "/about/colophon/" },
   ]}
 >
-  <Container>
-    <div
-      class="space-y-12"
-      data-pagefind-body
-      data-pagefind-filter="type:About"
-    >
-      <PageHero breadcrumb>
-        <Fragment slot="breadcrumb">
-          <Breadcrumb parent={{ label: "About", href: "/about/" }} />
-        </Fragment>
-        <Fragment slot="title">Colophon</Fragment>
-        <Fragment slot="summary">
-          Display titles are <em>Neue Montreal Book</em> (400); the same family
-          runs Medium (500) for labels and list titles. <em>Satoshi</em> sets the
-          running copy. <em>Spline Sans Mono</em> handles code and the small
-          typographic marks. Self-hosted as WOFF2.
-        </Fragment>
-      </PageHero>
+  <PageBody data-pagefind-body data-pagefind-filter="type:About">
+    <PageHero breadcrumb>
+      <Fragment slot="breadcrumb">
+        <Breadcrumb parent={{ label: "About", href: "/about/" }} />
+      </Fragment>
+      <Fragment slot="title">Colophon</Fragment>
+      <Fragment slot="summary">
+        Display titles are <em>Neue Montreal Book</em> (400); the same family
+        runs Medium (500) for labels and list titles. <em>Satoshi</em> sets the
+        running copy. <em>Spline Sans Mono</em> handles code and the small
+        typographic marks. Self-hosted as WOFF2.
+      </Fragment>
+    </PageHero>
 
-      <section class="space-y-6 text-base leading-relaxed text-black/85 dark:text-white/85">
-        <p>
-          Built with <Link href="https://astro.build/" external>Astro</Link>
-          and
-          <Link href="https://tailwindcss.com/" external>Tailwind CSS</Link>.
-          Search by
-          <Link href="https://pagefind.app/" external>Pagefind</Link>,
-          indexed at build time. Hosted on Cloudflare Pages.
-        </p>
-        <p>
-          Written in {SITE.LOCATION}. The footer activity rail is generated at
-          build time from the GitHub GraphQL API.
-        </p>
-      </section>
-
-      <EditorialRule />
-
-      <p class="text-xs text-black/55 dark:text-white/55">
-        <Link href="/about">back to /about</Link>
+    <section class="space-y-6 text-base leading-relaxed text-black/85 dark:text-white/85">
+      <p>
+        Built with <Link href="https://astro.build/" external>Astro</Link>
+        and
+        <Link href="https://tailwindcss.com/" external>Tailwind CSS</Link>.
+        Search by
+        <Link href="https://pagefind.app/" external>Pagefind</Link>,
+        indexed at build time. Hosted on Cloudflare Pages.
       </p>
-    </div>
-  </Container>
+      <p>
+        Written in {SITE.LOCATION}. The footer activity rail is generated at
+        build time from the GitHub GraphQL API.
+      </p>
+    </section>
+
+    <EditorialRule />
+
+    <p class="text-xs text-black/55 dark:text-white/55">
+      <Link href="/about">back to /about</Link>
+    </p>
+  </PageBody>
 </Layout>
