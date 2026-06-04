@@ -90,13 +90,12 @@
 
 @theme {
   --font-sans:
-    "Satoshi", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
-    "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-  --font-heading:
-    "Neue Montreal", "Satoshi", ui-sans-serif, system-ui, sans-serif;
+    "Satoshi", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+    "Segoe UI Symbol", "Noto Color Emoji";
+  --font-heading: "Neue Montreal", "Satoshi", ui-sans-serif, system-ui, sans-serif;
   --font-mono:
-    "Spline Sans Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-    "Liberation Mono", "Courier New", monospace;
+    "Spline Sans Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
 
   /* Fluid type scale (320px → 1280px viewport).
      Retuned for editorial legibility: body lands at 17→20px, heads scale
@@ -230,7 +229,7 @@
   }
 
   main {
-    @apply flex-1 pt-24 md:pt-32;
+    @apply flex-1 pt-28 md:pt-40;
     /* Reserves space for the fixed footer plus visual breathing room so the
        last paragraph of long-form prose doesn't sit flush against it. */
     padding-bottom: calc(var(--footer-height) + 4rem);
@@ -240,8 +239,8 @@
     main {
       /* Two-row masthead on mobile (logo + utility, then section links
          below a hairline rule) is taller than the single-row md: layout,
-         so it needs more top breathing room — not less. */
-      @apply pt-36;
+         so it keeps more top room than desktop. */
+      @apply pt-44;
     }
   }
 
@@ -376,21 +375,11 @@ body::after {
   /* Solid canvas behind the footer chrome so the fade runs into it
      seamlessly; the 4rem above the footer carries the visible transition
      from transparent content into canvas. */
-  background: linear-gradient(
-    to top,
-    #f6f4ef,
-    #f6f4ef var(--footer-height),
-    transparent
-  );
+  background: linear-gradient(to top, #f6f4ef, #f6f4ef var(--footer-height), transparent);
 }
 
 html.dark body::after {
-  background: linear-gradient(
-    to top,
-    #18161a,
-    #18161a var(--footer-height),
-    transparent
-  );
+  background: linear-gradient(to top, #18161a, #18161a var(--footer-height), transparent);
 }
 
 @supports (animation-timeline: scroll()) {
@@ -485,11 +474,7 @@ html.dark .dot-rule {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background-image: radial-gradient(
-    circle,
-    currentColor 0.5px,
-    transparent 0.5px
-  );
+  background-image: radial-gradient(circle, currentColor 0.5px, transparent 0.5px);
   background-size: 6px 1px;
   background-repeat: repeat-x;
   background-position: center;
