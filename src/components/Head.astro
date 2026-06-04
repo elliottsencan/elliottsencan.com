@@ -262,6 +262,30 @@ const breadcrumbSchema = breadcrumbs?.length
       });
 
     document.addEventListener("scroll", onScroll);
+
+    initNavMenu();
+  }
+
+  // Mobile section menu (a native <details> in the header). Native handles
+  // open/close on the ☰ summary; here we add the conventional dismissals:
+  // close when a link is chosen, on Escape, and on a tap outside the menu.
+  function initNavMenu() {
+    const navMenu = document.getElementById("nav-menu");
+    if (!navMenu) return;
+
+    for (const link of navMenu.querySelectorAll(".nav-panel a")) {
+      link.addEventListener("click", () => navMenu.removeAttribute("open"));
+    }
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") navMenu.removeAttribute("open");
+    });
+
+    document.addEventListener("pointerdown", (event) => {
+      if (navMenu.hasAttribute("open") && !navMenu.contains(event.target)) {
+        navMenu.removeAttribute("open");
+      }
+    });
   }
 
   // The icon tracks the user-selected mode (system/light/dark), not the
