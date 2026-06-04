@@ -12,6 +12,7 @@ sources:
     2026-05/2026-05-01t102345-sap-related-npm-packages-compromised-in-credential-stealing
   - >-
     2026-05/2026-05-04t231548-using-ssh-keys-to-make-connectivity-simpler-and-secure
+  - 2026-06/2026-06-04t163601-anthropicsdefending-code-reference-harness
 compiled_at: '2026-05-22T16:18:29.655Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -29,6 +30,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.014415
+last_source_added: '2026-06-04T23:36:01.357Z'
 ---
 Supply chain attacks target the packages and tools developers trust rather than the applications themselves. Two recent incidents illustrate how varied the attack surface has become.
 
