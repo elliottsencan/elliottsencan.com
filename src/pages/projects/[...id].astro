@@ -1,9 +1,9 @@
 ---
 import { type CollectionEntry, getCollection, render } from "astro:content";
 import Breadcrumb from "@components/Breadcrumb.astro";
-import Container from "@components/Container.astro";
 import FormattedDate from "@components/FormattedDate.astro";
 import Link from "@components/Link.astro";
+import PageBody from "@components/PageBody.astro";
 import TableOfContents from "@components/TableOfContents.astro";
 import ProjectLayout from "@layouts/ProjectLayout.astro";
 import { readingTime } from "@lib/utils";
@@ -43,23 +43,25 @@ const hasRail =
 ---
 
 <ProjectLayout project={project}>
-  <Container>
-    <Breadcrumb parent={{ label: "About", href: "/about/" }} />
-    <div class="my-10 max-w-[62ch] space-y-2">
-      <div class="flex items-center gap-1.5">
-        <div class="font-base text-sm">
-          <FormattedDate date={project.data.date} />
+  <PageBody>
+    <div class="flex flex-col gap-4">
+      <Breadcrumb parent={{ label: "About", href: "/about/" }} />
+      <div class="max-w-[62ch] space-y-2">
+        <div class="flex items-center gap-1.5">
+          <div class="font-base text-sm">
+            <FormattedDate date={project.data.date} />
+          </div>
+          &bull;
+          {project.body && (
+            <div class="font-base text-sm">{readingTime(project.body)}</div>
+          )}
         </div>
-        &bull;
-        {project.body && (
-          <div class="font-base text-sm">{readingTime(project.body)}</div>
-        )}
+        <h1
+          class="font-heading text-2xl font-medium tracking-tight text-black md:text-3xl dark:text-white"
+        >
+          {project.data.title}
+        </h1>
       </div>
-      <h1
-        class="font-heading text-2xl font-medium tracking-tight text-black md:text-3xl dark:text-white"
-      >
-        {project.data.title}
-      </h1>
     </div>
 
     {/*
@@ -68,7 +70,7 @@ const hasRail =
       operational metadata, and earn their own row.
     */}
     {project.data.impact && project.data.impact.length > 0 && (
-      <div class="mb-12 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 md:grid-cols-3">
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 md:grid-cols-3">
         {project.data.impact.map((item) => (
           <div class="rounded-sm border border-black/10 p-3 dark:border-white/15">
             <div class="font-heading text-lg font-medium text-black dark:text-white">
@@ -172,5 +174,5 @@ const hasRail =
         </aside>
       )}
     </div>
-  </Container>
+  </PageBody>
 </ProjectLayout>
