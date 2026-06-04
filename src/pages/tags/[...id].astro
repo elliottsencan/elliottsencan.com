@@ -50,7 +50,9 @@ const breadcrumbs = [
 >
   <PageBody data-pagefind-ignore>
     <PageHero breadcrumb>
-      <Breadcrumb slot="breadcrumb" parent={{ label: "Tags", href: "/tags/" }} />
+      <Fragment slot="breadcrumb">
+          <Breadcrumb parent={{ label: "Tags", href: "/tags/" }} />
+        </Fragment>
       <Fragment slot="title">Posts tagged with "{id}"</Fragment>
     </PageHero>
     <EditorialList>

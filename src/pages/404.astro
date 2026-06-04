@@ -10,7 +10,9 @@ import Layout from "@layouts/Layout.astro";
 <Layout title="404" description={SITE.DESCRIPTION}>
   <PageBody>
     <PageHero breadcrumb>
-      <Breadcrumb slot="breadcrumb" parent={{ label: "Home", href: "/" }} />
+      <Fragment slot="breadcrumb">
+        <Breadcrumb parent={{ label: "Home", href: "/" }} />
+      </Fragment>
       <Fragment slot="title">404 — Not found</Fragment>
       <Fragment slot="summary">
         The URL you followed doesn't match anything published here. It may
