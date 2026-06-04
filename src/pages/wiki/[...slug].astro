@@ -4,6 +4,7 @@ import Breadcrumb from "@components/Breadcrumb.astro";
 import EditorialRule from "@components/EditorialRule.astro";
 import LabeledRule from "@components/LabeledRule.astro";
 import Link from "@components/Link.astro";
+import PageBody from "@components/PageBody.astro";
 import ProvenanceBadge from "@components/ProvenanceBadge.astro";
 import ConstellationLocal from "@components/wiki/ConstellationLocal.astro";
 import constellationLayout from "@data/constellation-layout.json";
@@ -141,176 +142,170 @@ const neighborCount = hasLocal ? localData.nodes.length - 1 : 0;
   citations={citations}
   breadcrumbs={breadcrumbs}
 >
-  <div class="mx-auto max-w-5xl px-6 md:px-8">
+  <PageBody data-pagefind-body data-pagefind-filter="type:Wiki">
+    {/*
+      Hero — 3-row × 2-col grid mirroring /wiki. Col 1 holds the editorial
+      rails: row 1 = LabeledRule with "Wiki" (linked back to the index)
+      as the back-nav, row 2 = title/summary/source-count stack with flex
+      justify-between, row 3 = EditorialRule compact (bottom dot row).
+      Col 2 holds the local constellation spanning rows 1-2 and a footer
+      caption (cluster · neighbors) in row 3 that grid-aligns with the
+      col-1 bottom rule. The h1 carries the current concept identity, so
+      the row-1 label stays minimal — just "Wiki" — to avoid double
+      labelling.
+
+      NB: must NOT use bare <header> — global.css fixes-positions every
+      <header> as site chrome (CLAUDE.md: "bare tags are reserved").
+    */}
     <div
-      class="space-y-16"
-      data-pagefind-body
-      data-pagefind-filter="type:Wiki"
+      class="grid items-stretch gap-x-8 gap-y-3 md:grid-cols-[minmax(0,1fr)_auto] md:gap-x-10 md:[grid-template-rows:auto_1fr_auto]"
     >
-      {/*
-        Hero — 3-row × 2-col grid mirroring /wiki. Col 1 holds the editorial
-        rails: row 1 = LabeledRule with "Wiki" (linked back to the index)
-        as the back-nav, row 2 = title/summary/source-count stack with flex
-        justify-between, row 3 = EditorialRule compact (bottom dot row).
-        Col 2 holds the local constellation spanning rows 1-2 and a footer
-        caption (cluster · neighbors) in row 3 that grid-aligns with the
-        col-1 bottom rule. The h1 carries the current concept identity, so
-        the row-1 label stays minimal — just "Wiki" — to avoid double
-        labelling.
+      <div class="md:col-start-1 md:row-start-1">
+        <Breadcrumb parent={{ label: "Wiki", href: "/wiki/" }} />
+      </div>
 
-        NB: must NOT use bare <header> — global.css fixes-positions every
-        <header> as site chrome (CLAUDE.md: "bare tags are reserved").
-      */}
       <div
-        class="grid items-stretch gap-x-8 gap-y-3 md:grid-cols-[minmax(0,1fr)_auto] md:gap-x-10 md:[grid-template-rows:auto_1fr_auto]"
+        class="flex min-w-0 max-w-[62ch] flex-col justify-between gap-4 md:col-start-1 md:row-start-2"
       >
-        <div class="md:col-start-1 md:row-start-1">
-          <Breadcrumb parent={{ label: "Wiki", href: "/wiki/" }} />
-        </div>
-
-        <div
-          class="flex min-w-0 max-w-[62ch] flex-col justify-between gap-4 md:col-start-1 md:row-start-2"
-        >
-          <div class="flex flex-col gap-3">
-            <h1 class="font-heading text-display font-normal leading-[1.06] tracking-tight text-black dark:text-white">
-              {concept.data.title}
-            </h1>
-            <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
-              {concept.data.summary}
-            </p>
-            <p
-              class="inline-flex w-fit items-center gap-2 rounded-sm border border-black/15 px-2.5 py-1 font-mono text-xs text-[color:var(--accent)] dark:border-white/20"
-            >
-              <span class="flex gap-[2px]" aria-hidden="true">
-                {sources.map((_, i) => (
-                  <span
-                    class="block h-1 w-1 rounded-full bg-current"
-                    style={`opacity: ${0.7 + i * 0.04};`}
-                  />
-                ))}
-              </span>
-              <span class="whitespace-nowrap tracking-wider">
-                {sources.length} source{sources.length === 1 ? "" : "s"}
-              </span>
-            </p>
-          </div>
-
-          <ProvenanceBadge action="Compiled by Claude" date={concept.data.compiled_at} link />
-        </div>
-
-        <EditorialRule compact class="md:col-start-1 md:row-start-3" />
-
-        {
-          hasLocal && (
-            <div class="wiki-cl-well md:col-start-2 md:row-start-1 md:row-end-3">
-              <ConstellationLocal slug={concept.id} width={440} />
-            </div>
-          )
-        }
-
-        {
-          hasLocal && (
-            <p
-              class="font-mono text-xs tracking-wider text-black/55 dark:text-white/55 md:col-start-2 md:row-start-3 md:self-center"
-            >
-              {myCluster ? `${myCluster.short} · ` : ""}
-              {neighborCount} neighbor{neighborCount === 1 ? "" : "s"}
-            </p>
-          )
-        }
-      </div>
-
-      {/*
-        Body row — prose on the left, sticky sources rail on the right. The
-        rail collapses below the body on narrow screens.
-        NB: must NOT use <article> — global.css applies `prose` (max-width:
-        65ch) to every <article>, which can win over Tailwind utilities and
-        collapse the body in this 2-col grid. The wiki-body class below
-        carries the prose styling without the global side-effect.
-      */}
-      <div class="grid gap-8 md:grid-cols-[minmax(0,1fr)_220px] md:gap-12">
-        <div id="wiki-body" class="wiki-body min-w-0">
-          <Content />
-        </div>
-
-        <aside class="wiki-rail md:sticky md:top-28 md:self-start">
+        <div class="flex flex-col gap-3">
+          <h1 class="font-heading text-display font-normal leading-[1.06] tracking-tight text-black dark:text-white">
+            {concept.data.title}
+          </h1>
+          <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
+            {concept.data.summary}
+          </p>
           <p
-            class="mb-3 font-mono text-xs uppercase tracking-wider text-black/55 dark:text-white/55"
+            class="inline-flex w-fit items-center gap-2 rounded-sm border border-black/15 px-2.5 py-1 font-mono text-xs text-[color:var(--accent)] dark:border-white/20"
           >
-            Sources
+            <span class="flex gap-[2px]" aria-hidden="true">
+              {sources.map((_, i) => (
+                <span
+                  class="block h-1 w-1 rounded-full bg-current"
+                  style={`opacity: ${0.7 + i * 0.04};`}
+                />
+              ))}
+            </span>
+            <span class="whitespace-nowrap tracking-wider">
+              {sources.length} source{sources.length === 1 ? "" : "s"}
+            </span>
           </p>
-          <ol class="not-prose flex flex-col gap-1 text-sm">
-            {sources.map(({ slug, number, entry }) => (
-              <li class="rail-card" data-src={slug}>
-                <span class="rail-chip" data-src={slug} aria-hidden="true">
-                  {number}
-                </span>
-                <div class="flex min-w-0 flex-col gap-0.5">
-                  <a
-                    href={entry.data.url}
-                    target="_blank"
-                    rel="noopener"
-                    class="text-xs font-medium leading-snug text-black underline decoration-black/15 underline-offset-[3px] hover:decoration-black/55 dark:text-white dark:decoration-white/20 dark:hover:decoration-white/55"
-                  >
-                    {entry.data.title}
-                  </a>
-                  <span class="text-xs text-black/55 dark:text-white/55">
-                    {entry.data.author ?? entry.data.source ?? ""}
-                  </span>
-                  <span class="font-mono text-xs tracking-wide text-black/40 dark:text-white/45">
-                    {[entry.data.source, dateFormatter.format(entry.data.added)]
-                      .filter(Boolean)
-                      .join(" · ")}
-                  </span>
-                </div>
-              </li>
-            ))}
-          </ol>
-          <p class="mt-3 font-mono text-xs tracking-wider text-black/55 dark:text-white/55">
-            <Link href="/reading">view in /reading →</Link>
-          </p>
-        </aside>
+        </div>
+
+        <ProvenanceBadge action="Compiled by Claude" date={concept.data.compiled_at} link />
       </div>
 
-      {/*
-        Ambient related-concepts strip — sits below the body. Soft cards, not
-        a list. Concept names link into their entry pages; summaries are
-        truncated so the strip stays scannable.
-      */}
+      <EditorialRule compact class="md:col-start-1 md:row-start-3" />
+
       {
-        relatedConcepts.length > 0 && (
-          <section class="space-y-4">
-            <LabeledRule>Related concepts</LabeledRule>
-            <ul class="not-prose grid grid-cols-[repeat(auto-fill,minmax(170px,1fr))] gap-3">
-              {relatedConcepts.map((slug) => {
-                const rc = conceptById.get(slug);
-                if (!rc) return null;
-                const blurb = rc.data.summary.split(/[,;]/)[0].slice(0, 96);
-                return (
-                  <li>
-                    <a
-                      href={`/wiki/${slug}/`}
-                      class="group flex h-full flex-col gap-1.5 rounded-sm border border-black/5 bg-[color:var(--card)] px-3.5 py-3 no-underline dark:border-white/[0.06]"
-                    >
-                      <span class="font-heading text-sm font-medium leading-tight tracking-tight text-black transition-colors duration-300 ease-in-out group-hover:text-[color:var(--accent)] group-focus-visible:text-[color:var(--accent)] dark:text-white">
-                        {rc.data.title} →
-                      </span>
-                      <span class="text-xs leading-relaxed text-black/55 dark:text-white/55">
-                        {blurb}…
-                      </span>
-                      <span class="mt-auto pt-1 font-mono text-xs uppercase tracking-widest text-black/40 dark:text-white/40">
-                        {rc.data.sources.length} sources
-                      </span>
-                    </a>
-                  </li>
-                );
-              })}
-            </ul>
-          </section>
+        hasLocal && (
+          <div class="wiki-cl-well md:col-start-2 md:row-start-1 md:row-end-3">
+            <ConstellationLocal slug={concept.id} width={440} />
+          </div>
+        )
+      }
+
+      {
+        hasLocal && (
+          <p
+            class="font-mono text-xs tracking-wider text-black/55 dark:text-white/55 md:col-start-2 md:row-start-3 md:self-center"
+          >
+            {myCluster ? `${myCluster.short} · ` : ""}
+            {neighborCount} neighbor{neighborCount === 1 ? "" : "s"}
+          </p>
         )
       }
     </div>
-  </div>
+
+    {/*
+      Body row — prose on the left, sticky sources rail on the right. The
+      rail collapses below the body on narrow screens.
+      NB: must NOT use <article> — global.css applies `prose` (max-width:
+      65ch) to every <article>, which can win over Tailwind utilities and
+      collapse the body in this 2-col grid. The wiki-body class below
+      carries the prose styling without the global side-effect.
+    */}
+    <div class="grid gap-8 md:grid-cols-[minmax(0,1fr)_220px] md:gap-12">
+      <div id="wiki-body" class="wiki-body min-w-0">
+        <Content />
+      </div>
+
+      <aside class="wiki-rail md:sticky md:top-28 md:self-start">
+        <p
+          class="mb-3 font-mono text-xs uppercase tracking-wider text-black/55 dark:text-white/55"
+        >
+          Sources
+        </p>
+        <ol class="not-prose flex flex-col gap-1 text-sm">
+          {sources.map(({ slug, number, entry }) => (
+            <li class="rail-card" data-src={slug}>
+              <span class="rail-chip" data-src={slug} aria-hidden="true">
+                {number}
+              </span>
+              <div class="flex min-w-0 flex-col gap-0.5">
+                <a
+                  href={entry.data.url}
+                  target="_blank"
+                  rel="noopener"
+                  class="text-xs font-medium leading-snug text-black underline decoration-black/15 underline-offset-[3px] hover:decoration-black/55 dark:text-white dark:decoration-white/20 dark:hover:decoration-white/55"
+                >
+                  {entry.data.title}
+                </a>
+                <span class="text-xs text-black/55 dark:text-white/55">
+                  {entry.data.author ?? entry.data.source ?? ""}
+                </span>
+                <span class="font-mono text-xs tracking-wide text-black/40 dark:text-white/45">
+                  {[entry.data.source, dateFormatter.format(entry.data.added)]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </span>
+              </div>
+            </li>
+          ))}
+        </ol>
+        <p class="mt-3 font-mono text-xs tracking-wider text-black/55 dark:text-white/55">
+          <Link href="/reading">view in /reading →</Link>
+        </p>
+      </aside>
+    </div>
+
+    {/*
+      Ambient related-concepts strip — sits below the body. Soft cards, not
+      a list. Concept names link into their entry pages; summaries are
+      truncated so the strip stays scannable.
+    */}
+    {
+      relatedConcepts.length > 0 && (
+        <section class="space-y-4">
+          <LabeledRule>Related concepts</LabeledRule>
+          <ul class="not-prose grid grid-cols-[repeat(auto-fill,minmax(170px,1fr))] gap-3">
+            {relatedConcepts.map((slug) => {
+              const rc = conceptById.get(slug);
+              if (!rc) return null;
+              const blurb = rc.data.summary.split(/[,;]/)[0].slice(0, 96);
+              return (
+                <li>
+                  <a
+                    href={`/wiki/${slug}/`}
+                    class="group flex h-full flex-col gap-1.5 rounded-sm border border-black/5 bg-[color:var(--card)] px-3.5 py-3 no-underline dark:border-white/[0.06]"
+                  >
+                    <span class="font-heading text-sm font-medium leading-tight tracking-tight text-black transition-colors duration-300 ease-in-out group-hover:text-[color:var(--accent)] group-focus-visible:text-[color:var(--accent)] dark:text-white">
+                      {rc.data.title} →
+                    </span>
+                    <span class="text-xs leading-relaxed text-black/55 dark:text-white/55">
+                      {blurb}…
+                    </span>
+                    <span class="mt-auto pt-1 font-mono text-xs uppercase tracking-widest text-black/40 dark:text-white/40">
+                      {rc.data.sources.length} sources
+                    </span>
+                  </a>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )
+    }
+  </PageBody>
 
   {/*
     Build-time-computed slug → citation-number map, consumed by the inline
