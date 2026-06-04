@@ -1,5 +1,6 @@
 ---
 import { getCollection } from "astro:content";
+import Breadcrumb from "@components/Breadcrumb.astro";
 import EditorialRule from "@components/EditorialRule.astro";
 import Link from "@components/Link.astro";
 import PageBody from "@components/PageBody.astro";
@@ -12,7 +13,10 @@ const tags = [...new Set(posts.flatMap((post) => post.data.tags || []))].sort();
 
 <Layout title="Tags" description="List of tags used.">
   <PageBody data-pagefind-ignore>
-    <PageHero>
+    <PageHero breadcrumb>
+      <Fragment slot="breadcrumb">
+        <Breadcrumb parent={{ label: "Home", href: "/" }} />
+      </Fragment>
       <Fragment slot="title">Tags</Fragment>
       <Fragment slot="summary">
         Tags drawn from blog post frontmatter. Click through to see all

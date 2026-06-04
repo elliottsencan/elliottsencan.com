@@ -1,5 +1,6 @@
 ---
 import { getCollection } from "astro:content";
+import Breadcrumb from "@components/Breadcrumb.astro";
 import EditorialRule from "@components/EditorialRule.astro";
 import HeroMeta from "@components/HeroMeta.astro";
 import Link from "@components/Link.astro";
@@ -47,7 +48,10 @@ function statusLabel(status: string): string {
   description="Observable-style cells holding the data behind my writing — cost breakdowns, eval runs, telemetry."
 >
   <PageBody data-pagefind-body data-pagefind-filter="type:Labs">
-    <PageHero>
+    <PageHero breadcrumb>
+      <Fragment slot="breadcrumb">
+        <Breadcrumb parent={{ label: "Home", href: "/" }} />
+      </Fragment>
       <Fragment slot="title">Labs</Fragment>
       <Fragment slot="summary">
         Numbers behind the AI pipeline that compiles{" "}

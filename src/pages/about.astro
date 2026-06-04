@@ -1,4 +1,5 @@
 ---
+import Breadcrumb from "@components/Breadcrumb.astro";
 import EditorialList from "@components/EditorialList.astro";
 import EditorialListItem from "@components/EditorialListItem.astro";
 import EditorialRule from "@components/EditorialRule.astro";
@@ -86,7 +87,10 @@ const projectBlurbs: Array<{
 
 <Layout title="About" description={SITE.DESCRIPTION} includePersonSchema>
   <PageBody data-pagefind-body data-pagefind-filter="type:About">
-    <PageHero>
+    <PageHero breadcrumb>
+      <Fragment slot="breadcrumb">
+        <Breadcrumb parent={{ label: "Home", href: "/" }} />
+      </Fragment>
       <Fragment slot="title">About</Fragment>
       <Fragment slot="summary">
         Hi, I'm Elliott, an engineer in San Diego. Currently

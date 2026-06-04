@@ -1,5 +1,6 @@
 ---
 import { getCollection } from "astro:content";
+import Breadcrumb from "@components/Breadcrumb.astro";
 import EditorialList from "@components/EditorialList.astro";
 import EditorialListItem from "@components/EditorialListItem.astro";
 import EditorialRule from "@components/EditorialRule.astro";
@@ -36,7 +37,10 @@ const heroMetaLabel = lastPublished
 
 <Layout title="Writing" description="Essays, notes, and longer pieces.">
   <PageBody data-pagefind-body data-pagefind-filter="type:Writing">
-    <PageHero>
+    <PageHero breadcrumb>
+      <Fragment slot="breadcrumb">
+        <Breadcrumb parent={{ label: "Home", href: "/" }} />
+      </Fragment>
       <Fragment slot="title">Writing</Fragment>
       <Fragment slot="summary">
         Essays, notes, and longer pieces. The home page also lists these —

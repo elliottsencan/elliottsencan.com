@@ -1,5 +1,6 @@
 ---
 import { type CollectionEntry, getCollection } from "astro:content";
+import Breadcrumb from "@components/Breadcrumb.astro";
 import EditorialRule from "@components/EditorialRule.astro";
 import HeroMeta from "@components/HeroMeta.astro";
 import Link from "@components/Link.astro";
@@ -93,7 +94,10 @@ const heroMetaLabel = `${entries.length} source${entries.length === 1 ? "" : "s"
   description="Articles, essays, and books I've been reading."
 >
   <PageBody data-pagefind-body data-pagefind-filter="type:Reading">
-    <PageHero>
+    <PageHero breadcrumb>
+      <Fragment slot="breadcrumb">
+        <Breadcrumb parent={{ label: "Home", href: "/" }} />
+      </Fragment>
       <Fragment slot="title">Reading</Fragment>
       <Fragment slot="summary">
         Per-source citation index. Each entry is one URL with a short

@@ -1,5 +1,6 @@
 ---
 import { getEntry, render } from "astro:content";
+import Breadcrumb from "@components/Breadcrumb.astro";
 import EditorialRule from "@components/EditorialRule.astro";
 import Link from "@components/Link.astro";
 import PageBody from "@components/PageBody.astro";
@@ -28,7 +29,10 @@ const lastUpdatedISO = updated.toISOString().slice(0, 10);
     data-pagefind-filter="type:About"
     data-pagefind-meta={`date:${lastUpdatedISO}`}
   >
-    <PageHero>
+    <PageHero breadcrumb>
+      <Fragment slot="breadcrumb">
+        <Breadcrumb parent={{ label: "Home", href: "/" }} />
+      </Fragment>
       <Fragment slot="title">Now</Fragment>
       <ProvenanceBadge slot="meta" action="Updated" date={updated} />
     </PageHero>

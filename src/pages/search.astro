@@ -1,5 +1,6 @@
 ---
 import { getCollection } from "astro:content";
+import Breadcrumb from "@components/Breadcrumb.astro";
 import Link from "@components/Link.astro";
 import PageBody from "@components/PageBody.astro";
 import PageHero from "@components/PageHero.astro";
@@ -37,7 +38,10 @@ const scopes = [
   description="Search across writing, reading, wiki, projects, and labs."
 >
   <PageBody data-pagefind-ignore>
-    <PageHero>
+    <PageHero breadcrumb>
+      <Fragment slot="breadcrumb">
+        <Breadcrumb parent={{ label: "Home", href: "/" }} />
+      </Fragment>
       <Fragment slot="title">Search</Fragment>
       <Fragment slot="summary">
         Search across writing, reading, wiki, projects, and labs. Use the

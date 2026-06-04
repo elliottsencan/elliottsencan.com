@@ -1,5 +1,6 @@
 ---
 import { getCollection } from "astro:content";
+import Breadcrumb from "@components/Breadcrumb.astro";
 import Link from "@components/Link.astro";
 import ProvenanceBadge from "@components/ProvenanceBadge.astro";
 import ConstellationWell from "@components/wiki/ConstellationWell.astro";
@@ -60,38 +61,41 @@ const constellationTieCount = constellationLayout.global.edges.length;
 >
   <div class="mx-auto max-w-5xl px-6 md:px-8">
     <div class="space-y-16" data-pagefind-body data-pagefind-filter="type:Wiki">
-      {/* Header — eyebrow, title, lede, meta row (concepts pill + provenance). */}
-      <div class="flex max-w-[62ch] flex-col gap-4">
-        <p class="font-mono text-xs uppercase tracking-[0.16em] text-[color:var(--accent)]">
-          Wiki &middot; Concept index
-        </p>
-        <h1 class="font-heading text-display font-normal leading-[1.06] tracking-tight text-black dark:text-white">
-          Wiki
-        </h1>
-        <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
-          Concept-indexed synthesis articles. Each article compiles across
-          multiple sources from the <Link href="/reading">reading log</Link>;
-          one article per concept that has at least two contributing sources.
-        </p>
-        <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
-          <span class="inline-flex w-fit items-center gap-2 whitespace-nowrap rounded-sm border border-black/15 px-2.5 py-1 font-mono text-xs text-[color:var(--accent)] dark:border-white/20">
-            <span class="flex gap-[2px]" aria-hidden="true">
-              {Array.from({ length: Math.min(wiki.length, 8) }).map((_, i) => (
-                <span
-                  class="block h-1 w-1 rounded-full bg-[color:var(--accent)]"
-                  style={`opacity: ${0.55 + i * 0.05};`}
-                />
-              ))}
+      {/* Header — breadcrumb, then eyebrow, title, lede, meta row. */}
+      <div class="flex flex-col gap-4">
+        <Breadcrumb parent={{ label: "Home", href: "/" }} />
+        <div class="flex max-w-[62ch] flex-col gap-4">
+          <p class="font-mono text-xs uppercase tracking-[0.16em] text-[color:var(--accent)]">
+            Wiki &middot; Concept index
+          </p>
+          <h1 class="font-heading text-display font-normal leading-[1.06] tracking-tight text-black dark:text-white">
+            Wiki
+          </h1>
+          <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
+            Concept-indexed synthesis articles. Each article compiles across
+            multiple sources from the <Link href="/reading">reading log</Link>;
+            one article per concept that has at least two contributing sources.
+          </p>
+          <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
+            <span class="inline-flex w-fit items-center gap-2 whitespace-nowrap rounded-sm border border-black/15 px-2.5 py-1 font-mono text-xs text-[color:var(--accent)] dark:border-white/20">
+              <span class="flex gap-[2px]" aria-hidden="true">
+                {Array.from({ length: Math.min(wiki.length, 8) }).map((_, i) => (
+                  <span
+                    class="block h-1 w-1 rounded-full bg-[color:var(--accent)]"
+                    style={`opacity: ${0.55 + i * 0.05};`}
+                  />
+                ))}
+              </span>
+              <span>
+                {wiki.length} concept{wiki.length === 1 ? "" : "s"}
+              </span>
             </span>
-            <span>
-              {wiki.length} concept{wiki.length === 1 ? "" : "s"}
-            </span>
-          </span>
-          {
-            lastCompiled && (
-              <ProvenanceBadge action="Compiled by Claude" date={lastCompiled} link />
-            )
-          }
+            {
+              lastCompiled && (
+                <ProvenanceBadge action="Compiled by Claude" date={lastCompiled} link />
+              )
+            }
+          </div>
         </div>
       </div>
 
