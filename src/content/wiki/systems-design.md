@@ -15,6 +15,7 @@ sources:
     2026-05/2026-05-04t231858-how-container-filesystem-works-building-a-docker-like
   - 2026-05/2026-05-14t151252-5-faster-fastblur-in-image-rs
   - 2026-05/2026-05-18t113714-yaml-thats-norway-problem
+  - 2026-06/2026-06-04t073318-single-responsibility-the-distorted-principle
 compiled_at: '2026-05-06T16:19:10.396Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -32,7 +33,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.018438
-last_source_added: '2026-05-18T18:37:14.908Z'
+last_source_added: '2026-06-04T14:33:18.166Z'
 ---
 Good systems design centers on boundary drawing: deciding what each component knows, what it hides, and how it communicates. The sources here approach that problem from several angles.
 
