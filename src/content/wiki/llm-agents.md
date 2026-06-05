@@ -10,6 +10,8 @@ sources:
   - 2026-05/2026-05-18t222802-raellioctowiz
   - 2026-06/2026-06-04t163601-anthropicsdefending-code-reference-harness
   - 2026-06/2026-06-04t194033-the-potential-of-rlms
+  - >-
+    2026-06/2026-06-04t194416-what-anthropic-got-right-about-agentic-analytics-and-got
 compiled_at: '2026-05-20T15:00:48.039Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -27,7 +29,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.012972
-last_source_added: '2026-06-05T02:40:33.653Z'
+last_source_added: '2026-06-05T02:44:16.148Z'
 ---
 An LLM agent pairs a language model with external tools, memory, and a control loop so it can pursue goals across multiple steps rather than answering a single prompt. Two patterns emerge from recent deployments: structured multi-agent harnesses for complex domain tasks, and role-scoped memory systems that keep individual agent sessions focused.
 

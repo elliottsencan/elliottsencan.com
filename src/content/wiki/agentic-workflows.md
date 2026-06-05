@@ -30,6 +30,8 @@ sources:
   - 2026-06/2026-06-04t163601-anthropicsdefending-code-reference-harness
   - 2026-06/2026-06-04t194033-the-potential-of-rlms
   - 2026-06/2026-06-04t194244-inside-openais-in-house-data-agent
+  - >-
+    2026-06/2026-06-04t194416-what-anthropic-got-right-about-agentic-analytics-and-got
 compiled_at: 2026-05-04T03:36:22.698Z
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -47,7 +49,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.016995
-last_source_added: '2026-06-05T02:42:44.811Z'
+last_source_added: '2026-06-05T02:44:16.148Z'
 ---
 Agentic workflows are pipelines in which an AI model takes sequences of actions, using tools, memory, and external services, to complete tasks that unfold over multiple steps. The design decisions made at each layer, tool access, memory architecture, [orchestration topology, and observability](/wiki/systems-design), determine whether the system performs reliably or compounds failures.
 
