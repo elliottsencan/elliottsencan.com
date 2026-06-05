@@ -38,6 +38,8 @@ sources:
   - 2026-06/2026-06-04t194244-inside-openais-in-house-data-agent
   - >-
     2026-06/2026-06-04t194416-what-anthropic-got-right-about-agentic-analytics-and-got
+  - >-
+    2026-06/2026-06-04t195339-how-anthropic-enables-self-service-data-analytics-with
 aliases:
   - large-language-models
 compiled_at: '2026-05-20T15:02:11.760Z'
@@ -57,7 +59,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.038964
-last_source_added: '2026-06-05T02:44:16.148Z'
+last_source_added: '2026-06-05T02:53:39.783Z'
 ---
 LLM engineering is the set of practices for designing, building, and operating software systems built around large language models. The sources here span several interrelated concerns: how to structure knowledge for LLM consumption, how to wire agent behavior reliably, how to manage inference costs, and what happens when the discipline is applied carelessly.
 
