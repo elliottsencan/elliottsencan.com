@@ -14,6 +14,7 @@ sources:
     2026-05/2026-05-20t073144-maximizing-llm-efficiency-granular-prompt-caching-with-pure
   - >-
     2026-05/2026-05-20t073157-20x-faster-inference-with-the-first-kv-cache-for-s3-and-nfs
+  - 2026-06/2026-06-04t194244-inside-openais-in-house-data-agent
 compiled_at: '2026-05-04T03:38:56.661Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -31,7 +32,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.017097
-last_source_added: '2026-05-20T14:31:57.941Z'
+last_source_added: '2026-06-05T02:42:44.811Z'
 ---
 Retrieval-augmented generation (RAG) is the practice of embedding a query, retrieving semantically similar document chunks from a vector store, and supplying those chunks as context to an LLM before generation. The approach keeps a model's factual grounding updatable without retraining, and it scales reasonably well to large document collections. It has become standard enough that multimodal variants now exist: [the 2025 VLM landscape overview](/reading/2026-04/2026-04-29t171532-vision-language-models-better-faster-stronger) notes multimodal RAG as one of the notable developments in the vision-language model space, where retrieved content can include images and video alongside text.
 
