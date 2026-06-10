@@ -27,6 +27,7 @@ sources:
   - 2026-05/2026-05-22t091746-when-code-is-cheap-does-quality-still-matter
   - 2026-05/2026-05-31t164252-reviewing-large-changes-with-jujutsu
   - 2026-06/2026-06-04t073318-single-responsibility-the-distorted-principle
+  - 2026-06/2026-06-10t073045-the-unwritten-laws-of-software-engineering
 compiled_at: 2026-05-04T04:07:42.371Z
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -44,7 +45,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.017049
-last_source_added: '2026-06-04T14:33:18.166Z'
+last_source_added: '2026-06-10T14:30:45.672Z'
 ---
 Engineering craft covers the habits, patterns, and safeguards that separate code that works from code that holds up. The sources here approach it from four distinct angles, but share a common thread: precision in design pays forward.
 
