@@ -13,6 +13,7 @@ sources:
   - 2026-05/2026-05-06t204115-platform-engineering-end-to-end
   - 2026-05/2026-05-15t120337-playwright-testing-in-staging-vs-production
   - 2026-06/2026-06-10t073045-the-unwritten-laws-of-software-engineering
+  - 2026-06/2026-06-11t024225-testing-a-security-tool-like-it-can-hurt-people
 aliases:
   - reliability-engineering
 compiled_at: 2026-05-04T04:07:19.740Z
@@ -32,7 +33,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.015651
-last_source_added: '2026-06-10T14:30:45.672Z'
+last_source_added: '2026-06-11T09:42:25.250Z'
 ---
 Reliability is not a single property but a stack of guarantees, each layer capable of collapsing independently. The sources here approach it from four different angles that together describe the full surface area of the problem.
 
