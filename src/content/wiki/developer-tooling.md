@@ -31,6 +31,7 @@ sources:
     2026-06/2026-06-03t105229-putting-code-under-a-microscope-wavelet-based-context-for
   - >-
     2026-06/2026-06-10t223404-how-to-read-distributed-traces-when-you-didnt-write-the-code
+  - 2026-06/2026-06-11t023056-what-we-built-in-2-weeks-zerostack
 compiled_at: '2026-05-06T16:07:54.231Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -48,7 +49,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.026787
-last_source_added: '2026-06-11T05:34:04.803Z'
+last_source_added: '2026-06-11T09:30:56.335Z'
 ---
 Developer tooling is the aggregate of environments, scripts, pipelines, and automated systems that shape how software is written, tested, and shipped. The sources here cut across several layers of that stack, and a common thread runs through them: tools that catch problems earlier, or that reduce the cognitive overhead of catching problems, pay compound dividends.
 
