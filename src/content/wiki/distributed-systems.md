@@ -24,6 +24,8 @@ sources:
   - 2026-05/2026-05-08t175639-can-llms-model-real-world-systems-in-tla
   - 2026-05/2026-05-19t110000-building-ci-with-lambda-durable-functions
   - 2026-05/2026-05-31t164554-jj-vcsjj
+  - >-
+    2026-06/2026-06-10t223404-how-to-read-distributed-traces-when-you-didnt-write-the-code
 compiled_at: '2026-05-06T16:09:08.196Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -41,7 +43,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.020418
-last_source_added: '2026-05-31T23:45:54.242Z'
+last_source_added: '2026-06-11T05:34:04.803Z'
 ---
 The core challenge distributed systems pose is deceptively simple: multiple processes share state and must coordinate, and the ways they can fail are numerous, often silent, and hard to classify. Three distinct bodies of work in recent reading converge on this problem from different angles.
 

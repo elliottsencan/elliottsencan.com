@@ -11,6 +11,8 @@ sources:
   - >-
     2026-05/2026-05-10t140531-agent-observability-needs-feedback-to-power-learning
   - 2026-06/2026-06-10t073045-the-unwritten-laws-of-software-engineering
+  - >-
+    2026-06/2026-06-10t223404-how-to-read-distributed-traces-when-you-didnt-write-the-code
 compiled_at: '2026-05-04T04:09:40.819Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -28,7 +30,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.01242
-last_source_added: '2026-06-10T14:30:45.672Z'
+last_source_added: '2026-06-11T05:34:04.803Z'
 ---
 Observability, in the infrastructure sense, is the ability to understand what a running system is doing from its external outputs. For Kubernetes specifically, that means correlating pod states, network traffic, events, and configuration drift into a coherent picture without requiring operators to grep through raw logs or kubectl one resource at a time.
 
