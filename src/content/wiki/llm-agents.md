@@ -16,6 +16,8 @@ sources:
     2026-06/2026-06-04t195339-how-anthropic-enables-self-service-data-analytics-with
   - 2026-06/2026-06-04t210834-ai-memory-systems-feature-comparison
   - 2026-06/2026-06-09t190614-what-it-feels-like-to-work-with-mythos
+  - >-
+    2026-06/2026-06-10t221112-estimating-no-cot-task-completion-time-horizons-of-frontier
 compiled_at: '2026-05-20T15:00:48.039Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -33,7 +35,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.012972
-last_source_added: '2026-06-10T02:06:14.363Z'
+last_source_added: '2026-06-11T05:11:12.517Z'
 ---
 An LLM agent pairs a language model with external tools, memory, and a control loop so it can pursue goals across multiple steps rather than answering a single prompt. Two patterns emerge from recent deployments: structured multi-agent harnesses for complex domain tasks, and role-scoped memory systems that keep individual agent sessions focused.
 

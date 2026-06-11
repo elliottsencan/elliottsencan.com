@@ -50,6 +50,8 @@ sources:
   - 2026-06/2026-06-02t212937-no-mcp-is-definitely-not-dead-the-nsa-agrees
   - 2026-06/2026-06-04t163601-anthropicsdefending-code-reference-harness
   - 2026-06/2026-06-04t194244-inside-openais-in-house-data-agent
+  - >-
+    2026-06/2026-06-10t221112-estimating-no-cot-task-completion-time-horizons-of-frontier
 compiled_at: 2026-05-06T04:00:21.862Z
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -67,7 +69,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.041529
-last_source_added: '2026-06-05T02:42:44.811Z'
+last_source_added: '2026-06-11T05:11:12.517Z'
 ---
 An AI agent, in the current practical sense, is a system where a language model drives a loop of reasoning and action: it observes some environment, selects tools or sub-tasks, executes them, and feeds results back into its next decision. The concept sounds clean in definition and proves messy in deployment.
 
