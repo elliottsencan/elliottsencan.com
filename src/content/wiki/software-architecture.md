@@ -27,6 +27,8 @@ sources:
   - 2026-06/2026-06-04t073318-single-responsibility-the-distorted-principle
   - 2026-06/2026-06-11t023157-memory-design-zerostack
   - 2026-06/2026-06-11t023435-subagents-design-zerostack
+  - >-
+    2026-06/2026-06-11t023620-designing-memory-for-zerostack-plain-files-no-vector-store
 compiled_at: '2026-05-06T16:16:36.433Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -44,7 +46,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.018903
-last_source_added: '2026-06-11T09:34:35.304Z'
+last_source_added: '2026-06-11T09:36:20.507Z'
 ---
 The through-line across these sources is boundary management: where a system makes decisions about data shape, state, and responsibility determines how much it degrades under pressure.
 

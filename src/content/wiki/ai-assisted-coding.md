@@ -41,6 +41,8 @@ sources:
   - 2026-06/2026-06-09t190614-what-it-feels-like-to-work-with-mythos
   - 2026-06/2026-06-11t023056-what-we-built-in-2-weeks-zerostack
   - 2026-06/2026-06-11t023435-subagents-design-zerostack
+  - >-
+    2026-06/2026-06-11t023620-designing-memory-for-zerostack-plain-files-no-vector-store
 aliases:
   - ai-coding-assistants
 compiled_at: 2026-05-06T04:00:39.071Z
@@ -60,7 +62,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.021705
-last_source_added: '2026-06-11T09:34:35.304Z'
+last_source_added: '2026-06-11T09:36:20.507Z'
 ---
 AI coding assistants, ranging from inline completers to fully autonomous agents, are now capable of planning, generating, and evaluating code across multi-hour sessions. Anthropic's own engineering describes a GAN-inspired planner-generator-evaluator architecture that sustains coherent full-stack work without collapsing under context pressure [harness design](/reading/2026-05/2026-05-01t104137-harness-design-for-long-running-application-development). Tools like Claude Code and Cursor have accumulated enough adoption that purpose-built extension layers now exist: Databricks ships an MCP server and skill pack that grounds these assistants in verified Spark and Databricks patterns [ai-dev-kit](/reading/2026-04/2026-04-27t113526-databricks-solutionsai-dev-kit), and community plugins can turn a single prompt into a multi-agent pipeline with parallel execution and architectural review boards [orchestrator-supaconductor](/reading/2026-04/2026-04-30t231239-ibrahim-3dorchestrator-supaconductor).
 
