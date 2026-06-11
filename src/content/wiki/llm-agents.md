@@ -20,6 +20,7 @@ sources:
     2026-06/2026-06-10t221112-estimating-no-cot-task-completion-time-horizons-of-frontier
   - 2026-06/2026-06-11t023056-what-we-built-in-2-weeks-zerostack
   - 2026-06/2026-06-11t023157-memory-design-zerostack
+  - 2026-06/2026-06-11t023435-subagents-design-zerostack
 compiled_at: '2026-05-20T15:00:48.039Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -37,7 +38,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.012972
-last_source_added: '2026-06-11T09:31:57.049Z'
+last_source_added: '2026-06-11T09:34:35.304Z'
 ---
 An LLM agent pairs a language model with external tools, memory, and a control loop so it can pursue goals across multiple steps rather than answering a single prompt. Two patterns emerge from recent deployments: structured multi-agent harnesses for complex domain tasks, and role-scoped memory systems that keep individual agent sessions focused.
 
