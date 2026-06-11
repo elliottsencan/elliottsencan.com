@@ -12,6 +12,8 @@ sources:
   - >-
     2026-05/2026-05-05t135218-designing-playwright-tests-that-survive-ui-refactors
   - 2026-05/2026-05-05t183935-type-scale-graphs
+  - >-
+    2026-06/2026-06-10t220929-navigating-the-age-old-problem-of-checkmarks-in-ui-with
 compiled_at: '2026-05-06T16:19:47.802Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -29,6 +31,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.017586
+last_source_added: '2026-06-11T05:09:29.079Z'
 ---
 Accessibility shows up obliquely across several sources rather than as a central topic, but the pattern is consistent: semantic structure and human-readable labels matter as much for machines and assistive technology as for any other consumer of a page.
 

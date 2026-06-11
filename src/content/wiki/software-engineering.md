@@ -55,6 +55,8 @@ sources:
   - 2026-05/2026-05-31t164554-jj-vcsjj
   - 2026-06/2026-06-04t073318-single-responsibility-the-distorted-principle
   - 2026-06/2026-06-10t073045-the-unwritten-laws-of-software-engineering
+  - >-
+    2026-06/2026-06-10t220929-navigating-the-age-old-problem-of-checkmarks-in-ui-with
 compiled_at: '2026-05-06T16:17:24.293Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -72,7 +74,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.030135
-last_source_added: '2026-06-10T14:30:45.672Z'
+last_source_added: '2026-06-11T05:09:29.079Z'
 ---
 Software engineering as a discipline shows up in these sources less as a unified theory and more as a collection of recurring pressures: how to structure systems so they stay maintainable, how to choose tools that don't create new dependencies, and how to preserve the human judgment that holds everything together.
 
