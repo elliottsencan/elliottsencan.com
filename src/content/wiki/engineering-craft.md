@@ -30,6 +30,7 @@ sources:
   - 2026-06/2026-06-10t073045-the-unwritten-laws-of-software-engineering
   - >-
     2026-06/2026-06-10t220929-navigating-the-age-old-problem-of-checkmarks-in-ui-with
+  - 2026-06/2026-06-11t083730-7-more-common-mistakes-in-architecture-diagrams
 compiled_at: 2026-05-04T04:07:42.371Z
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -47,7 +48,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.017049
-last_source_added: '2026-06-11T05:09:29.079Z'
+last_source_added: '2026-06-11T15:37:30.467Z'
 ---
 Engineering craft covers the habits, patterns, and safeguards that separate code that works from code that holds up. The sources here approach it from four distinct angles, but share a common thread: precision in design pays forward.
 
