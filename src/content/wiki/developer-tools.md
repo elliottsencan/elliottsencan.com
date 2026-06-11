@@ -41,6 +41,7 @@ sources:
   - 2026-05/2026-05-27t181732-build-a-desktop-extension-with-mcpb
   - 2026-05/2026-05-31t164554-jj-vcsjj
   - 2026-06/2026-06-04t163601-anthropicsdefending-code-reference-harness
+  - 2026-06/2026-06-11t023723-gi-dellavzerostack
 compiled_at: '2026-05-20T15:01:47.219Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -58,7 +59,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.038373
-last_source_added: '2026-06-04T23:36:01.357Z'
+last_source_added: '2026-06-11T09:37:23.684Z'
 ---
 Developer tools now span a continuum from foundational infrastructure to AI-augmented coding environments, and the sources here illustrate nearly every layer of that stack.
 

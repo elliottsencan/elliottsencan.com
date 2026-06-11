@@ -23,6 +23,7 @@ sources:
   - 2026-06/2026-06-11t023435-subagents-design-zerostack
   - >-
     2026-06/2026-06-11t023620-designing-memory-for-zerostack-plain-files-no-vector-store
+  - 2026-06/2026-06-11t023723-gi-dellavzerostack
 compiled_at: '2026-05-20T15:00:48.039Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -40,7 +41,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.012972
-last_source_added: '2026-06-11T09:36:20.507Z'
+last_source_added: '2026-06-11T09:37:23.684Z'
 ---
 An LLM agent pairs a language model with external tools, memory, and a control loop so it can pursue goals across multiple steps rather than answering a single prompt. Two patterns emerge from recent deployments: structured multi-agent harnesses for complex domain tasks, and role-scoped memory systems that keep individual agent sessions focused.
 

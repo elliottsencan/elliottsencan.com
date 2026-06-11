@@ -25,6 +25,7 @@ sources:
   - 2026-06/2026-06-11t023056-what-we-built-in-2-weeks-zerostack
   - >-
     2026-06/2026-06-11t023620-designing-memory-for-zerostack-plain-files-no-vector-store
+  - 2026-06/2026-06-11t023723-gi-dellavzerostack
 aliases:
   - open-source-packages
   - open-source-tools
@@ -45,7 +46,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.01521
-last_source_added: '2026-06-11T09:36:20.507Z'
+last_source_added: '2026-06-11T09:37:23.684Z'
 ---
 Open source covers a wide spectrum in practice. At one end, [Radar](/reading/2026-05/2026-05-03t105238-radar-or-the-missing-open-source-kubernetes-ui) is a clean example: Apache 2.0 licensed, single-binary, self-hostable, no telemetry, no cloud account required. The license and the architecture reinforce each other. [Ivan Velichko's container tutorial](/reading/2026-05/2026-05-04t231858-how-container-filesystem-works-building-a-docker-like) sits in the same tradition: open knowledge, reproducible from Linux primitives, no proprietary surface.
 
