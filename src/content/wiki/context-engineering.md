@@ -36,6 +36,8 @@ sources:
   - 2026-06/2026-06-11t023157-memory-design-zerostack
   - >-
     2026-06/2026-06-11t023620-designing-memory-for-zerostack-plain-files-no-vector-store
+  - >-
+    2026-06/2026-06-11t090709-agent-memory-is-a-belief-maintenance-problem-not-a-storage
 compiled_at: '2026-05-04T03:37:55.731Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -53,7 +55,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.019617
-last_source_added: '2026-06-11T09:36:20.507Z'
+last_source_added: '2026-06-11T16:07:09.579Z'
 ---
 Context engineering is the practice of deciding what information an LLM sees, when it sees it, and in what form. It treats the context window not as a passive receptacle but as a surface to be designed, the same way an API schema or a database index is designed.
 

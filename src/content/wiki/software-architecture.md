@@ -30,6 +30,8 @@ sources:
   - >-
     2026-06/2026-06-11t023620-designing-memory-for-zerostack-plain-files-no-vector-store
   - 2026-06/2026-06-11t083730-7-more-common-mistakes-in-architecture-diagrams
+  - >-
+    2026-06/2026-06-11t090709-agent-memory-is-a-belief-maintenance-problem-not-a-storage
 compiled_at: '2026-05-06T16:16:36.433Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -47,7 +49,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.018903
-last_source_added: '2026-06-11T15:37:30.467Z'
+last_source_added: '2026-06-11T16:07:09.579Z'
 ---
 The through-line across these sources is boundary management: where a system makes decisions about data shape, state, and responsibility determines how much it degrades under pressure.
 
