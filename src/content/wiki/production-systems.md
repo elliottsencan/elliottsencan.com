@@ -21,6 +21,7 @@ sources:
   - >-
     2026-06/2026-06-10t223404-how-to-read-distributed-traces-when-you-didnt-write-the-code
   - 2026-06/2026-06-11t024225-testing-a-security-tool-like-it-can-hurt-people
+  - 2026-06/2026-06-11t111011-hows-linear-so-fast-a-technical-breakdown
 compiled_at: '2026-05-06T16:14:57.352Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -38,7 +39,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.015426
-last_source_added: '2026-06-11T09:42:25.250Z'
+last_source_added: '2026-06-11T18:10:11.019Z'
 ---
 The concerns that recur across production infrastructure are reliability under failure, trust in the tools being used, and predictable credential handling. Each of these surfaces in different layers of the stack.
 
