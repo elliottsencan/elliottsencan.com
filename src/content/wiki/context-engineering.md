@@ -33,6 +33,7 @@ sources:
   - >-
     2026-06/2026-06-04t195339-how-anthropic-enables-self-service-data-analytics-with
   - 2026-06/2026-06-04t210834-ai-memory-systems-feature-comparison
+  - 2026-06/2026-06-11t023157-memory-design-zerostack
 compiled_at: '2026-05-04T03:37:55.731Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -50,7 +51,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.019617
-last_source_added: '2026-06-05T04:08:34.414Z'
+last_source_added: '2026-06-11T09:31:57.049Z'
 ---
 Context engineering is the practice of deciding what information an LLM sees, when it sees it, and in what form. It treats the context window not as a passive receptacle but as a surface to be designed, the same way an API schema or a database index is designed.
 
