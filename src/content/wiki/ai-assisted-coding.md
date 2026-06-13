@@ -44,6 +44,7 @@ sources:
   - >-
     2026-06/2026-06-11t023620-designing-memory-for-zerostack-plain-files-no-vector-store
   - 2026-06/2026-06-11t023723-gi-dellavzerostack
+  - 2026-06/2026-06-13t083239-claude-fable-is-relentlessly-proactive
 aliases:
   - ai-coding-assistants
 compiled_at: 2026-05-06T04:00:39.071Z
@@ -63,7 +64,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.021705
-last_source_added: '2026-06-11T09:37:23.684Z'
+last_source_added: '2026-06-13T15:32:39.990Z'
 ---
 AI coding assistants, ranging from inline completers to fully autonomous agents, are now capable of planning, generating, and evaluating code across multi-hour sessions. Anthropic's own engineering describes a GAN-inspired planner-generator-evaluator architecture that sustains coherent full-stack work without collapsing under context pressure [harness design](/reading/2026-05/2026-05-01t104137-harness-design-for-long-running-application-development). Tools like Claude Code and Cursor have accumulated enough adoption that purpose-built extension layers now exist: Databricks ships an MCP server and skill pack that grounds these assistants in verified Spark and Databricks patterns [ai-dev-kit](/reading/2026-04/2026-04-27t113526-databricks-solutionsai-dev-kit), and community plugins can turn a single prompt into a multi-agent pipeline with parallel execution and architectural review boards [orchestrator-supaconductor](/reading/2026-04/2026-04-30t231239-ibrahim-3dorchestrator-supaconductor).
 

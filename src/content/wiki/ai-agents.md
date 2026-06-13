@@ -55,6 +55,7 @@ sources:
   - 2026-06/2026-06-11t023157-memory-design-zerostack
   - >-
     2026-06/2026-06-11t090709-agent-memory-is-a-belief-maintenance-problem-not-a-storage
+  - 2026-06/2026-06-13t083239-claude-fable-is-relentlessly-proactive
 compiled_at: 2026-05-06T04:00:21.862Z
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -72,7 +73,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.041529
-last_source_added: '2026-06-11T16:07:09.579Z'
+last_source_added: '2026-06-13T15:32:39.990Z'
 ---
 An AI agent, in the current practical sense, is a system where a language model drives a loop of reasoning and action: it observes some environment, selects tools or sub-tasks, executes them, and feeds results back into its next decision. The concept sounds clean in definition and proves messy in deployment.
 

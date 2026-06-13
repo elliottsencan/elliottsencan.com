@@ -42,6 +42,7 @@ sources:
     2026-06/2026-06-04t195339-how-anthropic-enables-self-service-data-analytics-with
   - >-
     2026-06/2026-06-10t221112-estimating-no-cot-task-completion-time-horizons-of-frontier
+  - 2026-06/2026-06-13t083239-claude-fable-is-relentlessly-proactive
 aliases:
   - large-language-models
 compiled_at: '2026-05-20T15:02:11.760Z'
@@ -61,7 +62,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.038964
-last_source_added: '2026-06-11T05:11:12.517Z'
+last_source_added: '2026-06-13T15:32:39.990Z'
 ---
 LLM engineering is the set of practices for designing, building, and operating software systems built around large language models. The sources here span several interrelated concerns: how to structure knowledge for LLM consumption, how to wire agent behavior reliably, how to manage inference costs, and what happens when the discipline is applied carelessly.
 
