@@ -18,6 +18,7 @@ sources:
   - 2026-06/2026-06-04t073318-single-responsibility-the-distorted-principle
   - 2026-06/2026-06-11t083730-7-more-common-mistakes-in-architecture-diagrams
   - 2026-06/2026-06-11t111011-hows-linear-so-fast-a-technical-breakdown
+  - 2026-06/2026-06-13t081411-signals-the-push-pull-based-algorithm
 compiled_at: '2026-05-06T16:19:10.396Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -35,7 +36,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.018438
-last_source_added: '2026-06-11T18:10:11.019Z'
+last_source_added: '2026-06-13T15:14:11.621Z'
 ---
 Good systems design centers on boundary drawing: deciding what each component knows, what it hides, and how it communicates. The sources here approach that problem from several angles.
 
