@@ -25,6 +25,7 @@ sources:
   - 2026-06/2026-06-04t210834-ai-memory-systems-feature-comparison
   - 2026-06/2026-06-09t190614-what-it-feels-like-to-work-with-mythos
   - 2026-06/2026-06-11t023435-subagents-design-zerostack
+  - 2026-06/2026-06-14t094245-agentswarms
 compiled_at: 2026-05-04T04:09:53.805Z
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -42,7 +43,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.023523
-last_source_added: '2026-06-11T09:34:35.304Z'
+last_source_added: '2026-06-14T16:42:45.928Z'
 ---
 Multi-agent systems (MAS) in the LLM era involve networks of AI agents assigned specialized roles, communicating to complete tasks too large or complex for a single model context. Christopher Meiklejohn's eight-part series maps the field's development across two waves [Getting Up to Speed, Part 1](/reading/2026-05/2026-05-03t110011-getting-up-to-speed-on-multi-agent-systems-part-1-the).
 
