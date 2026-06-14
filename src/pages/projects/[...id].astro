@@ -58,7 +58,7 @@ const hasRail =
         )}
       </div>
       <h1
-        class="font-heading text-2xl font-medium tracking-tight text-black md:text-3xl dark:text-white"
+        class="font-heading text-display font-normal tracking-tight leading-[1.06] text-black dark:text-white"
       >
         {project.data.title}
       </h1>
@@ -73,7 +73,7 @@ const hasRail =
       <div class="mb-12 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 md:grid-cols-3">
         {project.data.impact.map((item) => (
           <div class="rounded-sm border border-black/10 p-3 dark:border-white/15">
-            <div class="font-heading text-lg font-medium text-black dark:text-white">
+            <div class="font-heading text-lg font-normal text-black dark:text-white">
               {item.value}
             </div>
             <div class="text-xs text-neutral-500">{item.metric}</div>

@@ -141,7 +141,7 @@ function statusLabel(status: string): string {
                           relative z-10 so it remains independently clickable. */}
                       <Link
                         href={`/labs/${cell.id}/`}
-                        class="font-heading text-base font-medium tracking-tight text-black no-underline group-hover:text-[color:var(--accent)] before:absolute before:inset-y-0 before:-inset-x-3 before:rounded-md before:transition-colors before:content-[''] hover:before:bg-black/[0.03] md:before:-inset-x-4 dark:text-white dark:hover:before:bg-white/[0.03]"
+                        class="font-heading text-lg font-medium tracking-tight text-black no-underline transition-colors group-hover:text-[color:var(--accent)] before:absolute before:inset-y-0 before:-inset-x-3 before:rounded-md before:content-[''] md:before:-inset-x-4 dark:text-white"
                       >
                         {cell.data.title}
                       </Link>
@@ -193,10 +193,10 @@ function statusLabel(status: string): string {
                       </span>
                       <span
                         class:list={[
-                          "font-heading font-medium leading-none tracking-tight",
+                          "font-heading font-normal leading-none tracking-tight",
                           isPending
                             ? "text-2xl text-black/40 dark:text-white/40"
-                            : "text-3xl text-black md:text-[2.1rem] dark:text-white",
+                            : "text-stat text-black dark:text-white",
                         ]}
                         style="font-variant-numeric: tabular-nums;"
                       >
