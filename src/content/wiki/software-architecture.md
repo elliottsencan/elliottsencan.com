@@ -34,6 +34,7 @@ sources:
     2026-06/2026-06-11t090709-agent-memory-is-a-belief-maintenance-problem-not-a-storage
   - 2026-06/2026-06-11t111011-hows-linear-so-fast-a-technical-breakdown
   - 2026-06/2026-06-13t081411-signals-the-push-pull-based-algorithm
+  - 2026-06/2026-06-15t021106-formal-methods-and-the-future-of-programming
 compiled_at: '2026-05-06T16:16:36.433Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -51,7 +52,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.018903
-last_source_added: '2026-06-13T15:14:11.621Z'
+last_source_added: '2026-06-15T09:11:06.406Z'
 ---
 The through-line across these sources is boundary management: where a system makes decisions about data shape, state, and responsibility determines how much it degrades under pressure.
 
