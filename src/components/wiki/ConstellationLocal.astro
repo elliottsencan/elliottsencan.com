@@ -4,8 +4,8 @@
  *
  * Hero widget on /wiki/[slug]. Renders the active concept and its 1-hop
  * neighborhood with tinted cluster regions, weight-scaled nodes, italic
- * region labels, and a breathe ring on the active node. Visual language
- * mirrors the strip so the two widgets read as the same system.
+ * region labels, and a static accent ring on the active node. Visual
+ * language mirrors the strip so the two widgets read as the same system.
  *
  * Sizing: aspect-locked to the strip via @lib/constellationGeometry, so
  * the slug-page rail and the index strip render at identical pixel
@@ -21,10 +21,13 @@ import {
   LOCAL_VW,
   LOCAL_VX,
   LOCAL_VY,
+  type LocalLayout,
+  type LocalNode,
   STRIP_DEFAULT_WIDTH,
   STRIP_VH,
   STRIP_VW,
 } from "@lib/constellationGeometry";
+import { regionPath } from "@lib/constellationHull";
 
 type Props = {
   slug: string;
@@ -33,15 +36,6 @@ type Props = {
 
 const { slug, width = STRIP_DEFAULT_WIDTH } = Astro.props;
 
-type LocalNode = { id: string; x: number; y: number };
-type LocalEdge = {
-  a: string;
-  b: string;
-  weight: number;
-  via: { link: number; cocite: number };
-  display: boolean;
-};
-type LocalLayout = { nodes: LocalNode[]; edges: LocalEdge[] };
 type Cluster = { id: string; title: string; short: string; hue: number };
 
 const localLayouts: Record<string, LocalLayout> = layout.local;
@@ -93,74 +87,16 @@ const localGroups: Group[] = local
 
 const myCluster = clusterById[slug];
 
-// ─── geometry helpers (mirror the strip; pad shrinks for the local view) ─
-type Pt = { x: number; y: number };
-
-function convexHull(points: Pt[]): Pt[] {
-  if (points.length <= 1) {
-    return points.slice();
-  }
-  const pts = points.slice().sort((p, q) => p.x - q.x || p.y - q.y);
-  const cross = (o: Pt, a: Pt, b: Pt) => (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
-  const lower: Pt[] = [];
-  for (const p of pts) {
-    while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], p) <= 0) {
-      lower.pop();
-    }
-    lower.push(p);
-  }
-  const upper: Pt[] = [];
-  for (let i = pts.length - 1; i >= 0; i--) {
-    const p = pts[i];
-    while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], p) <= 0) {
-      upper.pop();
-    }
-    upper.push(p);
-  }
-  return lower.slice(0, -1).concat(upper.slice(0, -1));
-}
-
-function inflateHull(hull: Pt[], pad: number): Pt[] {
-  if (hull.length === 0) {
-    return hull;
-  }
-  const cx = hull.reduce((s, p) => s + p.x, 0) / hull.length;
-  const cy = hull.reduce((s, p) => s + p.y, 0) / hull.length;
-  return hull.map((p) => {
-    const dx = p.x - cx;
-    const dy = p.y - cy;
-    const d = Math.hypot(dx, dy) || 1;
-    return { x: p.x + (dx / d) * pad, y: p.y + (dy / d) * pad };
-  });
-}
-
-function smoothClosed(points: Pt[]): string {
-  if (points.length < 3) {
-    return "";
-  }
-  const n = points.length;
-  let d = `M ${points[0].x} ${points[0].y}`;
-  for (let i = 0; i < n; i++) {
-    const p0 = points[(i - 1 + n) % n];
-    const p1 = points[i];
-    const p2 = points[(i + 1) % n];
-    const p3 = points[(i + 2) % n];
-    const t = 0.18;
-    const c1x = p1.x + (p2.x - p0.x) * t;
-    const c1y = p1.y + (p2.y - p0.y) * t;
-    const c2x = p2.x - (p3.x - p1.x) * t;
-    const c2y = p2.y - (p3.y - p1.y) * t;
-    d += ` C ${c1x} ${c1y}, ${c2x} ${c2y}, ${p2.x} ${p2.y}`;
-  }
-  return `${d} Z`;
-}
-
-// Region path is empty for 2-node clusters (smoothClosed needs 3+ points)
-// but the italic label still renders — see `localGroups` below.
+// ─── geometry helpers (hull math lives in @lib/constellationHull) ────────
+// The raw hull path gets its pad from a fat round-joined stroke in CSS
+// (stroke-width 28 = 2 × pad 14); 2-node clusters yield an open segment
+// that the round caps turn into a capsule, so they get a real region too.
 const regionPaths = localGroups.map((g) => ({
   ...g,
-  path: smoothClosed(inflateHull(convexHull(g.nodes.map((n) => ({ x: n.x, y: n.y }))), 14)),
+  path: regionPath(g.nodes.map((n) => ({ x: n.x, y: n.y }))),
 }));
+
+const clusterHue = new Map(clusters.map((c) => [c.id, c.hue]));
 
 // Per-edge stroke width and opacity multiplier driven by relationship
 // weight. Mirrors the strip; the local rail keeps the same visual language.
@@ -190,9 +126,9 @@ const visibleLocalEdges = local
         role="img"
         aria-label={`Neighborhood graph for ${titles[slug] ?? slug}`}
       >
-        {/* Cluster regions — active concept's cluster is emphasized; 2-node
-            clusters skip the path (smoothClosed needs 3+ points) but still
-            get the italic label below. */}
+        {/* Cluster regions — active concept's cluster is emphasized.
+            2-node clusters render as stroke capsules (regionPath emits an
+            open segment, round caps do the rest). */}
         {regionPaths
           .filter((g) => g.path !== "")
           .map((g) => (
@@ -283,23 +219,30 @@ const visibleLocalEdges = local
             return (
               <g class="node active" data-slug={n.id}>
                 <title>{title}</title>
+                {/* Static "you are here" ring — no animation by design. */}
                 <circle
-                  class="breathe-ring"
+                  class="active-ring"
                   cx={n.x}
                   cy={n.y}
-                  r={r + 2}
+                  r={r + 3}
                   fill="none"
                   stroke="var(--accent)"
                   stroke-width="0.7"
                   vector-effect="non-scaling-stroke"
-                  style={`--r-start: ${r + 2}; --r-end: ${r + 8};`}
                 />
                 <circle class="dot" cx={n.x} cy={n.y} r={r} fill="var(--accent)" />
               </g>
             );
           }
+          const cid = clusterById[n.id];
           return (
-            <a class="node neighbor" href={`/wiki/${n.id}/`} data-slug={n.id}>
+            <a
+              class="node neighbor"
+              href={`/wiki/${n.id}/`}
+              data-slug={n.id}
+              data-cluster={cid ?? null}
+              style={cid ? `--hue: ${clusterHue.get(cid)};` : undefined}
+            >
               <title>{title}</title>
               <circle class="hit" cx={n.x} cy={n.y} r={r + 4} fill="transparent" />
               <circle class="dot" cx={n.x} cy={n.y} r={r} fill="currentColor" />
@@ -344,44 +287,46 @@ const visibleLocalEdges = local
     overflow: visible;
   }
 
-  /* Cluster regions */
+  /* Cluster regions — stroke-offset bubble, mirroring the strip: the path
+     is the RAW convex hull and the pad comes from a fat round-joined
+     stroke (28 = 2 × pad 14) in the same color as the fill, in viewBox
+     user-units so it scales with the field. Solid paints + one
+     element-level opacity composite fill and stroke as a single flat
+     blob — per-paint opacities would render the stroke band as a rim. */
   .constellation-local :global(.region) {
     fill: oklch(0.84 0.06 var(--hue));
-    opacity: 0.5;
-    stroke: oklch(0.62 0.08 var(--hue));
-    stroke-width: 1;
-    stroke-opacity: 0.35;
-    vector-effect: non-scaling-stroke;
+    stroke: oklch(0.84 0.06 var(--hue));
+    stroke-width: 28;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+    opacity: 0.34;
   }
   :global(.dark) .constellation-local :global(.region) {
-    fill: oklch(0.36 0.06 var(--hue));
-    stroke: oklch(0.55 0.08 var(--hue));
-    stroke-opacity: 0.45;
+    fill: oklch(0.4 0.08 var(--hue));
+    stroke: oklch(0.4 0.08 var(--hue));
+    opacity: 0.4;
   }
   .constellation-local :global(.region[data-active]) {
-    opacity: 1;
-    stroke-opacity: 0.7;
+    opacity: 0.6;
   }
   :global(.dark) .constellation-local :global(.region[data-active]) {
-    stroke-opacity: 0.8;
+    opacity: 0.65;
   }
 
   /* Italic cluster names — only the active concept's cluster shows. On
      heavy hubs the neighborhood touches all 5 clusters and their labels
      stack at near-identical y; showing one cluster name (the one tied to
-     the caption) keeps the field legible. Paint-order halo so the italic
-     reads cleanly over the region tint underneath. */
+     the caption) keeps the field legible. Paint-order halo matches the
+     --canvas surface the unboxed widget sits on (tracks dark mode by
+     itself). */
   .constellation-local :global(.cluster-name) {
     paint-order: stroke fill;
-    stroke: #f6f4ef;
+    stroke: var(--canvas);
     stroke-width: 3px;
     stroke-linejoin: round;
     pointer-events: none;
     opacity: 0;
     font-feature-settings: "ss01" 1;
-  }
-  :global(.dark) .constellation-local :global(.cluster-name) {
-    stroke: #18161a;
   }
   .constellation-local :global(.cluster-name[data-active]) {
     opacity: 0.75;
@@ -399,23 +344,22 @@ const visibleLocalEdges = local
     stroke-width: var(--edge-w, 0.5);
     opacity: calc(0.22 * var(--edge-o-mul, 1));
   }
-  .constellation-local :global(.edge.cross) {
-    stroke-width: var(--edge-w, 0.3);
-    opacity: calc(0.08 * var(--edge-o-mul, 1));
-  }
   :global(.dark) .constellation-local :global(.edge.same) {
     opacity: calc(0.14 * var(--edge-o-mul, 1));
   }
-  :global(.dark) .constellation-local :global(.edge.cross) {
-    opacity: calc(0.06 * var(--edge-o-mul, 1));
+  /* Cross-cluster edges only ever added center mud at their base opacity
+     — render them solely when active-incident (.on below). */
+  .constellation-local :global(.edge.cross:not(.on)) {
+    display: none;
   }
-  /* Active-incident edges go to accent — fixed weight regardless of the
-     per-edge var. Declared last so it overrides .same/.cross above. */
+  /* Active-incident spokes go to accent, weighted by the per-edge vars so
+     strong ties visibly outrank weak ones. Declared last so it overrides
+     .same/.cross above. */
   .constellation-local :global(.edge.on),
   :global(.dark) .constellation-local :global(.edge.on) {
     stroke: var(--accent);
-    stroke-width: 0.8;
-    opacity: 0.55;
+    stroke-width: calc(0.5 + 0.4 * var(--edge-w, 0.75));
+    opacity: calc(0.25 + 0.4 * var(--edge-o-mul, 1));
   }
 
   /* Neighbor nodes */
@@ -427,10 +371,23 @@ const visibleLocalEdges = local
   }
   .constellation-local :global(.node.neighbor .dot) {
     opacity: 0.7;
-    transition: opacity 150ms ease;
+    transition:
+      opacity 150ms ease,
+      fill 150ms ease;
   }
+  /* Membership tint — clustered dots carry their region hue; unclustered
+     stay currentColor. :where() keeps specificity flat so the accent
+     rules below win in both modes. */
+  .constellation-local :global(.node.neighbor:where([data-cluster]) .dot) {
+    fill: oklch(0.42 0.07 var(--hue));
+  }
+  :global(.dark) .constellation-local :global(.node.neighbor:where([data-cluster]) .dot) {
+    fill: oklch(0.82 0.07 var(--hue));
+  }
+  /* [data-on] is the coarse-pointer first-tap state (see script). */
   .constellation-local :global(.node.neighbor:hover .dot),
-  .constellation-local :global(.node.neighbor:focus-visible .dot) {
+  .constellation-local :global(.node.neighbor:focus-visible .dot),
+  .constellation-local :global(.node.neighbor[data-on] .dot) {
     fill: var(--accent);
     opacity: 1;
   }
@@ -438,65 +395,67 @@ const visibleLocalEdges = local
     filter: drop-shadow(0 0 4px color-mix(in oklch, var(--accent) 35%, transparent));
   }
 
-  /* Hover-revealed labels — paint-order halo for legibility over edges. */
+  /* Hover-revealed labels — paint-order halo for legibility over edges.
+     Halo matches the --canvas surface (tracks dark mode by itself). */
   .constellation-local :global(.node.neighbor .label) {
     opacity: 0;
     pointer-events: none;
     transition: opacity 120ms ease-in-out;
     paint-order: stroke fill;
-    stroke: #f6f4ef;
+    stroke: var(--canvas);
     stroke-width: 4px;
     stroke-linejoin: round;
     fill: var(--accent);
     vector-effect: non-scaling-stroke;
   }
-  :global(.dark) .constellation-local :global(.node.neighbor .label) {
-    stroke: #18161a;
-  }
   .constellation-local :global(.node.neighbor:hover .label),
-  .constellation-local :global(.node.neighbor:focus-visible .label) {
+  .constellation-local :global(.node.neighbor:focus-visible .label),
+  .constellation-local :global(.node.neighbor[data-on] .label) {
     opacity: 1;
   }
 
-  /* Active node breathe ring — same shape as the strip, slightly wider stroke */
-  .constellation-local :global(.breathe-ring) {
-    animation: constellation-local-breathe 2.6s linear infinite;
+  /* Active node ring — static thin accent halo, no animation (the site
+     rule: nothing on the page moves unless the reader is interacting). */
+  .constellation-local :global(.active-ring) {
     opacity: 0.5;
   }
-  @keyframes constellation-local-breathe {
-    0%,
-    100% {
-      r: var(--r-start);
-      opacity: 0.65;
-    }
-    50% {
-      r: var(--r-end);
-      opacity: 0.05;
-    }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .constellation-local :global(.breathe-ring) {
-      display: none !important;
-      animation: none !important;
-    }
-  }
 
-  /* Mobile / coarse-pointer adjustments. Node labels stay hidden on mobile
-     to match the strip — on hub concepts where the neighborhood touches
-     20+ nodes the labels otherwise collide into an unreadable band. Touch
-     readers tap a dot and navigate directly; the destination page header
-     supplies the concept name. Cross-cluster non-incident edges hide too,
-     matching the strip — the visual reads as accent-only relationships
-     reaching across cluster regions. Hit targets grow on coarse pointer
-     for forgiving taps without changing the visible dot size. */
-  @media (max-width: 640px) {
-    .constellation-local :global(.edge.cross:not(.on)) {
-      display: none;
-    }
-  }
+  /* Coarse-pointer adjustments. Node labels stay hover/tap-revealed at
+     every width — on hub concepts where the neighborhood touches 20+
+     nodes the labels otherwise collide into an unreadable band. Hit
+     targets grow on coarse pointer for forgiving taps without changing
+     the visible dot size. */
   @media (pointer: coarse) {
     .constellation-local :global(.hit) {
       r: 22;
     }
   }
 </style>
+
+<script>
+  // Coarse-pointer two-tap gate — mirrors the strip's touch protocol.
+  // First tap on a neighbor lights it up (accent dot + label, same as
+  // hover); second tap on the lit neighbor follows its link; a tap on
+  // the field outside any neighbor clears.
+  (() => {
+    if (!window.matchMedia("(pointer: coarse)").matches) return;
+    const svg = document.querySelector<SVGSVGElement>(".constellation-local-svg");
+    if (!svg) return;
+    const neighbors = Array.from(svg.querySelectorAll<SVGElement>(".node.neighbor"));
+    const clear = () => {
+      for (const n of neighbors) n.removeAttribute("data-on");
+    };
+    for (const n of neighbors) {
+      n.addEventListener("click", (e) => {
+        if (n.hasAttribute("data-on")) return; // second tap → navigate
+        e.preventDefault();
+        clear();
+        n.setAttribute("data-on", "");
+      });
+    }
+    svg.addEventListener("click", (e) => {
+      const target = e.target as Element | null;
+      if (target && !target.closest(".node.neighbor")) clear();
+    });
+  })();
+</script>

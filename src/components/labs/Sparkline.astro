@@ -2,12 +2,19 @@
 /**
  * Sparkline — single-series line chart with optional annotation marker.
  *
+ * Two variants:
+ *   - "area" (default): line + soft area fill + dotted point markers.
+ *     Used inside lab cells where the chart is the evidence.
+ *   - "line": clean polyline at 0.7 opacity with a single accent dot on
+ *     the last point — the instrument-row treatment from the redesign
+ *     boards (labs index rows, home trail rows).
+ *
  * Sparse-data handling: the chart kind feeds whatever bucket array the
  * aggregator emits (often very few points early on). With 0 points the
  * SVG renders an "awaiting data" hairline; with 1 point a centered dot;
- * with 2+ points a normal line + area + dotted markers. Dot radius
- * scales inversely with point count so a 4-point series reads as a
- * sequence of stations rather than dust.
+ * with 2+ points a normal line. Dot radius scales inversely with point
+ * count so a 4-point series reads as a sequence of stations rather than
+ * dust.
  */
 type Annotation = { at: number; label: string };
 type Props = {
@@ -15,9 +22,17 @@ type Props = {
   annotation?: Annotation;
   height?: number;
   width?: number;
+  variant?: "area" | "line";
+  /**
+   * Motion-layer draw-in: the line traces itself when a [data-observe]
+   * ancestor scrolls into view, then the accent end-dot fades in. Charts
+   * move because they depict time. Requires variant="line" and an ancestor
+   * carrying data-observe; without JS the chart renders fully drawn.
+   */
+  draw?: boolean;
 };
 
-const { data, annotation, height = 80, width = 600 } = Astro.props;
+const { data, annotation, height = 80, width = 600, variant = "area", draw = false } = Astro.props;
 
 const n = data.length;
 const max = n > 0 ? Math.max(...data) : 0;
@@ -40,8 +55,10 @@ const linePath = points
   .join(" ");
 // Only draw the area fill when there's actually a span — a 1-point area
 // degenerates into a triangular wedge that reads as a glitch.
-const areaPath = n >= 2 ? `${linePath} L ${width} ${height} L 0 ${height} Z` : null;
+const areaPath =
+  variant === "area" && n >= 2 ? `${linePath} L ${width} ${height} L 0 ${height} Z` : null;
 const annotationPoint = annotation ? points[annotation.at] : null;
+const lastPoint = points[points.length - 1];
 
 // Dot radius scales inversely with density so sparse series read as
 // distinct observations and dense series stay restrained.
@@ -70,19 +87,37 @@ const dotR = n === 1 ? 4 : n <= 4 ? 2.6 : n <= 12 ? 2 : 1.6;
   )}
   {areaPath && <path d={areaPath} fill="currentColor" opacity="0.06" />}
   {n >= 2 && (
-    <path d={linePath} fill="none" stroke="currentColor" stroke-width="1.4" />
+    <path
+      class={draw && variant === "line" ? "spark-path" : undefined}
+      pathLength={draw && variant === "line" ? 1 : undefined}
+      d={linePath}
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.4"
+      opacity={variant === "line" ? 0.7 : 1}
+    />
   )}
   {
-    points.map(([x, y], i) => (
-      <circle
-        cx={x}
-        cy={y}
-        r={dotR}
-        fill="currentColor"
-        opacity={annotation && i === annotation.at ? 1 : n <= 4 ? 0.9 : 0.4}
-      />
-    ))
+    variant === "area" &&
+      points.map(([x, y], i) => (
+        <circle
+          cx={x}
+          cy={y}
+          r={dotR}
+          fill="currentColor"
+          opacity={annotation && i === annotation.at ? 1 : n <= 4 ? 0.9 : 0.4}
+        />
+      ))
   }
+  {variant === "line" && lastPoint && (
+    <circle
+      class={draw ? "spark-dot" : undefined}
+      cx={lastPoint[0]}
+      cy={lastPoint[1]}
+      r="3"
+      fill="var(--accent)"
+    />
+  )}
   {
     annotation && annotationPoint && (
       <g>

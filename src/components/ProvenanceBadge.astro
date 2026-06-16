@@ -11,6 +11,12 @@ import { formatLongDate } from "@lib/format";
 // The ✱ machine-mark (terracotta accent) flags machine authorship — omit it
 // for human-authored items via machine={false}. The date is always a long
 // human date ("3 May 2026"), never ISO.
+//
+// whitespace-nowrap keeps each segment intact while flex-wrap + max-w-full
+// let the chip break *between* segments — the link variant is wider than a
+// 390px phone viewport and would otherwise force page-level overflow. Each
+// "·" is grouped with the segment it introduces so a wrap never strands a
+// separator at the end of a line.
 
 type Props = {
   action: "Compiled by Claude" | "Summarized by Claude" | "Last run" | "Updated";
@@ -23,7 +29,7 @@ const { action, date, machine = true, link = false } = Astro.props;
 ---
 
 <span
-  class="inline-flex w-fit items-center gap-1.5 whitespace-nowrap rounded-sm bg-black/5 px-2.5 py-1 font-mono text-xs text-black/55 dark:bg-white/5 dark:text-white/55"
+  class="inline-flex w-fit max-w-full flex-wrap items-center gap-x-1.5 gap-y-0.5 whitespace-nowrap rounded-sm bg-black/5 px-2.5 py-1 font-mono text-xs text-black/55 dark:bg-white/5 dark:text-white/55"
 >
   {
     machine && (
@@ -33,17 +39,19 @@ const { action, date, machine = true, link = false } = Astro.props;
     )
   }
   <span>{action}</span>
-  <span aria-hidden="true">&middot;</span>
-  <time
-    datetime={date.toISOString()}
-    class="tabular-nums text-black/75 dark:text-white/75"
-    style="font-variant-numeric: tabular-nums;"
-  >
-    {formatLongDate(date)}
-  </time>
+  <span class="inline-flex items-center gap-x-1.5 whitespace-nowrap">
+    <span aria-hidden="true">&middot;</span>
+    <time
+      datetime={date.toISOString()}
+      class="tabular-nums text-black/75 dark:text-white/75"
+      style="font-variant-numeric: tabular-nums;"
+    >
+      {formatLongDate(date)}
+    </time>
+  </span>
   {
     link && (
-      <>
+      <span class="inline-flex items-center gap-x-1.5 whitespace-nowrap">
         <span aria-hidden="true">&middot;</span>
         <a
           href="/wiki/how-this-works"
@@ -51,7 +59,7 @@ const { action, date, machine = true, link = false } = Astro.props;
         >
           How this works &rarr;
         </a>
-      </>
+      </span>
     )
   }
 </span>

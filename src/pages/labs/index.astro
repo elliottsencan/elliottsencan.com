@@ -2,22 +2,22 @@
 import { getCollection } from "astro:content";
 import Breadcrumb from "@components/Breadcrumb.astro";
 import EditorialRule from "@components/EditorialRule.astro";
-import HeroMeta from "@components/HeroMeta.astro";
 import Link from "@components/Link.astro";
 import CodeCell from "@components/labs/CodeCell.astro";
 import Sparkline from "@components/labs/Sparkline.astro";
+import MetaLine from "@components/MetaLine.astro";
 import PageBody from "@components/PageBody.astro";
 import PageHero from "@components/PageHero.astro";
-import ProvenanceBadge from "@components/ProvenanceBadge.astro";
 import Layout from "@layouts/Layout.astro";
+import { splitMetricValue } from "@lib/format";
 import { loadLabData } from "@lib/lab-data";
 
-// /labs — the measurement layer. Each cell stamps "what was the question,
-// what's the number, what does it mean." The index lists every cell in
-// reverse-chronological run order. Row chrome here matches /reading and
-// /writing: title + slug + summary on the left, headline metric pinned to
-// the right, status / when / tags below; sparkline (when the cell is a
-// chart with data) drops into a full-width row at the bottom of the cell.
+// /labs — the measurement layer, set as an instrument panel: one bordered
+// table on a graph-paper field, one ruled row per cell. Left column holds
+// the live dot + title + tldr + provenance MetaLine; middle is the
+// sparkline; right is the headline value as a thin instrument numeral.
+// The hero pairs the title/lede with the cell count numeral on the right
+// edge so the page leads with its own measurement.
 const cells = (await getCollection("labs")).sort(
   (a, b) => b.data.lastRunDate.valueOf() - a.data.lastRunDate.valueOf(),
 );
@@ -30,17 +30,12 @@ for (const cell of cells) {
 
 const liveCount = cells.filter((c) => c.data.status === "live").length;
 const pendingCount = cells.filter((c) => c.data.status === "draft").length;
+const countCaption =
+  pendingCount === 0
+    ? `${cells.length === 1 ? "cell" : "cells"} · all live`
+    : `${cells.length === 1 ? "cell" : "cells"} · ${liveCount} live`;
 
 const lastRun = cells[0]?.data.lastRunDate;
-// Count-only cell — the date moves to the provenance badge (see meta slot).
-const heroMetaLabel = `${cells.length} ${cells.length === 1 ? "cell" : "cells"}`;
-
-function statusLabel(status: string): string {
-  if (status === "draft") {
-    return "first-run pending";
-  }
-  return status;
-}
 ---
 
 <Layout
@@ -48,54 +43,45 @@ function statusLabel(status: string): string {
   description="Observable-style cells holding the data behind my writing — cost breakdowns, eval runs, telemetry."
 >
   <PageBody data-pagefind-body data-pagefind-filter="type:Labs">
-    <PageHero breadcrumb>
+    {/* Hero — title + lede left, cell-count numeral pinned to the right
+        edge so the page opens with a measurement of its own. */}
+    <PageHero breadcrumb asideWidth="280px" asideAlign="end">
       <Fragment slot="breadcrumb">
         <Breadcrumb parent={{ label: "Home", href: "/" }} />
       </Fragment>
       <Fragment slot="title">Labs</Fragment>
       <Fragment slot="summary">
         Numbers behind the AI pipeline that compiles{" "}
-        <Link href="/wiki">/wiki</Link>. Each cell asks one specific
-        question — does it cost too much, are its citations honest, do its
-        topic tags stay stable — and answers with a chart and a paragraph
-        in plain English.
+        <Link href="/wiki">/wiki</Link>. Each cell asks one question —
+        does it cost too much, are its citations honest — and answers
+        with a chart and a paragraph in plain English.
       </Fragment>
       {
         cells.length > 0 && (
-          <div slot="meta" class="flex flex-wrap items-center gap-x-3 gap-y-2">
-            <HeroMeta count={cells.length} label={heroMetaLabel} />
-            {lastRun && <ProvenanceBadge action="Last run" date={lastRun} />}
+          <div slot="aside" class="flex flex-col gap-2 md:items-end md:pb-1.5 md:text-right">
+            <span
+              class="num-display text-num-lg text-black dark:text-white"
+              aria-label={`${cells.length} cells`}
+            >
+              {cells.length}
+            </span>
+            <span class="font-mono text-xs uppercase tracking-[0.18em] text-black/55 dark:text-white/55">
+              {countCaption}
+            </span>
+            {lastRun && <MetaLine class="mt-2" segments={["Last run", { date: lastRun }]} />}
           </div>
         )
       }
     </PageHero>
 
-    <div class="space-y-3">
-      <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
-        Read top-down: the question being tested, the headline number, the
-        chart, then a short paragraph on what the number means and what to
-        watch for. The technical receipts (endpoint names, code, version
-        notes) sit at the bottom of each cell for anyone who wants to
-        verify the prose.
-      </p>
-      <p class="text-sm leading-relaxed text-black/65 dark:text-white/65">
-        Cells marked{" "}
-        <span class="font-mono text-black/65 dark:text-white/65">
-          first-run pending
-        </span>{" "}
-        have the question written and the methodology in place — they're
-        waiting on data, not on a decision.
-      </p>
-    </div>
-
     {
       cells.length > 0 ? (
-        <section data-pagefind-ignore class="space-y-0">
-          <p class="pb-3 text-right font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55">
-            {liveCount} live · {pendingCount} pending
-          </p>
-          <ul class="not-prose flex flex-col">
-            {cells.map((cell, i) => {
+        <section data-pagefind-ignore class="flex flex-col gap-7">
+          {/* Instrument table — one bordered block on graph paper. Each
+              row washes a translucent canvas over the grid so the type
+              stays legible while the field shows through the gutters. */}
+          <ul class="graph-paper not-prose m-0 flex flex-col border border-black/10 p-0 dark:border-white/10">
+            {cells.map((cell) => {
               const data = dataByCellId.get(cell.id);
               const isPending = cell.data.status === "draft";
               const sparkValues =
@@ -106,96 +92,86 @@ function statusLabel(status: string): string {
                   ? (data as { values: number[] }).values
                   : null;
               return (
-                <li
-                  class:list={[
-                    "group relative grid grid-cols-1 items-baseline gap-x-10 gap-y-4 border-t border-black/10 py-8 md:grid-cols-[minmax(0,1fr)_auto] dark:border-white/10",
-                    i === cells.length - 1 &&
-                      "border-b border-black/10 dark:border-white/10",
-                  ]}
-                >
-                  <div class="flex flex-col gap-1.5">
-                    {/* Title carries the stretched-link pseudo: clicking
-                        anywhere on the row routes to the cell's detail
-                        page. The cited-by link below opts out via
-                        relative z-10 so it remains independently clickable. */}
-                    <Link
-                      href={`/labs/${cell.id}/`}
-                      class="font-heading text-lg font-medium tracking-[-0.011em] text-black no-underline transition-colors duration-300 ease-in-out group-hover:text-[color:var(--accent)] before:absolute before:inset-y-0 before:-inset-x-3 before:rounded-md before:content-[''] md:before:-inset-x-4 dark:text-white"
-                    >
-                      {cell.data.title}
-                    </Link>
-                    <div class="flex flex-wrap items-center gap-x-3 gap-y-0.5 font-mono text-xs">
+                <li class="group relative grid grid-cols-1 gap-x-14 gap-y-6 border-b border-black/10 bg-[color-mix(in_oklab,var(--canvas)_55%,transparent)] px-6 py-8 last:border-b-0 md:grid-cols-[minmax(0,1fr)_220px_260px] md:items-center md:px-10 md:py-9 dark:border-white/10">
+                  <div class="flex min-w-0 flex-col gap-2.5">
+                    <div class="flex items-center gap-3">
                       <span
                         class:list={[
-                          "uppercase tracking-widest",
-                          cell.data.status === "live"
-                            ? "text-[color:var(--accent)]"
-                            : "text-black/55 dark:text-white/55",
+                          "h-[7px] w-[7px] shrink-0 rounded-full",
+                          isPending
+                            ? "bg-black/25 dark:bg-white/25"
+                            : "bg-[color:var(--accent)]",
                         ]}
+                        aria-hidden="true"
+                      />
+                      {/* Title carries the stretched-link pseudo: clicking
+                          anywhere on the row routes to the cell page. The
+                          MetaLine links opt back in via relative z-10. */}
+                      <Link
+                        href={`/labs/${cell.id}/`}
+                        class="font-heading text-xl font-medium leading-[1.12] tracking-[-0.013em] text-black no-underline transition-colors duration-300 ease-in-out group-hover:text-[color:var(--accent)] before:absolute before:inset-0 before:content-[''] dark:text-white"
                       >
-                        {statusLabel(cell.data.status)}
-                      </span>
-                      {isPending ? (
-                        <span class="text-black/55 dark:text-white/55">
-                          methodology shipped
-                        </span>
-                      ) : (
-                        <span class="relative z-10">
-                          <ProvenanceBadge action="Last run" date={cell.data.lastRunDate} />
-                        </span>
-                      )}
-                      {cell.data.blogPostSlug && (
-                        <span class="text-black/55 dark:text-white/55">
-                          cited by{" "}
-                          <Link
-                            href={`/writing/${cell.data.blogPostSlug}/`}
-                            class="relative z-10 font-sans text-xs"
-                          >
-                            {cell.data.blogPostSlug}
-                          </Link>
-                        </span>
-                      )}
+                        {cell.data.title}
+                      </Link>
                     </div>
-                    <p class="m-0 max-w-[38rem] text-sm leading-relaxed text-black/65 dark:text-white/65">
+                    <p class="m-0 max-w-[52ch] text-sm leading-relaxed text-black/65 dark:text-white/65">
                       {cell.data.tldr}
                     </p>
-                    {cell.data.tags.length > 0 && (
-                      <ul class="mt-1 flex flex-wrap gap-1.5">
-                        {cell.data.tags.map((t) => (
-                          <li class="inline-flex items-center rounded-sm bg-black/5 px-2 py-0.5 text-xs text-black/65 dark:bg-white/5 dark:text-white/65">
-                            {t}
-                          </li>
-                        ))}
-                      </ul>
+                    <MetaLine
+                      class="relative z-10"
+                      segments={[
+                        isPending ? "first-run pending" : "Last run",
+                        { date: cell.data.lastRunDate },
+                        ...(cell.data.tags.length > 0 ? [cell.data.tags.join(" · ")] : []),
+                        ...(cell.data.blogPostSlug
+                          ? [
+                              {
+                                text: `cited by ${cell.data.blogPostSlug}`,
+                                href: `/writing/${cell.data.blogPostSlug}/`,
+                                sans: true,
+                              },
+                            ]
+                          : []),
+                      ]}
+                    />
+                  </div>
+
+                  <div class="hidden text-black/65 md:block dark:text-white/65">
+                    {sparkValues && (
+                      <Sparkline data={sparkValues} width={220} height={52} variant="line" />
                     )}
                   </div>
 
-                  <div class="flex min-w-[7rem] flex-col gap-1 md:items-end">
-                    <span class="font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55">
-                      {cell.data.headlineMetric.label}
-                    </span>
+                  <div class="md:text-right">
+                    {/* Composite values ("89% · 103 claims") split: numeral
+                        at display size, qualifier folded into the
+                        micro-label so the big number never wraps. */}
                     <span
                       class:list={[
-                        "font-heading font-normal leading-none tracking-tight",
+                        "num-display block text-[clamp(2.5rem,1.9rem+2.4vw,4rem)]",
                         isPending
-                          ? "text-2xl text-black/40 dark:text-white/40"
-                          : "text-3xl text-black md:text-[2.1rem] dark:text-white",
+                          ? "text-black/40 dark:text-white/40"
+                          : "text-black dark:text-white",
                       ]}
-                      style="font-variant-numeric: tabular-nums;"
                     >
-                      {cell.data.headlineMetric.value}
+                      {splitMetricValue(cell.data.headlineMetric.value).numeral}
+                    </span>
+                    <span class="mt-2 block font-mono text-xs uppercase tracking-[0.18em] text-black/55 dark:text-white/55">
+                      {[
+                        splitMetricValue(cell.data.headlineMetric.value).qualifier,
+                        cell.data.headlineMetric.label,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
                     </span>
                   </div>
-
-                  {sparkValues && (
-                    <div class="block w-full text-black/75 md:col-span-2 dark:text-white/75">
-                      <Sparkline data={sparkValues} height={36} />
-                    </div>
-                  )}
                 </li>
               );
             })}
           </ul>
+          <p class="m-0 text-right font-mono text-xs text-black/40 dark:text-white/40">
+            receipts at the bottom of every cell — endpoint names, code, version notes
+          </p>
         </section>
       ) : (
         <div class="space-y-6">

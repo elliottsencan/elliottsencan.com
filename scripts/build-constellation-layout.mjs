@@ -203,6 +203,16 @@ function buildEdges(entries) {
 
 // ─── solvers ──────────────────────────────────────────────────────────────
 
+/** djb2-xor hash of a slug, mapped to [0, 2π). Seeds jitter from identity
+ *  rather than array index so adding one concept doesn't reshuffle the rest. */
+function hashAngle(slug) {
+  let h = 5381;
+  for (let i = 0; i < slug.length; i++) {
+    h = ((h * 33) ^ slug.charCodeAt(i)) >>> 0;
+  }
+  return (h / 4294967296) * Math.PI * 2;
+}
+
 function solveStrip(entries, edges, width = 800, height = 420) {
   const cx = width / 2;
   const cy = height / 2;
@@ -211,7 +221,11 @@ function solveStrip(entries, edges, width = 800, height = 420) {
   // are spread evenly around the canvas; entries without a cluster start at
   // the global center and let the springs find them a home.
   const clusterAnchors = new Map();
-  const clusterIds = [...new Set(entries.map((e) => e.cluster).filter(Boolean))];
+  // Canonical cluster order (the exported `clusters` array), not
+  // first-occurrence discovery order — anchor angles stay put as entries
+  // come and go.
+  const present = new Set(entries.map((e) => e.cluster).filter(Boolean));
+  const clusterIds = clusters.map((c) => c.id).filter((cid) => present.has(cid));
   clusterIds.forEach((cid, i) => {
     const a = (i / clusterIds.length) * Math.PI * 2;
     clusterAnchors.set(cid, {
@@ -220,11 +234,11 @@ function solveStrip(entries, edges, width = 800, height = 420) {
     });
   });
 
-  const seeded = entries.map((e, i) => {
+  const seeded = entries.map((e) => {
     const anchor = e.cluster ? clusterAnchors.get(e.cluster) : null;
     const baseX = anchor?.x ?? cx;
     const baseY = anchor?.y ?? cy;
-    const jitter = (i / entries.length) * Math.PI * 2;
+    const jitter = hashAngle(e.id);
     return {
       id: e.id,
       x: baseX + Math.cos(jitter) * (width * 0.04),
@@ -257,7 +271,7 @@ function solveStrip(entries, edges, width = 800, height = 420) {
       springLen: 80,
       springK: 0.08,
       gravity: 0.075,
-      clusterPull: 0.10,
+      clusterPull: 0.1,
       springLenFor,
       springKFor,
     });
@@ -275,24 +289,50 @@ function solveStrip(entries, edges, width = 800, height = 420) {
       springKFor,
     });
   }
+  // Post-solve extent normalization: the solver tends to leave slack at the
+  // box edges, so affinely rescale extents to fill [40, dim-40] (the kernel's
+  // own clamp pad). Anisotropy is capped at 1.8 — the larger scale shrinks to
+  // exactly that ratio and the slack centers — so clusters don't smear.
+  const minX = Math.min(...seeded.map((n) => n.x));
+  const maxX = Math.max(...seeded.map((n) => n.x));
+  const minY = Math.min(...seeded.map((n) => n.y));
+  const maxY = Math.max(...seeded.map((n) => n.y));
+  let sx = (width - 80) / Math.max(1, maxX - minX);
+  let sy = (height - 80) / Math.max(1, maxY - minY);
+  if (sx / sy > 1.8) {
+    sx = sy * 1.8;
+  } else if (sy / sx > 1.8) {
+    sy = sx * 1.8;
+  }
+  const offX = 40 + (width - 80 - (maxX - minX) * sx) / 2;
+  const offY = 40 + (height - 80 - (maxY - minY) * sy) / 2;
   return seeded.map((n) => ({
     id: n.id,
-    x: Math.max(20, Math.min(width - 20, n.x)),
-    y: Math.max(16, Math.min(height - 16, n.y)),
+    x: offX + (n.x - minX) * sx,
+    y: offY + (n.y - minY) * sy,
     weight: n.weight,
   }));
 }
 
+// Hubs can have 30+ neighbors; past this the local square is unreadable.
+// Keep the strongest ties and let the caption report the full count.
+const MAX_LOCAL_NEIGHBORS = 14;
+
 function solveLocal(activeId, _entries, allEdges, size = 200) {
-  const neighborSet = new Set([activeId]);
+  // Rank neighbors by total edge weight to the focus concept; ties break on
+  // slug so the cut is deterministic.
+  const weightByNeighbor = new Map();
   for (const e of allEdges) {
-    if (e.a === activeId) {
-      neighborSet.add(e.b);
-    }
-    if (e.b === activeId) {
-      neighborSet.add(e.a);
+    const other = e.a === activeId ? e.b : e.b === activeId ? e.a : null;
+    if (other) {
+      weightByNeighbor.set(other, (weightByNeighbor.get(other) ?? 0) + e.weight);
     }
   }
+  const neighborTotal = weightByNeighbor.size;
+  const kept = [...weightByNeighbor.keys()]
+    .sort((a, b) => weightByNeighbor.get(b) - weightByNeighbor.get(a) || (a < b ? -1 : 1))
+    .slice(0, MAX_LOCAL_NEIGHBORS);
+  const neighborSet = new Set([activeId, ...kept]);
   const ids = [...neighborSet];
   const subEdges = allEdges.filter((e) => neighborSet.has(e.a) && neighborSet.has(e.b));
   const cx = size / 2;
@@ -334,6 +374,7 @@ function solveLocal(activeId, _entries, allEdges, size = 200) {
       y: Math.max(10, Math.min(size - 10, n.y)),
     })),
     edges: subEdges,
+    neighborTotal,
   };
 }
 
@@ -343,7 +384,6 @@ function main() {
   if (!existsSync(WIKI_DIR)) {
     console.warn(`[constellation] no wiki directory at ${WIKI_DIR}; emitting empty layout`);
     write({
-      generated_at: new Date().toISOString(),
       titles: {},
       clusters,
       clusterById: {},
@@ -357,7 +397,6 @@ function main() {
   if (entries.length === 0) {
     console.warn("[constellation] no wiki entries found; emitting empty layout");
     write({
-      generated_at: new Date().toISOString(),
       titles: {},
       clusters,
       clusterById: {},
@@ -391,7 +430,6 @@ function main() {
   }
 
   const payload = {
-    generated_at: new Date().toISOString(),
     titles: titleById,
     clusters,
     clusterById: clusterByIdForEntries,

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+
 /**
  * wiki-surface-eval — offline, deterministic, $0 eval of the wiki surfacer.
  *
@@ -33,8 +34,8 @@
  *   --help / -h
  */
 
-import { createRequire } from "node:module";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";

@@ -49,6 +49,25 @@ export function formatCount(value: number | null): string {
   return value.toLocaleString("en-US");
 }
 
+/**
+ * Split a composite headline-metric value ("89% · 103 claims") into the
+ * numeral that renders at instrument-display size and the qualifier that
+ * folds into the mono micro-label beneath it. Values without a separator
+ * ("$3.19") pass through whole. The big number stays a number — a composite
+ * wraps into a three-line stack at display sizes.
+ */
+export function splitMetricValue(value: string): {
+  numeral: string;
+  qualifier: string | null;
+} {
+  const [numeral, ...rest] = value.split("·");
+  const qualifier = rest.join("·").trim();
+  return {
+    numeral: numeral.trim(),
+    qualifier: qualifier.length > 0 ? qualifier : null,
+  };
+}
+
 export function formatTokens(value: number | null): string {
   if (value === null) {
     return "—";

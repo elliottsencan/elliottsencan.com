@@ -63,12 +63,11 @@ const tiles: Tile[] = [
   {
     tiles.map((tile) => (
       <div class="flex flex-col gap-1">
-        <span class="font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55">
+        <span class="font-mono text-xs uppercase tracking-[0.18em] text-black/55 dark:text-white/55">
           {tile.label}
         </span>
         <span
-          class="font-heading text-2xl font-normal tracking-tight text-black md:text-3xl dark:text-white"
-          style="font-variant-numeric: tabular-nums;"
+          class="num-display text-2xl text-black md:text-3xl dark:text-white"
           title={tile.pending ? "Pending first eval run" : undefined}
         >
           {tile.value}

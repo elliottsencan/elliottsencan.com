@@ -1,7 +1,7 @@
 ---
+import { getCollection } from "astro:content";
 import LabeledRule from "@components/LabeledRule.astro";
 import { SITE } from "@consts";
-import EditorialRule from "./EditorialRule.astro";
 
 type Props = {
   standfirst?: string;
@@ -18,27 +18,72 @@ const editionDate = new Intl.DateTimeFormat("en-US", {
 }).format(buildDate);
 
 const location = SITE.LOCATION;
+
+// Live-ingest ticker — the latest reading entry's ingest time, rendered as
+// a relative timestamp that re-renders every 30s client-side (the runtime
+// in Layout.astro keys off data-ticker-ts). The SSR text below is the
+// build-time fallback so the line reads correctly without JS.
+const reading = await getCollection("reading");
+const lastIngest = reading.reduce<Date | null>(
+  (latest, entry) => (!latest || entry.data.added > latest ? entry.data.added : latest),
+  null,
+);
+const relativeIngest = (() => {
+  if (!lastIngest) {
+    return null;
+  }
+  const mins = Math.max(1, Math.round((buildDate.valueOf() - lastIngest.valueOf()) / 60000));
+  if (mins < 60) {
+    return `${mins} min ago`;
+  }
+  if (mins < 60 * 48) {
+    return `${Math.round(mins / 60)} h ago`;
+  }
+  return `${Math.round(mins / (60 * 24))} d ago`;
+})();
 ---
 
 <!--
   Newspaper-style masthead: the LabeledRule is the dateline (location + build
-  date) and the optional italic paragraph beneath it is the lede. Coupling the
-  two here — instead of leaving them as siblings on the page — makes the rule
-  read as the eyebrow on the lede rather than as standalone chrome.
+  date) and the standfirst beneath it IS the masthead — a statement-tier
+  Neue Montreal paragraph, not a small italic lede. Coupling the two here —
+  instead of leaving them as siblings on the page — makes the rule read as
+  the eyebrow on the standfirst rather than as standalone chrome.
 
   The site nav (Header.astro) already renders the site title, so a visible h1
   here would be redundant scaffolding; the sr-only h1 carries the page-level
   heading semantics so LabeledRule's slot is free for the dateline <p>.
+
+  Entrance: dateline then standfirst settle in on first load of the session
+  (.reveal, staggered) — soft navigation lands them set.
 -->
 <div>
   <h1 class="sr-only">{SITE.TITLE}</h1>
-  <LabeledRule as="h2" accent>
-    Currently in {location} &middot; {editionDate}
-  </LabeledRule>
+  <div class="reveal" style="--reveal-delay: 80ms;">
+    <LabeledRule as="h2" accent>
+      Currently in {location} &middot; {editionDate}
+      <Fragment slot="after">
+        {
+          lastIngest && relativeIngest ? (
+            <span class="hidden shrink-0 items-center gap-2 font-mono text-xs text-black/55 md:flex dark:text-white/55">
+              <span
+                aria-hidden="true"
+                class="live-dot size-1.5 rounded-full bg-[color:var(--accent)]"
+              />
+              <span style="font-variant-numeric: tabular-nums;">
+                last ingest · <span data-ticker-ts={lastIngest.valueOf()}>{relativeIngest}</span>
+              </span>
+            </span>
+          ) : null
+        }
+      </Fragment>
+    </LabeledRule>
+  </div>
   {
     standfirst ? (
       <p
-        class="mt-8 font-sans text-base italic leading-relaxed text-black dark:text-white"
+        class="reveal mt-10 max-w-[30ch] text-balance font-heading text-statement font-normal leading-[1.22] tracking-[-0.018em] text-black dark:text-white"
+        style="--reveal-delay: 170ms;"
         data-pagefind-meta={`standfirst:${standfirst}`}
       >
         {standfirst}

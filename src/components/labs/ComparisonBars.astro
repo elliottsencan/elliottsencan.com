@@ -123,7 +123,7 @@ function calloutAccent(m: Metric): boolean {
     <div class="grid grid-cols-1 gap-6 md:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] md:gap-10">
       {slopeRows.length > 0 ? (
         <div class="flex flex-col gap-3">
-          <span class="font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55">
+          <span class="font-mono text-xs uppercase tracking-[0.18em] text-black/55 dark:text-white/55">
             Headline · {legend.left} → {legend.right}
           </span>
           <SlopeChart
@@ -142,13 +142,13 @@ function calloutAccent(m: Metric): boolean {
             const secondary = calloutSecondary(m);
             return (
               <div class="flex flex-col gap-1.5">
-                <span class="font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55">
+                <span class="font-mono text-xs uppercase tracking-[0.18em] text-black/55 dark:text-white/55">
                   {m.label}
                 </span>
                 <div class="flex flex-wrap items-baseline gap-3">
                   <span
                     class:list={[
-                      "font-heading text-3xl font-normal tracking-tight tabular-nums md:text-[2.1rem]",
+                      "num-display text-3xl md:text-[2.1rem]",
                       accent ? "text-[color:var(--accent)]" : "text-black dark:text-white",
                     ]}
                     style="font-variant-numeric: tabular-nums;"
@@ -179,10 +179,10 @@ function calloutAccent(m: Metric): boolean {
   {sortedSamples.length > 0 && (
     <div class="flex flex-col gap-3 border-t border-black/10 pt-6 dark:border-white/10">
       <div class="flex items-baseline justify-between gap-3">
-        <span class="font-mono text-xs uppercase tracking-widest text-black/65 dark:text-white/65">
+        <span class="font-mono text-xs uppercase tracking-[0.18em] text-black/65 dark:text-white/65">
           {stripLabel ?? `Per-sample · n=${sortedSamples.length}`}
         </span>
-        <span class="hidden font-mono text-[0.65rem] uppercase tracking-widest text-black/45 sm:inline dark:text-white/45">
+        <span class="hidden font-mono text-[0.65rem] uppercase tracking-[0.18em] text-black/45 sm:inline dark:text-white/45">
           ← priors hurt · priors helped →
         </span>
       </div>

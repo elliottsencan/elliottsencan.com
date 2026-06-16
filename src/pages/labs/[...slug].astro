@@ -3,24 +3,24 @@ import { type CollectionEntry, getCollection, render } from "astro:content";
 import Breadcrumb from "@components/Breadcrumb.astro";
 import EditorialRule from "@components/EditorialRule.astro";
 import Link from "@components/Link.astro";
-import CodeCell from "@components/labs/CodeCell.astro";
 import LabResult from "@components/labs/LabResult.astro";
+import MetaLine from "@components/MetaLine.astro";
 import PageBody from "@components/PageBody.astro";
 import PageHero from "@components/PageHero.astro";
 import Layout from "@layouts/Layout.astro";
 import { loadLabData } from "@lib/lab-data";
 import { SITE_TIMEZONE } from "@lib/utils";
 
-// Individual lab cell — keeps the prose + sticky right rail layout from
-// the previous version. The only material change is the result card,
-// which now renders the chart pair (DailyBars + CumulativeArea) for
-// cost-shaped data and an explicit PendingMethodology card for cells
-// still awaiting their first run.
+// Individual lab cell — question → answer → evidence → receipts. The
+// question (hypothesis) is the h1 under a mono accent label; the headline
+// value counterweights it at instrument scale in the hero's right column.
+// The chart sits in a full-width `--well` evidence band (see ResultCell),
+// and the right rail keeps the operational dl plus a Receipts code block
+// (the `pre` frontmatter snippet, moved out of the body).
 //
-// Mobile: every grid in this page (the body/rail split, the headline
-// + chart block inside LabResult, the methodology card) is single-col
-// at base and only switches to two at `md:`. SVG charts use viewBox so
-// they fluid down without horizontal scroll.
+// Mobile: every grid in this page is single-col at base and only switches
+// to two at `md:`. SVG charts use viewBox so they fluid down without
+// horizontal scroll.
 
 export async function getStaticPaths() {
   const cells = await getCollection("labs");
@@ -82,135 +82,94 @@ const methodology = (
 
 <Layout title={`Labs: ${cell.data.title}`} description={cell.data.tldr}>
   <PageBody data-pagefind-body data-pagefind-filter="type:Labs">
-    <PageHero breadcrumb>
+    {/* The question is the h1; the answer is the counter-weight. */}
+    <PageHero breadcrumb size="statement" asideWidth="340px" asideAlign="end">
       <Fragment slot="breadcrumb">
         <Breadcrumb parent={{ label: "Labs", href: "/labs/" }} />
       </Fragment>
-      <Fragment slot="title">{cell.data.title}</Fragment>
-      <Fragment slot="summary">{cell.data.tldr}</Fragment>
+      <Fragment slot="eyebrow">The question</Fragment>
+      <Fragment slot="title">{cell.data.hypothesis}</Fragment>
+      <Fragment slot="summary">{cell.data.title} — {cell.data.tldr}</Fragment>
+      <div slot="aside" class="md:pb-1 md:text-right">
+        <span
+          class:list={[
+            "num-display block text-num-xl",
+            isPending ? "text-black/40 dark:text-white/40" : "text-black dark:text-white",
+          ]}
+          style="overflow-wrap: anywhere;"
+        >
+          {cell.data.headlineMetric.value}
+        </span>
+        <span class="mt-3 block font-mono text-xs uppercase tracking-[0.18em] text-black/55 dark:text-white/55">
+          {cell.data.headlineMetric.label}
+        </span>
+      </div>
     </PageHero>
 
-    {/* Hypothesis — labeled callout so it reads as the bet being
-        tested, not just another paragraph. */}
-    <div class="flex max-w-[62ch] flex-col gap-2">
-      <span
-        class="font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55"
-      >
-        The question
-      </span>
-      <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
-        {cell.data.hypothesis}
-      </p>
-    </div>
-
-    {/* Result card — the headline number + viz live inside ResultCell
-        via LabResult's "header" slot. On mobile the metric stacks
-        above the chart; on md+ they share a row (header sits above
-        the chart, but the chart itself splits into the byDay pair). */}
+    {/* Evidence band — full-width well strip (chrome lives in ResultCell);
+        the header slot is the mono caption row above the chart. */}
     <LabResult kind={cell.data.kind} data={data} size="full" methodology={methodology}>
       <div
         slot="header"
-        class="mb-5 flex flex-col items-baseline gap-1 md:flex-row md:flex-wrap md:gap-x-10 md:gap-y-2"
+        class="mb-6 flex flex-wrap items-baseline justify-between gap-x-10 gap-y-2"
       >
-        <div class="flex flex-col gap-1">
-          <span
-            class="font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55"
-          >
-            {cell.data.headlineMetric.label}
-          </span>
-          <span
-            class:list={[
-              "font-heading font-normal leading-none tracking-tight",
-              isPending
-                ? "text-2xl text-black/40 dark:text-white/40"
-                : "text-3xl text-black md:text-[2.1rem] dark:text-white",
-            ]}
-            style="font-variant-numeric: tabular-nums;"
-          >
-            {cell.data.headlineMetric.value}
-          </span>
-        </div>
-        {/* Optional secondary stats live in the chart `summary` block;
-            they render in-card via StatGrid. We deliberately don't
-            re-emit them here. */}
+        <span class="font-mono text-xs uppercase tracking-[0.18em] text-black/55 dark:text-white/55">
+          Evidence
+        </span>
+        <MetaLine mark={false} segments={["last run", { date: cell.data.lastRunDate }]} />
       </div>
     </LabResult>
 
-    {/* Body row — prose + optional methodology code on the left, sticky
-        operational rail on the right. Mirrors /wiki/[slug]. */}
-    <div class="grid gap-8 md:grid-cols-[minmax(0,1fr)_220px] md:gap-12">
-      <div class="min-w-0 space-y-6">
+    {/* Body row — prose on the left, operational rail + receipts right. */}
+    <div class="grid gap-10 md:grid-cols-[minmax(0,1fr)_300px] md:gap-14">
+      <div class="min-w-0">
         <div class="lab-body space-y-4">
           <Content />
           {cell.data.post && <p>{cell.data.post}</p>}
         </div>
-        {
-          cell.data.pre && (
-            <div class="flex flex-col gap-2">
-              <span class="font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55">
-                How it works
-              </span>
-              <CodeCell lang="js">{cell.data.pre}</CodeCell>
-            </div>
-          )
-        }
       </div>
 
-      <aside class="md:sticky md:top-28 md:self-start">
-        <dl class="flex flex-col gap-5">
-          <div class="flex flex-col gap-1.5">
-            <dt
-              class="font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55"
-            >
+      <aside class="flex flex-col gap-5 md:sticky md:top-28 md:self-start">
+        <dl class="flex flex-col gap-4">
+          <div class="grid grid-cols-[110px_minmax(0,1fr)] items-baseline gap-4">
+            <dt class="font-mono text-xs uppercase tracking-[0.18em] text-black/55 dark:text-white/55">
               Status
             </dt>
-            <dd>
-              <span
-                class:list={[
-                  "inline-flex rounded-sm border border-black/10 px-2 py-0.5 font-mono text-xs uppercase tracking-widest dark:border-white/15",
-                  isLive
-                    ? "text-[color:var(--accent)]"
-                    : "text-black/55 dark:text-white/55",
-                ]}
-              >
-                {statusLabel(cell.data.status)}
-              </span>
+            <dd
+              class:list={[
+                "m-0 font-mono text-xs",
+                isLive ? "text-[color:var(--accent)]" : "text-black/55 dark:text-white/55",
+              ]}
+            >
+              {statusLabel(cell.data.status)}
             </dd>
           </div>
 
-          <div class="flex flex-col gap-1.5">
-            <dt
-              class="font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55"
-            >
+          <div class="grid grid-cols-[110px_minmax(0,1fr)] items-baseline gap-4">
+            <dt class="font-mono text-xs uppercase tracking-[0.18em] text-black/55 dark:text-white/55">
               Published
             </dt>
-            <dd
-              class="font-mono text-xs text-black/65 dark:text-white/65"
-            >
+            <dd class="m-0 font-mono text-xs text-black/65 dark:text-white/65">
               {isoDate(cell.data.publishedDate)}
             </dd>
           </div>
 
-          <div class="flex flex-col gap-1.5">
-            <dt
-              class="font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55"
-            >
+          <div class="grid grid-cols-[110px_minmax(0,1fr)] items-baseline gap-4">
+            <dt class="font-mono text-xs uppercase tracking-[0.18em] text-black/55 dark:text-white/55">
               Last run
             </dt>
-            <dd
-              class="font-mono text-xs text-black/65 dark:text-white/65"
-            >
+            <dd class="m-0 font-mono text-xs text-black/65 dark:text-white/65">
               {isoDate(cell.data.lastRunDate)}
             </dd>
           </div>
 
           {
             cell.data.repoUrl && (
-              <div class="flex flex-col gap-1.5">
-                <dt class="font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55">
+              <div class="grid grid-cols-[110px_minmax(0,1fr)] items-baseline gap-4">
+                <dt class="font-mono text-xs uppercase tracking-[0.18em] text-black/55 dark:text-white/55">
                   Repo
                 </dt>
-                <dd class="text-xs">
+                <dd class="m-0 text-xs">
                   <Link href={cell.data.repoUrl} external>
                     source ↗
                   </Link>
@@ -221,11 +180,11 @@ const methodology = (
 
           {
             cell.data.blogPostSlug && (
-              <div class="flex flex-col gap-1.5">
-                <dt class="font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55">
+              <div class="grid grid-cols-[110px_minmax(0,1fr)] items-baseline gap-4">
+                <dt class="font-mono text-xs uppercase tracking-[0.18em] text-black/55 dark:text-white/55">
                   Cited by
                 </dt>
-                <dd class="text-xs">
+                <dd class="m-0 text-xs">
                   <Link href={`/writing/${cell.data.blogPostSlug}/`}>
                     {cell.data.blogPostSlug}
                   </Link>
@@ -236,23 +195,29 @@ const methodology = (
 
           {
             cell.data.tags.length > 0 && (
-              <div class="flex flex-col gap-1.5">
-                <dt class="font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55">
+              <div class="grid grid-cols-[110px_minmax(0,1fr)] items-baseline gap-4">
+                <dt class="font-mono text-xs uppercase tracking-[0.18em] text-black/55 dark:text-white/55">
                   Tags
                 </dt>
-                <dd>
-                  <ul class="flex flex-wrap gap-1.5">
-                    {cell.data.tags.map((t) => (
-                      <li class="rounded bg-black/5 px-2 py-1 font-mono text-xs text-black/65 dark:bg-white/10 dark:text-white/65">
-                        {t}
-                      </li>
-                    ))}
-                  </ul>
+                <dd class="m-0 font-mono text-xs text-black/65 dark:text-white/65">
+                  {cell.data.tags.join(" · ")}
                 </dd>
               </div>
             )
           }
         </dl>
+
+        {
+          cell.data.pre && (
+            <>
+              <div role="presentation" aria-hidden="true" class="dot-rule my-1 h-px w-full py-2" />
+              <span class="font-mono text-xs uppercase tracking-[0.18em] text-black/55 dark:text-white/55">
+                Receipts
+              </span>
+              <pre class="m-0 overflow-x-auto whitespace-pre bg-black/5 px-4 py-3.5 font-mono text-xs leading-[1.7] text-black/65 dark:bg-white/5 dark:text-white/65">{cell.data.pre}</pre>
+            </>
+          )
+        }
       </aside>
     </div>
 

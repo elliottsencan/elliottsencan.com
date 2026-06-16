@@ -1,53 +1,108 @@
 ---
 import EditorialRule from "@components/EditorialRule.astro";
 
-// Site-wide page hero — h1 + summary + meta cell, closed by a bottom dot rule
-// that marks where the hero ends and the body begins. Top-level pages open
-// straight into the h1 (the site Header already sits above, so a top rule
-// would just compete with it). Sub/slug pages opt into `breadcrumb` mode,
-// which prepends the self-contained `<Breadcrumb>` above the h1.
+// Site-wide page hero — h1 + summary + meta cell, closed by a bottom dot
+// rule that marks where the hero ends and the body begins. Every page
+// hero goes through this component so the breadcrumb→title gap, lede
+// tone, and closing rule are identical across surfaces (/reading, /wiki,
+// /labs, …); bespoke per-page hero grids are gone.
 //
-// The wiki index + slug pages keep their own bespoke 3-row grid because the
-// constellation in column 2 needs horizontal rules to grid-align against.
+// Two-column heroes (wiki map figure, labs count numeral, lab-cell
+// answer) pass an `aside` slot: at md+ the hero becomes a
+// `[minmax(0,1fr) asideWidth]` grid with the aside on the right edge.
+//
+// Props:
+//   - breadcrumb:  prepend the self-contained <Breadcrumb> slot above the h1
+//   - size:        h1 tier — "display" (default) or "statement" for pages
+//                  where a sentence is the title (the lab-cell question)
+//   - asideWidth:  md+ width of the aside column (any CSS length)
+//   - asideAlign:  vertical alignment of the two columns at md+
 //
 // Slots:
-//   - title    (required): the page h1 text
-//   - summary  (optional): standfirst paragraph
-//   - meta     (optional): typically a <HeroMeta /> cell
-//   - footer   (optional): small text-xs caption line (e.g. "Compiled by …")
+//   - title      (required): the page h1 text
+//   - eyebrow    (optional): mono accent micro-label above the h1
+//   - summary    (optional): standfirst paragraph
+//   - meta       (optional): typically a <MetaLine />
+//   - footer     (optional): small text-xs caption line
+//   - aside      (optional): right-column figure / numeral block
 //   - breadcrumb (only used when `breadcrumb` prop is set)
 
 type Props = {
   breadcrumb?: boolean;
+  size?: "display" | "statement";
+  asideWidth?: string;
+  asideAlign?: "start" | "center" | "end";
 };
 
-const { breadcrumb = false } = Astro.props;
+const {
+  breadcrumb = false,
+  size = "display",
+  asideWidth = "380px",
+  asideAlign = "start",
+} = Astro.props;
+
+const hasAside = Astro.slots.has("aside");
+const alignClass = {
+  start: "md:items-start",
+  center: "md:items-center",
+  end: "md:items-end",
+}[asideAlign];
 ---
 
 <div class="flex flex-col gap-4">
   {breadcrumb && <slot name="breadcrumb" />}
 
-  <div class="flex min-w-0 max-w-[62ch] flex-col gap-5">
-    <div class="flex flex-col gap-4">
-      <h1
-        class="font-heading text-display font-normal leading-[1.06] tracking-tight text-black dark:text-white"
-      >
-        <slot name="title" />
-      </h1>
+  <div
+    class:list={[
+      hasAside && [
+        "grid grid-cols-1 gap-x-22 gap-y-10 md:grid-cols-[minmax(0,1fr)_var(--hero-aside)]",
+        alignClass,
+      ],
+    ]}
+    style={hasAside ? `--hero-aside: ${asideWidth};` : undefined}
+  >
+    <div class="flex min-w-0 max-w-[62ch] flex-col gap-5">
+      <div class="flex flex-col gap-4">
+        {
+          Astro.slots.has("eyebrow") && (
+            <p class="m-0 font-mono text-xs uppercase tracking-[0.18em] text-[color:var(--accent)]">
+              <slot name="eyebrow" />
+            </p>
+          )
+        }
+        <h1
+          class:list={[
+            "font-heading font-normal text-black dark:text-white",
+            size === "display"
+              ? "text-display leading-[1.0] tracking-[-0.022em]"
+              : "max-w-[24ch] text-balance text-statement leading-[1.14] tracking-[-0.018em]",
+          ]}
+        >
+          <slot name="title" />
+        </h1>
+        {
+          Astro.slots.has("summary") && (
+            <p class="text-base leading-relaxed text-black/65 dark:text-white/65">
+              <slot name="summary" />
+            </p>
+          )
+        }
+        <slot name="meta" />
+      </div>
       {
-        Astro.slots.has("summary") && (
-          <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
-            <slot name="summary" />
+        Astro.slots.has("footer") && (
+          <p class="text-xs text-black/55 dark:text-white/55">
+            <slot name="footer" />
           </p>
         )
       }
-      <slot name="meta" />
     </div>
+
     {
-      Astro.slots.has("footer") && (
-        <p class="text-xs text-black/55 dark:text-white/55">
-          <slot name="footer" />
-        </p>
+      hasAside && (
+        <div class="min-w-0">
+          <slot name="aside" />
+        </div>
       )
     }
   </div>

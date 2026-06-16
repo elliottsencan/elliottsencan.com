@@ -1,61 +1,224 @@
 ---
 import ConstellationStrip from "@components/wiki/ConstellationStrip.astro";
+import { fitWidthCap } from "@lib/constellationGeometry";
 
-// Recessed flat "well" that contains the concept graph so it reads as a
-// deliberate object rather than a full-bleed hero. The strip component is
-// unchanged; this only frames and captions it.
+// Recessed flat "well" that contains the concept graph. Below 640px a
+// legend chip row sits under the graph — it replaces the in-SVG cluster
+// labels touch can't hover, and rows drive the strip's cluster-focus
+// protocol via a custom event (see the script at the bottom). At >=640px
+// the legend rows collapse: the hover protocol carries cluster identity,
+// the graph takes the full band, and the caption returns to the corner.
+type LegendCluster = { id: string; short: string; hue: number; count: number };
+
 type Props = {
   width?: number;
-  conceptCount: number;
+  clusters: LegendCluster[];
   neighbourhoodCount: number;
   tieCount: number;
 };
 
-const { width = 600, conceptCount, neighbourhoodCount, tieCount } = Astro.props;
+const { width = 600, clusters, neighbourhoodCount, tieCount } = Astro.props;
+
+// Widest the strip can be while its aspect-locked height stays within the
+// 20rem graph band. Capping width (instead of overflow-cropping height)
+// keeps the whole field visible whatever aspect the solved layout has.
+const capWidth = fitWidthCap(20);
 ---
 
 <div class="cw">
-  <div class="cw-graph">
+  <div class="cw-graph" style={`--cw-cap: ${capWidth};`}>
     <ConstellationStrip width={width} />
   </div>
-  <p class="cw-cap font-mono text-xs">
-    {conceptCount} concepts &middot; {neighbourhoodCount} neighbourhoods &middot; {tieCount} ties
-  </p>
+  <div class="cw-legend">
+    <ul class="cw-rows" role="list">
+      {
+        clusters.map((cl) => (
+          <li>
+            <button
+              type="button"
+              class="cw-row"
+              data-cluster={cl.id}
+              aria-pressed="false"
+              style={`--hue: ${cl.hue};`}
+            >
+              <span class="cw-chip" aria-hidden="true" />
+              <span class="cw-name font-heading">{cl.short}</span>
+              <span class="cw-count font-mono">{cl.count}</span>
+            </button>
+          </li>
+        ))
+      }
+    </ul>
+    <p class="cw-cap font-mono text-xs">
+      {neighbourhoodCount} neighbourhoods &middot; {tieCount} ties
+    </p>
+  </div>
 </div>
 
 <style>
   .cw {
-    position: relative;
     display: flex;
-    align-items: center;
-    justify-content: center;
+    flex-direction: column;
+    gap: 0.875rem;
     background: var(--well);
     border: 1px solid rgb(0 0 0 / 0.05);
     border-radius: 1rem;
-    padding: 1.5rem 1.5rem 2.75rem;
+    padding: 1rem 1.125rem 1.125rem;
   }
   :global(.dark) .cw {
     border-color: rgb(255 255 255 / 0.06);
   }
-  /* The strip's viewBox bakes in ~96px of symmetric top/bottom padding, so
-     it renders portrait-tall. Cap the height and let the centred strip
-     overflow equally top + bottom — overflow:hidden then trims that empty
-     padding, not the nodes (which sit in the centred band). */
+  /* Fit, don't crop: the strip keeps its viewBox aspect, so capping its
+     width at --cw-cap (20rem × aspect, set inline above) caps its height
+     at the 20rem band with the whole field visible. max-height + hidden
+     stay as belt-and-braces only. */
   .cw-graph {
     display: flex;
-    width: 100%;
+    min-width: 0;
     max-height: 20rem;
     align-items: center;
     justify-content: center;
     overflow: hidden;
   }
+  .cw-graph :global(.constellation-strip) {
+    max-width: min(100%, var(--cw-cap));
+  }
+
+  /* ─── Legend ──────────────────────────────────────────────────────────
+     Mobile-first: a wrapping chip row under the graph; ≥640px flips the
+     well to a row and the legend becomes a column in the right margin. */
+  .cw-rows {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 1.125rem;
+    row-gap: 0.25rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .cw-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4375rem;
+    margin: 0;
+    padding: 0.125rem 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    color: rgb(0 0 0 / 0.62);
+  }
+  :global(.dark) .cw-row {
+    color: rgb(255 255 255 / 0.62);
+  }
+  .cw-row:hover,
+  .cw-row:focus-visible,
+  .cw-row[aria-pressed="true"] {
+    color: rgb(0 0 0 / 0.92);
+  }
+  :global(.dark) .cw-row:hover,
+  :global(.dark) .cw-row:focus-visible,
+  :global(.dark) .cw-row[aria-pressed="true"] {
+    color: rgb(255 255 255 / 0.92);
+  }
+  /* Chip — same oklch family as the region fill / dot tint in the SVG. */
+  .cw-chip {
+    width: 0.625rem;
+    height: 0.625rem;
+    flex: none;
+    border-radius: 9999px;
+    background: oklch(0.72 0.1 var(--hue));
+  }
+  :global(.dark) .cw-chip {
+    background: oklch(0.62 0.09 var(--hue));
+  }
+  .cw-name {
+    font-style: italic;
+    font-size: 0.9375rem;
+    line-height: 1.3;
+    letter-spacing: 0.01em;
+  }
+  .cw-count {
+    font-size: 0.6875rem;
+    color: rgb(0 0 0 / 0.4);
+  }
+  :global(.dark) .cw-count {
+    color: rgb(255 255 255 / 0.4);
+  }
   .cw-cap {
-    position: absolute;
-    bottom: 1.125rem;
-    left: 1.5rem;
+    margin-top: 0.625rem;
     color: rgb(0 0 0 / 0.4);
   }
   :global(.dark) .cw-cap {
     color: rgb(255 255 255 / 0.4);
   }
+
+  @media (min-width: 640px) {
+    .cw {
+      position: relative;
+      padding: 1.5rem 1.5rem 2.75rem;
+    }
+    .cw-graph {
+      width: 100%;
+    }
+    .cw-rows {
+      display: none;
+    }
+    .cw-cap {
+      position: absolute;
+      bottom: 1.125rem;
+      left: 1.5rem;
+      margin-top: 0;
+    }
+  }
 </style>
+
+<script>
+  // Legend → strip wiring. The strip's inline script is the single writer
+  // of the SVG's focus state, so the legend never touches SVG attributes —
+  // it dispatches a constellation:cluster-focus event at the SVG and lets
+  // the strip's own state machine react. aria-pressed mirrors the
+  // tap-toggle state on coarse pointers (and styles the active row).
+  (() => {
+    const legend = document.querySelector<HTMLElement>(".cw-legend");
+    const svg = document.getElementById("constellation-strip");
+    if (!legend || !svg) return;
+    const rows = Array.from(legend.querySelectorAll<HTMLButtonElement>(".cw-row"));
+
+    const send = (cluster: string | null) => {
+      svg.dispatchEvent(new CustomEvent("constellation:cluster-focus", { detail: cluster }));
+      for (const r of rows) {
+        r.setAttribute("aria-pressed", cluster !== null && r.dataset.cluster === cluster ? "true" : "false");
+      }
+    };
+    const rowOf = (t: EventTarget | null) =>
+      t instanceof Element ? t.closest<HTMLElement>(".cw-row") : null;
+
+    // Coarse pointers: tap toggles the cluster highlight (no hover exists).
+    // Fine pointers: hover and keyboard focus mirror the node protocol.
+    const coarse = window.matchMedia("(pointer: coarse)").matches;
+    if (coarse) {
+      legend.addEventListener("click", (e) => {
+        const row = rowOf(e.target);
+        if (!row) return;
+        const active = row.getAttribute("aria-pressed") === "true";
+        send(active ? null : (row.dataset.cluster ?? null));
+      });
+    } else {
+      legend.addEventListener("mouseover", (e) => {
+        const row = rowOf(e.target);
+        if (row) send(row.dataset.cluster ?? null);
+      });
+      legend.addEventListener("mouseleave", () => send(null));
+      legend.addEventListener("focusin", (e) => {
+        const row = rowOf(e.target);
+        if (row) send(row.dataset.cluster ?? null);
+      });
+      legend.addEventListener("focusout", (e) => {
+        const next = e.relatedTarget as Node | null;
+        if (!next || !legend.contains(next)) send(null);
+      });
+    }
+  })();
+</script>

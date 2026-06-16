@@ -1,8 +1,13 @@
 ---
-// Fixed bottom-right inspector for the wiki directory. Hidden until a
-// directory row (#wiki-list .wd-row) is hovered or keyboard-focused, then it
-// shows that concept's neighbourhood / title / summary / source count. Pure
-// data-attribute toggling — same philosophy as ConstellationStrip.
+// Anchored hover card for the wiki directory — Wikipedia-style page
+// preview. When a directory row (#wiki-list .wd-row) is hovered or
+// keyboard-focused, the card appears directly beneath that row (flipping
+// above it when the viewport or fixed footer would clip it), showing the
+// concept's neighbourhood / title / summary / source count.
+//
+// The card is purely informative: pointer-events are disabled so it never
+// traps hover from the rows it overlaps — moving to the next row simply
+// re-anchors it. Pure data-attribute toggling, no layout shift.
 //
 // Contract: reads data-nb / data-ct / data-su and the row's `.wd-nm` text
 // from rows rendered by WikiDirectory.astro.
@@ -13,7 +18,6 @@
   <p class="wi-ti font-heading" id="wi-ti"></p>
   <p class="wi-su" id="wi-su"></p>
   <div class="wi-meta font-mono">
-    <span class="wi-dots" id="wi-dots" aria-hidden="true"></span>
     <span id="wi-ct"></span>
     <span class="wi-go">open &rarr;</span>
   </div>
@@ -22,17 +26,15 @@
 <style>
   #wiki-inspector {
     position: fixed;
-    right: 1.5rem;
-    bottom: 1.5rem;
     z-index: 40;
-    width: 20.625rem;
-    padding: 1.125rem 1.25rem 1rem;
+    width: 21rem;
+    max-width: calc(100vw - 2rem);
+    padding: 1rem 1.125rem 0.875rem;
     background: var(--card);
     border: 1px solid rgb(0 0 0 / 0.1);
-    border-radius: 0.875rem;
     box-shadow: 0 8px 30px rgb(0 0 0 / 0.08);
     opacity: 0;
-    transform: translateY(6px);
+    transform: translateY(4px);
     pointer-events: none;
     transition:
       opacity 130ms ease,
@@ -55,7 +57,7 @@
   }
   .wi-ti {
     margin: 0;
-    font-size: 1.1875rem;
+    font-size: 1.125rem;
     font-weight: 500;
     line-height: 1.2;
     letter-spacing: -0.012em;
@@ -65,8 +67,12 @@
     color: #fff;
   }
   .wi-su {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 4;
+    overflow: hidden;
     margin: 0.5rem 0 0;
-    font-size: 0.875rem;
+    font-size: 0.84375rem;
     line-height: 1.5;
     color: rgb(0 0 0 / 0.72);
   }
@@ -77,8 +83,8 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    margin-top: 0.875rem;
-    padding-top: 0.75rem;
+    margin-top: 0.75rem;
+    padding-top: 0.625rem;
     border-top: 1px solid rgb(0 0 0 / 0.08);
     font-size: 0.6875rem;
     color: rgb(0 0 0 / 0.5);
@@ -87,22 +93,13 @@
     border-top-color: rgb(255 255 255 / 0.08);
     color: rgb(255 255 255 / 0.5);
   }
-  .wi-dots {
-    display: inline-flex;
-    gap: 2px;
-  }
-  .wi-dots :global(i) {
-    display: block;
-    width: 3px;
-    height: 3px;
-    border-radius: 50%;
-    background: var(--accent);
-  }
   .wi-go {
     margin-left: auto;
     color: var(--accent);
   }
-  @media (max-width: 640px) {
+  /* Coarse pointers have no hover; the directory rows carry their own
+     mobile summary line instead. */
+  @media (max-width: 640px), (pointer: coarse) {
     #wiki-inspector {
       display: none;
     }
@@ -126,11 +123,37 @@
     const ti = document.getElementById("wi-ti");
     const su = document.getElementById("wi-su");
     const ct = document.getElementById("wi-ct");
-    const dots = document.getElementById("wi-dots");
-    if (!insp || !list || !nb || !ti || !su || !ct || !dots) return;
+    if (!insp || !list || !nb || !ti || !su || !ct) return;
 
     const rows = Array.from(list.querySelectorAll<HTMLElement>(".wd-row"));
     let hideT = 0;
+    let liveRow: HTMLElement | null = null;
+
+    const GAP = 8; // row ↔ card breathing room
+    const EDGE = 16; // viewport inset
+
+    // The site footer is fixed chrome with a translucent backdrop; the
+    // card must clear it, not just the viewport.
+    const chromeFooter = document.querySelector("footer");
+    const bottomLimit = () =>
+      chromeFooter ? chromeFooter.getBoundingClientRect().top : window.innerHeight;
+
+    // Anchor the card to the hovered row: left-aligned with the row,
+    // clamped to the viewport, below the row by default and flipped above
+    // when the footer/viewport would clip it.
+    const place = () => {
+      if (!liveRow) return;
+      const rect = liveRow.getBoundingClientRect();
+      const w = insp.offsetWidth;
+      const h = insp.offsetHeight;
+      const left = Math.max(EDGE, Math.min(rect.left, window.innerWidth - w - EDGE));
+      let top = rect.bottom + GAP;
+      if (top + h > bottomLimit() - GAP) {
+        top = rect.top - h - GAP;
+      }
+      insp.style.left = `${left}px`;
+      insp.style.top = `${Math.max(EDGE, top)}px`;
+    };
 
     const fill = (r: HTMLElement) => {
       clearTimeout(hideT);
@@ -139,45 +162,33 @@
       su.textContent = r.dataset.su ?? "";
       const n = Number.parseInt(r.dataset.ct ?? "0", 10);
       ct.textContent = `${n} source${n === 1 ? "" : "s"}`;
-      let d = "";
-      for (let i = 0; i < Math.min(n, 6); i++) {
-        d += `<i style="opacity:${0.5 + i * 0.08}"></i>`;
-      }
-      dots.innerHTML = d;
-      insp.setAttribute("data-show", "");
       for (const x of rows) x.removeAttribute("data-live");
       r.setAttribute("data-live", "");
+      liveRow = r;
+      place();
+      insp.setAttribute("data-show", "");
     };
 
     const hide = () => {
       hideT = window.setTimeout(() => {
         insp.removeAttribute("data-show");
         for (const x of rows) x.removeAttribute("data-live");
+        liveRow = null;
       }, 120);
     };
 
-    // Lift the card above the footer's Back-to-top button when it scrolls
-    // into view, so the fixed bottom-right card never collides with the
-    // footer chrome. Tracks the anchor on scroll so the card stays pinned
-    // just above it; falls back to base offset when nothing's in the way.
-    const liftAnchor =
-      document.getElementById("back-to-top") ?? document.querySelector("footer");
-    const BASE_BOTTOM = 24;
-    let liftRaf = 0;
-    const reflowLift = () => {
-      liftRaf = 0;
-      if (!liftAnchor) return;
-      const overlap = window.innerHeight - liftAnchor.getBoundingClientRect().top;
-      insp.style.bottom = `${BASE_BOTTOM + (overlap > 0 ? overlap + 16 : 0)}px`;
+    // Re-anchor while visible: the card is position:fixed, so scrolling
+    // moves the hovered row underneath it. rAF-coalesced, no-op when hidden.
+    let raf = 0;
+    const reflow = () => {
+      if (!raf)
+        raf = requestAnimationFrame(() => {
+          raf = 0;
+          place();
+        });
     };
-    if (liftAnchor) {
-      const onScrollLift = () => {
-        if (!liftRaf) liftRaf = requestAnimationFrame(reflowLift);
-      };
-      window.addEventListener("scroll", onScrollLift, { passive: true });
-      window.addEventListener("resize", onScrollLift, { passive: true });
-      reflowLift();
-    }
+    window.addEventListener("scroll", reflow, { passive: true });
+    window.addEventListener("resize", reflow, { passive: true });
 
     for (const r of rows) {
       r.addEventListener("mouseenter", () => fill(r));

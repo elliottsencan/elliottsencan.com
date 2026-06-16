@@ -17,12 +17,11 @@ const { stats } = Astro.props;
   {
     stats.map((s) => (
       <div class="flex flex-col gap-1">
-        <span class="font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55">
+        <span class="font-mono text-xs uppercase tracking-[0.18em] text-black/55 dark:text-white/55">
           {s.label}
         </span>
         <span
-          class="font-heading text-3xl font-normal tracking-tight text-black dark:text-white"
-          style="font-variant-numeric: tabular-nums;"
+          class="num-display text-3xl text-black dark:text-white"
         >
           {s.value}
         </span>

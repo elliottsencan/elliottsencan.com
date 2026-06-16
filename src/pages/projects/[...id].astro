@@ -57,7 +57,7 @@ const hasRail =
           )}
         </div>
         <h1
-          class="font-heading text-2xl font-medium tracking-tight text-black md:text-3xl dark:text-white"
+          class="font-heading text-display font-normal leading-[1.0] tracking-[-0.022em] text-black dark:text-white"
         >
           {project.data.title}
         </h1>
@@ -73,10 +73,12 @@ const hasRail =
       <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 md:grid-cols-3">
         {project.data.impact.map((item) => (
           <div class="rounded-sm border border-black/10 p-3 dark:border-white/15">
-            <div class="font-heading text-lg font-medium text-black dark:text-white">
+            <div class="num-display text-2xl text-black dark:text-white">
               {item.value}
             </div>
-            <div class="text-xs text-neutral-500">{item.metric}</div>
+            <div class="mt-1 font-mono text-xs uppercase tracking-[0.18em] text-black/55 dark:text-white/55">
+              {item.metric}
+            </div>
           </div>
         ))}
       </div>
@@ -110,7 +112,7 @@ const hasRail =
           <dl class="flex flex-col gap-5">
             {showStatusInRail && (
               <div class="flex flex-col gap-1.5">
-                <dt class="font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55">
+                <dt class="font-mono text-xs uppercase tracking-[0.18em] text-black/55 dark:text-white/55">
                   Status
                 </dt>
                 <dd>
@@ -125,7 +127,7 @@ const hasRail =
 
             {project.data.role && (
               <div class="flex flex-col gap-1.5">
-                <dt class="font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55">
+                <dt class="font-mono text-xs uppercase tracking-[0.18em] text-black/55 dark:text-white/55">
                   Role
                 </dt>
                 <dd class="text-sm text-black/85 dark:text-white/85">
@@ -136,7 +138,7 @@ const hasRail =
 
             {project.data.stack && project.data.stack.length > 0 && (
               <div class="flex flex-col gap-1.5">
-                <dt class="font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55">
+                <dt class="font-mono text-xs uppercase tracking-[0.18em] text-black/55 dark:text-white/55">
                   Stack
                 </dt>
                 <dd>
@@ -153,7 +155,7 @@ const hasRail =
 
             {(project.data.demoURL || project.data.repoURL) && (
               <div class="flex flex-col gap-1.5">
-                <dt class="font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55">
+                <dt class="font-mono text-xs uppercase tracking-[0.18em] text-black/55 dark:text-white/55">
                   Links
                 </dt>
                 <dd class="flex flex-col gap-1 text-xs">

@@ -2,18 +2,21 @@
 import { getCollection } from "astro:content";
 import Breadcrumb from "@components/Breadcrumb.astro";
 import Link from "@components/Link.astro";
+import MetaLine from "@components/MetaLine.astro";
 import PageBody from "@components/PageBody.astro";
-import ProvenanceBadge from "@components/ProvenanceBadge.astro";
-import ConstellationWell from "@components/wiki/ConstellationWell.astro";
+import PageHero from "@components/PageHero.astro";
+import ConstellationStrip from "@components/wiki/ConstellationStrip.astro";
 import WikiDirectory from "@components/wiki/WikiDirectory.astro";
 import WikiInspector from "@components/wiki/WikiInspector.astro";
 import constellationLayout from "@data/constellation-layout.json";
 import Layout from "@layouts/Layout.astro";
 
-// Wiki index — concept-indexed synthesis. The constellation sits in a
-// contained "well" below the header; the browse is a two-column directory
-// grouped by neighbourhood (the same clusters the constellation draws),
-// sorted by source count, with a hover/focus inspector for per-concept detail.
+// Wiki index — directory-led. The hero pairs title + lede + MetaLine with
+// the constellation as an unboxed marginal figure (the recessed well is
+// retired; the map keeps its hover protocol at thumbnail scale). Below,
+// the directory renders as numbered chapters — one per neighbourhood —
+// with dot-leader concept rows and the hover/focus inspector for
+// per-concept detail.
 const wiki = (await getCollection("wiki")).sort((a, b) => a.data.title.localeCompare(b.data.title));
 
 const lastCompiledMs =
@@ -23,7 +26,8 @@ const lastCompiled = lastCompiledMs ? new Date(lastCompiledMs) : null;
 // Neighbourhood grouping — map each concept to its cluster via the same
 // clusterById the constellation uses, emit clusters in curated order, sort
 // each group by source count desc, and carry a trailing "Other" group so no
-// concept drops out.
+// concept drops out. Hues ride along so the directory's chapter dots match
+// the map's regions.
 type Cluster = { id: string; title: string; short: string; hue: number };
 const constellationNodes: { id: string }[] = constellationLayout.global.nodes;
 const clusters: Cluster[] = constellationLayout.clusters;
@@ -33,6 +37,7 @@ const conceptGroups = [
   ...clusters.map((cl) => ({
     label: cl.title,
     short: cl.short,
+    hue: cl.hue as number | null,
     concepts: wiki
       .filter((c) => clusterById[c.id] === cl.id)
       .sort((a, b) => b.data.sources.length - a.data.sources.length),
@@ -40,6 +45,7 @@ const conceptGroups = [
   {
     label: "Other",
     short: "Other",
+    hue: null,
     concepts: wiki
       .filter((c) => {
         const id = clusterById[c.id];
@@ -49,11 +55,12 @@ const conceptGroups = [
   },
 ].filter((g) => g.concepts.length > 0);
 
-const constellationNeighborhoodCount = clusters.filter(
+// Neighbourhood count for the figure caption — the ≥2 filter mirrors the
+// strip's region threshold so the caption counts exactly the drawn
+// neighbourhoods.
+const neighbourhoodCount = clusters.filter(
   (cl) => constellationNodes.filter((n) => clusterById[n.id] === cl.id).length >= 2,
 ).length;
-const constellationConceptCount = constellationNodes.length;
-const constellationTieCount = constellationLayout.global.edges.length;
 ---
 
 <Layout
@@ -61,54 +68,51 @@ const constellationTieCount = constellationLayout.global.edges.length;
   description="Concept-indexed synthesis articles compiled from my reading log."
 >
   <PageBody data-pagefind-body data-pagefind-filter="type:Wiki">
-    {/* Header — breadcrumb, then eyebrow, title, lede, meta row. */}
-    <div class="flex flex-col gap-4">
-      <Breadcrumb parent={{ label: "Home", href: "/" }} />
-      <div class="flex max-w-[62ch] flex-col gap-4">
-        <h1 class="font-heading text-display font-normal leading-[1.06] tracking-tight text-black dark:text-white">
-          Wiki
-        </h1>
-        <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
-          Concept-indexed synthesis articles. Each article compiles across
-          multiple sources from the <Link href="/reading">reading log</Link>;
-          one article per concept that has at least two contributing sources.
-        </p>
-        <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
-          <span class="inline-flex w-fit items-center gap-2 whitespace-nowrap rounded-sm border border-black/15 px-2.5 py-1 font-mono text-xs text-[color:var(--accent)] dark:border-white/20">
-            <span class="flex gap-[2px]" aria-hidden="true">
-              {Array.from({ length: Math.min(wiki.length, 8) }).map((_, i) => (
-                <span
-                  class="block h-1 w-1 rounded-full bg-[color:var(--accent)]"
-                  style={`opacity: ${0.55 + i * 0.05};`}
-                />
-              ))}
-            </span>
-            <span>
-              {wiki.length} concept{wiki.length === 1 ? "" : "s"}
-            </span>
-          </span>
-          {
-            lastCompiled && (
-              <ProvenanceBadge action="Compiled by Claude" date={lastCompiled} link />
-            )
-          }
-        </div>
-      </div>
-    </div>
+    {/* Hero — title + lede + MetaLine left, the map as an unboxed
+        marginal figure right with a one-line mono caption beneath. */}
+    <PageHero breadcrumb asideWidth="380px">
+      <Fragment slot="breadcrumb">
+        <Breadcrumb parent={{ label: "Home", href: "/" }} />
+      </Fragment>
+      <Fragment slot="title">Wiki</Fragment>
+      <Fragment slot="summary">
+        Concept-indexed synthesis. Each article compiles across multiple
+        sources from the <Link href="/reading">reading log</Link> — one
+        article per concept with at least two contributing sources.
+      </Fragment>
+      {
+        lastCompiled && (
+          <MetaLine
+            slot="meta"
+            segments={[
+              "Compiled by Claude",
+              { date: lastCompiled },
+              { text: "How this works →", href: "/wiki/how-this-works" },
+            ]}
+          />
+        )
+      }
+      {
+        wiki.length > 0 && (
+          <div slot="aside" class="flex min-w-0 flex-col gap-2">
+            <ConstellationStrip width={380} />
+            <p class="m-0 flex flex-wrap justify-end gap-x-2.5 font-mono text-xs tracking-wider text-black/55 dark:text-white/55">
+              <span>
+                {wiki.length} concept{wiki.length === 1 ? "" : "s"}
+              </span>
+              <span aria-hidden="true" class="text-black/25 dark:text-white/25">
+                &middot;
+              </span>
+              <span>
+                {neighbourhoodCount} neighbourhood{neighbourhoodCount === 1 ? "" : "s"}
+              </span>
+            </p>
+          </div>
+        )
+      }
+    </PageHero>
 
-    {/* Contained constellation — framed in a recessed well, not a hero. */}
-    {
-      wiki.length > 0 && (
-        <ConstellationWell
-          width={640}
-          conceptCount={constellationConceptCount}
-          neighbourhoodCount={constellationNeighborhoodCount}
-          tieCount={constellationTieCount}
-        />
-      )
-    }
-
-    {/* Scannable directory + per-concept inspector. */}
+    {/* Numbered-chapter directory + per-concept inspector. */}
     {
       wiki.length > 0 ? (
         <WikiDirectory groups={conceptGroups} />
@@ -119,10 +123,6 @@ const constellationTieCount = constellationLayout.global.edges.length;
         </p>
       )
     }
-
-    <p class="text-xs text-black/55 dark:text-white/55">
-      <Link href="/reading">reading log &rarr;</Link>
-    </p>
   </PageBody>
 
   {wiki.length > 0 && <WikiInspector />}

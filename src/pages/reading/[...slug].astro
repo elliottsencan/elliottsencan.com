@@ -95,7 +95,7 @@ const breadcrumbs = [
 
     {
       entry.data.noindex && (
-        <div class="border-l-2 border-black/30 bg-black/5 px-3 py-2 font-mono text-xs uppercase tracking-wider text-black/60 dark:border-white/30 dark:bg-white/10 dark:text-white/60">
+        <div class="border-l-2 border-black/30 bg-black/5 px-3 py-2 font-mono text-xs uppercase tracking-[0.18em] text-black/60 dark:border-white/30 dark:bg-white/10 dark:text-white/60">
           Publisher opt-out: this source asked AI tools not to index it. The
           note below stands in for a summary.
         </div>
@@ -111,7 +111,7 @@ const breadcrumbs = [
     {
       myCanonicalTopics.length > 0 && (
         <section class="space-y-3">
-          <h2 class="font-mono text-xs uppercase tracking-wider text-black/50 dark:text-white/60">
+          <h2 class="font-mono text-xs uppercase tracking-[0.18em] text-black/50 dark:text-white/60">
             Topics
           </h2>
           <ul class="not-prose flex flex-wrap gap-2 text-sm">
@@ -128,7 +128,7 @@ const breadcrumbs = [
     {
       citingConcepts.length > 0 && (
         <section class="space-y-4">
-          <h2 class="font-mono text-xs uppercase tracking-wider text-black/50 dark:text-white/60">
+          <h2 class="font-mono text-xs uppercase tracking-[0.18em] text-black/50 dark:text-white/60">
             Cited by
           </h2>
           <ul class="not-prose flex flex-col gap-3 text-sm">
@@ -148,14 +148,14 @@ const breadcrumbs = [
     {
       relatedCapped.length > 0 && (
         <section class="space-y-4">
-          <h2 class="font-mono text-xs uppercase tracking-wider text-black/50 dark:text-white/60">
+          <h2 class="font-mono text-xs uppercase tracking-[0.18em] text-black/50 dark:text-white/60">
             Related
           </h2>
           <ul class="not-prose flex flex-col gap-3 text-sm">
             {relatedCapped.map(({ entry: e, reason }) => (
               <li>
                 <Link href={`/reading/${e.id}/`}>{e.data.title}</Link>
-                <span class="ml-2 font-mono text-xs uppercase tracking-widest text-black/40 dark:text-white/40">
+                <span class="ml-2 font-mono text-xs uppercase tracking-[0.18em] text-black/40 dark:text-white/40">
                   {reason}
                 </span>
               </li>

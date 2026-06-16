@@ -1,16 +1,15 @@
 ---
 import { getCollection, getEntry } from "astro:content";
-import EditorialList from "@components/EditorialList.astro";
-import EditorialListItem from "@components/EditorialListItem.astro";
 import EditorialRule from "@components/EditorialRule.astro";
 import LabeledRule from "@components/LabeledRule.astro";
 import Link from "@components/Link.astro";
 import Sparkline from "@components/labs/Sparkline.astro";
 import Masthead from "@components/Masthead.astro";
+import MetaLine from "@components/MetaLine.astro";
 import PageBody from "@components/PageBody.astro";
-import ProvenanceBadge from "@components/ProvenanceBadge.astro";
 import { HOME } from "@consts";
 import Layout from "@layouts/Layout.astro";
+import { splitMetricValue } from "@lib/format";
 import { loadLabData } from "@lib/lab-data";
 import { SITE_TIMEZONE } from "@lib/utils";
 
@@ -150,11 +149,19 @@ const trails = [
       ? { action: "Last run" as const, date: latestLab.data.lastRunDate }
       : null,
     meta: [`${labs.length} ${labs.length === 1 ? "cell" : "cells"}`],
+    // Composite values ("89% · 103 claims") split: the numeral renders at
+    // display size, the qualifier folds into the unit micro-label — a
+    // composite wraps into a three-line stack at --text-num-lg.
     stat: latestLab
-      ? {
-          n: latestLab.data.headlineMetric.value,
-          unit: latestLab.data.headlineMetric.label.toLowerCase(),
-        }
+      ? (() => {
+          const { numeral, qualifier } = splitMetricValue(latestLab.data.headlineMetric.value);
+          return {
+            n: numeral,
+            unit: [qualifier, latestLab.data.headlineMetric.label.toLowerCase()]
+              .filter(Boolean)
+              .join(" · "),
+          };
+        })()
       : null,
   },
 ];
@@ -166,161 +173,217 @@ const trails = [
 
     {
       posts.length > 0 ? (
-        <>
+        <div class="reveal" style="--reveal-delay: 260ms;">
           <LabeledRule as="h2">Recent posts</LabeledRule>
-          <section data-pagefind-ignore>
-            <EditorialList>
-              {posts.map((post) => (
-                <EditorialListItem
-                  title={post.data.title}
-                  href={`/writing/${post.id}`}
-                  meta={longDate.format(post.data.date)}
-                  metaCompact={compactDate.format(post.data.date)}
-                  metaDateTime={post.data.date.toISOString()}
-                >
-                  {post.data.description}
-                </EditorialListItem>
+          <section data-pagefind-ignore class="mt-2">
+            <ul class="not-prose m-0 flex list-none flex-col p-0">
+              {posts.map((post, i) => (
+                <li class="group">
+                  <div class="grid grid-cols-1 gap-x-14 gap-y-1.5 py-7 md:grid-cols-[minmax(0,1fr)_160px] md:items-baseline">
+                    <time
+                      datetime={post.data.date.toISOString()}
+                      class="font-mono text-xs text-black/55 md:col-start-2 md:row-start-1 md:text-right dark:text-white/55"
+                      style="font-variant-numeric: tabular-nums;"
+                    >
+                      <span class="md:hidden">{compactDate.format(post.data.date)}</span>
+                      <span class="hidden md:inline">{longDate.format(post.data.date)}</span>
+                    </time>
+                    <div class="flex min-w-0 flex-col gap-2 md:col-start-1 md:row-start-1">
+                      <div class="flex items-baseline gap-3 text-xl">
+                        <Link
+                          href={`/writing/${post.id}`}
+                          class="font-heading text-xl font-medium leading-[1.15] tracking-[-0.013em] text-black no-underline transition-colors duration-300 ease-in-out group-hover:text-[color:var(--accent)] hover:text-[color:var(--accent)] dark:text-white"
+                        >
+                          {post.data.title}
+                        </Link>
+                        <span class="hover-arrow" aria-hidden="true">
+                          →
+                        </span>
+                      </div>
+                      <p class="m-0 max-w-[52ch] text-sm leading-relaxed text-black/65 dark:text-white/65">
+                        {post.data.description}
+                      </p>
+                    </div>
+                  </div>
+                  {/* Dot-rule separator (was a solid hairline): same visual
+                      language as the section rules, and it crawls under the
+                      cursor on full motion. -my-2/py-2 keeps the 1px layout
+                      footprint while giving the cursor halo a hover band. */}
+                  {i < posts.length - 1 && (
+                    <div
+                      role="presentation"
+                      aria-hidden="true"
+                      class="dot-rule crawl-rule -my-2 h-px py-2"
+                    />
+                  )}
+                </li>
               ))}
-            </EditorialList>
+            </ul>
           </section>
-        </>
+        </div>
       ) : null
     }
 
     {/*
-      Trail cards — wiki leads, reading + labs follow. Each card pairs a
-      prose body (slug, blurb, latest pointer) with a stat block (number,
-      unit, mini-viz, aux). On md+ the stat sits as a right column; on
-      mobile it collapses to a horizontal strip beneath the prose.
-
-      Section boundaries: every card carries a border-t so the first card's
-      rule marks the section open. The bottom edge is left to the page-
-      level closing EditorialRule below — no border-b on the last card, no
-      opening EditorialRule above (which would double-up with the first
-      card's border-t and inflate the gap with its own margins).
+      Trail rows — wiki leads, reading + labs follow. Instrument grid:
+      the count carries the hierarchy as a thin display numeral in the
+      left column, the slug + blurb + provenance MetaLine sit in the
+      middle, and the mini-viz (cluster snippet / cadence bars /
+      sparkline) holds the right edge. The labs row leads with the
+      headline metric, not the cell count — the number is the story.
     */}
-    <section data-pagefind-ignore>
-      <ol class="not-prose flex flex-col">
+    <div data-pagefind-ignore>
+      <div class="reveal" style="--reveal-delay: 350ms;">
+        <LabeledRule as="h2">Where the writing comes from</LabeledRule>
+      </div>
+      <ol class="not-prose m-0 mt-6 flex list-none flex-col p-0">
         {
-          trails.map((trail) => (
-            <li class="group relative grid grid-cols-1 items-baseline gap-x-10 gap-y-4 border-t border-black/10 py-8 md:grid-cols-[minmax(0,1fr)_auto] dark:border-white/10">
-              <div class="flex flex-col gap-1.5">
-                {/* Stretched-link slug. The ::before pseudo extends the
-                    click target across the entire <li> (positioned
-                    ancestor) and carries the hover-state background.
-                    Meta/latest links below opt back into pointer events
-                    with relative z-10. */}
-                <Link
-                  href={trail.href}
-                  class="font-heading text-lg font-medium tracking-[-0.011em] text-black no-underline transition-colors duration-300 ease-in-out group-hover:text-(--accent) before:absolute before:inset-y-0 before:-inset-x-3 before:rounded-md before:content-[''] md:before:-inset-x-4 dark:text-white"
+          trails.map((trail, i) => (
+            <li
+              data-observe
+              class:list={[
+                "rise group relative grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-8 gap-y-5 border-t border-black/10 py-8 md:grid-cols-[240px_minmax(0,1fr)_200px] md:gap-x-14 md:py-10 dark:border-white/10",
+                i === trails.length - 1 && "border-b border-black/10 dark:border-white/10",
+              ]}
+            >
+              <div class="flex flex-col gap-1 md:gap-2.5">
+                <span
+                  class="num-display text-[2.5rem] text-black md:text-num-lg dark:text-white"
+                  style="overflow-wrap: anywhere;"
                 >
-                  /{trail.key}
-                </Link>
-                <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5 font-mono text-xs text-black/55 dark:text-white/55">
-                  {trail.provenance && (
-                    <span class="relative z-10">
-                      <ProvenanceBadge
-                        action={trail.provenance.action}
-                        date={trail.provenance.date}
-                      />
-                    </span>
-                  )}
-                  {trail.meta.map((m) => (
-                    <span>{m}</span>
-                  ))}
-                  {trail.latest && (
-                    <span>
-                      latest ·{" "}
-                      <Link
-                        href={trail.latest.href}
-                        class="relative z-10 font-sans text-xs"
-                      >
-                        {trail.latest.title}
-                      </Link>
-                    </span>
-                  )}
-                </div>
-                <p class="m-0 max-w-[38rem] text-sm leading-relaxed text-black/65 dark:text-white/65">
-                  {trail.blurb}
-                </p>
+                  {trail.stat?.n}
+                </span>
+                <span class="font-mono text-xs uppercase tracking-[0.18em] text-black/55 dark:text-white/55">
+                  {trail.stat?.unit}
+                </span>
               </div>
 
-              {trail.stat && (
-                <div class="flex min-w-[7rem] flex-col gap-1 md:items-end">
-                  <span class="font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55">
-                    {trail.stat.unit}
-                  </span>
-                  <span
-                    class="font-heading text-3xl font-normal leading-none tracking-tight text-black md:text-[2.1rem] dark:text-white"
-                    style="font-variant-numeric: tabular-nums;"
+              <div class="col-span-2 flex min-w-0 flex-col gap-2.5 md:col-span-1 md:pt-1.5">
+                {/* Stretched-link slug. The ::before pseudo extends the
+                    click target across the entire <li> (positioned
+                    ancestor); MetaLine links opt back into pointer
+                    events with relative z-10. */}
+                <div class="flex items-baseline gap-3 text-xl">
+                  <Link
+                    href={trail.href}
+                    class="font-heading text-xl font-medium leading-[1.1] tracking-[-0.013em] text-black no-underline transition-colors duration-300 ease-in-out group-hover:text-(--accent) before:absolute before:inset-0 before:content-[''] dark:text-white"
                   >
-                    {trail.stat.n}
-                  </span>
-                  {/* Mini-viz tucked under the headline number — wiki
-                      concept cluster, reading 12-week cadence, labs
-                      sparkline. Width matches the row's right-column
-                      minimum so the viz aligns with the value's
-                      baseline grid; height (h-10) matches the value's
-                      line-height so the viz sits as one more line of
-                      the right-column rhythm. mt-3 picks up the row's
-                      gap-y-3. */}
-                  <div class="mt-3 w-32 text-black/65 sm:w-40 dark:text-white/65">
-                    {trail.key === "wiki" && (
-                      <svg
-                        viewBox="0 0 80 40"
-                        aria-hidden="true"
-                        class="h-10 w-full"
-                        preserveAspectRatio="xMaxYMid meet"
-                      >
-                        <line x1="12" y1="22" x2="32" y2="10" stroke="currentColor" stroke-width="0.5" opacity="0.3" />
-                        <line x1="32" y1="10" x2="54" y2="24" stroke="currentColor" stroke-width="0.5" opacity="0.3" />
-                        <line x1="54" y1="24" x2="68" y2="14" stroke="currentColor" stroke-width="0.5" opacity="0.3" />
-                        <line x1="32" y1="10" x2="40" y2="30" stroke="currentColor" stroke-width="0.5" opacity="0.3" />
-                        <line x1="40" y1="30" x2="54" y2="24" stroke="currentColor" stroke-width="0.5" opacity="0.3" />
-                        <circle cx="12" cy="22" r="1.6" fill="currentColor" opacity="0.7" />
-                        <circle cx="32" cy="10" r="2.2" fill="var(--accent)" />
-                        <circle cx="40" cy="30" r="1.6" fill="currentColor" opacity="0.7" />
-                        <circle cx="54" cy="24" r="2" fill="currentColor" opacity="0.85" />
-                        <circle cx="68" cy="14" r="1.4" fill="currentColor" opacity="0.6" />
-                      </svg>
-                    )}
-                    {trail.key === "reading" && (
-                      <svg
-                        viewBox="0 0 80 40"
-                        aria-hidden="true"
-                        class="h-10 w-full"
-                        preserveAspectRatio="none"
-                      >
-                        {cadenceBuckets.map((v, idx) => {
-                          const barW = 80 / WEEKS - 1.4;
-                          const x = idx * (80 / WEEKS) + 0.7;
-                          const h = Math.max(2, (v / cadenceMax) * 36);
-                          const y = 38 - h;
-                          const isCurrent = idx === WEEKS - 1;
-                          return (
-                            <rect
-                              x={x}
-                              y={y}
-                              width={barW}
-                              height={h}
-                              fill={isCurrent ? "var(--accent)" : "currentColor"}
-                              opacity={isCurrent ? 1 : 0.55}
-                            />
-                          );
-                        })}
-                      </svg>
-                    )}
-                    {trail.key === "labs" && labSparkValues && labSparkValues.length > 0 && (
-                      <Sparkline data={labSparkValues} height={40} />
-                    )}
-                  </div>
+                    /{trail.key}
+                  </Link>
+                  <span class="hover-arrow" aria-hidden="true">→</span>
                 </div>
-              )}
+                <p class="m-0 max-w-[44ch] text-sm leading-relaxed text-black/65 dark:text-white/65">
+                  {trail.blurb}
+                </p>
+                {trail.provenance && (
+                  <MetaLine
+                    class="relative z-10 mt-0.5"
+                    segments={[
+                      trail.provenance.action,
+                      { date: trail.provenance.date },
+                      ...(trail.latest
+                        ? [
+                            "latest",
+                            { text: trail.latest.title, href: trail.latest.href, sans: true },
+                          ]
+                        : []),
+                    ]}
+                  />
+                )}
+              </div>
+
+              <div class="col-span-2 w-[200px] max-w-full text-black/65 md:col-span-1 md:pt-2.5 dark:text-white/65">
+                {trail.key === "wiki" && (
+                  <svg
+                    viewBox="0 0 80 40"
+                    aria-hidden="true"
+                    class="h-[84px] w-full"
+                    preserveAspectRatio="xMaxYMid meet"
+                  >
+                    <line x1="12" y1="22" x2="32" y2="10" stroke="currentColor" stroke-width="0.5" opacity="0.3" />
+                    <line x1="32" y1="10" x2="54" y2="24" stroke="currentColor" stroke-width="0.5" opacity="0.3" />
+                    <line x1="54" y1="24" x2="68" y2="14" stroke="currentColor" stroke-width="0.5" opacity="0.3" />
+                    <line x1="32" y1="10" x2="40" y2="30" stroke="currentColor" stroke-width="0.5" opacity="0.3" />
+                    <line x1="40" y1="30" x2="54" y2="24" stroke="currentColor" stroke-width="0.5" opacity="0.3" />
+                    {/* Ambient life: nodes twinkle on a 7s cycle with offset
+                        phases; the accent node — the most recently compiled
+                        concept — breathes. Full motion only. */}
+                    <circle
+                      class="node-twinkle"
+                      style="--twinkle-delay: 0.8s; --node-opacity: 0.7;"
+                      cx="12"
+                      cy="22"
+                      r="1.6"
+                      fill="currentColor"
+                      opacity="0.7"
+                    />
+                    <circle class="node-pulse" cx="32" cy="10" r="2.2" fill="var(--accent)" />
+                    <circle
+                      class="node-twinkle"
+                      style="--twinkle-delay: 3.4s; --node-opacity: 0.7;"
+                      cx="40"
+                      cy="30"
+                      r="1.6"
+                      fill="currentColor"
+                      opacity="0.7"
+                    />
+                    <circle
+                      class="node-twinkle"
+                      style="--twinkle-delay: 5.6s; --node-opacity: 0.85;"
+                      cx="54"
+                      cy="24"
+                      r="2"
+                      fill="currentColor"
+                      opacity="0.85"
+                    />
+                    <circle
+                      class="node-twinkle"
+                      style="--twinkle-delay: 1.9s; --node-opacity: 0.6;"
+                      cx="68"
+                      cy="14"
+                      r="1.4"
+                      fill="currentColor"
+                      opacity="0.6"
+                    />
+                  </svg>
+                )}
+                {trail.key === "reading" && (
+                  <svg
+                    viewBox="0 0 80 40"
+                    aria-hidden="true"
+                    class="h-[84px] w-full"
+                    preserveAspectRatio="none"
+                  >
+                    {cadenceBuckets.map((v, idx) => {
+                      const barW = 80 / WEEKS - 1.4;
+                      const x = idx * (80 / WEEKS) + 0.7;
+                      const h = Math.max(2, (v / cadenceMax) * 36);
+                      const y = 38 - h;
+                      const isCurrent = idx === WEEKS - 1;
+                      return (
+                        <rect
+                          class="bar-rise"
+                          style={`--bar-delay: ${idx * 45}ms;`}
+                          x={x}
+                          y={y}
+                          width={barW}
+                          height={h}
+                          fill={isCurrent ? "var(--accent)" : "currentColor"}
+                          opacity={isCurrent ? 1 : 0.55}
+                        />
+                      );
+                    })}
+                  </svg>
+                )}
+                {trail.key === "labs" && labSparkValues && labSparkValues.length > 0 && (
+                  <Sparkline data={labSparkValues} width={200} height={84} variant="line" draw />
+                )}
+              </div>
             </li>
           ))
         }
       </ol>
-    </section>
+    </div>
 
     <EditorialRule />
 

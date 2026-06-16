@@ -180,6 +180,39 @@ const breadcrumbSchema = breadcrumbs?.length
   } else {
     sessionStorage.setItem("introPlayed", "1");
   }
+
+  // Motion layer ("Alive") pre-paint markers. `alive` scopes every
+  // initially-hidden entrance state — without JS the class never lands and
+  // nothing hides. data-motion picks the level (off/calm/full); reduced
+  // motion forces off here AND via !important media queries in global.css.
+  document.documentElement.classList.add("alive");
+  document.documentElement.dataset.motion = window.matchMedia(
+    "(prefers-reduced-motion: reduce)",
+  ).matches
+    ? "off"
+    : localStorage.getItem("motion") || "full";
+
+  // data-mounted starts the entrance stagger. Deliberately in THIS inline
+  // script — the same failure domain as the class that hides .reveal
+  // blocks, so nothing can stay hidden if a bundled script never loads.
+  // Anchored to DOMContentLoaded: this script runs while <head> is still
+  // parsing, and rAFs scheduled here would fire before the .reveal blocks
+  // exist, mounting them pre-settled with no entrance. The two rAFs after
+  // DCL guarantee one painted frame in the hidden state to transition from.
+  (function () {
+    var mount = function () {
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+          document.documentElement.dataset.mounted = "1";
+        });
+      });
+    };
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", mount);
+    } else {
+      mount();
+    }
+  })();
 </script>
 
 <!-- Primary Meta Tags.
