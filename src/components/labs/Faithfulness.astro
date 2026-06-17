@@ -155,9 +155,7 @@ for (const article of data.articles) {
 }
 
 // Disagreements first, then by claim volume, then alphabetical.
-rows.sort(
-  (a, b) => b.disagree - a.disagree || b.total - a.total || a.slug.localeCompare(b.slug),
-);
+rows.sort((a, b) => b.disagree - a.disagree || b.total - a.total || a.slug.localeCompare(b.slug));
 // Hard flips (step 2) before boundary calls (step 1), so the sharpest
 // disagreement reads first.
 allDisagreements.sort((a, b) => b.step - a.step);
@@ -217,7 +215,7 @@ const judgeBars = [HAIKU, SONNET].map((m) => {
       </span>
       <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <span
-          class="font-heading text-4xl font-medium leading-none tracking-tight text-black md:text-5xl dark:text-white"
+          class="font-heading text-4xl font-normal leading-none tracking-tight text-black md:text-5xl dark:text-white"
           style="font-variant-numeric: tabular-nums;"
         >
           {supportedPct}%
@@ -292,7 +290,7 @@ const judgeBars = [HAIKU, SONNET].map((m) => {
       </span>
       <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <span
-          class="font-heading text-4xl font-medium leading-none tracking-tight text-black md:text-5xl dark:text-white"
+          class="font-heading text-4xl font-normal leading-none tracking-tight text-black md:text-5xl dark:text-white"
           style="font-variant-numeric: tabular-nums;"
         >
           {agreePct}%
