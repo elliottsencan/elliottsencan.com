@@ -15,6 +15,7 @@ sources:
   - >-
     2026-05/2026-05-12t165232-seven-cool-javascript-libraries-you-should-know-about
   - 2026-06/2026-06-13t081411-signals-the-push-pull-based-algorithm
+  - 2026-06/2026-06-17t075738-gunnargray-devunicode-animations
 compiled_at: '2026-05-06T04:20:25.103Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -32,7 +33,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.016326
-last_source_added: '2026-06-13T15:14:11.621Z'
+last_source_added: '2026-06-17T14:57:38.838Z'
 ---
 The core of API design is the contract between a module and its callers: what is exposed, what is hidden, and how much the caller must know to use it correctly. Four sources touch this from different angles, all arriving at the same conclusion: leaky, wide, or unvalidated interfaces create problems at scale.
 
