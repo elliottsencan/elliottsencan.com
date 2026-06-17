@@ -16,6 +16,27 @@ export const readingCategories = ["tech", "design", "music", "essay", "news", "o
 
 export const ReadingCategorySchema = z.enum(readingCategories);
 
+// Document *form/medium* — an axis orthogonal to `category` (which is domain).
+// `category` answers "what is this about?", `kind` answers "what form is it?".
+// They compose freely: a design doc about music is { kind: "design-doc",
+// category: "music" }. Closed enum so it stays scannable and filterable; the
+// ingest prompt (LINK_SUMMARY_SYSTEM) carries the disambiguation rules.
+export const readingKinds = [
+  "article",
+  "paper",
+  "repository",
+  "tool",
+  "component-library",
+  "design-doc",
+  "documentation",
+  "book",
+  "video",
+  "thread",
+  "other",
+] as const;
+
+export const ReadingKindSchema = z.enum(readingKinds);
+
 export const NowFrontmatterSchema = z.object({
   title: z.string(),
   description: z.string(),
@@ -61,6 +82,11 @@ export const ReadingFrontmatterSchema = z.object({
   url: z.url(),
   summary: z.string(),
   category: ReadingCategorySchema,
+  // Document form/medium (see `readingKinds`). `.default()` rather than
+  // `.optional()` so entries written before the field existed validate
+  // untouched AND `entry.data.kind` is always present for downstream code —
+  // a legacy entry with no `kind` in frontmatter reads as "article".
+  kind: ReadingKindSchema.default("article"),
   added: z.coerce.date(),
   author: z.string().optional(),
   source: z.string().optional(),

@@ -130,6 +130,11 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
                       <span class="inline-flex items-center rounded-sm bg-black/5 px-2 py-0.5 text-xs capitalize text-black/65 dark:bg-white/5 dark:text-white/65">
                         {entry.data.category}
                       </span>
+                      {entry.data.kind !== "article" && (
+                        <span class="inline-flex items-center rounded-sm border border-black/15 px-2 py-0.5 text-xs lowercase text-black/55 dark:border-white/15 dark:text-white/55">
+                          {entry.data.kind}
+                        </span>
+                      )}
                       {(citingByEntry.get(entry.id) ?? []).map((ref) => (
                         <span class="inline-flex items-baseline gap-1 font-heading text-xs text-[color:var(--accent)]">
                           <span aria-hidden="true">→</span>

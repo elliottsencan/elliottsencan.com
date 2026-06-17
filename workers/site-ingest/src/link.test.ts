@@ -142,6 +142,7 @@ const baseSummary: LinkSummary = {
   title: "Hello World",
   summary: "A short summary.",
   category: "tech",
+  kind: "article",
   topics: ["topic-a", "topic-b"],
   model: "claude-sonnet-4-6",
   cost: {
@@ -184,6 +185,15 @@ describe("buildEntryMarkdown", () => {
       cost_usd: 0.001,
     });
   });
+
+  it("persists the document kind into frontmatter", () => {
+    const { data } = parseEntry(buildEntryMarkdown(baseArgs));
+    expect(data.kind).toBe("article");
+    const repo = parseEntry(
+      buildEntryMarkdown({ ...baseArgs, summary: { ...baseSummary, kind: "repository" } }),
+    );
+    expect(repo.data.kind).toBe("repository");
+  });
 });
 
 // ---------- LinkSummarySchema ----------
@@ -193,6 +203,7 @@ describe("LinkSummarySchema", () => {
     title: "Some Article",
     summary: "Short summary.",
     category: "tech" as const,
+    kind: "article" as const,
     topics: ["mcp"],
   };
 
@@ -685,6 +696,7 @@ describe("makeLinkStrategy.plan — wiki sources[] patch", () => {
         title: "Article",
         summary: "Summary.",
         category: "tech",
+        kind: "article",
         topics: ["ai-assisted-coding"],
         model: "claude-sonnet-4-6",
         cost: {
@@ -746,6 +758,7 @@ describe("makeLinkStrategy.plan — wiki sources[] patch", () => {
         title: "X",
         summary: "x.",
         category: "tech",
+        kind: "article",
         topics: ["a-very-novel-topic"],
         model: "claude-sonnet-4-6",
         cost: {
@@ -810,6 +823,7 @@ describe("makeLinkStrategy.plan — wiki sources[] patch", () => {
         title: "Article",
         summary: "x.",
         category: "tech",
+        kind: "article",
         topics: ["ai-coding-assistants"],
         model: "claude-sonnet-4-6",
         cost: {
@@ -1149,6 +1163,7 @@ describe("makeLinkStrategy.plan — threshold trigger surfaces in summary", () =
         title: "Article",
         summary: "x.",
         category: "tech",
+        kind: "article",
         topics: ["new-concept"],
         model: "claude-sonnet-4-6",
         cost: {
@@ -1210,6 +1225,7 @@ describe("makeLinkStrategy.plan — threshold trigger surfaces in summary", () =
         title: "Article",
         summary: "x.",
         category: "tech",
+        kind: "article",
         topics: ["existing-concept"],
         model: "claude-sonnet-4-6",
         cost: {
@@ -1427,6 +1443,7 @@ describe("makeLinkStrategy.plan — dry_run", () => {
         title: "Article",
         summary: "Summary.",
         category: "tech",
+        kind: "article",
         topics: ["ai-assisted-coding"],
         model: "claude-sonnet-4-6",
         cost: {
@@ -1492,6 +1509,7 @@ describe("link.handle — dry_run", () => {
         title: "X",
         summary: "x.",
         category: "tech",
+        kind: "article",
         topics: ["topic-a"],
         model: "claude-sonnet-4-6",
         cost: {

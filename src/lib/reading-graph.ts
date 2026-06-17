@@ -31,6 +31,7 @@ export type ReadingGraphEntry = {
   url: string;
   summary: string;
   category: string;
+  kind: string;
   added: string;
   author: string | undefined;
   source: string | undefined;
@@ -46,6 +47,7 @@ export type ReadingGraphPayload = {
   generated_at: string;
   count: number;
   categories: string[];
+  kinds: string[];
   entries: ReadingGraphEntry[];
 };
 
@@ -60,6 +62,8 @@ export type ReadingInput = {
     url: string;
     summary: string;
     category: string;
+    /** Document form/medium. Defaulted to "article" by the schema. */
+    kind?: string;
     added: Date;
     author?: string;
     source?: string;
@@ -146,6 +150,7 @@ export function buildReadingGraph(
     generated_at: new Date().toISOString(),
     count: entries.length,
     categories: [...new Set(entries.map((e) => e.data.category))].sort(),
+    kinds: [...new Set(entries.map((e) => e.data.kind ?? "article"))].sort(),
     entries: entries.map((entry) => {
       const canonicalTopics = canonicalTopicsBySlug.get(entry.id) ?? [];
       const related: Related[] = [];
@@ -182,6 +187,7 @@ export function buildReadingGraph(
         url: entry.data.url,
         summary: entry.data.summary,
         category: entry.data.category,
+        kind: entry.data.kind ?? "article",
         added: entry.data.added.toISOString(),
         author: entry.data.author,
         source: entry.data.source,
