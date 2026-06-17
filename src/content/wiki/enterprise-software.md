@@ -15,6 +15,7 @@ sources:
     2026-05/2026-05-08t112608-your-onboarding-is-a-hazing-ritual-and-you-call-it-agile
   - >-
     2026-06/2026-06-04t195339-how-anthropic-enables-self-service-data-analytics-with
+  - 2026-06/2026-06-17t124905-the-competitive-moat-that-ai-cant-replicate
 compiled_at: 2026-05-04T04:08:24.933Z
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -32,7 +33,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.015162
-last_source_added: '2026-06-05T02:53:39.783Z'
+last_source_added: '2026-06-17T19:49:05.729Z'
 ---
 Enterprise software is distinguished less by feature count than by the organizational constraints it must satisfy: compliance certifications, audit trails, role-based access, and integration with existing infrastructure. These concerns show up across the sources here in different ways.
 

@@ -45,6 +45,7 @@ sources:
   - 2026-06/2026-06-13t083239-claude-fable-is-relentlessly-proactive
   - 2026-06/2026-06-13t083401-sgupai-fable5md
   - 2026-06/2026-06-14t091145-001tmfharness-forge
+  - 2026-06/2026-06-17t124905-the-competitive-moat-that-ai-cant-replicate
 aliases:
   - large-language-models
 compiled_at: '2026-05-20T15:02:11.760Z'
@@ -64,7 +65,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.038964
-last_source_added: '2026-06-14T16:11:45.522Z'
+last_source_added: '2026-06-17T19:49:05.729Z'
 ---
 LLM engineering is the set of practices for designing, building, and operating software systems built around large language models. The sources here span several interrelated concerns: how to structure knowledge for LLM consumption, how to wire agent behavior reliably, how to manage inference costs, and what happens when the discipline is applied carelessly.
 

@@ -10,6 +10,7 @@ sources:
     2026-05/2026-05-02t155432-cognitive-offloading-and-ai-how-reliance-on-llms-affects
   - 2026-05/2026-05-28t074225-welcome-robot-overlords-please-dont-fire-us
   - 2026-06/2026-06-09t190614-what-it-feels-like-to-work-with-mythos
+  - 2026-06/2026-06-17t124905-the-competitive-moat-that-ai-cant-replicate
 compiled_at: '2026-06-03T04:30:24.420Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -27,7 +28,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.013158
-last_source_added: '2026-06-10T02:06:14.363Z'
+last_source_added: '2026-06-17T19:49:05.729Z'
 ---
 The standard optimistic framing of automation holds that new technologies displace some jobs while creating others, leaving employment roughly intact over time. [Kevin Drum's 2013 essay](/reading/2026-05/2026-05-28t074225-welcome-robot-overlords-please-dont-fire-us) challenges that pattern directly: Moore's Law trajectories suggest AI will reach human-level capability around 2040, and unlike previous automation waves, this one targets cognitive work broadly enough that entire job classes may be eliminated without equivalent replacements emerging on a useful timescale.
 

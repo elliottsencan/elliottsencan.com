@@ -15,6 +15,7 @@ sources:
   - >-
     2026-05/2026-05-31t072101-the-ai-model-pricing-war-is-here-and-your-margins-depend-on
   - 2026-06/2026-06-02t212937-no-mcp-is-definitely-not-dead-the-nsa-agrees
+  - 2026-06/2026-06-17t124905-the-competitive-moat-that-ai-cant-replicate
 aliases:
   - startup-ecosystem
 compiled_at: '2026-05-04T03:37:21.522Z'
@@ -34,7 +35,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.015531
-last_source_added: '2026-06-03T04:29:37.253Z'
+last_source_added: '2026-06-17T19:49:05.729Z'
 ---
 Platform strategy describes how a product or company positions itself as a substrate that others depend on, rather than a feature among competing features. The sources here illustrate three distinct angles on that idea.
 

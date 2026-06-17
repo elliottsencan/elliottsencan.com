@@ -9,6 +9,7 @@ sources:
   - >-
     2026-05/2026-05-02t155432-cognitive-offloading-and-ai-how-reliance-on-llms-affects
   - 2026-05/2026-05-28t074225-welcome-robot-overlords-please-dont-fire-us
+  - 2026-06/2026-06-17t124905-the-competitive-moat-that-ai-cant-replicate
 compiled_at: '2026-06-03T04:30:13.311Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -26,6 +27,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.011748
+last_source_added: '2026-06-17T19:49:05.729Z'
 ---
 The two main concerns running through the cited sources are timing and irreversibility. [Kevin Drum's 2013 essay](/reading/2026-05/2026-05-28t074225-welcome-robot-overlords-please-dont-fire-us) argues that Moore's Law will deliver human-level AI around 2040, and that unlike earlier waves of mechanization, this one will eliminate whole classes of cognitive work with no obvious replacement employment waiting on the other side. Previous automation displaced muscles; this wave displaces judgment.
 
