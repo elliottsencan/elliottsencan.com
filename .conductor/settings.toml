@@ -1,0 +1,14 @@
+"$schema" = "https://conductor.build/schemas/settings.repo.schema.json"
+
+# Copy gitignored static secrets into every new workspace:
+#   .env*                          -> optional GITHUB_TOKEN for the build-time contributions rail
+#   workers/site-ingest/.dev.vars  -> local secrets for `wrangler dev` (skipped if absent)
+file_include_globs = ".env*\nworkers/site-ingest/.dev.vars\n"
+
+[scripts]
+# Install site deps, then the standalone worker's deps (separate lockfile, no root workspace).
+setup = "pnpm install && pnpm -C workers/site-ingest install"
+# Astro dev on a per-workspace port; predev hook regenerates constellation + labs data first.
+run = "pnpm dev --port $CONDUCTOR_PORT"
+# Each workspace gets its own port and worktree; no shared local resource to serialize on.
+run_mode = "concurrent"
