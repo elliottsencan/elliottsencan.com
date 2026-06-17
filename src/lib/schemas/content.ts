@@ -21,6 +21,10 @@ export const ReadingCategorySchema = z.enum(readingCategories);
 // They compose freely: a design doc about music is { kind: "design-doc",
 // category: "music" }. Closed enum so it stays scannable and filterable; the
 // ingest prompt (LINK_SUMMARY_SYSTEM) carries the disambiguation rules.
+// NOTE: this list is hand-duplicated in two places that must stay in sync —
+// the `kind` enum in LINK_SUMMARY_SYSTEM (workers/site-ingest/src/prompts.ts)
+// and the documented values in .claude/skills/reading/SKILL.md. Update all
+// three together when adding or renaming a kind.
 export const readingKinds = [
   "article",
   "paper",
@@ -365,6 +369,7 @@ export const BlogFrontmatterSchema = z.object({
 
 export type CompileCost = z.infer<typeof CompileCostSchema>;
 export type ReadingCategory = z.infer<typeof ReadingCategorySchema>;
+export type ReadingKind = z.infer<typeof ReadingKindSchema>;
 export type NowFrontmatter = z.infer<typeof NowFrontmatterSchema>;
 export type NowArchiveFrontmatter = z.infer<typeof NowArchiveFrontmatterSchema>;
 export type ReadingFrontmatter = z.infer<typeof ReadingFrontmatterSchema>;

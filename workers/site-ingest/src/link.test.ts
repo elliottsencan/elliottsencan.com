@@ -230,6 +230,14 @@ describe("LinkSummarySchema", () => {
     });
     expect(r.success).toBe(false);
   });
+
+  it("requires kind and rejects a value outside the enum", () => {
+    // kind is the contract handed to the model via zodOutputFormat; loosening
+    // it (made optional, or an out-of-enum value sneaking through) must fail.
+    const { kind: _omit, ...withoutKind } = validBase;
+    expect(LinkSummarySchema.safeParse(withoutKind).success).toBe(false);
+    expect(LinkSummarySchema.safeParse({ ...validBase, kind: "blogpost" }).success).toBe(false);
+  });
 });
 
 // ---------- copyright-posture: opt-out + host blocklist in strategy.plan ----------
@@ -333,6 +341,9 @@ describe("makeLinkStrategy.plan — copyright-posture", () => {
     expect(fm.opted_out).toBe("x-robots-tag");
     expect(fm.summary).toBe(OPT_OUT_STUB_SUMMARY);
     expect(fm.category).toBe("other");
+    // Deliberately "other", not the schema default "article": there's no body
+    // to classify a form from. Guards link.ts:buildOptOutStubMarkdown.
+    expect(fm.kind).toBe("other");
     expect(fm.compiled_with).toBe("manual:opt-out-stub");
     expect(result.data.summary?.opted_out).toBe("x-robots-tag");
     summarizeSpy.mockRestore();

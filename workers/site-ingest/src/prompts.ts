@@ -89,6 +89,10 @@ ${reference}`;
 
 // ---------- link summary ----------
 
+// The `kind` enum embedded in this prompt is hand-duplicated from
+// `readingKinds` in @shared/schemas/content.ts (the LinkSummarySchema validates
+// against that same enum, so a desync would just reject the model's output).
+// Keep the list here in sync when readingKinds changes.
 export const LINK_SUMMARY_SYSTEM = `You summarize and categorize articles for Elliott's personal reading archive on elliottsencan.com.
 
 Given an article title, URL, and optional excerpt or page text, produce ONE JSON object with these exact fields:

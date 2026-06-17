@@ -135,6 +135,7 @@ describe("buildRecompiledMarkdown", () => {
       url: "https://example.com/post",
       summary: "A short summary.",
       category: "tech",
+      kind: "article",
       added: "2026-04-01T00:00:00.000Z",
       compiled_at: "2026-04-24T00:00:00.000Z",
       compiled_with: "claude-sonnet-4-6",
