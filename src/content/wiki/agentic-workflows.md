@@ -42,6 +42,8 @@ sources:
   - 2026-06/2026-06-14t091145-001tmfharness-forge
   - 2026-06/2026-06-14t094245-agentswarms
   - 2026-06/2026-06-15t021106-formal-methods-and-the-future-of-programming
+  - >-
+    2026-06/2026-06-17t130655-the-founders-playbook-building-an-ai-native-startup
 compiled_at: 2026-05-04T03:36:22.698Z
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -59,7 +61,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.016995
-last_source_added: '2026-06-15T09:11:06.406Z'
+last_source_added: '2026-06-17T20:06:55.435Z'
 ---
 Agentic workflows are pipelines in which an AI model takes sequences of actions, using tools, memory, and external services, to complete tasks that unfold over multiple steps. The design decisions made at each layer, tool access, memory architecture, [orchestration topology, and observability](/wiki/systems-design), determine whether the system performs reliably or compounds failures.
 

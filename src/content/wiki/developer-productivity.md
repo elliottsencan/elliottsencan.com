@@ -31,6 +31,8 @@ sources:
   - 2026-05/2026-05-31t164252-reviewing-large-changes-with-jujutsu
   - 2026-06/2026-06-11t111011-hows-linear-so-fast-a-technical-breakdown
   - 2026-06/2026-06-17t075816-matt-palmer
+  - >-
+    2026-06/2026-06-17t130655-the-founders-playbook-building-an-ai-native-startup
 compiled_at: '2026-05-20T15:01:18.268Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -48,7 +50,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.028065
-last_source_added: '2026-06-17T14:58:16.253Z'
+last_source_added: '2026-06-17T20:06:55.435Z'
 ---
 The word "productivity" in software development usually means writing more code faster. A cluster of recent thinking challenges that framing by pointing to where the actual bottlenecks live.
 
