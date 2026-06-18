@@ -27,9 +27,6 @@ sources:
   - 2026-05/2026-05-31t164554-jj-vcsjj
   - >-
     2026-06/2026-06-10t223404-how-to-read-distributed-traces-when-you-didnt-write-the-code
-aliases:
-  - fault-tolerance
-  - stateful-computing
 compiled_at: '2026-06-18T21:45:09.664Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:

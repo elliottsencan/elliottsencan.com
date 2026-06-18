@@ -37,8 +37,6 @@ sources:
   - 2026-06/2026-06-17t075738-gunnargray-devunicode-animations
   - 2026-06/2026-06-17t075816-matt-palmer
   - 2026-06/2026-06-18t024208-the-git-commands-i-run-before-reading-any-code
-aliases:
-  - developer-experience
 compiled_at: '2026-06-18T21:44:20.068Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
