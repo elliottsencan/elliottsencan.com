@@ -1,23 +1,26 @@
 ---
 title: Software engineering
 summary: >-
-  A broad discipline covering code quality, tooling, architecture, testing, and
-  professional practice, where recurring sources argue that engineering judgment
-  remains the scarce resource regardless of how much automation enters the
-  workflow.
+  A discipline spanning design principles, tooling, testing, security, and
+  organizational practice — with AI integration now reframing questions about
+  skill, ownership, and quality at every layer.
 sources:
-  - 2026-04/2026-04-27t114426-dont-prompt-your-agent-for-reliability-engineer-it
   - 2026-04/2026-04-27t145041-agentic-coding-is-a-trap
+  - >-
+    2026-04/2026-04-30t155134-learn-algorithms-for-interviews-forget-them-for-work
+  - 2026-04/2026-04-30t195531-what-ci-actually-looks-like-at-a-100-person-team
   - 2026-04/2026-04-30t230919-dmytro-mezhenskyi-udmezhenskyi-on-reddit
   - 2026-04/2026-04-30t231027-munificentcraftinginterpreters
+  - >-
+    2026-04/2026-04-30t231634-supply-chain-attack-using-invisible-code-hits-github-and
   - >-
     2026-04/2026-04-30t231815-shell-tricks-that-actually-make-life-easier-and-save-your
   - 2026-04/2026-04-30t231909-the-great-css-expansion
   - >-
     2026-04/2026-04-30t232001-a-better-way-to-build-angular-components-from-inputs-to
+  - 2026-05/2026-05-02t094735-approaching-zero-bugs
   - 2026-05/2026-05-03t103944-the-lobster-in-the-hot-pot
-  - >-
-    2026-05/2026-05-03t110032-getting-up-to-speed-on-multi-agent-systems-part-3-wave-1
+  - 2026-05/2026-05-03t110114-getting-up-to-speed-on-multi-agent-systems-part-7
   - 2026-05/2026-05-04t231343-ai-likes-deep-modules
   - >-
     2026-05/2026-05-04t231548-using-ssh-keys-to-make-connectivity-simpler-and-secure
@@ -43,14 +46,14 @@ sources:
   - 2026-05/2026-05-15t120337-playwright-testing-in-staging-vs-production
   - 2026-05/2026-05-17t204925-why-most-developers-cant-use-ai-effectively
   - 2026-05/2026-05-18t113714-yaml-thats-norway-problem
-  - 2026-05/2026-05-18t221205-walkinglabslearn-harness-engineering
   - >-
     2026-05/2026-05-19t110710-the-tacit-dimension-why-your-best-engineers-cant-tell-you
+  - 2026-05/2026-05-19t193626-slow-mode
   - 2026-05/2026-05-19t221035-effective-harnesses-for-long-running-agents
   - 2026-05/2026-05-22t091746-when-code-is-cheap-does-quality-still-matter
   - >-
     2026-05/2026-05-27t181744-ruby-vs-java-vs-typescript-my-experience-on-building-a
-  - 2026-05/2026-05-30t210309-90percent-of-the-t-distribution
+  - 2026-05/2026-05-28t074225-welcome-robot-overlords-please-dont-fire-us
   - 2026-05/2026-05-31t164252-reviewing-large-changes-with-jujutsu
   - 2026-05/2026-05-31t164554-jj-vcsjj
   - 2026-06/2026-06-04t073318-single-responsibility-the-distorted-principle
@@ -59,20 +62,19 @@ sources:
     2026-06/2026-06-10t220929-navigating-the-age-old-problem-of-checkmarks-in-ui-with
   - >-
     2026-06/2026-06-10t223404-how-to-read-distributed-traces-when-you-didnt-write-the-code
-  - 2026-06/2026-06-11t023723-gi-dellavzerostack
+  - 2026-06/2026-06-11t023056-what-we-built-in-2-weeks-zerostack
   - 2026-06/2026-06-11t024225-testing-a-security-tool-like-it-can-hurt-people
-  - 2026-06/2026-06-13t083401-sgupai-fable5md
   - 2026-06/2026-06-15t021106-formal-methods-and-the-future-of-programming
   - 2026-06/2026-06-17t075738-gunnargray-devunicode-animations
   - 2026-06/2026-06-18t024208-the-git-commands-i-run-before-reading-any-code
   - >-
     2026-06/2026-06-18t090801-how-i-audit-a-legacy-rails-codebase-in-the-first-week
-compiled_at: '2026-06-18T21:56:08.689Z'
+compiled_at: '2026-06-18T22:54:16.254Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 14143
-    output_tokens: 1855
+    input_tokens: 14726
+    output_tokens: 2288
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -83,22 +85,20 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.070254
+  cost_usd: 0.078498
 ---
-Software engineering as a discipline resists clean definition, but a common thread across recent technical writing is that the hard problems have never been purely about writing code. [The Typical Set](/reading/2026-05/2026-05-06t110728-the-bottleneck-was-never-the-code) puts it plainly: the real bottleneck is organizational — shared context, specification clarity, and management coherence. Code generation, whether by hand or by agent, amplifies whatever alignment or misalignment already exists in a team.
+Software engineering resists a single definition, and the sources gathered here reflect that breadth: they touch design principles, version control, testing strategies, shell tooling, security, language ecosystems, and the organizational fabric that makes or breaks technical work. What connects them is a recurring tension between speed and understanding, between automation and ownership.
 
-Code quality surfaces repeatedly as a concern independent of how code gets produced. [Yusuf Aytas](/reading/2026-05/2026-05-22t091746-when-code-is-cheap-does-quality-still-matter) argues that LLMs lowered the cost of producing code but not the cost of owning it: AI-generated code can look polished while encoding bad decisions at machine speed, making engineering taste and judgment more valuable, not less. [Go Monk](/reading/2026-05/2026-05-04t231343-ai-likes-deep-modules) adds a structural point — codebases built around deep modules with interfaces that hide complexity serve both human and AI contributors better, because shallow abstractions force reasoning across too many layers at once. [Henrique Teixeira](/reading/2026-06/2026-06-04t073318-single-responsibility-the-distorted-principle) traces a related misreading: SRP is widely applied as "do one thing" when it actually concerns cohesion, and over-granular class splitting violates the cognitive simplicity the principle was meant to provide.
+On design, the Single Responsibility Principle [single-responsibility-the-distorted-principle](/reading/2026-06/2026-06-04t073318-single-responsibility-the-distorted-principle) and the case for deep modules [ai-likes-deep-modules](/reading/2026-05/2026-05-04t231343-ai-likes-deep-modules) both argue that the point of good structure is cognitive simplicity, not granularity for its own sake. Misreading SRP as "do only one thing" produces over-fragmented classes that are harder to reason about than cohesive ones. Deep modules, by contrast, hide large implementations behind small interfaces, reducing the surface area a reader or an LLM needs to understand before making a change. The Angular composition article [a-better-way-to-build-angular-components](/reading/2026-04/2026-04-30t232001-a-better-way-to-build-angular-components-from-inputs-to) applies the same logic at the component level: bloated input lists signal that a component has taken on too many concerns and should be decomposed into directives and sub-components.
 
-Testing practice runs through several sources. [Currents.dev](/reading/2026-05/2026-05-05t135218-designing-playwright-tests-that-survive-ui-refactors) diagnoses why Playwright suites break on UI refactors — coupling to CSS classes and DOM structure rather than semantic roles and explicit test attributes — and prescribes a tiered selector hierarchy and page-object patterns. The same team's [staging vs. production framework](/reading/2026-05/2026-05-15t120337-playwright-testing-in-staging-vs-production) addresses where different test types belong, with risk profiles determining which environments carry which suites. [Emphere Engineering](/reading/2026-06/2026-06-11t024225-testing-a-security-tool-like-it-can-hurt-people) takes this further for safety-sensitive systems: their assurance platform uses real-kernel runners and behavioral fixture invariants, plus red runs that confirm the system fails loudly rather than silently overclaiming certainty.
+Testing occupies several sources. The Playwright pieces [designing-playwright-tests-that-survive-ui-refactors](/reading/2026-05/2026-05-05t135218-designing-playwright-tests-that-survive-ui-refactors) and [playwright-testing-in-staging-vs-production](/reading/2026-05/2026-05-15t120337-playwright-testing-in-staging-vs-production) argue that test suites fail not primarily from bad selectors but from coupling to implementation details rather than semantic roles and stable accessibility names. CI at scale [what-ci-actually-looks-like-at-a-100-person-team](/reading/2026-04/2026-04-30t195531-what-ci-actually-looks-like-at-a-100-person-team) shows what happens when those problems compound across 575,000 weekly jobs: flaky tests need automated triage and root-cause tracing just to remain manageable. Daniel Stenberg's analysis of curl's bug history [approaching-zero-bugs](/reading/2026-05/2026-05-02t094735-approaching-zero-bugs) adds a sobering note: even with AI-assisted static analysis, there is no measurable signal yet that open-source projects are converging toward zero latent defects.
 
-Version control and code review have their own craft. [Ben Gesoff](/reading/2026-05/2026-05-31t164252-reviewing-large-changes-with-jujutsu) describes a Jujutsu workflow for reviewing large changes by incrementally squashing reviewed files into an empty parent commit, preserving progress without losing context. [jj itself](/reading/2026-05/2026-05-31t164554-jj-vcsjj) is presented as a Git-compatible VCS with cleaner undo history and first-class conflict handling. [Ally Piechowski's git log audit](/reading/2026-06/2026-06-18t024208-the-git-commands-i-run-before-reading-any-code) demonstrates that churn hotspots, bus factor, and bug clusters visible in git history diagnose codebase health before a single file is opened — a discipline continued in her [legacy Rails audit process](/reading/2026-06/2026-06-18t090801-how-i-audit-a-legacy-rails-codebase-in-the-first-week), which starts with stakeholder interviews before touching any tooling.
+Security surfaces in a supply-chain attack that encoded payloads in invisible Unicode variation-selector characters across 151 npm and GitHub packages [supply-chain-attack-using-invisible-unicode-code](/reading/2026-04/2026-04-30t231634-supply-chain-attack-using-invisible-code-hits-github-and). The attack bypassed code review and static analysis entirely, which is a practical argument for the kind of deterministic assurance testing [testing-a-security-tool-like-it-can-hurt-people](/reading/2026-06/2026-06-11t024225-testing-a-security-tool-like-it-can-hurt-people) that proves a tool fails loudly when it overclaims certainty. Formal methods, long considered too expensive for routine use, are now cost-effective enough to reconsider according to Jane Street's Yaron Minsky [formal-methods-and-the-future-of-programming](/reading/2026-06/2026-06-15t021106-formal-methods-and-the-future-of-programming), partly because agentic coding lowers the cost of writing proofs while simultaneously raising demand for verification that goes beyond tests.
 
-Tacit knowledge is a structural constraint that tooling cannot paper over. [Christian Ekrem](/reading/2026-05/2026-05-19t110710-the-tacit-dimension-why-your-best-engineers-cant-tell-you), drawing on Michael Polanyi, argues that pattern recognition, system intuition, and unwritten conventions are structurally inaccessible to AI tools and can only be transmitted through apprenticeship. [Anton Zaides](/reading/2026-06/2026-06-10t073045-the-unwritten-laws-of-software-engineering) catalogs a related set of hard-won rules — roll back before debugging, treat every external dependency as a future outage — that developers learn by breaking things in production. [Tuhin Nair](/reading/2026-05/2026-05-13t060018-why-senior-developers-fail-to-communicate-their-expertise) adds that senior engineers lose influence when they frame their work as complexity management rather than uncertainty reduction, which is how the rest of the business actually thinks.
+Version control and tooling form their own thread. Jujutsu [jj-vcsjj](/reading/2026-05/2026-05-31t164554-jj-vcsjj) auto-commits the working copy and records conflicts as first-class objects; the companion workflow article [reviewing-large-changes-with-jujutsu](/reading/2026-05/2026-05-31t164252-reviewing-large-changes-with-jujutsu) shows how to use jj's history model to make large-PR review tractable without cognitive overhead. Git archaeology [the-git-commands-i-run-before-reading-any-code](/reading/2026-06/2026-06-18t024208-the-git-commands-i-run-before-reading-any-code) and legacy codebase auditing [how-i-audit-a-legacy-rails-codebase-in-the-first-week](/reading/2026-06/2026-06-18t090801-how-i-audit-a-legacy-rails-codebase-in-the-first-week) treat the commit graph and schema as primary diagnostic documents before any tool is run. Shell fluency [shell-tricks-that-actually-make-life-easier](/reading/2026-04/2026-04-30t231815-shell-tricks-that-actually-make-life-easier-and-save-your) and SSH key management [using-ssh-keys-to-make-connectivity-simpler-and-secure](/reading/2026-05/2026-05-04t231548-using-ssh-keys-to-make-connectivity-simpler-and-secure) belong in the same category: infrastructure-adjacent habits that reduce friction and error. Container internals [how-container-filesystem-works](/reading/2026-05/2026-05-04t231858-how-container-filesystem-works-building-a-docker-like) and distributed tracing [how-to-read-distributed-traces-when-you-didnt-write-the-code](/reading/2026-06/2026-06-10t223404-how-to-read-distributed-traces-when-you-didnt-write-the-code) are in the same vein: understanding what is actually happening at runtime, rather than treating the system as a black box.
 
-Infrastructure fundamentals appear throughout. [Ivan Velichko](/reading/2026-05/2026-05-04t231858-how-container-filesystem-works-building-a-docker-like) walks through building Docker-style container isolation from Linux primitives — mount namespaces, pivot\_root, pseudo-filesystems — as a way to understand what abstractions are actually doing. [SSH key management](/reading/2026-05/2026-05-04t231548-using-ssh-keys-to-make-connectivity-simpler-and-secure) covers key pairs, agent forwarding, and commit signing as practical identity infrastructure. [Christian Hofstede-Kuhn](/reading/2026-04/2026-04-30t231815-shell-tricks-that-actually-make-life-easier-and-save-your) catalogs underused shell patterns — Readline bindings, brace expansion, process substitution, and script safety flags — that reduce everyday friction.
+The organizational dimension runs through several essays. Poor onboarding [your-onboarding-is-a-hazing-ritual](/reading/2026-05/2026-05-08t112608-your-onboarding-is-a-hazing-ritual-and-you-call-it-agile) sets up new engineers to fail by front-loading meetings and same-sprint workloads while making the dysfunction invisible. The communication gap between senior engineers and business stakeholders [why-senior-developers-fail-to-communicate-their-expertise](/reading/2026-05/2026-05-13t060018-why-senior-developers-fail-to-communicate-their-expertise) stems from a mismatch in frames: engineers think about complexity management; the business thinks about uncertainty reduction. Tacit knowledge [the-tacit-dimension-why-your-best-engineers-cant-tell-you](/reading/2026-05/2026-05-19t110710-the-tacit-dimension-why-your-best-engineers-cant-tell-you) compounds this, because pattern recognition and design intuition cannot be fully articulated and are structurally inaccessible to AI tools.
 
-Observability enters via [SigNoz's distributed tracing guide](/reading/2026-06/2026-06-10t223404-how-to-read-distributed-traces-when-you-didnt-write-the-code), which treats span types and shapes as a primary interface for understanding unfamiliar systems. [YAML's Norway bug](/reading/2026-05/2026-05-18t113714-yaml-thats-norway-problem) — where NO parses as false due to implicit boolean typing persisting in libraries despite the 1.2 spec fix — illustrates how configuration format choices carry long-tail reliability costs.
+AI's role in engineering is the most contested thread. Lars Faye argues that full agentic workflows accelerate skill atrophy and create vendor dependency [agentic-coding-is-a-trap](/reading/2026-04/2026-04-27t145041-agentic-coding-is-a-trap). Val Town's Slow Mode proposal [slow-mode](/reading/2026-05/2026-05-19t193626-slow-mode) responds to the same concern with a practical alternative: an agent that teaches and plans alongside the programmer rather than autonomously looping. The bottleneck essay [the-bottleneck-was-never-the-code](/reading/2026-05/2026-05-06t110728-the-bottleneck-was-never-the-code) reframes the whole debate: code generation was never the real constraint; shared context and specification clarity were, and agents amplify whatever organizational alignment already exists. Code quality under AI pressure [when-code-is-cheap-does-quality-still-matter](/reading/2026-05/2026-05-22t091746-when-code-is-cheap-does-quality-still-matter) and the perils of vibe coding [the-perils-of-ai-to-the-software-engineering-profession](/reading/2026-05/2026-05-14t223612-the-perils-of-ai-to-the-software-engineering-profession) both insist that producing code cheaply does not reduce the cost of owning it, and that unreviewed AI output is categorically incompatible with safety-critical systems.
 
-Formal verification, historically seen as too expensive, gets reappraised by [Yaron Minsky at Jane Street](/reading/2026-06/2026-06-15t021106-formal-methods-and-the-future-of-programming): agentic coding has lowered proof costs while creating new demand for machine-checkable verification of AI-generated output, reversing the firm's prior skepticism. Robert Nystrom's [Crafting Interpreters](/reading/2026-04/2026-04-30t231027-munificentcraftinginterpreters) represents the pedagogical end of the discipline — a complete book and two interpreter implementations showing how language internals actually work, the kind of foundational knowledge that sits below most daily practice.
-
-Onboarding is where organizational and technical concerns collide. [Nguyen Duy Hung](/reading/2026-05/2026-05-08t112608-your-onboarding-is-a-hazing-ritual-and-you-call-it-agile) argues that Agile-framed onboarding that loads new hires with full sprint expectations from day one treats the system's failures as individual failures, making the problem structurally invisible.
+The algorithm interview problem [learn-algorithms-for-interviews-forget-them-for-work](/reading/2026-04/2026-04-30t155134-learn-algorithms-for-interviews-forget-them-for-work) sits at the intersection of all these threads: hiring filters for a narrow, trainable skill while real engineering requires reading tradeoffs, shipping incrementally, and handling messy real-world inputs. That gap between what is tested and what is practiced is one of the field's oldest unresolved problems.

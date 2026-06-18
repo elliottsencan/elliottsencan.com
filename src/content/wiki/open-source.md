@@ -1,41 +1,46 @@
 ---
 title: Open source
 summary: >-
-  Open source spans infrastructure tooling, local AI runtimes, and developer
-  utilities, with recurring themes around transparency, self-hosting, and the
-  tension between community ethos and commercial drift.
+  Open source spans infrastructure tooling, LLM runtimes, security
+  vulnerabilities, and platform hosting — connected by recurring tensions
+  between community trust, commercial pressure, and software quality.
 sources:
+  - 2026-04/2026-04-24t093356-unsloth
+  - >-
+    2026-04/2026-04-29t172018-how-to-build-scalable-web-apps-with-openais-privacy-filter
+  - 2026-04/2026-04-29t173553-canitrun-can-my-gpu-run-this-llm
+  - >-
+    2026-04/2026-04-30t231634-supply-chain-attack-using-invisible-code-hits-github-and
+  - 2026-05/2026-05-02t094735-approaching-zero-bugs
   - 2026-05/2026-05-03t105219-radar-open-source-kubernetes-ui
   - 2026-05/2026-05-03t105238-radar-or-the-missing-open-source-kubernetes-ui
-  - >-
-    2026-05/2026-05-04t231858-how-container-filesystem-works-building-a-docker-like
+  - 2026-05/2026-05-03t173422-vectorize-iohindsight
   - 2026-05/2026-05-05t071447-friends-dont-let-friends-use-ollama
   - 2026-05/2026-05-05t071908-oobaboogatextgen
-  - 2026-05/2026-05-06t171355-vectifyaipageindex
   - 2026-05/2026-05-06t173338-raiyanyahyahow-to-train-your-gpt
   - 2026-05/2026-05-10t205349-github-is-sinking
   - 2026-05/2026-05-10t213609-raiyanyahyahow-to-train-your-gpt
   - >-
     2026-05/2026-05-12t165232-seven-cool-javascript-libraries-you-should-know-about
+  - >-
+    2026-05/2026-05-12t215147-running-claude-code-with-a-local-model-via-lm-studio
   - 2026-05/2026-05-14t151252-5-faster-fastblur-in-image-rs
   - 2026-05/2026-05-14t222554-piyush-mishra-00helply
   - >-
     2026-05/2026-05-27t181744-ruby-vs-java-vs-typescript-my-experience-on-building-a
   - 2026-05/2026-05-31t164554-jj-vcsjj
-  - 2026-06/2026-06-11t023056-what-we-built-in-2-weeks-zerostack
   - >-
     2026-06/2026-06-11t023620-designing-memory-for-zerostack-plain-files-no-vector-store
-  - 2026-06/2026-06-11t023723-gi-dellavzerostack
-  - 2026-06/2026-06-13t081411-signals-the-push-pull-based-algorithm
-  - 2026-06/2026-06-14t091145-001tmfharness-forge
   - 2026-06/2026-06-17t075738-gunnargray-devunicode-animations
   - 2026-06/2026-06-17t075816-matt-palmer
-compiled_at: '2026-06-18T21:52:47.565Z'
+aliases:
+  - open-source-maintenance
+compiled_at: '2026-06-18T22:54:40.384Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 9426
-    output_tokens: 959
+    input_tokens: 9873
+    output_tokens: 980
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -46,18 +51,16 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.042663
+  cost_usd: 0.044319
 ---
-Open source remains the default distribution mode for a wide range of technical infrastructure, from Kubernetes visibility tooling to local LLM runtimes to version control systems. What the cited sources collectively illustrate is that the label carries both practical consequences and ideological weight, and the two are not always aligned.
+Open source is the context in which most of the practical software discussed across these sources lives, and reading them together reveals recurring tensions: between community governance and commercial incentives, between transparency as a virtue and transparency as an attack surface, and between the idealism of freely shared code and the reality of maintenance burden.
 
-On the infrastructure side, [Radar](/reading/2026-05/2026-05-03t105238-radar-or-the-missing-open-source-kubernetes-ui) ships under Apache 2.0 as a single binary requiring no cloud account, making self-hosting a first-class use case rather than an afterthought. The same pattern appears in [oobabooga/text-generation-webui](/reading/2026-05/2026-05-05t071908-oobaboogatextgen), which runs LLMs fully offline with no telemetry. Both projects treat open source as a contract with users: you can inspect, self-host, and trust the tool.
+The most pointed example of commercial drift is Ollama. [The critical history at Sleeping Robots](/reading/2026-05/2026-05-05t071447-friends-dont-let-friends-use-ollama) documents how it obscured its dependency on llama.cpp, introduced misleading model naming conventions, launched a closed-source GUI, and has pivoted toward a VC-backed cloud offering, abandoning the local-first premise that attracted its early users. This is a recognizable pattern: a project gains community trust by being open, then gradually enclosures parts of itself as investor pressure mounts. The contrast with [oobabooga/textgen](/reading/2026-05/2026-05-05t071908-oobaboogatextgen) is instructive — a fully offline, fully open LLM frontend that has maintained its local-first character.
 
-That contract can fray. [Zetaphor's critique of Ollama](/reading/2026-05/2026-05-05t071447-friends-dont-let-friends-use-ollama) argues the project obscured its dependence on llama.cpp, misled users with model naming, ships a closed-source GUI, and has drifted toward cloud monetization. The critique is less about licensing than about transparency norms: an open-source project that hides its dependency chain or ships proprietary components alongside the open core can undermine the trust that the label implies.
+The infrastructure layer shows similar variation. [Radar](/reading/2026-05/2026-05-03t105238-radar-or-the-missing-open-source-kubernetes-ui) ships under Apache 2.0 as a single binary requiring no cloud account, a deliberate design choice that trades ecosystem lock-in for operator trust. [Unsloth](/reading/2026-04/2026-04-24t093356-unsloth) offers open fine-tuning tooling with dramatic performance improvements over alternatives, while [vectorize-io/hindsight](/reading/2026-05/2026-05-03t173422-vectorize-iohindsight) and [raiyanyahya/how-to-train-your-gpt](/reading/2026-05/2026-05-06t173338-raiyanyahyahow-to-train-your-gpt) represent the educational and experimental end of open LLM work.
 
-A parallel concern surfaces around platform dependence. [David Bushell](/reading/2026-05/2026-05-10t205349-github-is-sinking) argues that Microsoft's acquisition has degraded GitHub through AI noise and reliability problems, and urges migration to Codeberg, Forgejo, or self-hosted forges. Open source code hosted on a platform controlled by a single commercial entity inherits that entity's incentive structure.
+Transparency cuts both ways. The supply-chain attack documented by [Ars Technica](/reading/2026-04/2026-04-30t231634-supply-chain-attack-using-invisible-code-hits-github-and) used 151 malicious npm and GitHub packages that encoded payloads in invisible Unicode characters, exploiting the assumption that open code is readable code. The attack was undetectable by code reviewers and static analysis tools, turning the openness of the package ecosystem into a vector. This sits in uncomfortable proximity to [Daniel Stenberg's analysis of curl](/reading/2026-05/2026-05-02t094735-approaching-zero-bugs), which argues that despite new AI-assisted static analysis, there is no measurable sign that open-source projects are converging on zero latent bugs.
 
-Several sources illustrate open source as a learning medium. [raiyanyahya/how-to-train-your-gpt](/reading/2026-05/2026-05-06t173338-raiyanyahyahow-to-train-your-gpt) publishes a heavily commented walkthrough for building an LLM from scratch. [Ivan Velichko's container tutorial](/reading/2026-05/2026-05-04t231858-how-container-filesystem-works-building-a-docker-like) reconstructs Docker-style isolation from Linux primitives. [zerostack](/reading/2026-06/2026-06-11t023723-gi-dellavzerostack) is a minimal Rust coding agent whose design decisions around memory and tooling are documented in companion posts, treating the repository itself as explanation.
+The hosting layer is under its own pressure. [David Bushell's critique of GitHub](/reading/2026-05/2026-05-10t205349-github-is-sinking) argues that reliability and quality have declined sharply under Microsoft and recommends migrating to Codeberg, Forgejo, or self-hosted forges. This is the platform risk that underlies all open-source distribution: code may be free but it still lives somewhere, and that somewhere has owners.
 
-Other projects in the set are simply useful, scoped tools: [PageIndex](/reading/2026-05/2026-05-06t171355-vectifyaipageindex) for reasoning-based RAG, [unicode-animations](/reading/2026-06/2026-06-17t075738-gunnargray-devunicode-animations) for zero-dependency CLI spinners, [jj](/reading/2026-05/2026-05-31t164554-jj-vcsjj) as a Git-compatible version control alternative, and [harness-forge](/reading/2026-06/2026-06-14t091145-001tmfharness-forge) for LLM scaffolding optimization. These share the open-source norm without making it a central argument.
-
-The through-line is that open source is not a monolithic category. Licensing, transparency, dependency honesty, platform independence, and community governance are separable properties, and projects can satisfy some while failing others.
+Smaller projects like gunnargray-dev/unicode-animations and [Biome and Knip from the JS libraries roundup](/reading/2026-05/2026-05-12t165232-seven-cool-javascript-libraries-you-should-know-about) illustrate the other end of the spectrum: focused, zero-dependency packages with no commercial ambition, where open source functions as it nominally promises to.

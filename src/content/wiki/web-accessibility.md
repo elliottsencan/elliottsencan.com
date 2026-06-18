@@ -1,29 +1,29 @@
 ---
 title: Web accessibility
 summary: >-
-  Web accessibility surfaces across testing strategy, CSS primitives, and HTML
-  structure, with modern platform features increasingly enabling accessible
-  patterns without JavaScript overhead.
+  Web accessibility spans technical decisions across typography, layout, and
+  interaction patterns; several CSS-focused sources treat it as a constraint
+  that good implementation should satisfy rather than add on separately.
 sources:
+  - 2026-04/2026-04-24t085352-building-a-ui-without-breakpoints
+  - 2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp
   - 2026-04/2026-04-30t230919-dmytro-mezhenskyi-udmezhenskyi-on-reddit
+  - 2026-04/2026-04-30t231412-form-model-design-angular-signal-forms
   - 2026-04/2026-04-30t231909-the-great-css-expansion
   - 2026-04/2026-04-30t231931-50-best-font-combinations-for-graphic-design
   - 2026-05/2026-05-05t091632-building-websites-with-llms
-  - >-
-    2026-05/2026-05-05t135218-designing-playwright-tests-that-survive-ui-refactors
   - 2026-05/2026-05-05t183935-type-scale-graphs
+  - 2026-05/2026-05-06t163329-multi-stroke-text-effect-in-css
   - >-
     2026-06/2026-06-10t220929-navigating-the-age-old-problem-of-checkmarks-in-ui-with
   - 2026-06/2026-06-11t111011-hows-linear-so-fast-a-technical-breakdown
   - 2026-06/2026-06-13t081411-signals-the-push-pull-based-algorithm
-aliases:
-  - accessibility
-compiled_at: '2026-06-18T21:57:27.366Z'
+compiled_at: '2026-06-18T23:01:09.131Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 3969
-    output_tokens: 437
+    input_tokens: 4521
+    output_tokens: 552
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -34,12 +34,14 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.018462
+  cost_usd: 0.021843
 ---
-Accessibility in web development is less a separate discipline than a property that emerges from how HTML, CSS, and interaction patterns are constructed. Several sources touch on it from different angles without making it their primary subject.
+Accessibility in web interfaces tends to surface as a secondary concern in sources primarily about CSS or layout, but the constraints it imposes are concrete and shape implementation choices in direct ways.
 
-The Playwright testing piece from [Currents.dev](/reading/2026-05/2026-05-05t135218-designing-playwright-tests-that-survive-ui-refactors) makes the clearest structural argument: test suites that couple to CSS classes and DOM hierarchy break during refactors, while selectors grounded in semantic roles and ARIA labels stay stable. The same attributes that make tests resilient, semantic markup and explicit labels, are what make interfaces accessible to assistive technology. The two goals are not parallel concerns; they converge on the same underlying practice.
+The clearest example is fluid typography. When using `clamp()` to scale font sizes across viewport widths, the unit chosen for minimum and maximum values matters. [Adrian Bece's breakdown of CSS clamp typography](/reading/2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp) notes that using `rem` units instead of `px` ensures the fluid scale respects a user's browser font size preference. A user who bumps their default size to 20px will see proportionally larger text throughout; pixel values ignore that preference entirely. This is not a cosmetic difference: it directly affects users who rely on browser-level text scaling as an accommodation.
 
-On the CSS side, [Piccalilli](/reading/2026-06/2026-06-10t220929-navigating-the-age-old-problem-of-checkmarks-in-ui-with) examines the `::checkmark` pseudo-element as a progressive enhancement path for custom dropdown controls. Native form controls carry built-in accessibility semantics that JavaScript-heavy custom implementations routinely discard or must laboriously reconstruct. The argument for the platform primitive is partly about code weight, but it is also about not fighting the browser's accessibility tree.
+Layout decisions carry similar stakes. [Amit Sheen's argument for breakpoint-free UIs](/reading/2026-04/2026-04-24t085352-building-a-ui-without-breakpoints) frames media queries for user preferences, such as `prefers-reduced-motion` or `prefers-contrast`, as the appropriate remaining use case for media queries once intrinsic layout handles sizing. That framing positions accessibility preferences as first-class signals the platform already provides, not features to bolt on.
 
-Jim Nielsen's "Lots of Little HTML pages" approach [makes a related point](/reading/2026-05/2026-05-05t091632-building-websites-with-llms): separate linked HTML pages with CSS view transitions restore standard browser navigation behavior, including history, focus management, and the address bar, which JavaScript-routed SPAs commonly break for keyboard and screen-reader users.
+On the interaction side, [Sunkanmi Fafowora's piece on the CSS `::checkmark` pseudo-element](/reading/2026-06/2026-06-10t220929-navigating-the-age-old-problem-of-checkmarks-in-ui-with) argues that native platform primitives handle semantics and keyboard behavior correctly by default, where JavaScript-heavy custom components frequently fail. The progressive enhancement framing is explicit: start with what the browser understands natively, then layer on where support exists. The tradeoff is browser support gaps, which the piece acknowledges rather than papers over.
+
+Taken together, these sources suggest a consistent pattern: accessibility is easiest to preserve when implementation stays close to platform primitives and respects the preference signals users have already expressed through their OS or browser settings.
