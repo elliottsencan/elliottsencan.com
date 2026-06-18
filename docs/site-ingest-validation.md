@@ -152,7 +152,7 @@ pnpm worker recompile --scope=compiled_before_model:claude-sonnet-4-5 --no-dry-r
 
 Cost: `MAX_ENTRIES_PER_RUN × $0.001-0.005 = $0.10-0.50 per saturated run`. Re-invoke until the dry-run reports no `deferred[]` entries.
 
-Inspect the PR for: pre/post topic drift on a few entries, sensible `category` reclassification (rare), and that `compiled_with` reflects the new model.
+Inspect the PR for: pre/post topic drift on a few entries, sensible `category` and `kind` reclassification (rare), and that `compiled_with` reflects the new model.
 
 ---
 

@@ -17,6 +17,7 @@ function reading(
       url: data.url ?? `https://example.com/${id}`,
       summary: data.summary ?? "summary",
       category: data.category ?? "tech",
+      kind: data.kind,
       added: data.added ?? new Date("2026-04-15T12:00:00Z"),
       author: data.author,
       source: data.source,
@@ -118,7 +119,22 @@ describe("buildReadingGraph", () => {
     expect(payload.count).toBe(0);
     expect(payload.entries).toEqual([]);
     expect(payload.categories).toEqual([]);
+    expect(payload.kinds).toEqual([]);
     expect(orphanCitations).toEqual([]);
+  });
+
+  it("surfaces the document kind and lists distinct kinds", () => {
+    const entries = [
+      reading("2026-04/a", { kind: "paper" }),
+      reading("2026-04/b", { kind: "repository" }),
+      // No kind set in frontmatter — resolves to the schema default.
+      reading("2026-04/c"),
+    ];
+    const { payload } = buildReadingGraph(entries, []);
+    expect(findEntry(payload.entries, "2026-04/a").kind).toBe("paper");
+    expect(findEntry(payload.entries, "2026-04/b").kind).toBe("repository");
+    expect(findEntry(payload.entries, "2026-04/c").kind).toBe("article");
+    expect(payload.kinds).toEqual(["article", "paper", "repository"]);
   });
 
   it("groups entries in the same category and slug-derived month bucket", () => {

@@ -89,6 +89,10 @@ ${reference}`;
 
 // ---------- link summary ----------
 
+// The `kind` enum embedded in this prompt is hand-duplicated from
+// `readingKinds` in @shared/schemas/content.ts (the LinkSummarySchema validates
+// against that same enum, so a desync would just reject the model's output).
+// Keep the list here in sync when readingKinds changes.
 export const LINK_SUMMARY_SYSTEM = `You summarize and categorize articles for Elliott's personal reading archive on elliottsencan.com.
 
 Given an article title, URL, and optional excerpt or page text, produce ONE JSON object with these exact fields:
@@ -111,6 +115,19 @@ Given an article title, URL, and optional excerpt or page text, produce ONE JSON
   - essay: longform thinking, criticism, personal writing
   - news: time-sensitive reportage
   - other: genuinely none of the above — rare
+- kind: one of ["article", "paper", "repository", "tool", "component-library", "design-doc", "documentation", "book", "video", "thread", "other"]. This is the document's FORM, a separate axis from category (which is the subject domain). Pick the most specific form that fits; default to "article" for ordinary prose. Definitions and precedence (apply in this order when more than one seems to fit):
+  - component-library: a UI component kit, design system, or component catalog. Takes precedence over "repository" and "tool" when the thing IS a set of reusable UI components (e.g. a shadcn/Radix-style library), whether it lives on GitHub or its own site.
+  - repository: a source-code repository (GitHub/GitLab "org/repo" and the like) that is NOT primarily a UI component library.
+  - tool: a hosted product, app, or service — a landing/marketing page or launch (e.g. Product Hunt), not a code repo.
+  - paper: academic paper, research report, or white paper (arXiv, PDFs, journal/conference pages).
+  - documentation: reference docs, API docs, guides, or handbooks for a tool or platform.
+  - design-doc: a design document, technical spec, RFC, or proposal.
+  - book: a book or a book's landing/press page.
+  - video: a video or recorded talk (YouTube, Vimeo, conference recordings).
+  - thread: a social-media or forum discussion (X/Twitter, Hacker News, Reddit, mailing-list threads).
+  - article: ordinary prose — blog posts, essays, news pieces, publisher homepages. This is the default and the catch-all for written pieces.
+  - other: genuinely none of the above.
+  Infer kind primarily from the URL host and the title; you will often not have the full body. When unsure between "article" and a more specific form, choose "article".
 - author: author name if identifiable, else omit the field entirely.
 - source: publication or site name if identifiable (e.g. "Stripe Press", "NYT"), else omit the field entirely.
 - topics: an array of 3 to 5 lowercase kebab-case topic slugs that describe the substance of the piece. Topics drive concept clustering for the wiki layer — entries sharing a topic become candidates for a synthesis article. Rules:

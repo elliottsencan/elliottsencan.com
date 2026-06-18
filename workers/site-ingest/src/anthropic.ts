@@ -16,7 +16,12 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
-import { JUDGE_MODELS, type JudgeModel, ReadingCategorySchema } from "@shared/schemas/content.ts";
+import {
+  JUDGE_MODELS,
+  type JudgeModel,
+  ReadingCategorySchema,
+  ReadingKindSchema,
+} from "@shared/schemas/content.ts";
 import { z } from "zod";
 import { type CostRecord, computeCost, type Usage } from "./cost.ts";
 import type { CorpusName } from "./crosslink-config.ts";
@@ -54,6 +59,10 @@ export const LinkSummarySchema = z.object({
   title: z.string(),
   summary: z.string(),
   category: ReadingCategorySchema,
+  // Document form/medium, orthogonal to category. Always classified for new
+  // entries (required here); legacy entries default to "article" at the site
+  // schema layer. See readingKinds in @shared/schemas/content.ts.
+  kind: ReadingKindSchema,
   author: z.string().optional(),
   source: z.string().optional(),
   // 3–5 lowercase kebab-case topics. Drives concept clustering for the

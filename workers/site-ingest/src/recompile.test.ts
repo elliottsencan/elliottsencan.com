@@ -45,6 +45,7 @@ function entry(
       url: "https://example.com/",
       summary: "An example entry.",
       category: "tech",
+      kind: "article",
       added: added ? new Date(added) : new Date("2026-04-01T00:00:00.000Z"),
       ...rest,
     },
@@ -97,6 +98,7 @@ const baseSummary: LinkSummary = {
   title: "Hello World",
   summary: "A short summary.",
   category: "tech",
+  kind: "article",
   topics: ["topic-a", "topic-b"],
   model: "claude-sonnet-4-6",
   cost: {
@@ -133,6 +135,7 @@ describe("buildRecompiledMarkdown", () => {
       url: "https://example.com/post",
       summary: "A short summary.",
       category: "tech",
+      kind: "article",
       added: "2026-04-01T00:00:00.000Z",
       compiled_at: "2026-04-24T00:00:00.000Z",
       compiled_with: "claude-sonnet-4-6",
@@ -258,6 +261,7 @@ function sortableEntry(path: string, compiledAt?: string | Date): SortableEntry 
       url: "https://example.com/x",
       summary: "x",
       category: "tech",
+      kind: "article",
       added: new Date("2026-04-01T00:00:00.000Z"),
       ...(compiledAt
         ? { compiled_at: typeof compiledAt === "string" ? new Date(compiledAt) : compiledAt }

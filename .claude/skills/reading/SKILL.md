@@ -5,7 +5,7 @@ description: Query Elliott's reading log — articles, essays, and books he has 
 
 # Reading log queries
 
-This site has a reading log at `https://elliottsencan.com/reading`. Every entry is committed via an ingest pipeline that compiles a URL into a structured summary (title, summary, category, author, source, added date, topics). The canonical machine-readable surfaces are:
+This site has a reading log at `https://elliottsencan.com/reading`. Every entry is committed via an ingest pipeline that compiles a URL into a structured summary (title, summary, category, kind, author, source, added date, topics). Entries are classified on two orthogonal axes: `category` is the subject *domain* (tech, design, music, essay, news, other) and `kind` is the document *form* (article, paper, repository, tool, component-library, design-doc, documentation, book, video, thread, other; defaults to `article`). The canonical machine-readable surfaces are:
 
 - `https://elliottsencan.com/reading.json` — structured JSON with `related[]` graph edges and a `wiki_concepts[]` reverse index (which wiki concepts cite each entry)
 - `https://elliottsencan.com/reading/<slug>/` — per-entry page with topics, related, and "cited by" cross-references
@@ -32,12 +32,14 @@ pnpm reading <command>
 - `recent [n]` — most recent N entries (default 10)
 - `search <query>` — substring search across title, summary, author, source
 - `get <slug>` — full entry as JSON
-- `categories` — category counts
+- `categories` — category (domain) counts
+- `kinds` — document-kind (form) counts
 - `related <slug>` — entries linked by shared topic / author / source / category+month (topic overlap is the strongest signal)
 
 ### Flags
 
-- `--category <name>` — filter to one of: tech, design, music, essay, news, other
+- `--category <name>` — filter by domain: tech, design, music, essay, news, other
+- `--kind <name>` — filter by form: article, paper, repository, tool, component-library, design-doc, documentation, book, video, thread, other
 - `--json` — emit JSON instead of formatted text
 - `--limit <n>` — cap results
 
@@ -68,3 +70,9 @@ User: "Show me all the design entries from this month."
 
 User: "What else has he read from Smashing Magazine?"
 → `node scripts/reading.mjs search "Smashing Magazine"`
+
+User: "What papers has he saved?"
+→ `node scripts/reading.mjs recent 50 --kind paper`
+
+User: "Which UI component libraries are in the reading log?"
+→ `node scripts/reading.mjs recent 50 --kind component-library`

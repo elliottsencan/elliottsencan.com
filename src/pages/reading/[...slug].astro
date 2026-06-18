@@ -64,7 +64,14 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
 });
 
 const heroSourceLine = [entry.data.author, entry.data.source].filter(Boolean).join(", ");
-const heroMetaLabel = [dateFormatter.format(entry.data.added), entry.data.category, heroSourceLine]
+const heroMetaLabel = [
+  dateFormatter.format(entry.data.added),
+  entry.data.category,
+  // "article" is the unmarked default; only surface the form axis when it
+  // carries information.
+  entry.data.kind !== "article" ? entry.data.kind : null,
+  heroSourceLine,
+]
   .filter(Boolean)
   .join(" · ");
 

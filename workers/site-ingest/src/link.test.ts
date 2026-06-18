@@ -142,6 +142,7 @@ const baseSummary: LinkSummary = {
   title: "Hello World",
   summary: "A short summary.",
   category: "tech",
+  kind: "article",
   topics: ["topic-a", "topic-b"],
   model: "claude-sonnet-4-6",
   cost: {
@@ -184,6 +185,15 @@ describe("buildEntryMarkdown", () => {
       cost_usd: 0.001,
     });
   });
+
+  it("persists the document kind into frontmatter", () => {
+    const { data } = parseEntry(buildEntryMarkdown(baseArgs));
+    expect(data.kind).toBe("article");
+    const repo = parseEntry(
+      buildEntryMarkdown({ ...baseArgs, summary: { ...baseSummary, kind: "repository" } }),
+    );
+    expect(repo.data.kind).toBe("repository");
+  });
 });
 
 // ---------- LinkSummarySchema ----------
@@ -193,6 +203,7 @@ describe("LinkSummarySchema", () => {
     title: "Some Article",
     summary: "Short summary.",
     category: "tech" as const,
+    kind: "article" as const,
     topics: ["mcp"],
   };
 
@@ -218,6 +229,14 @@ describe("LinkSummarySchema", () => {
       topic_rationale: 42,
     });
     expect(r.success).toBe(false);
+  });
+
+  it("requires kind and rejects a value outside the enum", () => {
+    // kind is the contract handed to the model via zodOutputFormat; loosening
+    // it (made optional, or an out-of-enum value sneaking through) must fail.
+    const { kind: _omit, ...withoutKind } = validBase;
+    expect(LinkSummarySchema.safeParse(withoutKind).success).toBe(false);
+    expect(LinkSummarySchema.safeParse({ ...validBase, kind: "blogpost" }).success).toBe(false);
   });
 });
 
@@ -322,6 +341,9 @@ describe("makeLinkStrategy.plan — copyright-posture", () => {
     expect(fm.opted_out).toBe("x-robots-tag");
     expect(fm.summary).toBe(OPT_OUT_STUB_SUMMARY);
     expect(fm.category).toBe("other");
+    // Deliberately "other", not the schema default "article": there's no body
+    // to classify a form from. Guards link.ts:buildOptOutStubMarkdown.
+    expect(fm.kind).toBe("other");
     expect(fm.compiled_with).toBe("manual:opt-out-stub");
     expect(result.data.summary?.opted_out).toBe("x-robots-tag");
     summarizeSpy.mockRestore();
@@ -685,6 +707,7 @@ describe("makeLinkStrategy.plan — wiki sources[] patch", () => {
         title: "Article",
         summary: "Summary.",
         category: "tech",
+        kind: "article",
         topics: ["ai-assisted-coding"],
         model: "claude-sonnet-4-6",
         cost: {
@@ -746,6 +769,7 @@ describe("makeLinkStrategy.plan — wiki sources[] patch", () => {
         title: "X",
         summary: "x.",
         category: "tech",
+        kind: "article",
         topics: ["a-very-novel-topic"],
         model: "claude-sonnet-4-6",
         cost: {
@@ -810,6 +834,7 @@ describe("makeLinkStrategy.plan — wiki sources[] patch", () => {
         title: "Article",
         summary: "x.",
         category: "tech",
+        kind: "article",
         topics: ["ai-coding-assistants"],
         model: "claude-sonnet-4-6",
         cost: {
@@ -1149,6 +1174,7 @@ describe("makeLinkStrategy.plan — threshold trigger surfaces in summary", () =
         title: "Article",
         summary: "x.",
         category: "tech",
+        kind: "article",
         topics: ["new-concept"],
         model: "claude-sonnet-4-6",
         cost: {
@@ -1210,6 +1236,7 @@ describe("makeLinkStrategy.plan — threshold trigger surfaces in summary", () =
         title: "Article",
         summary: "x.",
         category: "tech",
+        kind: "article",
         topics: ["existing-concept"],
         model: "claude-sonnet-4-6",
         cost: {
@@ -1427,6 +1454,7 @@ describe("makeLinkStrategy.plan — dry_run", () => {
         title: "Article",
         summary: "Summary.",
         category: "tech",
+        kind: "article",
         topics: ["ai-assisted-coding"],
         model: "claude-sonnet-4-6",
         cost: {
@@ -1492,6 +1520,7 @@ describe("link.handle — dry_run", () => {
         title: "X",
         summary: "x.",
         category: "tech",
+        kind: "article",
         topics: ["topic-a"],
         model: "claude-sonnet-4-6",
         cost: {

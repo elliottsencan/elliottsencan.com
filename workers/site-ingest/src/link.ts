@@ -566,6 +566,7 @@ export function buildEntryMarkdown(args: {
     url,
     summary: summary.summary,
     category: summary.category,
+    kind: summary.kind,
     added: added.toISOString(),
   };
   if (summary.author) {
@@ -992,6 +993,9 @@ export function buildOptOutStubMarkdown(args: {
     url: args.url,
     summary: OPT_OUT_STUB_SUMMARY,
     category: "other",
+    // No body to classify form from, so the form axis is "other" too rather
+    // than letting it default to "article".
+    kind: "other",
     added: args.added.toISOString(),
     noindex: true,
     opted_out: args.reason,

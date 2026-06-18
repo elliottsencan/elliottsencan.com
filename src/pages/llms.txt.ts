@@ -113,7 +113,7 @@ export async function GET() {
   lines.push("");
   for (const entry of recentReading) {
     lines.push(
-      `- [${entry.data.title}](${entry.data.url}) (${siteDate(entry.data.added)}, ${entry.data.category}): ${entry.data.summary}`,
+      `- [${entry.data.title}](${entry.data.url}) (${siteDate(entry.data.added)}, ${entry.data.category}, ${entry.data.kind}): ${entry.data.summary}`,
     );
   }
   lines.push("");

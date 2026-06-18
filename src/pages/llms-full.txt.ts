@@ -71,7 +71,7 @@ export async function GET() {
 
   sections.push("## Reading");
   sections.push(
-    `Each entry below is an AI-compiled citation for a URL I've saved — title, summary, category, topics. Source text lives at the linked URL; cross-source synthesis lives in the Wiki section above.`,
+    `Each entry below is an AI-compiled citation for a URL I've saved — title, summary, category, kind, topics. Source text lives at the linked URL; cross-source synthesis lives in the Wiki section above.`,
   );
   for (const entry of readingEntries) {
     const meta = [entry.data.author, entry.data.source].filter(Boolean).join(", ");
@@ -79,7 +79,7 @@ export async function GET() {
     const topics = canonicalTopics.length ? `\nTopics: ${canonicalTopics.join(", ")}` : "";
     const lines = [
       `### ${entry.data.title}`,
-      `*${siteDate(entry.data.added)} — ${entry.data.category}${meta ? ` — ${meta}` : ""}*`,
+      `*${siteDate(entry.data.added)} — ${entry.data.category} / ${entry.data.kind}${meta ? ` — ${meta}` : ""}*`,
       "",
       `Source: ${entry.data.url}${topics}`,
       "",

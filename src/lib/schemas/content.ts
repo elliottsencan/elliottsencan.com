@@ -16,6 +16,31 @@ export const readingCategories = ["tech", "design", "music", "essay", "news", "o
 
 export const ReadingCategorySchema = z.enum(readingCategories);
 
+// Document *form/medium* — an axis orthogonal to `category` (which is domain).
+// `category` answers "what is this about?", `kind` answers "what form is it?".
+// They compose freely: a design doc about music is { kind: "design-doc",
+// category: "music" }. Closed enum so it stays scannable and filterable; the
+// ingest prompt (LINK_SUMMARY_SYSTEM) carries the disambiguation rules.
+// NOTE: this list is hand-duplicated in two places that must stay in sync —
+// the `kind` enum in LINK_SUMMARY_SYSTEM (workers/site-ingest/src/prompts.ts)
+// and the documented values in .claude/skills/reading/SKILL.md. Update all
+// three together when adding or renaming a kind.
+export const readingKinds = [
+  "article",
+  "paper",
+  "repository",
+  "tool",
+  "component-library",
+  "design-doc",
+  "documentation",
+  "book",
+  "video",
+  "thread",
+  "other",
+] as const;
+
+export const ReadingKindSchema = z.enum(readingKinds);
+
 export const NowFrontmatterSchema = z.object({
   title: z.string(),
   description: z.string(),
@@ -61,6 +86,11 @@ export const ReadingFrontmatterSchema = z.object({
   url: z.url(),
   summary: z.string(),
   category: ReadingCategorySchema,
+  // Document form/medium (see `readingKinds`). `.default()` rather than
+  // `.optional()` so entries written before the field existed validate
+  // untouched AND `entry.data.kind` is always present for downstream code —
+  // a legacy entry with no `kind` in frontmatter reads as "article".
+  kind: ReadingKindSchema.default("article"),
   added: z.coerce.date(),
   author: z.string().optional(),
   source: z.string().optional(),
@@ -339,6 +369,7 @@ export const BlogFrontmatterSchema = z.object({
 
 export type CompileCost = z.infer<typeof CompileCostSchema>;
 export type ReadingCategory = z.infer<typeof ReadingCategorySchema>;
+export type ReadingKind = z.infer<typeof ReadingKindSchema>;
 export type NowFrontmatter = z.infer<typeof NowFrontmatterSchema>;
 export type NowArchiveFrontmatter = z.infer<typeof NowArchiveFrontmatterSchema>;
 export type ReadingFrontmatter = z.infer<typeof ReadingFrontmatterSchema>;

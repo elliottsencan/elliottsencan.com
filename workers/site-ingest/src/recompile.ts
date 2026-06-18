@@ -639,6 +639,7 @@ export function buildRecompiledMarkdown(args: {
     url,
     summary: summary.summary,
     category: summary.category,
+    kind: summary.kind,
     added: added.toISOString(),
   };
   if (summary.author) {

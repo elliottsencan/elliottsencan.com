@@ -11,10 +11,12 @@
  *   reading search <query>              substring search across title+summary
  *   reading get <slug>                  full entry JSON by slug
  *   reading categories                  list categories with counts
+ *   reading kinds                       list document kinds with counts
  *   reading related <slug>              entries related via metadata graph
  *
  * Flags (apply to recent/search):
- *   --category <name>                   filter by category
+ *   --category <name>                   filter by category (domain axis)
+ *   --kind <name>                       filter by document kind (form axis)
  *   --json                              emit JSON instead of formatted text
  *   --limit <n>                         cap result count (default 20 for search)
  *   --source <url>                      override data source URL
@@ -27,6 +29,7 @@ const DEFAULT_SOURCE = "https://elliottsencan.com/reading.json";
 const PARSE_OPTIONS = {
   options: {
     category: { type: "string" },
+    kind: { type: "string" },
     json: { type: "boolean" },
     limit: { type: "string" },
     source: { type: "string" },
@@ -45,7 +48,9 @@ async function loadData(source) {
 
 function formatEntry(entry) {
   const meta = [entry.author, entry.source].filter(Boolean).join(", ");
-  const head = `${entry.added.slice(0, 10)}  [${entry.category}]  ${entry.title}`;
+  const tag =
+    entry.kind && entry.kind !== "article" ? `${entry.category}/${entry.kind}` : entry.category;
+  const head = `${entry.added.slice(0, 10)}  [${tag}]  ${entry.title}`;
   const body = [meta && `  ${meta}`, `  ${entry.url}`, `  ${entry.summary}`]
     .filter(Boolean)
     .join("\n");
@@ -78,10 +83,12 @@ Commands:
   search <query>        substring search
   get <slug>            full entry JSON by slug
   categories            list categories with counts
+  kinds                 list document kinds with counts
   related <slug>        entries related via shared topic/author/source/category+month
 
 Flags:
-  --category <name>     filter by category
+  --category <name>     filter by category (domain axis)
+  --kind <name>         filter by document kind (form axis)
   --json                emit JSON
   --limit <n>           cap result count
   --source <url>        override data source (default ${DEFAULT_SOURCE})
@@ -93,6 +100,9 @@ Flags:
   let entries = data.entries;
   if (flags.category) {
     entries = entries.filter((e) => e.category === flags.category);
+  }
+  if (flags.kind) {
+    entries = entries.filter((e) => (e.kind ?? "article") === flags.kind);
   }
 
   switch (cmd) {
@@ -137,6 +147,22 @@ Flags:
       }
       for (const [cat, count] of sorted) {
         process.stdout.write(`${String(count).padStart(4)}  ${cat}\n`);
+      }
+      return;
+    }
+    case "kinds": {
+      const counts = new Map();
+      for (const e of data.entries) {
+        const kind = e.kind ?? "article";
+        counts.set(kind, (counts.get(kind) ?? 0) + 1);
+      }
+      const sorted = [...counts.entries()].sort((a, b) => b[1] - a[1]);
+      if (flags.json) {
+        process.stdout.write(`${JSON.stringify(Object.fromEntries(sorted), null, 2)}\n`);
+        return;
+      }
+      for (const [kind, count] of sorted) {
+        process.stdout.write(`${String(count).padStart(4)}  ${kind}\n`);
       }
       return;
     }
