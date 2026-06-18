@@ -108,7 +108,7 @@ function statusLabel(status: string): string {
                 return (
                   <li
                     class:list={[
-                      "group relative grid grid-cols-1 items-baseline gap-x-8 gap-y-3 border-t border-black/10 py-6 md:grid-cols-[minmax(0,1fr)_auto] dark:border-white/10",
+                      "group relative grid grid-cols-1 items-baseline gap-x-8 gap-y-3 border-t border-black/10 py-5 md:grid-cols-[minmax(0,1fr)_auto] md:py-6 dark:border-white/10",
                       i === cells.length - 1 &&
                         "border-b border-black/10 dark:border-white/10",
                     ]}
@@ -166,21 +166,26 @@ function statusLabel(status: string): string {
                       )}
                     </div>
 
-                    <div class="flex min-w-[7rem] flex-col gap-1 md:items-end">
-                      <span class="font-heading text-xs uppercase tracking-widest text-black/55 dark:text-white/55">
-                        {cell.data.headlineMetric.label}
-                      </span>
-                      <span
-                        class:list={[
-                          "font-heading font-medium leading-none tracking-tight",
-                          isPending
-                            ? "text-2xl text-black/40 dark:text-white/40"
-                            : "text-3xl text-black md:text-[2.1rem] dark:text-white",
-                        ]}
-                        style="font-variant-numeric: tabular-nums slashed-zero;"
-                      >
-                        {cell.data.headlineMetric.value}
-                      </span>
+                    {/* Headline-metric block. Mobile: a baseline row sitting
+                        below the prose; on md+ it collapses to the right-
+                        aligned column. Matches the home page's trail-card stat
+                        block so the two surfaces share one grammar. */}
+                    <div class="flex flex-row items-end justify-between gap-4 md:min-w-[7rem] md:flex-col md:items-end md:justify-start">
+                      <div class="flex flex-col gap-1 md:items-end">
+                        <span class="font-heading text-xs uppercase tracking-widest text-black/55 dark:text-white/55">
+                          {cell.data.headlineMetric.label}
+                        </span>
+                        <span
+                          class:list={[
+                            "num-display",
+                            isPending
+                              ? "text-2xl text-black/40 dark:text-white/40"
+                              : "text-3xl text-black md:text-[2.1rem] dark:text-white",
+                          ]}
+                        >
+                          {cell.data.headlineMetric.value}
+                        </span>
+                      </div>
                     </div>
                   </li>
                 );

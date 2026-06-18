@@ -48,7 +48,7 @@ const sections = [
         <a
           href="/search"
           aria-label="Search"
-          class="inline-flex items-center text-black/75 transition-colors duration-300 ease-in-out hover:text-black focus-visible:text-black dark:text-white/75 dark:hover:text-white dark:focus-visible:text-white"
+          class="-m-3 inline-flex items-center justify-center p-3 text-black/75 transition-colors duration-300 ease-in-out hover:text-black focus-visible:text-black dark:text-white/75 dark:hover:text-white dark:focus-visible:text-white"
         >
           <svg
             aria-hidden="true"
@@ -68,7 +68,7 @@ const sections = [
           id="theme-cycle"
           aria-label="Switch theme"
           title="Theme: Auto"
-          class="inline-flex cursor-pointer items-center text-black/75 transition-colors duration-300 ease-in-out hover:text-black focus-visible:text-black dark:text-white/75 dark:hover:text-white dark:focus-visible:text-white"
+          class="-m-3 inline-flex cursor-pointer items-center justify-center p-3 text-black/75 transition-colors duration-300 ease-in-out hover:text-black focus-visible:text-black dark:text-white/75 dark:hover:text-white dark:focus-visible:text-white"
         >
           <!-- Auto (system): circle outline with right half filled. The user-
                selected mode — shown regardless of what the OS resolves to. -->
@@ -186,8 +186,13 @@ const sections = [
   .nav-toggle {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     cursor: pointer;
     list-style: none;
+    /* ≥44px tap target. Padding offset by a matching negative margin so the
+       icon stays visually 20px and the cluster gap is unchanged. */
+    padding: 0.75rem;
+    margin: -0.75rem;
     color: rgb(0 0 0 / 0.75);
     transition: color 300ms ease-in-out;
   }
