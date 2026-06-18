@@ -1,9 +1,9 @@
 ---
 title: Web accessibility
 summary: >-
-  Web accessibility appears as a secondary concern across sources on CSS,
-  testing, and typography — surfacing in selector strategy, semantic HTML, and
-  readable type scales rather than as a dedicated subject.
+  Web accessibility surfaces across testing strategy, CSS primitives, and HTML
+  structure, with modern platform features increasingly enabling accessible
+  patterns without JavaScript overhead.
 sources:
   - 2026-04/2026-04-30t230919-dmytro-mezhenskyi-udmezhenskyi-on-reddit
   - 2026-04/2026-04-30t231909-the-great-css-expansion
@@ -16,12 +16,14 @@ sources:
     2026-06/2026-06-10t220929-navigating-the-age-old-problem-of-checkmarks-in-ui-with
   - 2026-06/2026-06-11t111011-hows-linear-so-fast-a-technical-breakdown
   - 2026-06/2026-06-13t081411-signals-the-push-pull-based-algorithm
-compiled_at: '2026-05-06T16:19:47.802Z'
+aliases:
+  - accessibility
+compiled_at: '2026-06-18T21:57:27.366Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 3247
-    output_tokens: 523
+    input_tokens: 3969
+    output_tokens: 437
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -32,15 +34,12 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.017586
-last_source_added: '2026-06-13T15:14:11.621Z'
+  cost_usd: 0.018462
 ---
-Accessibility shows up obliquely across several sources rather than as a central topic, but the pattern is consistent: semantic structure and human-readable labels matter as much for machines and assistive technology as for any other consumer of a page.
+Accessibility in web development is less a separate discipline than a property that emerges from how HTML, CSS, and interaction patterns are constructed. Several sources touch on it from different angles without making it their primary subject.
 
-[Designing Playwright Tests That Survive UI Refactors](/reading/2026-05/2026-05-05t135218-designing-playwright-tests-that-survive-ui-refactors) makes the clearest case. Its tiered selector hierarchy puts ARIA roles, labels, and explicit test attributes above CSS classes or DOM structure precisely because those attributes are stable across refactors. A test that targets a button by its accessible label rather than its class name is also a test that implicitly validates the accessible label exists. The argument for resilient tests and the argument for accessible markup converge on the same practice.
+The Playwright testing piece from [Currents.dev](/reading/2026-05/2026-05-05t135218-designing-playwright-tests-that-survive-ui-refactors) makes the clearest structural argument: test suites that couple to CSS classes and DOM hierarchy break during refactors, while selectors grounded in semantic roles and ARIA labels stay stable. The same attributes that make tests resilient, semantic markup and explicit labels, are what make interfaces accessible to assistive technology. The two goals are not parallel concerns; they converge on the same underlying practice.
 
-[The Great CSS Expansion](/reading/2026-04/2026-04-30t231909-the-great-css-expansion) adds a structural note: replacing JavaScript-powered popovers, modals, and custom selects with native CSS and HTML primitives tends to preserve the accessibility semantics browsers and screen readers already understand, where custom JS implementations often discard them.
+On the CSS side, [Piccalilli](/reading/2026-06/2026-06-10t220929-navigating-the-age-old-problem-of-checkmarks-in-ui-with) examines the `::checkmark` pseudo-element as a progressive enhancement path for custom dropdown controls. Native form controls carry built-in accessibility semantics that JavaScript-heavy custom implementations routinely discard or must laboriously reconstruct. The argument for the platform primitive is partly about code weight, but it is also about not fighting the browser's accessibility tree.
 
-[Building Websites With LLMS](/reading/2026-05/2026-05-05t091632-building-websites-with-llms) points in a similar direction. Separate linked HTML pages with CSS view transitions are inherently more navigable than JavaScript-rendered single-page flows, and that navigability benefits both search indexing and assistive technology.
-
-On the typographic side, [Type Scale Graphs](/reading/2026-05/2026-05-05t183935-type-scale-graphs) and [50 Best Font Combinations](/reading/2026-04/2026-04-30t231931-50-best-font-combinations-for-graphic-design) address legibility and hierarchy indirectly. Readable type scales and well-paired fonts reduce cognitive load for all users, including those with reading difficulties, though neither source frames accessibility as a primary concern.
+Jim Nielsen's "Lots of Little HTML pages" approach [makes a related point](/reading/2026-05/2026-05-05t091632-building-websites-with-llms): separate linked HTML pages with CSS view transitions restore standard browser navigation behavior, including history, focus management, and the address bar, which JavaScript-routed SPAs commonly break for keyboard and screen-reader users.
