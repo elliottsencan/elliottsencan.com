@@ -178,11 +178,12 @@ const visibleLocalEdges = local
 {
   local && local.nodes.length > 1 && (
     <div
-      class="constellation-local"
+      class="constellation-well"
       style={`--cl-w: ${width}px; --cl-aspect: ${STRIP_VW} / ${STRIP_VH};`}
     >
-      <svg
-        class="constellation-local-svg"
+      <div class="constellation-local">
+        <svg
+          class="constellation-local-svg"
         viewBox={`${LOCAL_VX} ${LOCAL_VY} ${LOCAL_VW} ${LOCAL_VH}`}
         width="100%"
         height="100%"
@@ -317,7 +318,8 @@ const visibleLocalEdges = local
             </a>
           );
         })}
-      </svg>
+        </svg>
+      </div>
     </div>
   )
 }
@@ -330,8 +332,24 @@ const visibleLocalEdges = local
      `width: 100%; max-width: --cl-w` pattern collapses inside a CSS Grid
      `auto` track because the column resolves against min-content, which
      an aspect-ratio'd box can shrink to ~0. */
-  .constellation-local {
+  /* The "well" — a flat tonal step off the page canvas (--well vs --canvas)
+     that gives the constellation visual weight and reads it as a contained
+     object. Depth via tone only, no border/shadow (matches the token's own
+     design intent in global.css). The well owns the footprint (width +
+     padding) so the inner aspect-locked box fills it without shifting the
+     grid column. Overflow stays visible so the breathe-ring and hover labels
+     aren't clipped at the surface edge. */
+  .constellation-well {
     width: var(--cl-w);
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 1.25rem;
+    background: var(--well);
+    border-radius: 0.5rem;
+  }
+
+  .constellation-local {
+    width: 100%;
     max-width: 100%;
     aspect-ratio: var(--cl-aspect);
     color: rgb(0 0 0 / 0.88);
@@ -373,15 +391,12 @@ const visibleLocalEdges = local
      reads cleanly over the region tint underneath. */
   .constellation-local :global(.cluster-name) {
     paint-order: stroke fill;
-    stroke: #f6f4ef;
+    stroke: var(--well);
     stroke-width: 3px;
     stroke-linejoin: round;
     pointer-events: none;
     opacity: 0;
     font-feature-settings: "ss01" 1;
-  }
-  :global(.dark) .constellation-local :global(.cluster-name) {
-    stroke: #18161a;
   }
   .constellation-local :global(.cluster-name[data-active]) {
     opacity: 0.75;
@@ -444,14 +459,11 @@ const visibleLocalEdges = local
     pointer-events: none;
     transition: opacity 120ms ease-in-out;
     paint-order: stroke fill;
-    stroke: #f6f4ef;
+    stroke: var(--well);
     stroke-width: 4px;
     stroke-linejoin: round;
     fill: var(--accent);
     vector-effect: non-scaling-stroke;
-  }
-  :global(.dark) .constellation-local :global(.node.neighbor .label) {
-    stroke: #18161a;
   }
   .constellation-local :global(.node.neighbor:hover .label),
   .constellation-local :global(.node.neighbor:focus-visible .label) {

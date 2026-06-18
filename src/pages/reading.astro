@@ -1,9 +1,9 @@
 ---
 import { type CollectionEntry, getCollection } from "astro:content";
-import Container from "@components/Container.astro";
 import EditorialRule from "@components/EditorialRule.astro";
 import HeroMeta from "@components/HeroMeta.astro";
 import Link from "@components/Link.astro";
+import PageBody from "@components/PageBody.astro";
 import PageHero from "@components/PageHero.astro";
 import Layout from "@layouts/Layout.astro";
 import { monthKey, SITE_TIMEZONE } from "@lib/utils";
@@ -98,12 +98,7 @@ const heroMetaLabel = lastAdded
   title="Reading"
   description="Articles, essays, and books I've been reading."
 >
-  <Container>
-    <div
-      class="space-y-10"
-      data-pagefind-body
-      data-pagefind-filter="type:Reading"
-    >
+  <PageBody data-pagefind-body data-pagefind-filter="type:Reading">
       <PageHero>
         <Fragment slot="title">Reading</Fragment>
         <Fragment slot="summary">
@@ -118,13 +113,13 @@ const heroMetaLabel = lastAdded
       {
         years.length > 1 && (
           <nav
-            class="flex flex-wrap items-baseline gap-x-3 gap-y-1 font-mono text-xs uppercase tracking-wider text-black/55 dark:text-white/55"
+            class="flex flex-wrap items-baseline gap-x-3 gap-y-1 font-heading text-xs uppercase tracking-wider text-black/55 dark:text-white/55"
             aria-label="Archive by year"
           >
             <span>Archive:</span>
             {years.map((y, i) => (
               <>
-                <Link href={`/reading/${y}/`} class="font-sans text-xs">
+                <Link href={`/reading/${y}/`} class="font-heading text-xs">
                   {y}
                 </Link>
                 {i < years.length - 1 && <span aria-hidden="true">·</span>}
@@ -156,7 +151,7 @@ const heroMetaLabel = lastAdded
                           where it belongs. */}
                       <time
                         datetime={entry.data.added.toISOString()}
-                        class="hidden w-32 shrink-0 font-sans text-xs text-black/50 md:block dark:text-white/60"
+                        class="hidden w-32 shrink-0 font-heading text-xs text-black/50 md:block dark:text-white/60"
                       >
                         {dateFormatter.format(entry.data.added)}
                       </time>
@@ -173,7 +168,7 @@ const heroMetaLabel = lastAdded
                           <Link
                             href={entry.data.url}
                             external
-                            class="font-heading font-medium text-black before:absolute before:inset-y-0 before:-inset-x-3 before:rounded-md before:transition-colors before:content-[''] hover:before:bg-black/[0.03] md:before:-inset-x-4 dark:text-white dark:hover:before:bg-white/[0.03]"
+                            class="font-display font-medium text-black before:absolute before:inset-y-0 before:-inset-x-3 before:rounded-md before:transition-colors before:content-[''] hover:before:bg-black/[0.03] md:before:-inset-x-4 dark:text-white dark:hover:before:bg-white/[0.03]"
                           >
                             {entry.data.title}
                           </Link>
@@ -194,7 +189,7 @@ const heroMetaLabel = lastAdded
                         {/* Mobile caption strip: monospace, dot-separated.
                             Promotes date into the row, keeps the cited-in
                             link as the accent-tinted final segment. */}
-                        <div class="flex flex-wrap items-center gap-x-2.5 gap-y-1 pt-1 font-mono text-xs tracking-wider text-black/55 md:hidden dark:text-white/55">
+                        <div class="flex flex-wrap items-center gap-x-2.5 gap-y-1 pt-1 font-heading text-xs tracking-wider text-black/55 md:hidden dark:text-white/55">
                           <time datetime={entry.data.added.toISOString()}>
                             {compactDateFormatter.format(entry.data.added)}
                           </time>
@@ -222,11 +217,11 @@ const heroMetaLabel = lastAdded
                             {entry.data.category}
                           </span>
                           {citings.map((ref) => (
-                            <span class="inline-flex items-baseline gap-1 font-mono text-xs text-[color:var(--accent)]">
+                            <span class="inline-flex items-baseline gap-1 font-heading text-xs text-[color:var(--accent)]">
                               <span aria-hidden="true">→</span>
                               <a
                                 href={`/wiki/${ref.id}/`}
-                                class="relative z-10 font-sans text-xs underline decoration-[color:var(--accent)]/40 underline-offset-[3px] hover:decoration-[color:var(--accent)]"
+                                class="relative z-10 font-heading text-xs underline decoration-[color:var(--accent)]/40 underline-offset-[3px] hover:decoration-[color:var(--accent)]"
                               >
                                 cited in /wiki/{ref.id}
                               </a>
@@ -254,6 +249,5 @@ const heroMetaLabel = lastAdded
       <p class="text-xs text-black/55 dark:text-white/55">
         <Link href="/wiki">wiki →</Link>
       </p>
-    </div>
-  </Container>
+  </PageBody>
 </Layout>

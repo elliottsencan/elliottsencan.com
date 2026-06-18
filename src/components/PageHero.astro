@@ -26,7 +26,7 @@ type Props = {
 const { breadcrumb = false } = Astro.props;
 ---
 
-<div class="flex flex-col gap-3">
+<div class="flex flex-col gap-4">
   {
     breadcrumb && (
       <LabeledRule>
@@ -35,10 +35,10 @@ const { breadcrumb = false } = Astro.props;
     )
   }
 
-  <div class="flex min-w-0 max-w-[62ch] flex-col gap-4">
-    <div class="flex flex-col gap-3">
+  <div class="flex min-w-0 max-w-[62ch] flex-col gap-5">
+    <div class="flex flex-col gap-4">
       <h1
-        class="font-heading text-xl font-semibold tracking-tight text-black dark:text-white"
+        class="title-display text-xl font-normal tracking-tight text-black dark:text-white"
       >
         <slot name="title" />
       </h1>

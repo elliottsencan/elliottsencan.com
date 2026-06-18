@@ -42,10 +42,7 @@
   "per_prompt": [
     {
       "prompt": "how do I keep my flaky tests from blocking CI",
-      "relevant": [
-        "flaky-tests",
-        "continuous-integration"
-      ],
+      "relevant": ["flaky-tests", "continuous-integration"],
       "off_topic": false,
       "results": [
         {
@@ -72,9 +69,7 @@
     },
     {
       "prompt": "my test suite passes locally but randomly fails on the build server, what's going on",
-      "relevant": [
-        "flaky-tests"
-      ],
+      "relevant": ["flaky-tests"],
       "off_topic": false,
       "results": [
         {
@@ -101,9 +96,7 @@
     },
     {
       "prompt": "best way to set up a merge queue so the main branch stays green",
-      "relevant": [
-        "continuous-integration"
-      ],
+      "relevant": ["continuous-integration"],
       "off_topic": false,
       "results": [
         {
@@ -130,9 +123,7 @@
     },
     {
       "prompt": "I want the model to pull in relevant docs at query time before answering",
-      "relevant": [
-        "retrieval-augmented-generation"
-      ],
+      "relevant": ["retrieval-augmented-generation"],
       "off_topic": false,
       "results": [
         {
@@ -159,10 +150,7 @@
     },
     {
       "prompt": "RAG keeps missing facts that span multiple documents, any alternatives",
-      "relevant": [
-        "retrieval-augmented-generation",
-        "context-engineering"
-      ],
+      "relevant": ["retrieval-augmented-generation", "context-engineering"],
       "off_topic": false,
       "results": [
         {
@@ -189,9 +177,7 @@
     },
     {
       "prompt": "how do I expose my tools and context to an AI agent over a standard protocol",
-      "relevant": [
-        "mcp"
-      ],
+      "relevant": ["mcp"],
       "off_topic": false,
       "results": [
         {
@@ -218,9 +204,7 @@
     },
     {
       "prompt": "wiring up a model context protocol server so the assistant can call my functions",
-      "relevant": [
-        "mcp"
-      ],
+      "relevant": ["mcp"],
       "off_topic": false,
       "results": [
         {
@@ -247,9 +231,7 @@
     },
     {
       "prompt": "the agent's context window keeps filling with junk, how do I budget tokens better",
-      "relevant": [
-        "context-engineering"
-      ],
+      "relevant": ["context-engineering"],
       "off_topic": false,
       "results": [
         {
@@ -276,9 +258,7 @@
     },
     {
       "prompt": "what should I think about when deciding what to stuff into the prompt",
-      "relevant": [
-        "context-engineering"
-      ],
+      "relevant": ["context-engineering"],
       "off_topic": false,
       "results": [
         {
@@ -305,10 +285,7 @@
     },
     {
       "prompt": "I need real-time visibility into what my cluster is actually doing",
-      "relevant": [
-        "observability",
-        "kubernetes"
-      ],
+      "relevant": ["observability", "kubernetes"],
       "off_topic": false,
       "results": [
         {
@@ -335,9 +312,7 @@
     },
     {
       "prompt": "looking for a single-binary UI to see my k8s topology and helm releases",
-      "relevant": [
-        "kubernetes"
-      ],
+      "relevant": ["kubernetes"],
       "off_topic": false,
       "results": [
         {
@@ -364,9 +339,7 @@
     },
     {
       "prompt": "the model is being sycophantic and agreeing with everything, how do I constrain that at inference time",
-      "relevant": [
-        "ai-safety"
-      ],
+      "relevant": ["ai-safety"],
       "off_topic": false,
       "results": [
         {
@@ -393,9 +366,7 @@
     },
     {
       "prompt": "how do I design a narrow stable interface that hides the messy internals",
-      "relevant": [
-        "api-design"
-      ],
+      "relevant": ["api-design"],
       "off_topic": false,
       "results": [
         {
@@ -422,10 +393,7 @@
     },
     {
       "prompt": "making my type scale readable and keeping semantic HTML for screen readers",
-      "relevant": [
-        "web-accessibility",
-        "fluid-typography"
-      ],
+      "relevant": ["web-accessibility", "fluid-typography"],
       "off_topic": false,
       "results": [
         {
@@ -452,10 +420,7 @@
     },
     {
       "prompt": "I want my layout to adapt without writing a dozen media query breakpoints",
-      "relevant": [
-        "responsive-design",
-        "fluid-typography"
-      ],
+      "relevant": ["responsive-design", "fluid-typography"],
       "off_topic": false,
       "results": [
         {
@@ -482,10 +447,7 @@
     },
     {
       "prompt": "using clamp to scale font sizes smoothly across viewport widths",
-      "relevant": [
-        "fluid-typography",
-        "responsive-design"
-      ],
+      "relevant": ["fluid-typography", "responsive-design"],
       "off_topic": false,
       "results": [
         {
@@ -512,9 +474,7 @@
     },
     {
       "prompt": "which two typefaces pair well to give my design system contrast and hierarchy",
-      "relevant": [
-        "font-pairing"
-      ],
+      "relevant": ["font-pairing"],
       "off_topic": false,
       "results": [
         {
@@ -541,9 +501,7 @@
     },
     {
       "prompt": "worried about a malicious dependency sneaking through code review with hidden unicode",
-      "relevant": [
-        "supply-chain-security"
-      ],
+      "relevant": ["supply-chain-security"],
       "off_topic": false,
       "results": [
         {
@@ -570,10 +528,7 @@
     },
     {
       "prompt": "how do durable execution frameworks help with consistency in distributed systems",
-      "relevant": [
-        "distributed-systems",
-        "production-systems"
-      ],
+      "relevant": ["distributed-systems", "production-systems"],
       "off_topic": false,
       "results": [
         {
@@ -600,10 +555,7 @@
     },
     {
       "prompt": "coordinating several LLM agents that keep disagreeing on subtasks",
-      "relevant": [
-        "agent-coordination",
-        "multi-agent-systems"
-      ],
+      "relevant": ["agent-coordination", "multi-agent-systems"],
       "off_topic": false,
       "results": [
         {
@@ -630,10 +582,7 @@
     },
     {
       "prompt": "why do my multi-agent setups fail so often, is it the coordination or the synthesis",
-      "relevant": [
-        "multi-agent-systems",
-        "agent-coordination"
-      ],
+      "relevant": ["multi-agent-systems", "agent-coordination"],
       "off_topic": false,
       "results": [
         {
@@ -660,9 +609,7 @@
     },
     {
       "prompt": "worried AI coding assistants are atrophying my skills and hurting verification",
-      "relevant": [
-        "ai-assisted-coding"
-      ],
+      "relevant": ["ai-assisted-coding"],
       "off_topic": false,
       "results": [
         {
@@ -689,9 +636,7 @@
     },
     {
       "prompt": "running a quantized model locally but I'm hitting VRAM limits",
-      "relevant": [
-        "llm-inference"
-      ],
+      "relevant": ["llm-inference"],
       "off_topic": false,
       "results": [
         {

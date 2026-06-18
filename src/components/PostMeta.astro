@@ -30,7 +30,7 @@ const updatedFormatted = post.data.updated ? dateFormatter.format(post.data.upda
 const readingTimeFormatted = readingTime(post.body ?? "");
 ---
 
-<div class="flex flex-wrap items-center gap-x-3 gap-y-2 font-sans text-xs text-black/55 dark:text-white/55">
+<div class="flex flex-wrap items-center gap-x-3 gap-y-2 font-heading text-xs text-black/55 dark:text-white/55">
   <span>Published {publishedFormatted}</span>
 
   {post.body && (

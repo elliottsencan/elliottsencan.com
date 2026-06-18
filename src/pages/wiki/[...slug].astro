@@ -125,8 +125,7 @@ const breadcrumbs = [
 type ConstellationCluster = { id: string; title: string; short: string; hue: number };
 const constellationClusters: ConstellationCluster[] = constellationLayout.clusters;
 const constellationClusterById: Record<string, string | null> = constellationLayout.clusterById;
-const constellationLocal: Record<string, { nodes: { id: string }[] }> =
-  constellationLayout.local;
+const constellationLocal: Record<string, { nodes: { id: string }[] }> = constellationLayout.local;
 
 const localData = constellationLocal[concept.id];
 const hasLocal = !!localData && localData.nodes.length > 1;
@@ -154,33 +153,26 @@ const neighborCount = hasLocal ? localData.nodes.length - 1 : 0;
       data-pagefind-filter="type:Wiki"
     >
       {/*
-        Hero — 3-row × 2-col grid mirroring /wiki. Col 1 holds the editorial
-        rails: row 1 = LabeledRule with "Wiki" (linked back to the index)
-        as the back-nav, row 2 = title/summary/source-count stack with flex
-        justify-between, row 3 = EditorialRule compact (bottom dot row).
-        Col 2 holds the local constellation spanning rows 1-2 and a footer
-        caption (cluster · neighbors) in row 3 that grid-aligns with the
-        col-1 bottom rule. The h1 carries the current concept identity, so
-        the row-1 label stays minimal — just "Wiki" — to avoid double
-        labelling.
+        Hero — 2-row × 2-col grid mirroring /wiki. Col 1 holds the editorial
+        rail: row 1 = title/summary/source-count stack (flex justify-between),
+        row 2 = EditorialRule compact (bottom dot row). Col 2 holds the local
+        constellation in row 1 and a footer caption (cluster · neighbors) in
+        row 2 that grid-aligns with the col-1 bottom rule. The back-nav "Wiki"
+        breadcrumb lives in the Layout header now, so the hero opens straight
+        into the title — no leading row, which previously left a dead `auto`
+        row whose gap-y-3 gutter pushed the title down 12px from the top.
 
         NB: must NOT use bare <header> — global.css fixes-positions every
         <header> as site chrome (CLAUDE.md: "bare tags are reserved").
       */}
       <div
-        class="grid items-stretch gap-x-8 gap-y-3 md:grid-cols-[minmax(0,1fr)_auto] md:gap-x-10 md:[grid-template-rows:auto_1fr_auto]"
+        class="grid items-stretch gap-x-8 gap-y-3 md:grid-cols-[minmax(0,1fr)_auto] md:gap-x-10 md:[grid-template-rows:1fr_auto]"
       >
-        <div class="md:col-start-1 md:row-start-1">
-          <LabeledRule>
-            <Link href="/wiki/">Wiki</Link>
-          </LabeledRule>
-        </div>
-
         <div
-          class="flex min-w-0 max-w-[62ch] flex-col justify-between gap-4 md:col-start-1 md:row-start-2"
+          class="flex min-w-0 max-w-[62ch] flex-col justify-between gap-4 md:col-start-1 md:row-start-1"
         >
           <div class="flex flex-col gap-3">
-            <h1 class="font-heading text-xl font-semibold tracking-tight text-black dark:text-white">
+            <h1 class="title-display text-xl font-normal tracking-tight text-black dark:text-white">
               {concept.data.title}
             </h1>
             <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
@@ -212,11 +204,11 @@ const neighborCount = hasLocal ? localData.nodes.length - 1 : 0;
           </p>
         </div>
 
-        <EditorialRule compact class="md:col-start-1 md:row-start-3" />
+        <EditorialRule compact class="md:col-start-1 md:row-start-2" />
 
         {
           hasLocal && (
-            <div class="md:col-start-2 md:row-start-1 md:row-end-3">
+            <div class="md:col-start-2 md:row-start-1">
               <ConstellationLocal slug={concept.id} />
             </div>
           )
@@ -225,7 +217,7 @@ const neighborCount = hasLocal ? localData.nodes.length - 1 : 0;
         {
           hasLocal && (
             <p
-              class="font-mono text-xs tracking-wider text-black/55 dark:text-white/55 md:col-start-2 md:row-start-3 md:self-center"
+              class="font-mono text-xs tracking-wider text-black/55 dark:text-white/55 md:col-start-2 md:row-start-2 md:self-center"
             >
               {myCluster ? `${myCluster.short} · ` : ""}
               {neighborCount} neighbor{neighborCount === 1 ? "" : "s"}
@@ -249,7 +241,7 @@ const neighborCount = hasLocal ? localData.nodes.length - 1 : 0;
 
         <aside class="wiki-rail md:sticky md:top-28 md:self-start">
           <p
-            class="mb-3 font-mono text-xs uppercase tracking-wider text-black/55 dark:text-white/55"
+            class="mb-3 font-heading text-xs uppercase tracking-wider text-black/55 dark:text-white/55"
           >
             Sources
           </p>
@@ -271,7 +263,7 @@ const neighborCount = hasLocal ? localData.nodes.length - 1 : 0;
                   <span class="text-xs text-black/55 dark:text-white/55">
                     {entry.data.author ?? entry.data.source ?? ""}
                   </span>
-                  <span class="font-mono text-xs tracking-wide text-black/40 dark:text-white/45">
+                  <span class="font-heading text-xs tracking-wide text-black/40 dark:text-white/45">
                     {[entry.data.source, dateFormatter.format(entry.data.added)]
                       .filter(Boolean)
                       .join(" · ")}
@@ -280,7 +272,7 @@ const neighborCount = hasLocal ? localData.nodes.length - 1 : 0;
               </li>
             ))}
           </ol>
-          <p class="mt-3 font-mono text-xs tracking-wider text-black/55 dark:text-white/55">
+          <p class="mt-3 font-heading text-xs tracking-wider text-black/55 dark:text-white/55">
             <Link href="/reading">view in /reading →</Link>
           </p>
         </aside>
@@ -306,7 +298,7 @@ const neighborCount = hasLocal ? localData.nodes.length - 1 : 0;
                       href={`/wiki/${slug}/`}
                       class="flex h-full flex-col gap-1.5 rounded-sm bg-black/5 px-3.5 py-3 no-underline transition-colors hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10"
                     >
-                      <span class="font-heading text-sm font-medium leading-tight tracking-tight text-black dark:text-white">
+                      <span class="font-display text-sm font-medium leading-tight tracking-tight text-black dark:text-white">
                         {rc.data.title} →
                       </span>
                       <span class="text-xs leading-relaxed text-black/55 dark:text-white/55">
@@ -416,7 +408,7 @@ const neighborCount = hasLocal ? localData.nodes.length - 1 : 0;
   /* Wiki body prose — same visual as the global article rule but scoped to
      a class so it doesn't collide with the 2-column grid track sizing. */
   .wiki-body {
-    font-family: var(--font-sans);
+    font-family: var(--font-serif);
     font-size: 1rem;
     line-height: 1.7;
     color: rgb(0 0 0 / 0.85);
@@ -434,7 +426,7 @@ const neighborCount = hasLocal ? localData.nodes.length - 1 : 0;
     margin-top: 1.1em;
   }
   .wiki-body h2 {
-    font-family: var(--font-heading);
+    font-family: var(--font-display);
     font-weight: 500;
     font-size: 1.25em;
     color: rgb(0 0 0);
@@ -446,7 +438,7 @@ const neighborCount = hasLocal ? localData.nodes.length - 1 : 0;
     color: rgb(255 255 255);
   }
   .wiki-body h3 {
-    font-family: var(--font-heading);
+    font-family: var(--font-display);
     font-weight: 500;
     font-size: 1.1em;
     color: rgb(0 0 0);

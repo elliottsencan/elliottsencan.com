@@ -6,11 +6,9 @@ import EditorialListItem from "@components/EditorialListItem.astro";
 import EditorialRule from "@components/EditorialRule.astro";
 import LabeledRule from "@components/LabeledRule.astro";
 import Link from "@components/Link.astro";
-import Sparkline from "@components/labs/Sparkline.astro";
 import Masthead from "@components/Masthead.astro";
 import { HOME } from "@consts";
 import Layout from "@layouts/Layout.astro";
-import { loadLabData } from "@lib/lab-data";
 import { SITE_TIMEZONE } from "@lib/utils";
 
 // Homepage layout: Masthead → Recent posts → Where this writing comes from
@@ -98,17 +96,7 @@ for (const entry of reading) {
   }
 }
 const thisWeekCount = cadenceBuckets[WEEKS - 1];
-const cadenceMax = Math.max(1, ...cadenceBuckets);
 
-// Labs spark — pull the latest live cell's chart values.
-const labSparkData =
-  latestLab && latestLab.data.kind === "chart" ? await loadLabData(latestLab.data.dataPath) : null;
-const labSparkValues =
-  labSparkData &&
-  typeof labSparkData === "object" &&
-  Array.isArray((labSparkData as { values?: unknown }).values)
-    ? (labSparkData as { values: number[] }).values
-    : null;
 const lastRunIso = latestLab ? toIso(latestLab.data.lastRunDate) : null;
 const wikiCompiledIso = latestWiki ? toIso(latestWiki.data.compiled_at) : null;
 
@@ -218,7 +206,7 @@ const trails = [
                       with relative z-10. */}
                   <Link
                     href={trail.href}
-                    class="font-heading text-base font-medium tracking-tight text-black no-underline group-hover:text-(--accent) before:absolute before:inset-y-0 before:-inset-x-3 before:rounded-md before:transition-colors before:content-[''] hover:before:bg-black/[0.03] md:before:-inset-x-4 dark:text-white dark:hover:before:bg-white/[0.03]"
+                    class="font-display text-base font-medium tracking-tight text-black no-underline group-hover:text-(--accent) before:absolute before:inset-y-0 before:-inset-x-3 before:rounded-md before:transition-colors before:content-[''] hover:before:bg-black/[0.03] md:before:-inset-x-4 dark:text-white dark:hover:before:bg-white/[0.03]"
                   >
                     /{trail.key}
                   </Link>
@@ -231,7 +219,7 @@ const trails = [
                         latest ·{" "}
                         <Link
                           href={trail.latest.href}
-                          class="relative z-10 font-sans text-xs"
+                          class="relative z-10 font-heading text-xs"
                         >
                           {trail.latest.title}
                         </Link>
@@ -245,25 +233,22 @@ const trails = [
 
                 {trail.stat && (
                   <div class="flex min-w-[7rem] flex-col gap-1 md:items-end">
-                    <span class="font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55">
+                    <span class="font-heading text-xs uppercase tracking-widest text-black/55 dark:text-white/55">
                       {trail.stat.unit}
                     </span>
-                    <span
-                      class="font-heading text-3xl font-medium leading-none tracking-tight text-black md:text-[2.1rem] dark:text-white"
-                      style="font-variant-numeric: tabular-nums;"
-                    >
+                    <span class="num-display text-3xl text-black md:text-[2.1rem] dark:text-white">
                       {trail.stat.n}
                     </span>
-                    {/* Mini-viz tucked under the headline number — wiki
-                        concept cluster, reading 12-week cadence, labs
-                        sparkline. Width matches the row's right-column
-                        minimum so the viz aligns with the value's
-                        baseline grid; height (h-10) matches the value's
-                        line-height so the viz sits as one more line of
-                        the right-column rhythm. mt-3 picks up the row's
-                        gap-y-3. */}
-                    <div class="mt-3 w-32 text-black/65 sm:w-40 dark:text-white/65">
-                      {trail.key === "wiki" && (
+                    {/* Mini-viz under the headline number — the wiki
+                        concept-cluster graph only. The decorative reading
+                        cadence bars and labs sparkline were cut in the
+                        differentiation pass (form follows the thesis: keep the
+                        one real graph, drop the unlabeled charts). Width matches
+                        the row's right-column minimum; height (h-10) matches the
+                        value's line-height so it reads as one more line of the
+                        right-column rhythm. mt-3 picks up the row's gap-y-3. */}
+                    {trail.key === "wiki" && (
+                      <div class="mt-3 w-32 text-black/65 sm:w-40 dark:text-white/65">
                         <svg
                           viewBox="0 0 80 40"
                           aria-hidden="true"
@@ -281,37 +266,8 @@ const trails = [
                           <circle cx="54" cy="24" r="2" fill="currentColor" opacity="0.85" />
                           <circle cx="68" cy="14" r="1.4" fill="currentColor" opacity="0.6" />
                         </svg>
-                      )}
-                      {trail.key === "reading" && (
-                        <svg
-                          viewBox="0 0 80 40"
-                          aria-hidden="true"
-                          class="h-10 w-full"
-                          preserveAspectRatio="none"
-                        >
-                          {cadenceBuckets.map((v, idx) => {
-                            const barW = 80 / WEEKS - 1.4;
-                            const x = idx * (80 / WEEKS) + 0.7;
-                            const h = Math.max(2, (v / cadenceMax) * 36);
-                            const y = 38 - h;
-                            const isCurrent = idx === WEEKS - 1;
-                            return (
-                              <rect
-                                x={x}
-                                y={y}
-                                width={barW}
-                                height={h}
-                                fill={isCurrent ? "var(--accent)" : "currentColor"}
-                                opacity={isCurrent ? 1 : 0.55}
-                              />
-                            );
-                          })}
-                        </svg>
-                      )}
-                      {trail.key === "labs" && labSparkValues && labSparkValues.length > 0 && (
-                        <Sparkline data={labSparkValues} height={40} />
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </li>

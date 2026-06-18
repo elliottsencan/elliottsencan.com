@@ -2,6 +2,10 @@
 import Container from "@components/Container.astro";
 import Link from "@components/Link.astro";
 import SignatureLogo from "./SignatureLogo.astro";
+
+// Active section = first path segment, so /reading, /reading/2026, and
+// /reading/2026/slug all light the "reading" nav item in the accent.
+const section = Astro.url.pathname.split("/").filter(Boolean)[0] ?? "";
 ---
 
 <header transition:persist>
@@ -19,11 +23,11 @@ import SignatureLogo from "./SignatureLogo.astro";
         class="header-links flex items-center text-sm sm:justify-end sm:gap-x-5"
       >
         <!-- <Link href="/writing">writing</Link> -->
-        <Link href="/now">now</Link>
-        <Link href="/reading">reading</Link>
-        <Link href="/wiki">wiki</Link>
-        <Link href="/labs">labs</Link>
-        <Link href="/about">about</Link>
+        <Link href="/now" active={section === "now"}>now</Link>
+        <Link href="/reading" active={section === "reading"}>reading</Link>
+        <Link href="/wiki" active={section === "wiki"}>wiki</Link>
+        <Link href="/labs" active={section === "labs"}>labs</Link>
+        <Link href="/about" active={section === "about"}>about</Link>
       </nav>
       <div class="header-utility flex items-center gap-x-3.5">
         <a

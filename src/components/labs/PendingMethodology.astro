@@ -30,20 +30,20 @@ const { message, steps = [], receipts = [], code } = Astro.props;
 <div class="flex flex-col gap-5 border border-dashed border-black/30 p-5 md:p-6 dark:border-white/25">
   <div class="flex items-center gap-3">
     <span class="inline-block h-2 w-2 animate-pulse rounded-full bg-[color:var(--accent)]"></span>
-    <span class="font-mono text-xs uppercase tracking-widest text-black/65 dark:text-white/65">
+    <span class="font-heading text-xs uppercase tracking-widest text-black/65 dark:text-white/65">
       Methodology shipped · first run pending
     </span>
   </div>
 
   {message && (
-    <p class="m-0 font-mono text-xs leading-relaxed text-black/65 dark:text-white/65">
+    <p class="m-0 font-heading text-xs leading-relaxed text-black/65 dark:text-white/65">
       {message}
     </p>
   )}
 
   {
     steps.length > 0 && (
-      <ol class="m-0 flex list-decimal flex-col gap-2 pl-5 font-sans text-sm leading-relaxed text-black/80 marker:font-mono marker:text-xs marker:text-black/45 dark:text-white/80 dark:marker:text-white/45">
+      <ol class="m-0 flex list-decimal flex-col gap-2 pl-5 font-serif text-sm leading-relaxed text-black/80 marker:font-mono marker:text-xs marker:text-black/45 dark:text-white/80 dark:marker:text-white/45">
         {steps.map((s) => (
           <li set:html={s} />
         ))}

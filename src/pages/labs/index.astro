@@ -1,31 +1,23 @@
 ---
 import { getCollection } from "astro:content";
-import Container from "@components/Container.astro";
 import EditorialRule from "@components/EditorialRule.astro";
 import HeroMeta from "@components/HeroMeta.astro";
 import Link from "@components/Link.astro";
 import CodeCell from "@components/labs/CodeCell.astro";
-import Sparkline from "@components/labs/Sparkline.astro";
+import PageBody from "@components/PageBody.astro";
 import PageHero from "@components/PageHero.astro";
 import Layout from "@layouts/Layout.astro";
-import { loadLabData } from "@lib/lab-data";
 import { SITE_TIMEZONE } from "@lib/utils";
 
 // /labs — the measurement layer. Each cell stamps "what was the question,
 // what's the number, what does it mean." The index lists every cell in
 // reverse-chronological run order. Row chrome here matches /reading and
 // /writing: title + slug + summary on the left, headline metric pinned to
-// the right, status / when / tags below; sparkline (when the cell is a
-// chart with data) drops into a full-width row at the bottom of the cell.
+// the right, status / when / tags below. (The per-row decorative sparkline
+// was cut in the differentiation pass — real charts live on each cell page.)
 const cells = (await getCollection("labs")).sort(
   (a, b) => b.data.lastRunDate.valueOf() - a.data.lastRunDate.valueOf(),
 );
-
-const dataByCellId = new Map<string, unknown>();
-for (const cell of cells) {
-  const data = await loadLabData(cell.data.dataPath);
-  dataByCellId.set(cell.id, data);
-}
 
 const liveCount = cells.filter((c) => c.data.status === "live").length;
 const pendingCount = cells.filter((c) => c.data.status === "draft").length;
@@ -69,12 +61,7 @@ function statusLabel(status: string): string {
   title="Labs"
   description="Observable-style cells holding the data behind my writing — cost breakdowns, eval runs, telemetry."
 >
-  <Container>
-    <div
-      class="space-y-10"
-      data-pagefind-body
-      data-pagefind-filter="type:Labs"
-    >
+  <PageBody data-pagefind-body data-pagefind-filter="type:Labs">
       <PageHero>
         <Fragment slot="title">Labs</Fragment>
         <Fragment slot="summary">
@@ -117,15 +104,7 @@ function statusLabel(status: string): string {
             </p>
             <ul class="not-prose flex flex-col">
               {cells.map((cell, i) => {
-                const data = dataByCellId.get(cell.id);
                 const isPending = cell.data.status === "draft";
-                const sparkValues =
-                  cell.data.kind === "chart" &&
-                  typeof data === "object" &&
-                  data !== null &&
-                  Array.isArray((data as { values?: unknown }).values)
-                    ? (data as { values: number[] }).values
-                    : null;
                 return (
                   <li
                     class:list={[
@@ -141,11 +120,11 @@ function statusLabel(status: string): string {
                           relative z-10 so it remains independently clickable. */}
                       <Link
                         href={`/labs/${cell.id}/`}
-                        class="font-heading text-base font-medium tracking-tight text-black no-underline group-hover:text-[color:var(--accent)] before:absolute before:inset-y-0 before:-inset-x-3 before:rounded-md before:transition-colors before:content-[''] hover:before:bg-black/[0.03] md:before:-inset-x-4 dark:text-white dark:hover:before:bg-white/[0.03]"
+                        class="font-display text-base font-medium tracking-tight text-black no-underline group-hover:text-[color:var(--accent)] before:absolute before:inset-y-0 before:-inset-x-3 before:rounded-md before:transition-colors before:content-[''] hover:before:bg-black/[0.03] md:before:-inset-x-4 dark:text-white dark:hover:before:bg-white/[0.03]"
                       >
                         {cell.data.title}
                       </Link>
-                      <div class="flex flex-wrap items-center gap-x-3 gap-y-0.5 font-mono text-xs">
+                      <div class="flex flex-wrap items-center gap-x-3 gap-y-0.5 font-heading text-xs">
                         <span
                           class:list={[
                             "uppercase tracking-widest",
@@ -156,7 +135,7 @@ function statusLabel(status: string): string {
                         >
                           {statusLabel(cell.data.status)}
                         </span>
-                        <span class="text-black/55 dark:text-white/55">
+                        <span class="font-mono text-black/55 dark:text-white/55">
                           {isPending
                             ? "methodology shipped"
                             : `last run · ${formatLastRun(cell.data.lastRunDate)}`}
@@ -166,7 +145,7 @@ function statusLabel(status: string): string {
                             cited by{" "}
                             <Link
                               href={`/writing/${cell.data.blogPostSlug}/`}
-                              class="relative z-10 font-sans text-xs"
+                              class="relative z-10 font-heading text-xs"
                             >
                               {cell.data.blogPostSlug}
                             </Link>
@@ -188,7 +167,7 @@ function statusLabel(status: string): string {
                     </div>
 
                     <div class="flex min-w-[7rem] flex-col gap-1 md:items-end">
-                      <span class="font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55">
+                      <span class="font-heading text-xs uppercase tracking-widest text-black/55 dark:text-white/55">
                         {cell.data.headlineMetric.label}
                       </span>
                       <span
@@ -198,17 +177,11 @@ function statusLabel(status: string): string {
                             ? "text-2xl text-black/40 dark:text-white/40"
                             : "text-3xl text-black md:text-[2.1rem] dark:text-white",
                         ]}
-                        style="font-variant-numeric: tabular-nums;"
+                        style="font-variant-numeric: tabular-nums slashed-zero;"
                       >
                         {cell.data.headlineMetric.value}
                       </span>
                     </div>
-
-                    {sparkValues && (
-                      <div class="block w-full text-black/75 md:col-span-2 dark:text-white/75">
-                        <Sparkline data={sparkValues} height={36} />
-                      </div>
-                    )}
                   </li>
                 );
               })}
@@ -236,6 +209,5 @@ const { post, run } = await loadCell({
       <p class="text-xs text-black/55 dark:text-white/55">
         <Link href="/wiki">wiki →</Link>
       </p>
-    </div>
-  </Container>
+  </PageBody>
 </Layout>

@@ -58,27 +58,27 @@ const constellationTieCount = constellationLayout.global.edges.length;
       
 
       {/*
-        Hero — 3-row grid at md+. Column 1 holds the editorial rails:
-          row 1: top rule
-          row 2: prose + meta cell, flex-col justify-between so the prose
+        Hero — 2-row grid at md+. Column 1 holds the editorial rail:
+          row 1: prose + meta cell, flex-col justify-between so the prose
                  anchors at the top and the meta cell at the bottom of the
                  row
-          row 3: bottom rule
-        Column 2 holds only the constellation (with its MAP eyebrow); it
-        spans all three rows, so the constellation's top and bottom edges
-        align with the col-1 rules. On mobile (no grid columns) items fall
-        back to source order: top rule → content → bottom rule → const.
+          row 2: bottom rule
+        Column 2 holds only the constellation; it spans row 1 and a caption
+        in row 2, so the constellation's top aligns with the title and its
+        caption aligns with the col-1 bottom rule. The hero opens straight
+        into the title — no leading rule row, which previously left a dead
+        `auto` row whose gap-y-3 gutter pushed the title down 12px. On mobile
+        (no grid columns) items fall back to source order: content → bottom
+        rule → const.
       */}
       <div
-        class="grid items-stretch gap-x-8 gap-y-3 md:grid-cols-[minmax(0,1fr)_auto] md:gap-x-10 md:[grid-template-rows:auto_1fr_auto]"
+        class="grid items-stretch gap-x-8 gap-y-3 md:grid-cols-[minmax(0,1fr)_auto] md:gap-x-10 md:[grid-template-rows:1fr_auto]"
       >
-        <!-- <EditorialRule compact class="md:col-start-1 md:row-start-1" /> -->
-
         <div
-          class="flex min-w-0 max-w-[62ch] flex-col justify-between gap-4 md:col-start-1 md:row-start-2"
+          class="flex min-w-0 max-w-[62ch] flex-col justify-between gap-4 md:col-start-1 md:row-start-1"
         >
           <div class="flex flex-col gap-3">
-            <h1 class="font-heading text-xl font-semibold tracking-tight text-black dark:text-white">
+            <h1 class="title-display text-xl font-normal tracking-tight text-black dark:text-white">
               Wiki
             </h1>
             <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
@@ -112,20 +112,20 @@ const constellationTieCount = constellationLayout.global.edges.length;
           </p>
         </div>
 
-        <EditorialRule compact class="md:col-start-1 md:row-start-3" />
+        <EditorialRule compact class="md:col-start-1 md:row-start-2" />
 
         {
           wiki.length > 0 && (
-            <div class="md:col-start-2 md:row-start-1 md:row-end-3">
+            <div class="md:col-start-2 md:row-start-1">
               <ConstellationStrip />
             </div>
           )
         }
 
-        {/* Caption sits in col 2 row 3 so it lines up horizontally with the
+        {/* Caption sits in col 2 row 2 so it lines up horizontally with the
             col-1 EditorialRule. Same row → guaranteed alignment. */}
         <p
-          class="font-mono text-xs text-black/55 dark:text-white/55 md:col-start-2 md:row-start-3"
+          class="font-mono text-xs text-black/55 dark:text-white/55 md:col-start-2 md:row-start-2"
         >
           {constellationNeighborhoodCount} neighborhoods
           {" · "}
@@ -153,7 +153,7 @@ const constellationTieCount = constellationLayout.global.edges.length;
                     href={`/wiki/${concept.id}/`}
                     class="-mx-2 flex h-full flex-col gap-2 rounded-sm px-2 pt-2 pb-2 no-underline transition-colors hover:bg-[color-mix(in_oklch,var(--accent)_10%,transparent)] focus-visible:bg-[color-mix(in_oklch,var(--accent)_10%,transparent)]"
                   >
-                    <span class="font-heading text-base font-medium text-black dark:text-white">
+                    <span class="font-display text-base font-medium text-black dark:text-white">
                       {concept.data.title}
                     </span>
                     <p class="text-sm leading-relaxed text-black/75 dark:text-white/75">

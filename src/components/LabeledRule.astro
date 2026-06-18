@@ -33,7 +33,7 @@ const { as: Tag = "h1", class: className, accent = false } = Astro.props;
       accent ? "text-[color:var(--accent)]" : "text-black/55 dark:text-white/60",
       className,
     ]}
-    style="font-variant-numeric: tabular-nums;"
+    style="font-variant-numeric: tabular-nums slashed-zero;"
   >
     <slot />
   </Tag>
