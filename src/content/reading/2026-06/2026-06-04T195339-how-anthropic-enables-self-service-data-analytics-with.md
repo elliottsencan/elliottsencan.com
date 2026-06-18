@@ -3,28 +3,27 @@ title: How Anthropic Enables Self-Service Data Analytics with Claude
 url: >-
   https://claude.com/blog/how-anthropic-enables-self-service-data-analytics-with-claude
 summary: >-
-  Anthropic automated 95% of internal business analytics queries via Claude at
-  ~95% accuracy by building a layered agentic stack of canonical data
-  foundations, structured sources of truth, domain-specific skills, and
-  continuous validation to eliminate ambiguity, staleness, and retrieval
-  failures.
+  Anthropic automated 95% of business analytics queries with ~95% accuracy by
+  building an agentic stack of canonical datasets, a semantic layer, and curated
+  skill docs that route Claude to governed data sources rather than letting it
+  freely search the warehouse.
 category: tech
+kind: article
 added: '2026-06-05T02:53:39.783Z'
 author: Anthropic
-source: Anthropic
+source: Anthropic Blog
 topics:
   - agentic-workflows
-  - llm-agents
   - llm-engineering
+  - llm-agents
   - context-engineering
-  - enterprise-software
-compiled_at: '2026-06-05T02:53:39.783Z'
+  - production-systems
+compiled_at: '2026-06-18T22:44:18.662Z'
 compiled_with: claude-sonnet-4-6
-title_source: model
 compile_cost:
   usage:
-    input_tokens: 5363
-    output_tokens: 177
+    input_tokens: 5820
+    output_tokens: 124
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -35,6 +34,6 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.018744
+  cost_usd: 0.01932
 ---
 
