@@ -20,8 +20,6 @@ sources:
     2026-06/2026-06-10t221112-estimating-no-cot-task-completion-time-horizons-of-frontier
   - 2026-06/2026-06-11t024225-testing-a-security-tool-like-it-can-hurt-people
   - 2026-06/2026-06-13t083239-claude-fable-is-relentlessly-proactive
-aliases:
-  - ai-security
 compiled_at: '2026-06-18T21:40:48.981Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
