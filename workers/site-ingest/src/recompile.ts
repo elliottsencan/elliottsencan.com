@@ -91,7 +91,10 @@ type SkipReason = "no-source" | "transient" | "frontmatter-invalid" | "other";
 
 type RecompileResultRow = {
   path: string;
-  status: "updated" | "skipped";
+  // "would-recompile" is the dry-run/preview status: the entry matched the
+  // scope and would be rebuilt on a live run, without having fetched its
+  // source or called Anthropic.
+  status: "updated" | "skipped" | "would-recompile";
   reason?: string;
   skip_reason?: SkipReason;
 };
@@ -132,6 +135,42 @@ export function makeRecompileStrategy(req: RecompileRequest): Strategy<Recompile
       const scoped = applyScope(entries, req.scope);
       const prioritized = prioritizeByCompiledAt(scoped);
       const maxEntries = resolveMaxEntries(env);
+
+      // Dry run is a preview: report every matched entry without fetching its
+      // source or calling Anthropic. The per-entry fetch+LLM work happens only
+      // on the live path below — doing it here would spend tokens for a preview
+      // and blow past Cloudflare's wall time for large scopes. The per-run cap
+      // is a live-execution safety bound, so it doesn't constrain the preview;
+      // `recompile:run-all` chunks this full list into cap-sized live calls.
+      if (req.dry_run) {
+        const results: RecompileResultRow[] = [
+          ...prioritized.map((e) => ({ path: e.path, status: "would-recompile" as const })),
+          ...invalidPaths.map((path) => ({
+            path,
+            status: "skipped" as const,
+            reason: "frontmatter parse failed",
+            skip_reason: "frontmatter-invalid" as const,
+          })),
+        ];
+        log.info("recompile", "plan", "dry-run preview", {
+          matched: prioritized.length,
+          invalid: invalidPaths.length,
+        });
+        return {
+          ok: true,
+          data: {
+            mutation: { added: [], changed: [] },
+            summary: {
+              matched: prioritized.length,
+              results,
+              scope: req.scope,
+              deferred: [],
+              run_cost: aggregateCost([]),
+            },
+          },
+        };
+      }
+
       const filtered = prioritized.slice(0, maxEntries);
       const deferred = prioritized.slice(maxEntries).map((e) => slugFromPath(e.path));
 
@@ -350,12 +389,15 @@ export async function handle(request: Request, env: Env, ctx: ExecutionContext):
     if (!summary) {
       return jsonResponse({ ok: false, error: "no summary returned" }, 500);
     }
-    const updated = summary.results.filter((r) => r.status === "updated");
+    const would = summary.results.filter((r) => r.status === "would-recompile");
     return jsonResponse({
       ok: true,
       dry_run: true,
       matched: summary.matched,
-      processed: updated.length,
+      processed: would.length,
+      // Slug list consumed by `recompile:run-all` to chunk the backfill into
+      // cap-sized live calls.
+      would_recompile: would.map((r) => slugFromPath(r.path)),
       skipped: partitionSkips(summary.results),
       results: summary.results,
       deferred: summary.deferred,
