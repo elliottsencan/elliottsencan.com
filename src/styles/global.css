@@ -330,7 +330,7 @@
 
   article {
     @apply prose prose-neutral dark:prose-invert prose-img:mx-auto prose-img:my-auto;
-    @apply prose-headings:font-heading prose-headings:font-medium;
+    @apply prose-headings:font-display prose-headings:font-medium;
     @apply prose-headings:text-black dark:prose-headings:text-white;
     /* Drive article body off the fluid scale instead of Typography's
        internal size variants (prose-base / prose-lg / etc.) so all body
