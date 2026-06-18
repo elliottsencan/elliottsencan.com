@@ -2,26 +2,27 @@
 title: Building a UI Without Breakpoints
 url: 'https://frontendmasters.com/blog/building-a-ui-without-breakpoints/'
 summary: >-
-  Argues that modern CSS primitives—intrinsic grid layouts, clamp() fluid
-  values, container units, and container queries—should replace viewport
-  breakpoints as the default responsive design engine, reserving media queries
-  for device capabilities and user preferences.
+  Argues that modern component-first UIs should replace viewport breakpoints
+  with intrinsic layouts, fluid clamp() values, container units, and container
+  queries — reserving media queries for device capabilities and user
+  preferences.
 category: design
+kind: article
 added: '2026-04-24T15:53:52.177Z'
 author: Amit Sheen
 source: Frontend Masters
 topics:
   - responsive-design
-  - css
-  - container-queries
   - fluid-typography
-  - css-layout
-compiled_at: '2026-05-03T18:34:22.763Z'
+  - web-accessibility
+  - engineering-craft
+  - software-architecture
+compiled_at: '2026-06-18T22:30:21.374Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 5513
-    output_tokens: 107
+    input_tokens: 6573
+    output_tokens: 154
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -32,6 +33,6 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.018144
+  cost_usd: 0.022029
 ---
 

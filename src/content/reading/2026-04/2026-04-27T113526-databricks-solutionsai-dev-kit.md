@@ -2,25 +2,26 @@
 title: databricks-solutions/ai-dev-kit
 url: 'https://github.com/databricks-solutions/ai-dev-kit'
 summary: >-
-  An MCP server, Python library, and skill pack that give AI coding assistants
-  (Claude Code, Cursor, Windsurf, etc.) trusted Databricks patterns and 50+
-  executable tools for building Spark pipelines, jobs, dashboards, and agents on
-  Databricks.
+  A composable toolkit that brings Databricks expertise to AI coding assistants
+  via an MCP server, markdown skills, a Python core library, and a full-stack
+  builder app — supporting Claude Code, Cursor, Gemini CLI, and others.
 category: tech
+kind: repository
 added: '2026-04-27T18:35:26.978Z'
+author: Databricks Solutions
 source: GitHub
 topics:
-  - developer-tools
-  - databricks
-  - mcp-server
   - ai-assisted-coding
-  - ai-agents
-compiled_at: '2026-05-03T18:34:44.668Z'
+  - mcp
+  - developer-tooling
+  - llm-tooling
+  - agentic-workflows
+compiled_at: '2026-06-18T22:30:45.334Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 4900
-    output_tokens: 119
+    input_tokens: 6101
+    output_tokens: 121
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -31,6 +32,6 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.016485
+  cost_usd: 0.020118
 ---
 

@@ -2,24 +2,24 @@
 title: CanItRun — Can my GPU run this LLM?
 url: 'https://canitrun.dev/'
 summary: >-
-  A free tool that lets you pick any GPU and instantly see which open-weight
-  LLMs fit in its VRAM, at which quantization level, and how fast they'll run in
-  tokens per second.
+  Interactive tool that calculates whether a given GPU's VRAM can run specific
+  open-weight LLMs, showing compatible quantization levels and estimated
+  tokens-per-second based on model weights, KV cache, and activation overhead.
 category: tech
+kind: tool
 added: '2026-04-30T00:35:53.380Z'
-source: CanItRun
 topics:
   - llm-inference
-  - local-llm
-  - vram
-  - quantization
-  - open-weight-models
-compiled_at: '2026-05-03T18:35:16.906Z'
+  - llm-engineering
+  - developer-tools
+  - benchmarks
+  - open-source
+compiled_at: '2026-06-18T22:31:24.990Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 6717
-    output_tokens: 108
+    input_tokens: 8324
+    output_tokens: 106
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -30,6 +30,6 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.021771
+  cost_usd: 0.026562
 ---
 
