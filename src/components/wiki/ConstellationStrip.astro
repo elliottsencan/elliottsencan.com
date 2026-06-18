@@ -174,11 +174,12 @@ const nodeById = new Map(nodes.map((n) => [n.id, n]));
 ---
 
 <div
-  class="constellation-strip"
+  class="constellation-well"
   style={`--cs-w: ${width}px; --cs-aspect: ${VW} / ${VH};`}
 >
-  <svg
-    id="constellation-strip"
+  <div class="constellation-strip">
+    <svg
+      id="constellation-strip"
     viewBox={`${VX} ${VY} ${VW} ${VH}`}
     width="100%"
     height="100%"
@@ -318,7 +319,8 @@ const nodeById = new Map(nodes.map((n) => [n.id, n]));
         );
       })
     }
-  </svg>
+    </svg>
+  </div>
 </div>
 
 <style is:global>
@@ -334,8 +336,24 @@ const nodeById = new Map(nodes.map((n) => [n.id, n]));
      geometry. All SVG fonts and stroke widths sit in viewBox user-units,
      so they scale with the field — no JS, no media query, no SSG-time
      scale math. */
-  .constellation-strip {
+  /* The "well" — a flat tonal step off the page canvas (--well vs --canvas)
+     that gives the constellation visual weight and reads it as a contained
+     object. Depth via tone only, no border/shadow (matches the token's own
+     design intent in global.css). The well owns the footprint (width +
+     padding) so the inner aspect-locked box fills it without shifting the
+     grid column. Overflow stays visible so hover labels aren't clipped at
+     the surface edge. Mirrors .constellation-well in ConstellationLocal. */
+  .constellation-well {
     width: var(--cs-w);
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 1.25rem;
+    background: var(--well);
+    border-radius: 0.5rem;
+  }
+
+  .constellation-strip {
+    width: 100%;
     max-width: 100%;
     aspect-ratio: var(--cs-aspect);
     color: rgb(0 0 0 / 0.88);
@@ -381,16 +399,13 @@ const nodeById = new Map(nodes.map((n) => [n.id, n]));
      italic from the region fill underneath. */
   #constellation-strip .cluster-name {
     paint-order: stroke fill;
-    stroke: #f6f4ef;
+    stroke: var(--well);
     stroke-width: 4px;
     stroke-linejoin: round;
     pointer-events: none;
     opacity: 0;
     font-feature-settings: "ss01" 1;
     transition: opacity 180ms ease;
-  }
-  .dark #constellation-strip .cluster-name {
-    stroke: #18161a;
   }
   #constellation-strip .cluster-name[data-on] {
     opacity: 0.75;
@@ -481,13 +496,10 @@ const nodeById = new Map(nodes.map((n) => [n.id, n]));
     pointer-events: none;
     transition: opacity 120ms ease-in-out;
     paint-order: stroke fill;
-    stroke: #f6f4ef;
+    stroke: var(--well);
     stroke-width: 5px;
     stroke-linejoin: round;
     vector-effect: non-scaling-stroke;
-  }
-  .dark #constellation-strip .label {
-    stroke: #18161a;
   }
   /* Only the actively-focused node ever shows its label — neighbors are
      identified by the highlighted edges and the cluster region focus, not
