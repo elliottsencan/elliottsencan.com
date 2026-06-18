@@ -1,9 +1,10 @@
 ---
 title: Context engineering
 summary: >-
-  Deliberate construction and management of the information fed into an LLM's
-  context window, treated as a first-class engineering problem spanning
-  retrieval strategy, knowledge structure, memory systems, and token efficiency.
+  Context engineering is the practice of deliberately constructing, structuring,
+  and managing what an LLM receives in its context window, covering everything
+  from prompt caching and hierarchical indexing to memory architectures and
+  harness design.
 sources:
   - >-
     2026-04/2026-04-27t114138-scaling-managed-agents-decoupling-the-brain-from-the-hands
@@ -40,12 +41,14 @@ sources:
     2026-06/2026-06-11t090709-agent-memory-is-a-belief-maintenance-problem-not-a-storage
   - 2026-06/2026-06-13t083401-sgupai-fable5md
   - 2026-06/2026-06-14t091145-001tmfharness-forge
-compiled_at: '2026-05-04T03:37:55.731Z'
+aliases:
+  - context-management
+compiled_at: '2026-06-18T21:42:33.866Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 3399
-    output_tokens: 628
+    input_tokens: 8741
+    output_tokens: 1197
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -56,15 +59,16 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.019617
-last_source_added: '2026-06-14T16:11:45.522Z'
+  cost_usd: 0.044178
 ---
-Context engineering is the practice of deciding what information an LLM sees, when it sees it, and in what form. It treats the context window not as a passive receptacle but as a surface to be designed, the same way an API schema or a database index is designed.
+Context engineering sits at the intersection of systems design and language model behavior: the premise is that model quality is largely fixed, so the leverage point is controlling what the model sees. That framing appears across the sources here in different forms, from infrastructure-level caching to belief-maintenance theory.
 
-The clearest articulation of this comes from the LLM-wiki pattern associated with Andrej Karpathy. Rather than retrieving chunks at query time, the model is asked to pre-synthesize raw documents into structured Markdown files that the model can later consume whole. [One implementation guide](/reading/2026-04/2026-04-30t232052-how-to-implement-karpathys-llm-knowledge-base) describes ingesting sources, having the model build and maintain the wiki, and running health checks to prevent drift. [A developer who built this end-to-end](/reading/2026-04/2026-04-30t232201-building-karpathys-llm-wiki-honest-takeaways) found that cross-document synthesis genuinely outperforms RAG for curated research, but that hallucinations baked in at ingest propagate structurally, making the lint step non-negotiable.
+The most concrete lever is what goes into the context window and when. Anthropic's harness work [Effective Harnesses for Long-Running Agents](/reading/2026-05/2026-05-19t221035-effective-harnesses-for-long-running-agents) solves multi-session continuity by having an initializer agent scaffold a feature list and progress file so each subsequent coding session inherits structured state rather than starting cold. The 12-factor-agents pattern [Factor 5: Unify Execution State](/reading/2026-05/2026-05-19t174452-humanlayer12-factor-agents) takes this further, arguing that execution state and business state should collapse into a single context-window-derived thread, making the context itself the source of truth for serialization, recovery, and debugging.
 
-Token efficiency is the other axis. A zero-dependency CLI described in [LostWarrior/knowledge-base](/reading/2026-04/2026-04-30t232126-lostwarriorknowledge-base) organizes project context as tiered Markdown files with a machine-readable manifest so agents can navigate a knowledge base without burning excess tokens on irrelevant content.
+At infrastructure scale, KV caching addresses a related problem: redundant prefill computation. Persistent storage-backed caching [How to Cut LLM Inference Costs with KV Caching](/reading/2026-05/2026-05-20t073125-how-to-cut-llm-inference-costs-with-kv-caching) hashes prompt prefixes and injects cached tensors, cutting time-to-first-token by up to 20x. Granular-prompt caching [Maximizing LLM Efficiency: Granular-Prompt Caching](/reading/2026-05/2026-05-20t073144-maximizing-llm-efficiency-granular-prompt-caching-with-pure) extends this by segmenting prompts into reusable checkpoints so only token deltas are processed.
 
-At the infrastructure level, Anthropic's Managed Agents architecture [decouples the agent harness, session log, and sandbox](/reading/2026-04/2026-04-27t114138-scaling-managed-agents-decoupling-the-brain-from-the-hands) into independent interfaces, cutting p50 time-to-first-token by roughly 60 percent and p95 by over 90 percent. Separating those concerns is itself a context engineering decision: each component controls its own information surface.
+On the retrieval side, several approaches challenge the RAG orthodoxy. WaveScope [Putting Code Under a Microscope](/reading/2026-06/2026-06-03t105229-putting-code-under-a-microscope-wavelet-based-context-for) applies wavelet transforms to source code, producing hierarchical multi-resolution views that reduce token usage by up to 92%. PageIndex [VectifyAI/PageIndex](/reading/2026-05/2026-05-06t171355-vectifyaipageindex) replaces embeddings with LLM-built structured page indexes for reasoning-based retrieval. The Karpathy LLM wiki pattern, described from multiple angles [Building Karpathy's LLM Wiki: Honest Takeaways](/reading/2026-04/2026-04-30t232201-building-karpathys-llm-wiki-honest-takeaways), synthesizes raw documents into maintained Markdown files that an LLM queries directly; cross-document synthesis quality exceeds RAG for curated research, but hallucinations baked in at ingest propagate structurally, making lint steps non-negotiable.
 
-Longer-horizon memory is the open problem. [Vectorize's Hindsight system](/reading/2026-05/2026-05-03t173422-vectorize-iohindsight) uses biomimetic data structures and multi-strategy retrieval so agents accumulate and query memory across sessions, moving closer to the kind of persistent context that one-shot context windows cannot provide.
+Memory architecture is where context engineering gets philosophically contested. The hindsight library [vectorize-io/hindsight](/reading/2026-05/2026-05-03t173422-vectorize-iohindsight) uses biomimetic data structures for multi-strategy retrieval. Zerostack's implementation [Designing Memory for zerostack](/reading/2026-06/2026-06-11t023620-designing-memory-for-zerostack-plain-files-no-vector-store) rejects vector stores entirely in favor of plain Markdown and regex retrieval under RAM and infrastructure constraints. One analysis [Agent memory is a belief-maintenance problem](/reading/2026-06/2026-06-11t090709-agent-memory-is-a-belief-maintenance-problem-not-a-storage) argues all of these approaches share a deeper flaw: they store assertions rather than beliefs with provenance, confidence, and revision history, proposing instead a truth-maintenance architecture with supersession and utility-scored pruning.
+
+The organizational dimension matters too. Coding agents amplify whatever context clarity already exists in a team [The bottleneck was never the code](/reading/2026-05/2026-05-06t110728-the-bottleneck-was-never-the-code), meaning context engineering is partly a documentation and specification problem, not just a retrieval or caching one. Anthropic's internal analytics stack How Anthropic Enables Self-Service Data Analytics with Claude achieved 95% query accuracy by building layered canonical data foundations and structured sources of truth, precisely to eliminate context ambiguity before it reaches the model.

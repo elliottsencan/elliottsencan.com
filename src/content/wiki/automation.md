@@ -1,21 +1,20 @@
 ---
 title: Automation
 summary: >-
-  Automation, particularly AI-driven automation, promises long-run productivity
-  gains while creating near-term disruption: firms risk eroding the human
-  oversight capacity they need, and entire job categories may disappear faster
-  than workers can adapt.
+  Automation driven by AI threatens not just jobs but the human capital and
+  relational trust that organizations depend on, creating structural risks that
+  cost-cutting logic tends to obscure until the damage is done.
 sources:
   - >-
     2026-05/2026-05-02t155432-cognitive-offloading-and-ai-how-reliance-on-llms-affects
   - 2026-05/2026-05-28t074225-welcome-robot-overlords-please-dont-fire-us
   - 2026-06/2026-06-17t124905-the-competitive-moat-that-ai-cant-replicate
-compiled_at: '2026-06-03T04:30:13.311Z'
+compiled_at: '2026-06-18T21:41:47.665Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 2371
-    output_tokens: 309
+    input_tokens: 2562
+    output_tokens: 449
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -26,9 +25,12 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.011748
-last_source_added: '2026-06-17T19:49:05.729Z'
+  cost_usd: 0.014421
 ---
-The two main concerns running through the cited sources are timing and irreversibility. [Kevin Drum's 2013 essay](/reading/2026-05/2026-05-28t074225-welcome-robot-overlords-please-dont-fire-us) argues that Moore's Law will deliver human-level AI around 2040, and that unlike earlier waves of mechanization, this one will eliminate whole classes of cognitive work with no obvious replacement employment waiting on the other side. Previous automation displaced muscles; this wave displaces judgment.
+The economic case for automating labor looks straightforward until you account for what gets destroyed in the process. [Falk and Tsoukalas](/reading/2026-05/2026-05-02t155432-cognitive-offloading-and-ai-how-reliance-on-llms-affects) argue that firms face a structural trap: laying off workers to capture AI cost savings erodes the human capital needed to supervise and correct AI outputs, producing long-run quality and productivity losses that the short-run savings mask. The workers who leave take with them the judgment required to catch the mistakes the system makes.
 
-The structural risk compounds at the firm level. [Falk and Tsoukalas](/reading/2026-05/2026-05-02t155432-cognitive-offloading-and-ai-how-reliance-on-llms-affects) show that companies face a trap: laying off workers to capture AI cost savings destroys exactly the human capital needed to supervise and correct AI outputs. The short-run efficiency gain trades against long-run quality and reliability. Oversight is not a redundant cost; it is the mechanism that catches AI errors before they compound.
+[Kevin Drum](/reading/2026-05/2026-05-28t074225-welcome-robot-overlords-please-dont-fire-us) situates this in a longer arc, arguing that Moore's Law is pushing AI toward human-level capability by roughly 2040 and that this wave of automation is qualitatively different from previous ones. Past automation displaced specific tasks and workers eventually found new roles; this one may eliminate entire occupational categories faster than labor markets can absorb them.
+
+A third dimension appears in [Ghost in the Data](/reading/2026-06/2026-06-17t124905-the-competitive-moat-that-ai-cant-replicate): organizations that automate away human interaction, closing branches, moving to online-only service, optimizing for measurable metrics, quietly destroy trust and loyalty that no AI personalization engine can rebuild. The loss is invisible on a balance sheet until customers are already gone.
+
+All three sources converge on a common warning: automation optimizes for what is measurable and immediate, while the costs accumulate in what is harder to see, human judgment, occupational knowledge, and relational capital.

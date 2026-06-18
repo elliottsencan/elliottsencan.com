@@ -1,10 +1,10 @@
 ---
 title: API design
 summary: >-
-  Good API design hides complexity behind narrow, stable interfaces; sources
-  here address that principle from schema validation in Angular HTTP layers,
-  typed QuickBooks abstraction, component input discipline, and LLM-friendliness
-  of deep modules.
+  API design spans both the surface contracts between systems and the internal
+  module interfaces within a codebase, with themes of type safety, validation,
+  abstraction depth, and composability appearing across libraries, frameworks,
+  and backend integrations.
 sources:
   - >-
     2026-04/2026-04-30t230851-from-flaky-to-flawless-angular-api-response-management-with
@@ -16,12 +16,12 @@ sources:
     2026-05/2026-05-12t165232-seven-cool-javascript-libraries-you-should-know-about
   - 2026-06/2026-06-13t081411-signals-the-push-pull-based-algorithm
   - 2026-06/2026-06-17t075738-gunnargray-devunicode-animations
-compiled_at: '2026-05-06T04:20:25.103Z'
+compiled_at: '2026-06-18T21:41:36.942Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 2757
-    output_tokens: 537
+    input_tokens: 7425
+    output_tokens: 576
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -32,15 +32,14 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.016326
-last_source_added: '2026-06-17T14:57:38.838Z'
+  cost_usd: 0.030915
 ---
-The core of API design is the contract between a module and its callers: what is exposed, what is hidden, and how much the caller must know to use it correctly. Four sources touch this from different angles, all arriving at the same conclusion: leaky, wide, or unvalidated interfaces create problems at scale.
+Good API design balances expressiveness with constraint. A narrow, well-typed surface forces callers to interact correctly; a bloated or leaky one shifts that burden onto every consumer.
 
-[Zod-based response validation](/reading/2026-04/2026-04-30t230851-from-flaky-to-flawless-angular-api-response-management-with) addresses the external API surface: when a backend response deviates from the expected shape, runtime errors surface in production rather than at dev time. Wrapping Angular HTTP calls with a custom RxJS operator that validates against a Zod schema catches those mismatches early, treating the API contract as something to enforce rather than assume.
+Runtime validation is one place where that principle becomes concrete. [Angular with Zod](/reading/2026-04/2026-04-30t230851-from-flaky-to-flawless-angular-api-response-management-with) illustrates the cost of trusting backend shapes implicitly: unexpected fields or missing properties propagate silently until they surface as UI bugs. Using Zod schemas inside a custom RxJS operator catches contract violations at the boundary, failing fast in development rather than degrading quietly in production. Zod also appears in a broader JS library roundup [alongside Orval](/reading/2026-05/2026-05-12t165232-seven-cool-javascript-libraries-you-should-know-about), which generates fully-typed API clients from OpenAPI specs, pushing the contract definition upstream into a schema that both server and client agree on.
 
-[Conductor](/reading/2026-04/2026-04-30t231709-conductor) illustrates what a well-designed API can replace: decades of qbXML and SOAP complexity collapsed into a typed Python, Node.js, and REST interface covering 130+ QuickBooks objects. The abstraction works because it hides implementation detail completely, exposing only the objects callers actually need.
+Abstraction depth matters on the module side too. The argument in [AI Likes Deep Modules](/reading/2026-05/2026-05-04t231343-ai-likes-deep-modules) is that interfaces hiding complexity behind simple surfaces serve both human and AI consumers better than shallow ones that expose implementation details. A deep module requires callers to understand less while accomplishing more.
 
-The component-level analogue appears in [Angular component composition](/reading/2026-04/2026-04-30t232001-a-better-way-to-build-angular-components-from-inputs-to): components with dozens of inputs are effectively wide APIs. Each input is a coupling point. Moving concerns into directives and sub-components narrows the interface and keeps each unit's contract legible.
+The same logic applies at the component level. [Composite Angular components](/reading/2026-04/2026-04-30t232001-a-better-way-to-build-angular-components-from-inputs-to) argue that components with dozens of inputs are a design smell: each input is a point of contract, and too many of them make the API brittle. Distributing behavior into directives and sub-components keeps each surface small.
 
-[AI Likes Deep Modules](/reading/2026-05/2026-05-04t231343-ai-likes-deep-modules) makes this explicit: deep modules, interfaces that hide complexity behind a small surface, are easier for LLMs to reason about than shallow ones that leak implementation detail across layers. The argument applies equally to human callers. A narrow interface forces the designer to decide what matters; a wide one defers that decision to every consumer.
+[Conductor](/reading/2026-04/2026-04-30t231709-conductor) shows what good abstraction looks like at the integration layer. QuickBooks Desktop exposes qbXML and SOAP; Conductor replaces that with a typed REST and SDK interface covering 130+ objects. The underlying protocol complexity disappears entirely behind a surface designed for modern tooling.
