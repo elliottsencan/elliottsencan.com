@@ -501,7 +501,6 @@ type ArticleEvalOutcome = {
 export function buildSidecar(
   outcomes: ArticleEvalOutcome[],
   preservedArticles: SidecarArticle[],
-  costByJudge: Record<string, number>,
   priorGeneratedAt: string | null,
 ): CitationFaithfulnessSidecar {
   const now = new Date().toISOString();
@@ -529,6 +528,20 @@ export function buildSidecar(
   // verdicts — keeps the sidecar diff empty on a fully-cached rerun.
   const noFreshWork = outcomes.every((o) => !o.freshlyEvaluated);
   const generatedAt = noFreshWork && priorGeneratedAt ? priorGeneratedAt : now;
+  // Corpus cost total — derived from the per-judge `summary.total_cost_usd`
+  // of every article in the final file (preserved + freshly evaluated), not
+  // from this run's fresh spend. That makes the field a pure function of file
+  // content: a fully-cached rerun reproduces it byte-for-byte (empty diff, no
+  // PR), and a partial rerun reports the whole corpus rather than only the
+  // latest slice. This run's fresh spend is reported separately on the
+  // EvalSummary for the PR body.
+  const costByJudge: Record<string, number> = {};
+  for (const article of allArticles) {
+    for (const judge of article.judges) {
+      costByJudge[judge.judge_model] =
+        (costByJudge[judge.judge_model] ?? 0) + judge.summary.total_cost_usd;
+    }
+  }
   return {
     rubric_version: RUBRIC_VERSION,
     generated_at: generatedAt,
@@ -759,12 +772,7 @@ async function planEval(
   const outcomeSlugs = new Set(outcomes.map((o) => o.article.slug));
   const preservedArticles = selectPreservedArticles(existing, outcomeSlugs);
 
-  const sidecar = buildSidecar(
-    outcomes,
-    preservedArticles,
-    totalCostByJudge,
-    existing?.generated_at ?? null,
-  );
+  const sidecar = buildSidecar(outcomes, preservedArticles, existing?.generated_at ?? null);
   const validation = CitationFaithfulnessSidecarSchema.safeParse(sidecar);
   if (!validation.success) {
     return {
@@ -775,13 +783,17 @@ async function planEval(
   }
   const content = `${JSON.stringify(sidecar, null, 2)}\n`;
 
+  // A fully-cached rerun rebuilds byte-identical content. Don't report a
+  // `changed` entry in that case — an empty mutation lets the substrate's
+  // no-op guard (`pipeline.ts`: added + changed both empty) short-circuit
+  // without opening a redundant PR. The /eval Action still runs and the
+  // worker still responds 200; only the junk PR disappears.
   const mutation =
-    existingRaw !== null
-      ? {
-          added: [],
-          changed: [{ path: SIDECAR_PATH, before: existingRaw, after: content }],
-        }
-      : { added: [{ path: SIDECAR_PATH, content }], changed: [] };
+    existingRaw === null
+      ? { added: [{ path: SIDECAR_PATH, content }], changed: [] }
+      : existingRaw === content
+        ? { added: [], changed: [] }
+        : { added: [], changed: [{ path: SIDECAR_PATH, before: existingRaw, after: content }] };
 
   const summary: EvalSummary = {
     rubric_version: RUBRIC_VERSION,

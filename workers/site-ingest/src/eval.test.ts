@@ -385,10 +385,34 @@ describe("buildSidecar", () => {
     const sidecar = buildSidecar(
       [makeOutcome({ slug: "alpha", contentHash: "a-hash", freshlyEvaluated: true })],
       preserved,
-      { "claude-haiku-4-5": 0.005 },
       null,
     );
     expect(sidecar.articles.map((a) => a.wiki_slug)).toEqual(["alpha", "zebra"]);
+  });
+
+  it("derives total_cost_usd_by_judge from persisted per-judge summaries (not the run's fresh spend)", () => {
+    // Both articles are entirely reused (freshlyEvaluated: false), so this run
+    // spent nothing — yet the corpus cost must still reflect the two persisted
+    // summaries (0.001 each). This is the regression guard: a fully-cached
+    // rerun reproduces the cost field rather than zeroing it.
+    const preserved = fakeSidecar({
+      wikiSlug: "zebra",
+      contentHash: "z-hash",
+      judgeModel: "claude-haiku-4-5",
+    }).articles;
+    const sidecar = buildSidecar(
+      [
+        makeOutcome({
+          slug: "alpha",
+          contentHash: "a-hash",
+          freshlyEvaluated: false,
+          preservedEvaluatedAt: "2026-05-01T00:00:00.000Z",
+        }),
+      ],
+      preserved,
+      "2026-05-01T00:00:00.000Z",
+    );
+    expect(sidecar.totals.total_cost_usd_by_judge).toEqual({ "claude-haiku-4-5": 0.002 });
   });
 
   it("computes corpus total_claims across preserved + freshly evaluated articles", () => {
@@ -400,7 +424,6 @@ describe("buildSidecar", () => {
     const sidecar = buildSidecar(
       [makeOutcome({ slug: "alpha", contentHash: "a-hash", freshlyEvaluated: true })],
       preserved,
-      {},
       null,
     );
     // Each article carries 1 claim → corpus total = 2.
@@ -421,7 +444,6 @@ describe("buildSidecar", () => {
         }),
       ],
       [],
-      {},
       prior,
     );
     expect(sidecar.generated_at).toBe(prior);
@@ -432,7 +454,6 @@ describe("buildSidecar", () => {
     const sidecar = buildSidecar(
       [makeOutcome({ slug: "alpha", contentHash: "a-hash", freshlyEvaluated: true })],
       [],
-      {},
       prior,
     );
     expect(sidecar.generated_at).not.toBe(prior);
@@ -450,7 +471,6 @@ describe("buildSidecar", () => {
         }),
       ],
       [],
-      {},
       null,
     );
     expect(sidecar.articles[0]?.evaluated_at).toBe(prior);
