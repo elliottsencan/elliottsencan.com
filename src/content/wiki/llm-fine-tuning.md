@@ -12,8 +12,6 @@ sources:
   - 2026-05/2026-05-05t071908-oobaboogatextgen
   - 2026-05/2026-05-06t173338-raiyanyahyahow-to-train-your-gpt
   - 2026-05/2026-05-10t213609-raiyanyahyahow-to-train-your-gpt
-aliases:
-  - machine-learning
 compiled_at: '2026-06-18T21:49:21.134Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
