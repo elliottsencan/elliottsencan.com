@@ -1,10 +1,10 @@
 ---
 import { getCollection } from "astro:content";
-import Container from "@components/Container.astro";
 import EditorialRule from "@components/EditorialRule.astro";
 import HeroMeta from "@components/HeroMeta.astro";
 import Link from "@components/Link.astro";
 import CodeCell from "@components/labs/CodeCell.astro";
+import PageBody from "@components/PageBody.astro";
 import PageHero from "@components/PageHero.astro";
 import Layout from "@layouts/Layout.astro";
 import { SITE_TIMEZONE } from "@lib/utils";
@@ -61,12 +61,7 @@ function statusLabel(status: string): string {
   title="Labs"
   description="Observable-style cells holding the data behind my writing — cost breakdowns, eval runs, telemetry."
 >
-  <Container>
-    <div
-      class="space-y-10"
-      data-pagefind-body
-      data-pagefind-filter="type:Labs"
-    >
+  <PageBody data-pagefind-body data-pagefind-filter="type:Labs">
       <PageHero>
         <Fragment slot="title">Labs</Fragment>
         <Fragment slot="summary">
@@ -214,6 +209,5 @@ const { post, run } = await loadCell({
       <p class="text-xs text-black/55 dark:text-white/55">
         <Link href="/wiki">wiki →</Link>
       </p>
-    </div>
-  </Container>
+  </PageBody>
 </Layout>

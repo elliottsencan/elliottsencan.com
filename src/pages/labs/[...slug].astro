@@ -124,12 +124,11 @@ const methodology = (
             </span>
             <span
               class:list={[
-                "font-heading font-medium leading-none tracking-tight",
+                "num-display",
                 isPending
                   ? "text-2xl text-black/40 dark:text-white/40"
-                  : "text-3xl text-black md:text-[2.1rem] dark:text-white",
+                  : "text-num-xl text-black dark:text-white",
               ]}
-              style="font-variant-numeric: tabular-nums slashed-zero;"
             >
               {cell.data.headlineMetric.value}
             </span>

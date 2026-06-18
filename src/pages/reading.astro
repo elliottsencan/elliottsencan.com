@@ -1,9 +1,9 @@
 ---
 import { type CollectionEntry, getCollection } from "astro:content";
-import Container from "@components/Container.astro";
 import EditorialRule from "@components/EditorialRule.astro";
 import HeroMeta from "@components/HeroMeta.astro";
 import Link from "@components/Link.astro";
+import PageBody from "@components/PageBody.astro";
 import PageHero from "@components/PageHero.astro";
 import Layout from "@layouts/Layout.astro";
 import { monthKey, SITE_TIMEZONE } from "@lib/utils";
@@ -98,12 +98,7 @@ const heroMetaLabel = lastAdded
   title="Reading"
   description="Articles, essays, and books I've been reading."
 >
-  <Container>
-    <div
-      class="space-y-10"
-      data-pagefind-body
-      data-pagefind-filter="type:Reading"
-    >
+  <PageBody data-pagefind-body data-pagefind-filter="type:Reading">
       <PageHero>
         <Fragment slot="title">Reading</Fragment>
         <Fragment slot="summary">
@@ -254,6 +249,5 @@ const heroMetaLabel = lastAdded
       <p class="text-xs text-black/55 dark:text-white/55">
         <Link href="/wiki">wiki →</Link>
       </p>
-    </div>
-  </Container>
+  </PageBody>
 </Layout>
