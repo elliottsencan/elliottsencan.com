@@ -52,7 +52,7 @@ const metaProps = metaDateTime ? { datetime: metaDateTime } : {};
     meta && (
       <MetaTag
         {...metaProps}
-        class="hidden w-32 shrink-0 font-sans text-xs text-black/50 md:block dark:text-white/60"
+        class="hidden w-32 shrink-0 font-heading text-xs text-black/50 md:block dark:text-white/60"
       >
         {meta}
       </MetaTag>
@@ -83,7 +83,7 @@ const metaProps = metaDateTime ? { datetime: metaDateTime } : {};
         mobileMeta && (
           <MetaTag
             {...metaProps}
-            class="shrink-0 font-mono text-xs tracking-wider text-black/55 md:hidden dark:text-white/55"
+            class="shrink-0 font-heading text-xs tracking-wider text-black/55 md:hidden dark:text-white/55"
           >
             {mobileMeta}
           </MetaTag>

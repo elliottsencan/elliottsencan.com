@@ -257,7 +257,7 @@ function solveStrip(entries, edges, width = 800, height = 420) {
       springLen: 80,
       springK: 0.08,
       gravity: 0.075,
-      clusterPull: 0.10,
+      clusterPull: 0.1,
       springLenFor,
       springKFor,
     });

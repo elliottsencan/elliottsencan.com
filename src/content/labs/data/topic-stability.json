@@ -209,73 +209,31 @@
         "llm-inference",
         "agentic-workflows"
       ],
-      "priors_on": [
-        "mcp",
-        "ai-agents",
-        "llm-orchestration",
-        "agentic-workflows",
-        "api-design"
-      ],
-      "priors_off": [
-        "model-context-protocol",
-        "ai-agents",
-        "llm-tooling",
-        "api-design"
-      ],
+      "priors_on": ["mcp", "ai-agents", "llm-orchestration", "agentic-workflows", "api-design"],
+      "priors_off": ["model-context-protocol", "ai-agents", "llm-tooling", "api-design"],
       "jaccard_on_vs_off": 0.2857,
-      "added_without_priors": [
-        "llm-tooling",
-        "model-context-protocol"
-      ],
-      "dropped_without_priors": [
-        "agentic-workflows",
-        "llm-orchestration",
-        "mcp"
-      ],
+      "added_without_priors": ["llm-tooling", "model-context-protocol"],
+      "dropped_without_priors": ["agentic-workflows", "llm-orchestration", "mcp"],
       "cost_usd": {
         "priors_on": 0.007167,
         "priors_off": 0.006045
       },
       "recovery_priors_on": {
         "rate": 0.6,
-        "recovered": [
-          "agentic-workflows",
-          "ai-agents",
-          "mcp"
-        ],
-        "missed": [
-          "developer-tools",
-          "llm-inference"
-        ]
+        "recovered": ["agentic-workflows", "ai-agents", "mcp"],
+        "missed": ["developer-tools", "llm-inference"]
       },
       "recovery_priors_off": {
         "rate": 0.2,
-        "recovered": [
-          "ai-agents"
-        ],
-        "missed": [
-          "agentic-workflows",
-          "developer-tools",
-          "llm-inference",
-          "mcp"
-        ]
+        "recovered": ["ai-agents"],
+        "missed": ["agentic-workflows", "developer-tools", "llm-inference", "mcp"]
       }
     },
     {
       "url": "https://stratechery.com/2026/he-came-he-saw-he-cooked/?access_token=eyJhbGciOiJSUzI1NiIsImtpZCI6InN0cmF0ZWNoZXJ5LnBhc3Nwb3J0Lm9ubGluZSIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJzdHJhdGVjaGVyeS5wYXNzcG9ydC5vbmxpbmUiLCJhenAiOiJIS0xjUzREd1Nod1AyWURLYmZQV00xIiwiZW50Ijp7InVyaSI6WyJodHRwczovL3N0cmF0ZWNoZXJ5LmNvbS8yMDI2L2hlLWNhbWUtaGUtc2F3LWhlLWNvb2tlZC8iXX0sImV4cCI6MTc3OTY0MjI0OCwiaWF0IjoxNzc3MDUwMjQ4LCJpc3MiOiJodHRwczovL2FwcC5wYXNzcG9ydC5vbmxpbmUvb2F1dGgiLCJzY29wZSI6ImZlZWQ6cmVhZCBhcnRpY2xlOnJlYWQgYXNzZXQ6cmVhZCBjYXRlZ29yeTpyZWFkIGVudGl0bGVtZW50cyIsInN1YiI6ImFjZWVhOTc2LTIyNjQtNGIyNC1iMjRiLTlhZWYzZjliN2I2YSIsInVzZSI6ImFjY2VzcyJ9.tpBwt25mec_T-6vh19CSI8BeLSykh88rO_I4zvFjf_ME71giXBmZwl1r_APa5Pu8MeIDesCvtbQJs8E23ZKN8lP-xI3ww_ud28sFyk05LDu14DhmngktLnk9cGNDXl94YViOc37xIp539FLJ9Ayj1o6q7C-hmwqJa0wFMYvaAhxnhxkdU51x3gMoirfYS22U3lxJo4UPMNvZNYHC0mxfTojHB-qWAhu6OxyEnpEWwoZ5Yg6gpRPZSuNHH917yzTERQS1FOwSle01GMvESDmKzZiTzOfCy1BE9iTQgKu4FLHMR71viUfKGVfBGCYYEwf1v6z_cOl1IPdZCm7jzeFe9w",
       "source_path": "src/content/reading/2026-04/2026-04-24T162154-he-came-he-saw-he-cooked.md",
-      "original_topics": [
-        "apple",
-        "big-tech",
-        "ai-industry",
-        "geopolitics",
-        "media-bundles"
-      ],
-      "priors_on": [
-        "platform-strategy",
-        "enterprise-software",
-        "software-architecture"
-      ],
+      "original_topics": ["apple", "big-tech", "ai-industry", "geopolitics", "media-bundles"],
+      "priors_on": ["platform-strategy", "enterprise-software", "software-architecture"],
       "priors_off": [
         "tech-industry",
         "platform-strategy",
@@ -283,15 +241,8 @@
         "competitive-dynamics"
       ],
       "jaccard_on_vs_off": 0.1667,
-      "added_without_priors": [
-        "aggregation-theory",
-        "competitive-dynamics",
-        "tech-industry"
-      ],
-      "dropped_without_priors": [
-        "enterprise-software",
-        "software-architecture"
-      ],
+      "added_without_priors": ["aggregation-theory", "competitive-dynamics", "tech-industry"],
+      "dropped_without_priors": ["enterprise-software", "software-architecture"],
       "cost_usd": {
         "priors_on": 0.009999,
         "priors_off": 0.008157
@@ -299,24 +250,12 @@
       "recovery_priors_on": {
         "rate": 0,
         "recovered": [],
-        "missed": [
-          "ai-industry",
-          "apple",
-          "big-tech",
-          "geopolitics",
-          "media-bundles"
-        ]
+        "missed": ["ai-industry", "apple", "big-tech", "geopolitics", "media-bundles"]
       },
       "recovery_priors_off": {
         "rate": 0,
         "recovered": [],
-        "missed": [
-          "ai-industry",
-          "apple",
-          "big-tech",
-          "geopolitics",
-          "media-bundles"
-        ]
+        "missed": ["ai-industry", "apple", "big-tech", "geopolitics", "media-bundles"]
       }
     },
     {
@@ -362,9 +301,7 @@
       },
       "recovery_priors_on": {
         "rate": 0.2,
-        "recovered": [
-          "ai-agents"
-        ],
+        "recovered": ["ai-agents"],
         "missed": [
           "data-engineering",
           "developer-tools",
@@ -401,19 +338,9 @@
         "developer-tools",
         "production-systems"
       ],
-      "priors_off": [
-        "openai",
-        "privacy",
-        "web-apps",
-        "llm-inference"
-      ],
+      "priors_off": ["openai", "privacy", "web-apps", "llm-inference"],
       "jaccard_on_vs_off": 0,
-      "added_without_priors": [
-        "llm-inference",
-        "openai",
-        "privacy",
-        "web-apps"
-      ],
+      "added_without_priors": ["llm-inference", "openai", "privacy", "web-apps"],
       "dropped_without_priors": [
         "ai-safety",
         "developer-tools",
@@ -438,15 +365,8 @@
       },
       "recovery_priors_off": {
         "rate": 0.2,
-        "recovered": [
-          "llm-inference"
-        ],
-        "missed": [
-          "gradio",
-          "open-source-models",
-          "pii-detection",
-          "web-app-development"
-        ]
+        "recovered": ["llm-inference"],
+        "missed": ["gradio", "open-source-models", "pii-detection", "web-app-development"]
       }
     },
     {
@@ -466,43 +386,22 @@
         "angular",
         "type-validation"
       ],
-      "priors_off": [
-        "runtime-validation",
-        "angular",
-        "api-design",
-        "type-safety"
-      ],
+      "priors_off": ["runtime-validation", "angular", "api-design", "type-safety"],
       "jaccard_on_vs_off": 0.2857,
-      "added_without_priors": [
-        "runtime-validation",
-        "type-safety"
-      ],
-      "dropped_without_priors": [
-        "reliability",
-        "software-architecture",
-        "type-validation"
-      ],
+      "added_without_priors": ["runtime-validation", "type-safety"],
+      "dropped_without_priors": ["reliability", "software-architecture", "type-validation"],
       "cost_usd": {
         "priors_on": 0.007926,
         "priors_off": 0.006069
       },
       "recovery_priors_on": {
         "rate": 0.6,
-        "recovered": [
-          "api-design",
-          "reliability",
-          "software-architecture"
-        ],
-        "missed": [
-          "developer-tooling",
-          "type-system-design"
-        ]
+        "recovered": ["api-design", "reliability", "software-architecture"],
+        "missed": ["developer-tooling", "type-system-design"]
       },
       "recovery_priors_off": {
         "rate": 0.2,
-        "recovered": [
-          "api-design"
-        ],
+        "recovered": ["api-design"],
         "missed": [
           "developer-tooling",
           "reliability",
@@ -527,15 +426,9 @@
         "agent-coordination",
         "open-source"
       ],
-      "priors_off": [
-        "orchestration",
-        "software-architecture"
-      ],
+      "priors_off": ["orchestration", "software-architecture"],
       "jaccard_on_vs_off": 0,
-      "added_without_priors": [
-        "orchestration",
-        "software-architecture"
-      ],
+      "added_without_priors": ["orchestration", "software-architecture"],
       "dropped_without_priors": [
         "agent-coordination",
         "agentic-workflows",
@@ -549,24 +442,13 @@
       },
       "recovery_priors_on": {
         "rate": 0.25,
-        "recovered": [
-          "llm-orchestration"
-        ],
-        "missed": [
-          "ai-agents",
-          "ai-assisted-coding",
-          "developer-tooling"
-        ]
+        "recovered": ["llm-orchestration"],
+        "missed": ["ai-agents", "ai-assisted-coding", "developer-tooling"]
       },
       "recovery_priors_off": {
         "rate": 0,
         "recovered": [],
-        "missed": [
-          "ai-agents",
-          "ai-assisted-coding",
-          "developer-tooling",
-          "llm-orchestration"
-        ]
+        "missed": ["ai-agents", "ai-assisted-coding", "developer-tooling", "llm-orchestration"]
       }
     },
     {
@@ -579,54 +461,24 @@
         "llm-tooling",
         "enterprise-software"
       ],
-      "priors_on": [
-        "developer-tools",
-        "api-design",
-        "developer-productivity",
-        "platform-strategy"
-      ],
-      "priors_off": [
-        "developer-tools",
-        "documentation",
-        "developer-experience"
-      ],
+      "priors_on": ["developer-tools", "api-design", "developer-productivity", "platform-strategy"],
+      "priors_off": ["developer-tools", "documentation", "developer-experience"],
       "jaccard_on_vs_off": 0.1667,
-      "added_without_priors": [
-        "developer-experience",
-        "documentation"
-      ],
-      "dropped_without_priors": [
-        "api-design",
-        "developer-productivity",
-        "platform-strategy"
-      ],
+      "added_without_priors": ["developer-experience", "documentation"],
+      "dropped_without_priors": ["api-design", "developer-productivity", "platform-strategy"],
       "cost_usd": {
         "priors_on": 0.006849,
         "priors_off": 0.005517
       },
       "recovery_priors_on": {
         "rate": 0.4,
-        "recovered": [
-          "developer-productivity",
-          "developer-tools"
-        ],
-        "missed": [
-          "enterprise-software",
-          "llm-tooling",
-          "mcp"
-        ]
+        "recovered": ["developer-productivity", "developer-tools"],
+        "missed": ["enterprise-software", "llm-tooling", "mcp"]
       },
       "recovery_priors_off": {
         "rate": 0.2,
-        "recovered": [
-          "developer-tools"
-        ],
-        "missed": [
-          "developer-productivity",
-          "enterprise-software",
-          "llm-tooling",
-          "mcp"
-        ]
+        "recovered": ["developer-tools"],
+        "missed": ["developer-productivity", "enterprise-software", "llm-tooling", "mcp"]
       }
     },
     {
@@ -639,54 +491,24 @@
         "accounting-software",
         "sdk"
       ],
-      "priors_on": [
-        "api-design",
-        "developer-tools",
-        "enterprise-software",
-        "software-engineering"
-      ],
-      "priors_off": [
-        "developer-tools",
-        "api-design",
-        "accounting-software",
-        "data-integration"
-      ],
+      "priors_on": ["api-design", "developer-tools", "enterprise-software", "software-engineering"],
+      "priors_off": ["developer-tools", "api-design", "accounting-software", "data-integration"],
       "jaccard_on_vs_off": 0.3333,
-      "added_without_priors": [
-        "accounting-software",
-        "data-integration"
-      ],
-      "dropped_without_priors": [
-        "enterprise-software",
-        "software-engineering"
-      ],
+      "added_without_priors": ["accounting-software", "data-integration"],
+      "dropped_without_priors": ["enterprise-software", "software-engineering"],
       "cost_usd": {
         "priors_on": 0.006897,
         "priors_off": 0.00555
       },
       "recovery_priors_on": {
         "rate": 0.4,
-        "recovered": [
-          "api-design",
-          "developer-tools"
-        ],
-        "missed": [
-          "accounting-software",
-          "quickbooks",
-          "sdk"
-        ]
+        "recovered": ["api-design", "developer-tools"],
+        "missed": ["accounting-software", "quickbooks", "sdk"]
       },
       "recovery_priors_off": {
         "rate": 0.6,
-        "recovered": [
-          "accounting-software",
-          "api-design",
-          "developer-tools"
-        ],
-        "missed": [
-          "quickbooks",
-          "sdk"
-        ]
+        "recovered": ["accounting-software", "api-design", "developer-tools"],
+        "missed": ["quickbooks", "sdk"]
       }
     },
     {
@@ -698,50 +520,24 @@
         "responsive-design",
         "web-accessibility"
       ],
-      "priors_on": [
-        "font-pairing",
-        "fluid-typography",
-        "responsive-design"
-      ],
-      "priors_off": [
-        "typography",
-        "font-pairing",
-        "type-system-design"
-      ],
+      "priors_on": ["font-pairing", "fluid-typography", "responsive-design"],
+      "priors_off": ["typography", "font-pairing", "type-system-design"],
       "jaccard_on_vs_off": 0.2,
-      "added_without_priors": [
-        "type-system-design",
-        "typography"
-      ],
-      "dropped_without_priors": [
-        "fluid-typography",
-        "responsive-design"
-      ],
+      "added_without_priors": ["type-system-design", "typography"],
+      "dropped_without_priors": ["fluid-typography", "responsive-design"],
       "cost_usd": {
         "priors_on": 0.007053,
         "priors_off": 0.005946
       },
       "recovery_priors_on": {
         "rate": 0.75,
-        "recovered": [
-          "fluid-typography",
-          "font-pairing",
-          "responsive-design"
-        ],
-        "missed": [
-          "web-accessibility"
-        ]
+        "recovered": ["fluid-typography", "font-pairing", "responsive-design"],
+        "missed": ["web-accessibility"]
       },
       "recovery_priors_off": {
         "rate": 0.25,
-        "recovered": [
-          "font-pairing"
-        ],
-        "missed": [
-          "fluid-typography",
-          "responsive-design",
-          "web-accessibility"
-        ]
+        "recovered": ["font-pairing"],
+        "missed": ["fluid-typography", "responsive-design", "web-accessibility"]
       }
     },
     {
@@ -754,29 +550,11 @@
         "bug-tracking",
         "curl"
       ],
-      "priors_on": [
-        "open-source",
-        "engineering-craft",
-        "software-engineering",
-        "reliability"
-      ],
-      "priors_off": [
-        "open-source",
-        "software-quality",
-        "bug-tracking",
-        "curl"
-      ],
+      "priors_on": ["open-source", "engineering-craft", "software-engineering", "reliability"],
+      "priors_off": ["open-source", "software-quality", "bug-tracking", "curl"],
       "jaccard_on_vs_off": 0.1429,
-      "added_without_priors": [
-        "bug-tracking",
-        "curl",
-        "software-quality"
-      ],
-      "dropped_without_priors": [
-        "engineering-craft",
-        "reliability",
-        "software-engineering"
-      ],
+      "added_without_priors": ["bug-tracking", "curl", "software-quality"],
+      "dropped_without_priors": ["engineering-craft", "reliability", "software-engineering"],
       "cost_usd": {
         "priors_on": 0.00738,
         "priors_off": 0.006018
@@ -794,15 +572,8 @@
       },
       "recovery_priors_off": {
         "rate": 0.4,
-        "recovered": [
-          "bug-tracking",
-          "curl"
-        ],
-        "missed": [
-          "open-source-maintenance",
-          "software-security",
-          "static-analysis"
-        ]
+        "recovered": ["bug-tracking", "curl"],
+        "missed": ["open-source-maintenance", "software-security", "static-analysis"]
       }
     },
     {
@@ -815,44 +586,19 @@
         "software-engineering",
         "startup-ecosystem"
       ],
-      "priors_on": [
-        "ai-safety",
-        "software-engineering",
-        "engineering-craft"
-      ],
-      "priors_off": [
-        "cultural-criticism",
-        "metaphor",
-        "gradual-change",
-        "awareness"
-      ],
+      "priors_on": ["ai-safety", "software-engineering", "engineering-craft"],
+      "priors_off": ["cultural-criticism", "metaphor", "gradual-change", "awareness"],
       "jaccard_on_vs_off": 0,
-      "added_without_priors": [
-        "awareness",
-        "cultural-criticism",
-        "gradual-change",
-        "metaphor"
-      ],
-      "dropped_without_priors": [
-        "ai-safety",
-        "engineering-craft",
-        "software-engineering"
-      ],
+      "added_without_priors": ["awareness", "cultural-criticism", "gradual-change", "metaphor"],
+      "dropped_without_priors": ["ai-safety", "engineering-craft", "software-engineering"],
       "cost_usd": {
         "priors_on": 0.00711,
         "priors_off": 0.005808
       },
       "recovery_priors_on": {
         "rate": 0.2,
-        "recovered": [
-          "software-engineering"
-        ],
-        "missed": [
-          "ai-strategy",
-          "cognitive-debt",
-          "llm-engineering",
-          "startup-ecosystem"
-        ]
+        "recovered": ["software-engineering"],
+        "missed": ["ai-strategy", "cognitive-debt", "llm-engineering", "startup-ecosystem"]
       },
       "recovery_priors_off": {
         "rate": 0,
@@ -891,36 +637,20 @@
       ],
       "jaccard_on_vs_off": 0.8,
       "added_without_priors": [],
-      "dropped_without_priors": [
-        "agent-coordination"
-      ],
+      "dropped_without_priors": ["agent-coordination"],
       "cost_usd": {
         "priors_on": 0.007392,
         "priors_off": 0.006045
       },
       "recovery_priors_on": {
         "rate": 0.6,
-        "recovered": [
-          "ai-agents",
-          "distributed-systems",
-          "multi-agent-systems"
-        ],
-        "missed": [
-          "ai-research",
-          "benchmarks"
-        ]
+        "recovered": ["ai-agents", "distributed-systems", "multi-agent-systems"],
+        "missed": ["ai-research", "benchmarks"]
       },
       "recovery_priors_off": {
         "rate": 0.6,
-        "recovered": [
-          "ai-agents",
-          "distributed-systems",
-          "multi-agent-systems"
-        ],
-        "missed": [
-          "ai-research",
-          "benchmarks"
-        ]
+        "recovered": ["ai-agents", "distributed-systems", "multi-agent-systems"],
+        "missed": ["ai-research", "benchmarks"]
       }
     },
     {
@@ -940,17 +670,9 @@
         "agent-coordination",
         "software-architecture"
       ],
-      "priors_off": [
-        "multi-agent-systems",
-        "ai-agents",
-        "verification",
-        "distributed-systems"
-      ],
+      "priors_off": ["multi-agent-systems", "ai-agents", "verification", "distributed-systems"],
       "jaccard_on_vs_off": 0.2857,
-      "added_without_priors": [
-        "distributed-systems",
-        "verification"
-      ],
+      "added_without_priors": ["distributed-systems", "verification"],
       "dropped_without_priors": [
         "agent-coordination",
         "llm-orchestration",
@@ -962,27 +684,13 @@
       },
       "recovery_priors_on": {
         "rate": 0.4,
-        "recovered": [
-          "ai-agents",
-          "multi-agent-systems"
-        ],
-        "missed": [
-          "ai-assisted-coding",
-          "llm-reliability",
-          "software-verification"
-        ]
+        "recovered": ["ai-agents", "multi-agent-systems"],
+        "missed": ["ai-assisted-coding", "llm-reliability", "software-verification"]
       },
       "recovery_priors_off": {
         "rate": 0.4,
-        "recovered": [
-          "ai-agents",
-          "multi-agent-systems"
-        ],
-        "missed": [
-          "ai-assisted-coding",
-          "llm-reliability",
-          "software-verification"
-        ]
+        "recovered": ["ai-agents", "multi-agent-systems"],
+        "missed": ["ai-assisted-coding", "llm-reliability", "software-verification"]
       }
     },
     {
@@ -995,44 +703,19 @@
         "ai-infrastructure",
         "benchmarks"
       ],
-      "priors_on": [
-        "ai-agents",
-        "llm-engineering",
-        "developer-tools",
-        "open-source"
-      ],
-      "priors_off": [
-        "machine-learning",
-        "ai-research",
-        "developer-tools",
-        "llm-inference"
-      ],
+      "priors_on": ["ai-agents", "llm-engineering", "developer-tools", "open-source"],
+      "priors_off": ["machine-learning", "ai-research", "developer-tools", "llm-inference"],
       "jaccard_on_vs_off": 0.1429,
-      "added_without_priors": [
-        "ai-research",
-        "llm-inference",
-        "machine-learning"
-      ],
-      "dropped_without_priors": [
-        "ai-agents",
-        "llm-engineering",
-        "open-source"
-      ],
+      "added_without_priors": ["ai-research", "llm-inference", "machine-learning"],
+      "dropped_without_priors": ["ai-agents", "llm-engineering", "open-source"],
       "cost_usd": {
         "priors_on": 0.00687,
         "priors_off": 0.005718
       },
       "recovery_priors_on": {
         "rate": 0.2,
-        "recovered": [
-          "ai-agents"
-        ],
-        "missed": [
-          "agent-coordination",
-          "agentic-workflows",
-          "ai-infrastructure",
-          "benchmarks"
-        ]
+        "recovered": ["ai-agents"],
+        "missed": ["agent-coordination", "agentic-workflows", "ai-infrastructure", "benchmarks"]
       },
       "recovery_priors_off": {
         "rate": 0,
@@ -1070,40 +753,21 @@
         "developer-tools"
       ],
       "jaccard_on_vs_off": 0.5,
-      "added_without_priors": [
-        "developer-tools"
-      ],
-      "dropped_without_priors": [
-        "engineering-craft",
-        "llm-engineering"
-      ],
+      "added_without_priors": ["developer-tools"],
+      "dropped_without_priors": ["engineering-craft", "llm-engineering"],
       "cost_usd": {
         "priors_on": 0.007176,
         "priors_off": 0.005724
       },
       "recovery_priors_on": {
         "rate": 0.6,
-        "recovered": [
-          "ai-assisted-coding",
-          "api-design",
-          "llm-engineering"
-        ],
-        "missed": [
-          "software-engineering",
-          "systems-design"
-        ]
+        "recovered": ["ai-assisted-coding", "api-design", "llm-engineering"],
+        "missed": ["software-engineering", "systems-design"]
       },
       "recovery_priors_off": {
         "rate": 0.4,
-        "recovered": [
-          "ai-assisted-coding",
-          "api-design"
-        ],
-        "missed": [
-          "llm-engineering",
-          "software-engineering",
-          "systems-design"
-        ]
+        "recovered": ["ai-assisted-coding", "api-design"],
+        "missed": ["llm-engineering", "software-engineering", "systems-design"]
       }
     },
     {
@@ -1123,49 +787,23 @@
         "developer-tools",
         "open-source"
       ],
-      "priors_off": [
-        "llm-inference",
-        "local-ai",
-        "developer-tools",
-        "model-serving"
-      ],
+      "priors_off": ["llm-inference", "local-ai", "developer-tools", "model-serving"],
       "jaccard_on_vs_off": 0.2857,
-      "added_without_priors": [
-        "local-ai",
-        "model-serving"
-      ],
-      "dropped_without_priors": [
-        "ai-infrastructure",
-        "open-source",
-        "production-systems"
-      ],
+      "added_without_priors": ["local-ai", "model-serving"],
+      "dropped_without_priors": ["ai-infrastructure", "open-source", "production-systems"],
       "cost_usd": {
         "priors_on": 0.007371,
         "priors_off": 0.005784
       },
       "recovery_priors_on": {
         "rate": 0.8,
-        "recovered": [
-          "developer-tools",
-          "llm-inference",
-          "open-source",
-          "production-systems"
-        ],
-        "missed": [
-          "llm-tooling"
-        ]
+        "recovered": ["developer-tools", "llm-inference", "open-source", "production-systems"],
+        "missed": ["llm-tooling"]
       },
       "recovery_priors_off": {
         "rate": 0.4,
-        "recovered": [
-          "developer-tools",
-          "llm-inference"
-        ],
-        "missed": [
-          "llm-tooling",
-          "open-source",
-          "production-systems"
-        ]
+        "recovered": ["developer-tools", "llm-inference"],
+        "missed": ["llm-tooling", "open-source", "production-systems"]
       }
     },
     {
@@ -1192,15 +830,8 @@
         "information-retrieval"
       ],
       "jaccard_on_vs_off": 0.2857,
-      "added_without_priors": [
-        "document-processing",
-        "information-retrieval"
-      ],
-      "dropped_without_priors": [
-        "context-engineering",
-        "llm-engineering",
-        "open-source"
-      ],
+      "added_without_priors": ["document-processing", "information-retrieval"],
+      "dropped_without_priors": ["context-engineering", "llm-engineering", "open-source"],
       "cost_usd": {
         "priors_on": 0.007203,
         "priors_off": 0.005931
@@ -1213,21 +844,12 @@
           "open-source",
           "retrieval-augmented-generation"
         ],
-        "missed": [
-          "ai-infrastructure"
-        ]
+        "missed": ["ai-infrastructure"]
       },
       "recovery_priors_off": {
         "rate": 0.2,
-        "recovered": [
-          "retrieval-augmented-generation"
-        ],
-        "missed": [
-          "ai-infrastructure",
-          "context-engineering",
-          "llm-engineering",
-          "open-source"
-        ]
+        "recovered": ["retrieval-augmented-generation"],
+        "missed": ["ai-infrastructure", "context-engineering", "llm-engineering", "open-source"]
       }
     },
     {
@@ -1247,19 +869,9 @@
         "reliability",
         "developer-tools"
       ],
-      "priors_off": [
-        "end-to-end-testing",
-        "playwright",
-        "test-environments",
-        "ci-cd"
-      ],
+      "priors_off": ["end-to-end-testing", "playwright", "test-environments", "ci-cd"],
       "jaccard_on_vs_off": 0,
-      "added_without_priors": [
-        "ci-cd",
-        "end-to-end-testing",
-        "playwright",
-        "test-environments"
-      ],
+      "added_without_priors": ["ci-cd", "end-to-end-testing", "playwright", "test-environments"],
       "dropped_without_priors": [
         "continuous-integration",
         "developer-tools",
@@ -1273,15 +885,8 @@
       },
       "recovery_priors_on": {
         "rate": 0.8,
-        "recovered": [
-          "continuous-integration",
-          "flaky-tests",
-          "production-systems",
-          "reliability"
-        ],
-        "missed": [
-          "software-engineering"
-        ]
+        "recovered": ["continuous-integration", "flaky-tests", "production-systems", "reliability"],
+        "missed": ["software-engineering"]
       },
       "recovery_priors_off": {
         "rate": 0,

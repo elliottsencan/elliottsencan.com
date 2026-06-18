@@ -125,8 +125,7 @@ const breadcrumbs = [
 type ConstellationCluster = { id: string; title: string; short: string; hue: number };
 const constellationClusters: ConstellationCluster[] = constellationLayout.clusters;
 const constellationClusterById: Record<string, string | null> = constellationLayout.clusterById;
-const constellationLocal: Record<string, { nodes: { id: string }[] }> =
-  constellationLayout.local;
+const constellationLocal: Record<string, { nodes: { id: string }[] }> = constellationLayout.local;
 
 const localData = constellationLocal[concept.id];
 const hasLocal = !!localData && localData.nodes.length > 1;
@@ -249,7 +248,7 @@ const neighborCount = hasLocal ? localData.nodes.length - 1 : 0;
 
         <aside class="wiki-rail md:sticky md:top-28 md:self-start">
           <p
-            class="mb-3 font-mono text-xs uppercase tracking-wider text-black/55 dark:text-white/55"
+            class="mb-3 font-heading text-xs uppercase tracking-wider text-black/55 dark:text-white/55"
           >
             Sources
           </p>
@@ -271,7 +270,7 @@ const neighborCount = hasLocal ? localData.nodes.length - 1 : 0;
                   <span class="text-xs text-black/55 dark:text-white/55">
                     {entry.data.author ?? entry.data.source ?? ""}
                   </span>
-                  <span class="font-mono text-xs tracking-wide text-black/40 dark:text-white/45">
+                  <span class="font-heading text-xs tracking-wide text-black/40 dark:text-white/45">
                     {[entry.data.source, dateFormatter.format(entry.data.added)]
                       .filter(Boolean)
                       .join(" · ")}
@@ -280,7 +279,7 @@ const neighborCount = hasLocal ? localData.nodes.length - 1 : 0;
               </li>
             ))}
           </ol>
-          <p class="mt-3 font-mono text-xs tracking-wider text-black/55 dark:text-white/55">
+          <p class="mt-3 font-heading text-xs tracking-wider text-black/55 dark:text-white/55">
             <Link href="/reading">view in /reading →</Link>
           </p>
         </aside>
@@ -416,7 +415,7 @@ const neighborCount = hasLocal ? localData.nodes.length - 1 : 0;
   /* Wiki body prose — same visual as the global article rule but scoped to
      a class so it doesn't collide with the 2-column grid track sizing. */
   .wiki-body {
-    font-family: var(--font-sans);
+    font-family: var(--font-serif);
     font-size: 1rem;
     line-height: 1.7;
     color: rgb(0 0 0 / 0.85);

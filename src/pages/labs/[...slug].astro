@@ -98,7 +98,7 @@ const methodology = (
           tested, not just another paragraph. */}
       <div class="flex max-w-[62ch] flex-col gap-2">
         <span
-          class="font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55"
+          class="font-heading text-xs uppercase tracking-widest text-black/55 dark:text-white/55"
         >
           The question
         </span>
@@ -118,7 +118,7 @@ const methodology = (
         >
           <div class="flex flex-col gap-1">
             <span
-              class="font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55"
+              class="font-heading text-xs uppercase tracking-widest text-black/55 dark:text-white/55"
             >
               {cell.data.headlineMetric.label}
             </span>
@@ -129,7 +129,7 @@ const methodology = (
                   ? "text-2xl text-black/40 dark:text-white/40"
                   : "text-3xl text-black md:text-[2.1rem] dark:text-white",
               ]}
-              style="font-variant-numeric: tabular-nums;"
+              style="font-variant-numeric: tabular-nums slashed-zero;"
             >
               {cell.data.headlineMetric.value}
             </span>
@@ -151,7 +151,7 @@ const methodology = (
           {
             cell.data.pre && (
               <div class="flex flex-col gap-2">
-                <span class="font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55">
+                <span class="font-heading text-xs uppercase tracking-widest text-black/55 dark:text-white/55">
                   How it works
                 </span>
                 <CodeCell lang="js">{cell.data.pre}</CodeCell>
@@ -164,14 +164,14 @@ const methodology = (
           <dl class="flex flex-col gap-5">
             <div class="flex flex-col gap-1.5">
               <dt
-                class="font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55"
+                class="font-heading text-xs uppercase tracking-widest text-black/55 dark:text-white/55"
               >
                 Status
               </dt>
               <dd>
                 <span
                   class:list={[
-                    "inline-flex rounded-sm border border-black/10 px-2 py-0.5 font-mono text-xs uppercase tracking-widest dark:border-white/15",
+                    "inline-flex rounded-sm border border-black/10 px-2 py-0.5 font-heading text-xs uppercase tracking-widest dark:border-white/15",
                     isLive
                       ? "text-[color:var(--accent)]"
                       : "text-black/55 dark:text-white/55",
@@ -184,12 +184,12 @@ const methodology = (
 
             <div class="flex flex-col gap-1.5">
               <dt
-                class="font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55"
+                class="font-heading text-xs uppercase tracking-widest text-black/55 dark:text-white/55"
               >
                 Published
               </dt>
               <dd
-                class="font-mono text-xs text-black/65 dark:text-white/65"
+                class="font-heading text-xs text-black/65 dark:text-white/65"
               >
                 {isoDate(cell.data.publishedDate)}
               </dd>
@@ -197,7 +197,7 @@ const methodology = (
 
             <div class="flex flex-col gap-1.5">
               <dt
-                class="font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55"
+                class="font-heading text-xs uppercase tracking-widest text-black/55 dark:text-white/55"
               >
                 Last run
               </dt>
@@ -211,7 +211,7 @@ const methodology = (
             {
               cell.data.repoUrl && (
                 <div class="flex flex-col gap-1.5">
-                  <dt class="font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55">
+                  <dt class="font-heading text-xs uppercase tracking-widest text-black/55 dark:text-white/55">
                     Repo
                   </dt>
                   <dd class="text-xs">
@@ -226,7 +226,7 @@ const methodology = (
             {
               cell.data.blogPostSlug && (
                 <div class="flex flex-col gap-1.5">
-                  <dt class="font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55">
+                  <dt class="font-heading text-xs uppercase tracking-widest text-black/55 dark:text-white/55">
                     Cited by
                   </dt>
                   <dd class="text-xs">
@@ -241,13 +241,13 @@ const methodology = (
             {
               cell.data.tags.length > 0 && (
                 <div class="flex flex-col gap-1.5">
-                  <dt class="font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55">
+                  <dt class="font-heading text-xs uppercase tracking-widest text-black/55 dark:text-white/55">
                     Tags
                   </dt>
                   <dd>
                     <ul class="flex flex-wrap gap-1.5">
                       {cell.data.tags.map((t) => (
-                        <li class="rounded bg-black/5 px-2 py-1 font-mono text-xs text-black/65 dark:bg-white/10 dark:text-white/65">
+                        <li class="rounded bg-black/5 px-2 py-1 font-heading text-xs text-black/65 dark:bg-white/10 dark:text-white/65">
                           {t}
                         </li>
                       ))}
@@ -271,7 +271,7 @@ const methodology = (
 
 <style is:global>
   .lab-body {
-    font-family: var(--font-sans);
+    font-family: var(--font-serif);
     line-height: 1.7;
     color: rgb(0 0 0 / 0.85);
   }

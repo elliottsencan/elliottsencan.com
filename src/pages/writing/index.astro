@@ -53,13 +53,13 @@ const heroMetaLabel = lastPublished
       {
         years.length > 1 && (
           <nav
-            class="flex flex-wrap items-baseline gap-x-3 gap-y-1 font-mono text-xs uppercase tracking-wider text-black/55 dark:text-white/55"
+            class="flex flex-wrap items-baseline gap-x-3 gap-y-1 font-heading text-xs uppercase tracking-wider text-black/55 dark:text-white/55"
             aria-label="Archive by year"
           >
             <span>Archive:</span>
             {years.map((y, i) => (
               <>
-                <Link href={`/writing/${y}/`} class="font-sans text-xs">
+                <Link href={`/writing/${y}/`} class="font-heading text-xs">
                   {y}
                 </Link>
                 {i < years.length - 1 && <span aria-hidden="true">·</span>}

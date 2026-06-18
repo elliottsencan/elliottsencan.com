@@ -30,7 +30,7 @@ const { headers, rows } = Astro.props;
           {row.map((cell) => (
             <td
               class="px-2 py-1 text-black/85 dark:text-white/85"
-              style="font-variant-numeric: tabular-nums;"
+              style="font-variant-numeric: tabular-nums slashed-zero;"
             >
               {cell}
             </td>

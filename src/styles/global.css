@@ -22,36 +22,55 @@
   font-display: swap;
 }
 
+/* Newsreader — the serif reading face. Self-hosted Google subsets (latin +
+   latin-ext). Variable-weight slices: one file covers 400–500, so each
+   @font-face declares the full range and the browser interpolates. */
 @font-face {
-  font-family: "Satoshi";
-  src: url("/fonts/Satoshi-Regular.woff2") format("woff2");
-  font-weight: 400;
+  font-family: "Newsreader";
+  src: url("/fonts/Newsreader-latin.woff2") format("woff2");
+  font-weight: 400 500;
   font-style: normal;
   font-display: swap;
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF,
+    U+FFFD;
 }
 
 @font-face {
-  font-family: "Satoshi";
-  src: url("/fonts/Satoshi-Medium.woff2") format("woff2");
-  font-weight: 500;
+  font-family: "Newsreader";
+  src: url("/fonts/Newsreader-latin-ext.woff2") format("woff2");
+  font-weight: 400 500;
   font-style: normal;
   font-display: swap;
+  unicode-range:
+    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304,
+    U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0,
+    U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 
 @font-face {
-  font-family: "Satoshi";
-  src: url("/fonts/Satoshi-Bold.woff2") format("woff2");
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Satoshi";
-  src: url("/fonts/Satoshi-Italic.woff2") format("woff2");
-  font-weight: 400;
+  font-family: "Newsreader";
+  src: url("/fonts/Newsreader-Italic-latin.woff2") format("woff2");
+  font-weight: 400 500;
   font-style: italic;
   font-display: swap;
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF,
+    U+FFFD;
+}
+
+@font-face {
+  font-family: "Newsreader";
+  src: url("/fonts/Newsreader-Italic-latin-ext.woff2") format("woff2");
+  font-weight: 400 500;
+  font-style: italic;
+  font-display: swap;
+  unicode-range:
+    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304,
+    U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0,
+    U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 
 @font-face {
@@ -65,10 +84,10 @@
 /* --- Theme --- */
 
 @theme {
-  --font-sans:
-    "Satoshi", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
-    "Segoe UI Symbol", "Noto Color Emoji";
-  --font-heading: "Neue Montreal", "Satoshi", ui-sans-serif, system-ui, sans-serif;
+  /* Reading face — Newsreader serif. `font-serif` is the body/prose role;
+     long-form text reads as authored, not scaffolded. (Satoshi retired.) */
+  --font-serif: "Newsreader", ui-serif, Georgia, "Times New Roman", serif;
+  --font-heading: "Neue Montreal", ui-sans-serif, system-ui, sans-serif;
   --font-mono:
     "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
     "Courier New", monospace;
@@ -111,9 +130,25 @@
      inline override this via specificity; monospace text has its own
      numerals and is unaffected. */
   article,
-  .font-sans,
+  .font-serif,
   section.prose {
     font-feature-settings: "onum" 1;
+  }
+
+  /* JetBrains Mono marks machine output, and as metadata (badges, stat
+     labels, timestamps) it's a LABEL, not code — so kill the programming
+     ligatures (`->`, `>=`, `!=` should stay literal) and pull the tracking
+     in a touch, since the face rides wide at small sizes. Scoped to the
+     `.font-mono` utility: actual code (Expressive Code, prose `<code>`/`<pre>`)
+     is styled by element/component selectors, not this class, so it keeps
+     its own ligatures. An explicit `tracking-*` utility still wins over the
+     letter-spacing here (utilities layer > base). */
+  .font-mono {
+    font-variant-ligatures: none;
+    font-feature-settings:
+      "calt" 0,
+      "liga" 0;
+    letter-spacing: -0.01em;
   }
 }
 
@@ -143,7 +178,7 @@
   }
 
   body {
-    @apply font-sans antialiased;
+    @apply font-serif antialiased;
     @apply flex flex-col;
     @apply text-black/85 dark:text-white/85;
     background-color: transparent;
@@ -166,16 +201,21 @@
   :root {
     --masthead-height: 5rem;
     --footer-height: 3.5rem;
-    /* Editorial accent — used sparingly: forward-link badges between
-       /reading and /wiki, the "compiled from N sources" chip on wiki
-       entries, the numbered citation supers in wiki prose, the rail
-       chip when a source is hovered. Brighter in dark for readability
-       at low surface contrast. */
-    --accent: oklch(0.5 0.09 35);
+    /* Editorial accent — terracotta, committed. Pulled up to real
+       saturation from the wiki concept-graph's "agents" neighbourhood hue
+       so the whole surface reads of-a-piece with its best asset. Marks
+       emphasis only: links in running prose, the active nav item, metric
+       numerals, badge borders, the numbered citation supers, the rail chip
+       on hover. Brighter in dark for readability at low surface contrast. */
+    --accent: oklch(0.56 0.15 40);
+    /* Derived tints used by badges and rail highlights — vary opacity, not
+       hue, so they stay locked to --accent. */
+    --accent-line: color-mix(in oklch, var(--accent) 32%, transparent);
+    --accent-soft: color-mix(in oklch, var(--accent) 12%, transparent);
   }
 
   html.dark {
-    --accent: oklch(0.78 0.1 62);
+    --accent: oklch(0.78 0.13 48);
   }
 
   @media (min-width: 768px) {
@@ -234,7 +274,7 @@
 
 @layer utilities {
   article a {
-    @apply font-sans text-current underline underline-offset-4 decoration-1;
+    @apply font-serif text-current underline underline-offset-4 decoration-1;
     @apply decoration-black/25 dark:decoration-white/30;
     @apply transition-colors duration-300 ease-in-out;
   }

@@ -175,6 +175,12 @@ Pinned to `^5.9.3`. **Do not bump to TS 6** until `@astrojs/language-server`'s p
 
 The site is intentionally flat — **no entrance animations** (the `.animate` fade-in classes are being removed) and **no background textures** (no grain/noise/paper overlays). Lean on color temperature, type weight, and spacing instead. Section labels are direct (`WRITING`, `WORK`, `CONTACT`), not stylized (`DISPATCHES`, `FIELD NOTES`).
 
+Flat does **not** mean colourless. After the differentiation pass the site makes three deliberate surface commitments — preserve them, don't "clean them back out":
+
+- **One accent, committed.** `--accent` is a real terracotta (`oklch(0.56 0.15 40)` light / `oklch(0.78 0.13 48)` dark), pulled from the concept-graph's "agents" neighbourhood hue. Use it for emphasis only — the active nav item (`aria-current` via the `Link` `active` prop), `/reading`↔`/wiki` forward-link badges, the "compiled from N sources" chips, citation supers, metric numerals, badge borders (`--accent-line`), the rail highlight (`--accent-soft`). It stays restrained — running-prose body links remain the neutral underlined treatment, not accent. Do not introduce a second accent, and do not desaturate this one.
+- **A serif reading face.** Long-form / prose text is **Newsreader** (`--font-serif`, the `font-serif` utility), set centrally on `body` + `.prose`. Display titles, nav, eyebrows, dates and other chrome stay **Neue Montreal** (`font-heading`). Satoshi has been retired — don't reintroduce it or a generic grotesque body face.
+- **Mono means machine.** `JetBrains Mono` (`font-mono`) is reserved for genuinely machine-emitted values: the `✱ Compiled/Summarized by Claude` provenance badges, pipeline stats, citation source numbers, labs telemetry, and code. It is **not** the default for eyebrows, section labels, or dates — those are tracked Neue Montreal. Reaching for `font-mono` on a hand-authored label is the regression this pass removed.
+
 ### Build-time env
 
 Optional: `GITHUB_TOKEN` (classic PAT with `public_repo` + `read:user`, or fine-grained equivalent). Without it, the contributions rail and `/github` data degrade to null and the relevant blocks omit themselves — build still succeeds. Set in `.env` for local dev (gitignored), and in the Cloudflare Pages build-environment variables for production.
