@@ -1,10 +1,9 @@
 ---
 title: Software engineering
 summary: >-
-  A broad discipline covering architecture, tooling, testing, and craft
-  decisions that determine how software is built, maintained, and extended — a
-  theme connecting sources on agent reliability, CSS platform primitives,
-  component design, shell scripting, and more.
+  A broad discipline whose recurring tensions — between craft and tooling, tacit
+  knowledge and explicit process, individual skill and organizational alignment
+  — are sharpened by the current moment of AI-assisted development.
 sources:
   - 2026-04/2026-04-27t114426-dont-prompt-your-agent-for-reliability-engineer-it
   - 2026-04/2026-04-27t145041-agentic-coding-is-a-trap
@@ -67,12 +66,12 @@ sources:
   - 2026-06/2026-06-18t024208-the-git-commands-i-run-before-reading-any-code
   - >-
     2026-06/2026-06-18t090801-how-i-audit-a-legacy-rails-codebase-in-the-first-week
-compiled_at: '2026-05-06T16:17:24.293Z'
+compiled_at: '2026-06-18T21:13:20.142Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 4855
-    output_tokens: 1038
+    input_tokens: 14143
+    output_tokens: 1703
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -83,17 +82,22 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.030135
-last_source_added: '2026-06-18T16:08:01.863Z'
+  cost_usd: 0.067974
 ---
-Software engineering as a discipline shows up in these sources less as a unified theory and more as a collection of recurring pressures: how to structure systems so they stay maintainable, how to choose tools that don't create new dependencies, and how to preserve the human judgment that holds everything together.
+Software engineering is the practice of building, maintaining, and reasoning about software systems at a level beyond individual function authorship. The sources collected here span languages, tools, testing, architecture, AI assistance, and organizational behavior, but several fault lines run through all of them.
 
-On architecture, the lesson that emerges is that explicit structure beats implicit cleverness. A data engineering agent built across three architectures demonstrated that atomic, well-scoped tools outperform prompt engineering when reliability is the goal [Don't Prompt Your Agent for Reliability](/reading/2026-04/2026-04-27t114426-dont-prompt-your-agent-for-reliability-engineer-it). The same principle appears in component design: Angular components bloated with inputs collapse under their own surface area, and the fix is splitting responsibilities into directives and sub-components so each piece has a clean contract [A Better Way to Build Angular Components](/reading/2026-04/2026-04-30t232001-a-better-way-to-build-angular-components-from-inputs-to). At the LLM tooling layer, codebases with deep modules — interfaces that hide implementation details — make it easier for AI coding tools to reason accurately, because shallow abstractions force models to traverse too many layers at once [AI Likes Deep Modules](/reading/2026-05/2026-05-04t231343-ai-likes-deep-modules).
+The most insistent theme is that code is cheap but ownership is not. [Yusuf Aytas](/reading/2026-05/2026-05-22t091746-when-code-is-cheap-does-quality-still-matter) puts it plainly: LLMs lowered the cost of producing code while leaving the cost of owning it unchanged, meaning engineering judgment remains the scarce asset. This pairs with the argument in [The Bottleneck Was Never the Code](/reading/2026-05/2026-05-06t110728-the-bottleneck-was-never-the-code) that coding agents accelerate writing but amplify whatever misalignment already exists around specifications, shared context, and management coherence. Individual productivity gains do not resolve organizational clarity problems.
 
-On tooling and platform choices, several sources argue for preferring platform primitives over library dependencies. Modern CSS now handles anchor positioning, scroll animations, and view transitions natively, replacing hundreds of kilobytes of JavaScript [The Great CSS Expansion](/reading/2026-04/2026-04-30t231909-the-great-css-expansion). Jim Nielsen makes a similar case for web architecture: linked HTML pages with CSS transitions are simpler to build and maintain than JavaScript-driven interactions [Building Websites With LLMS](/reading/2026-05/2026-05-05t091632-building-websites-with-llms). Shell fluency — Readline bindings, brace expansion, script safety flags — follows the same logic; knowing what the environment already gives you reduces the need to layer on abstractions [Shell Tricks That Actually Make Life Easier](/reading/2026-04/2026-04-30t231815-shell-tricks-that-actually-make-life-easier-and-save-your).
+A second persistent concern is skill atrophy. [Lars Faye](/reading/2026-04/2026-04-27t145041-agentic-coding-is-a-trap) argues that full reliance on AI coding agents erodes the debugging and critical-thinking skills needed to supervise those same agents, a circular dependency that also locks engineers into unpredictable token costs. The same anxiety appears in [a broader essay on vibe coding](/reading/2026-05/2026-05-14t223612-the-perils-of-ai-to-the-software-engineering-profession), which points to compounding LLM errors in safety-critical contexts as a downstream consequence of reviewing nothing. [Christian Ekrem](/reading/2026-05/2026-05-19t110710-the-tacit-dimension-why-your-best-engineers-cant-tell-you) frames this through Michael Polanyi's tacit knowledge: the pattern recognition, system intuition, and unwritten conventions that define senior engineering expertise are structurally inaccessible to AI tools and can only be transmitted through apprenticeship.
 
-Testing surfaces a related concern about coupling. Playwright suites that target CSS classes and DOM structure break on every refactor; suites that target semantic roles and explicit test attributes survive because they're coupled to behavior rather than implementation [Designing Playwright Tests That Survive UI Refactors](/reading/2026-05/2026-05-05t135218-designing-playwright-tests-that-survive-ui-refactors).
+Architectural decisions now carry an AI-readability dimension alongside their human-readability one. [Go Monk](/reading/2026-05/2026-05-04t231343-ai-likes-deep-modules) argues that deep modules with narrow interfaces reduce the surface area an LLM must reason across, making codebases easier for AI tools to work in. This connects to the design principle rehabilitation in [Henrique Teixeira's piece on SRP](/reading/2026-06/2026-06-04t073318-single-responsibility-the-distorted-principle): single responsibility is about cohesion and cognitive simplicity, not maximum granularity, and over-splitting into shallow classes produces the leaky abstractions that defeat both humans and AI.
 
-The human-skill dimension runs through several pieces. Lars Faye argues that full reliance on AI coding agents erodes the debugging and critical thinking skills developers need to supervise those same agents — a paradox that compounds over time [Agentic Coding is a Trap](/reading/2026-04/2026-04-27t145041-agentic-coding-is-a-trap). Christoph Spörk extends this to institutional knowledge: gradual AI dependency quietly hollows out the expertise that organizations need to course-correct when systems fail [The Lobster in the Hot Pot](/reading/2026-05/2026-05-03t103944-the-lobster-in-the-hot-pot). Robert Nystrom's interpreter book points in the opposite direction — toward building deep understanding from first principles [Crafting Interpreters](/reading/2026-04/2026-04-30t231027-munificentcraftinginterpreters), as does the container filesystem tutorial that reconstructs Docker-style isolation from raw Linux primitives [How Container Filesystem Works](/reading/2026-05/2026-05-04t231858-how-container-filesystem-works-building-a-docker-like).
+Reliability engineering for AI agents adds a new layer to existing production discipline. [Aiyan's data engineering agent case study](/reading/2026-04/2026-04-27t114426-dont-prompt-your-agent-for-reliability-engineer-it) shows that prompt engineering is the wrong tool for reliability; environment design and atomic tools are what produce consistent behavior across architectures. [Anthropic's harness writeup](/reading/2026-05/2026-05-19t221035-effective-harnesses-for-long-running-agents) extends this to multi-session agents, using an initializer agent and a progress file to maintain coherence across context windows. The [learn-harness-engineering course](/reading/2026-05/2026-05-18t221205-walkinglabslearn-harness-engineering) formalizes the concept: a harness is a structured environment of instructions, state, verification, and session lifecycle, not a prompt.
 
-Across these sources, engineering craft is less about any single practice and more about the discipline of knowing which layer a problem belongs to and resisting solutions that shift complexity somewhere harder to see.
+Testing retains its importance regardless of how code is generated. [Currents.dev on Playwright selectors](/reading/2026-05/2026-05-05t135218-designing-playwright-tests-that-survive-ui-refactors) argues that brittle test suites stem from coupling to CSS classes and DOM structure rather than semantic roles and explicit test attributes. [Their staging vs. production piece](/reading/2026-05/2026-05-15t120337-playwright-testing-in-staging-vs-production) adds a risk-based framework for where different test types belong. [Emphere's security tool testing](/reading/2026-06/2026-06-11t024225-testing-a-security-tool-like-it-can-hurt-people) makes the harder point: tests for safety-critical tools must include deliberate failure cases that prove the system fails loudly when it overclaims certainty.
+
+Tooling and platform choices still matter at the margins and sometimes more than that. [Pavel Laptev on CSS](/reading/2026-04/2026-04-30t231909-the-great-css-expansion) documents native platform primitives replacing hundreds of kilobytes of JavaScript, reducing dependency surface. [Jujutsu](/reading/2026-05/2026-05-31t164554-jj-vcsjj) offers a Git-compatible VCS with cleaner conflict handling and [a practical review workflow on top of it](/reading/2026-05/2026-05-31t164252-reviewing-large-changes-with-jujutsu) shows how the tool shapes practice. [Anton Zaides' seven production rules](/reading/2026-06/2026-06-10t073045-the-unwritten-laws-of-software-engineering) are the kind of hard-won operational knowledge that no architecture document captures: roll back before debugging, treat every external dependency as a future outage.
+
+Organizational context shapes what any of the above is worth. [Bad onboarding](/reading/2026-05/2026-05-08t112608-your-onboarding-is-a-hazing-ritual-and-you-call-it-agile) signals that the process, not the engineer, is failing. [Senior developers losing influence](/reading/2026-05/2026-05-13t060018-why-senior-developers-fail-to-communicate-their-expertise) because they speak in complexity terms while the business speaks in uncertainty terms is a communication failure with architectural consequences. [Ally Piechowski's Rails audit process](/reading/2026-06/2026-06-18t090801-how-i-audit-a-legacy-rails-codebase-in-the-first-week) treats stakeholder interviews and schema reading as prior to any tooling, on the premise that the social knowledge gap is usually larger than the technical one.
+
+Formal verification, long sidelined as too costly, is gaining renewed attention. [Yaron Minsky at Jane Street](/reading/2026-06/2026-06-15t021106-formal-methods-and-the-future-of-programming) argues that agentic coding creates new demand for machine-checkable proofs precisely because AI-generated code is fast enough to outpace human review, making the economics of proof-writing finally competitive.
