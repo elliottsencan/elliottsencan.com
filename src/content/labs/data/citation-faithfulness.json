@@ -1,6 +1,6 @@
 {
   "rubric_version": "v1.0",
-  "generated_at": "2026-06-18T22:39:19.934Z",
+  "generated_at": "2026-06-18T23:06:15.401Z",
   "articles": [
     {
       "wiki_slug": "agent-coordination",
@@ -3018,14 +3018,109 @@
         "disagree": 0,
         "agreement_pct": 100
       }
+    },
+    {
+      "wiki_slug": "multimodal-ai",
+      "content_hash": "09063ef5b6f40411891953c5c93ddee4c4124b2081960f17425e8f3d2aa962d2",
+      "evaluated_at": "2026-06-18T23:06:15.401Z",
+      "judges": [
+        {
+          "judge_model": "claude-haiku-4-5",
+          "claims": [
+            {
+              "claim_text": "The 2025 VLM landscape [survey](/reading/2026-04/2026-04-29t171532-vision-language-models-better-faster-stronger) documents how far the field moved in a single year: architectures now span any-to-any models, mixture-of-experts designs, vision-language-action models for robotics, and dedicated video understanding pipelines.",
+              "cited_source_slug": "2026-04/2026-04-29t171532-vision-language-models-better-faster-stronger",
+              "verdict": "supported",
+              "justification": "The source summary explicitly mentions 'new architectures (any-to-any, MoE decoders, reasoning models)' and 'video understanding' and 'agentic VLM applications.' This directly supports the claim's references to any-to-any models, mixture-of-experts designs, vision-language-action models for robotics, and dedicated video understanding pipelines. The source is described as a '2025 update on vision language model progress,' matching the '2025 VLM landscape' description.",
+              "cost_usd": 0.001647
+            },
+            {
+              "claim_text": "That shift toward smaller, local deployment shows up directly in [oobabooga/textgen](/reading/2026-05/2026-05-05t071908-oobaboogatextgen), a local desktop app that supports vision inputs alongside standard text inference, all offline with no telemetry.",
+              "cited_source_slug": "2026-05/2026-05-05t071908-oobaboogatextgen",
+              "verdict": "supported",
+              "justification": "The source summary confirms that oobabooga/textgen is a 'local, fully offline desktop app' that supports 'multimodal input,' directly matching the claim that it's a local desktop app supporting vision inputs offline with no telemetry.",
+              "cost_usd": 0.001316
+            },
+            {
+              "claim_text": "On the production side, [Poolday's Creator-1](/reading/2026-04/2026-04-30t231206-poolday) platform orchestrates over 100 generative models to handle video editing end-to-end, cutting and generating assets across modalities in a multi-agent pipeline.",
+              "cited_source_slug": "2026-04/2026-04-30t231206-poolday",
+              "verdict": "supported",
+              "justification": "The source states that Poolday's Creator-1 'orchestrating 100+ generative models' and 'autonomously execute video edits end-to-end — cutting, trimming, generating AI assets' in a 'multi-agent system.' This directly supports the claim that the platform orchestrates over 100 generative models for video editing end-to-end with cutting and generating assets across modalities in a multi-agent pipeline.",
+              "cost_usd": 0.00151
+            },
+            {
+              "claim_text": "And [Helply](/reading/2026-05/2026-05-14t222554-piyush-mishra-00helply) combines real-time audio transcription with language model responses, a narrower but practical pairing of speech and text modalities for live meeting assistance.",
+              "cited_source_slug": "2026-05/2026-05-14t222554-piyush-mishra-00helply",
+              "verdict": "supported",
+              "justification": "The source confirms Helply combines real-time transcription with AI-generated answers (language model responses) during calls. The source specifies 'real-time transcription and AI-generated answers,' which directly supports the claim's characterization of it as combining 'real-time audio transcription with language model responses' for meeting assistance.",
+              "cost_usd": 0.001401
+            }
+          ],
+          "summary": {
+            "supported": 4,
+            "partial": 0,
+            "unsupported": 0,
+            "synthetic_count": 0,
+            "accuracy_pct": 100,
+            "total_cost_usd": 0.0059
+          }
+        },
+        {
+          "judge_model": "claude-sonnet-4-6",
+          "claims": [
+            {
+              "claim_text": "The 2025 VLM landscape [survey](/reading/2026-04/2026-04-29t171532-vision-language-models-better-faster-stronger) documents how far the field moved in a single year: architectures now span any-to-any models, mixture-of-experts designs, vision-language-action models for robotics, and dedicated video understanding pipelines.",
+              "cited_source_slug": "2026-04/2026-04-29t171532-vision-language-models-better-faster-stronger",
+              "verdict": "supported",
+              "justification": "The source summary explicitly lists 'new architectures (any-to-any, MoE decoders, reasoning models)' and 'video understanding' as covered topics, matching the claim's mention of any-to-any models, mixture-of-experts designs, and dedicated video understanding pipelines. Vision-language-action models for robotics are not explicitly listed, making this a near-complete match.",
+              "cost_usd": 0.004479
+            },
+            {
+              "claim_text": "That shift toward smaller, local deployment shows up directly in [oobabooga/textgen](/reading/2026-05/2026-05-05t071908-oobaboogatextgen), a local desktop app that supports vision inputs alongside standard text inference, all offline with no telemetry.",
+              "cited_source_slug": "2026-05/2026-05-05t071908-oobaboogatextgen",
+              "verdict": "supported",
+              "justification": "The source describes it as a 'local, fully offline desktop app' supporting 'multimodal input,' which maps to the claim's description of a local desktop app with vision inputs and offline use. The source also notes 'no telemetry' is implied by fully offline, though the source does not use that exact word.",
+              "cost_usd": 0.004131
+            },
+            {
+              "claim_text": "On the production side, [Poolday's Creator-1](/reading/2026-04/2026-04-30t231206-poolday) platform orchestrates over 100 generative models to handle video editing end-to-end, cutting and generating assets across modalities in a multi-agent pipeline.",
+              "cited_source_slug": "2026-04/2026-04-30t231206-poolday",
+              "verdict": "supported",
+              "justification": "The source states Creator-1 'orchestrating 100+ generative models' and uses 'a multi-agent system to autonomously execute video edits end-to-end — cutting, trimming, generating AI assets,' which directly entails the claim about orchestrating over 100 generative models across modalities in a multi-agent pipeline.",
+              "cost_usd": 0.004173
+            },
+            {
+              "claim_text": "And [Helply](/reading/2026-05/2026-05-14t222554-piyush-mishra-00helply) combines real-time audio transcription with language model responses, a narrower but practical pairing of speech and text modalities for live meeting assistance.",
+              "cited_source_slug": "2026-05/2026-05-14t222554-piyush-mishra-00helply",
+              "verdict": "supported",
+              "justification": "The source describes Helply as providing 'real-time transcription and AI-generated answers during calls,' which directly supports the claim of combining real-time audio transcription with language model responses for live meeting assistance.",
+              "cost_usd": 0.003771
+            }
+          ],
+          "summary": {
+            "supported": 4,
+            "partial": 0,
+            "unsupported": 0,
+            "synthetic_count": 0,
+            "accuracy_pct": 100,
+            "total_cost_usd": 0.0166
+          }
+        }
+      ],
+      "judge_agreement": {
+        "total_claims": 4,
+        "agree": 4,
+        "disagree": 0,
+        "agreement_pct": 100
+      }
     }
   ],
   "totals": {
-    "articles_evaluated": 20,
-    "total_claims": 157,
+    "articles_evaluated": 1,
+    "total_claims": 161,
     "total_cost_usd_by_judge": {
-      "claude-haiku-4-5": 0.2205,
-      "claude-sonnet-4-6": 0.6338
+      "claude-haiku-4-5": 0.2264,
+      "claude-sonnet-4-6": 0.6504
     }
   }
 }
