@@ -1,0 +1,63 @@
+[     291ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:4325/@vite/client:0
+[    1213ms] [LOG]  ____    _____   ____        ____    _____  __     __
+|___ \  |_   _| / ___|      |  _ \  | ____| \ \   / /
+  __) |   | |   \___ \      | | | | |  _|    \ \ / / 
+ / __/    | |    ___) |  _  | |_| | | |___    \ V /  
+|_____|   |_|   |____/  (_) |____/  |_____|    \_/    @ http://localhost:4325/:175
+[    1213ms] [LOG] looking under the hood? I can tell you all about it. Email me here: elliottsencan88@gmail.com @ http://localhost:4325/:176
+[   45929ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:4325/@vite/client:0
+[   46082ms] [LOG]  ____    _____   ____        ____    _____  __     __
+|___ \  |_   _| / ___|      |  _ \  | ____| \ \   / /
+  __) |   | |   \___ \      | | | | |  _|    \ \ / / 
+ / __/    | |    ___) |  _  | |_| | | |___    \ V /  
+|_____|   |_|   |____/  (_) |____/  |_____|    \_/    @ http://localhost:4325/wiki:175
+[   46082ms] [LOG] looking under the hood? I can tell you all about it. Email me here: elliottsencan88@gmail.com @ http://localhost:4325/wiki:176
+[   85288ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:4325/@vite/client:0
+[   85427ms] [LOG]  ____    _____   ____        ____    _____  __     __
+|___ \  |_   _| / ___|      |  _ \  | ____| \ \   / /
+  __) |   | |   \___ \      | | | | |  _|    \ \ / / 
+ / __/    | |    ___) |  _  | |_| | | |___    \ V /  
+|_____|   |_|   |____/  (_) |____/  |_____|    \_/    @ http://localhost:4325/wiki:175
+[   85427ms] [LOG] looking under the hood? I can tell you all about it. Email me here: elliottsencan88@gmail.com @ http://localhost:4325/wiki:176
+[   95106ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:4325/@vite/client:0
+[   95113ms] [LOG]  ____    _____   ____        ____    _____  __     __
+|___ \  |_   _| / ___|      |  _ \  | ____| \ \   / /
+  __) |   | |   \___ \      | | | | |  _|    \ \ / / 
+ / __/    | |    ___) |  _  | |_| | | |___    \ V /  
+|_____|   |_|   |____/  (_) |____/  |_____|    \_/    @ http://localhost:4325/writing:175
+[   95113ms] [LOG] looking under the hood? I can tell you all about it. Email me here: elliottsencan88@gmail.com @ http://localhost:4325/writing:176
+[  121908ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:4325/@vite/client:0
+[  122066ms] [LOG]  ____    _____   ____        ____    _____  __     __
+|___ \  |_   _| / ___|      |  _ \  | ____| \ \   / /
+  __) |   | |   \___ \      | | | | |  _|    \ \ / / 
+ / __/    | |    ___) |  _  | |_| | | |___    \ V /  
+|_____|   |_|   |____/  (_) |____/  |_____|    \_/    @ http://localhost:4325/:175
+[  122066ms] [LOG] looking under the hood? I can tell you all about it. Email me here: elliottsencan88@gmail.com @ http://localhost:4325/:176
+[  163390ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:4325/@vite/client:0
+[  163400ms] [LOG]  ____    _____   ____        ____    _____  __     __
+|___ \  |_   _| / ___|      |  _ \  | ____| \ \   / /
+  __) |   | |   \___ \      | | | | |  _|    \ \ / / 
+ / __/    | |    ___) |  _  | |_| | | |___    \ V /  
+|_____|   |_|   |____/  (_) |____/  |_____|    \_/    @ http://localhost:4325/tags:175
+[  163400ms] [LOG] looking under the hood? I can tell you all about it. Email me here: elliottsencan88@gmail.com @ http://localhost:4325/tags:176
+[  209096ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:4325/@vite/client:0
+[  209214ms] [LOG]  ____    _____   ____        ____    _____  __     __
+|___ \  |_   _| / ___|      |  _ \  | ____| \ \   / /
+  __) |   | |   \___ \      | | | | |  _|    \ \ / / 
+ / __/    | |    ___) |  _  | |_| | | |___    \ V /  
+|_____|   |_|   |____/  (_) |____/  |_____|    \_/    @ http://localhost:4325/reading:175
+[  209214ms] [LOG] looking under the hood? I can tell you all about it. Email me here: elliottsencan88@gmail.com @ http://localhost:4325/reading:176
+[  209881ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:4325/@vite/client:0
+[  209971ms] [LOG]  ____    _____   ____        ____    _____  __     __
+|___ \  |_   _| / ___|      |  _ \  | ____| \ \   / /
+  __) |   | |   \___ \      | | | | |  _|    \ \ / / 
+ / __/    | |    ___) |  _  | |_| | | |___    \ V /  
+|_____|   |_|   |____/  (_) |____/  |_____|    \_/    @ http://localhost:4325/labs:175
+[  209971ms] [LOG] looking under the hood? I can tell you all about it. Email me here: elliottsencan88@gmail.com @ http://localhost:4325/labs:176
+[  211533ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:4325/@vite/client:0
+[  212050ms] [LOG]  ____    _____   ____        ____    _____  __     __
+|___ \  |_   _| / ___|      |  _ \  | ____| \ \   / /
+  __) |   | |   \___ \      | | | | |  _|    \ \ / / 
+ / __/    | |    ___) |  _  | |_| | | |___    \ V /  
+|_____|   |_|   |____/  (_) |____/  |_____|    \_/    @ http://localhost:4325/wiki/multi-agent-systems/:175
+[  212050ms] [LOG] looking under the hood? I can tell you all about it. Email me here: elliottsencan88@gmail.com @ http://localhost:4325/wiki/multi-agent-systems/:176
