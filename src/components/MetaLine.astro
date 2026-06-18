@@ -1,0 +1,91 @@
+---
+import { formatLongDate } from "@lib/format";
+
+// One quiet mono provenance line — no fills, no borders. Replaces the
+// stacked chip pile (count chip + ProvenanceBadge + trailing link) on the
+// redesigned pages; ProvenanceBadge stays as the chip variant for surfaces
+// that haven't been touched yet (e.g. /reading rows).
+//
+//   ✱ Compiled by Claude · 3 May 2026 · 5 sources · How this works →
+//
+// Ordered `segments` render left → right. Each `·` separator is grouped
+// with the segment it introduces (same wrap discipline as ProvenanceBadge)
+// so a line break never strands a separator. Segment forms:
+//   - string                            → plain text at /55
+//   - { date }                          → <time> long date at /65
+//   - { text, href, accent?, sans? }    → link; accent (default) renders in
+//     var(--accent) with hover underline, `sans` renders as a quiet
+//     underlined font-sans link for content titles.
+
+type Segment =
+  | string
+  | { date: Date }
+  | { text: string; href: string; accent?: boolean; sans?: boolean };
+
+type Props = {
+  mark?: boolean;
+  segments: Segment[];
+  class?: string;
+};
+
+const { mark = true, segments, class: className } = Astro.props;
+
+const isDate = (s: Segment): s is { date: Date } => typeof s !== "string" && "date" in s;
+const isLink = (
+  s: Segment,
+): s is { text: string; href: string; accent?: boolean; sans?: boolean } =>
+  typeof s !== "string" && "href" in s;
+---
+
+<p
+  class:list={[
+    "inline-flex w-fit max-w-full flex-wrap items-baseline gap-x-2.5 gap-y-0.5 font-mono text-xs text-black/55 dark:text-white/55",
+    className,
+  ]}
+>
+  {
+    mark && (
+      <span aria-hidden="true" class="text-[color:var(--accent)]">
+        &#x2731;
+      </span>
+    )
+  }
+  {
+    segments.map((segment, i) => (
+      <span class="inline-flex max-w-full flex-wrap items-baseline gap-x-2.5 whitespace-nowrap">
+        {i > 0 && (
+          <span aria-hidden="true" class="text-black/25 dark:text-white/25">
+            &middot;
+          </span>
+        )}
+        {isDate(segment) ? (
+          <time
+            datetime={segment.date.toISOString()}
+            class="text-black/65 dark:text-white/65"
+            style="font-variant-numeric: tabular-nums;"
+          >
+            {formatLongDate(segment.date)}
+          </time>
+        ) : isLink(segment) ? (
+          segment.sans ? (
+            <a
+              href={segment.href}
+              class="whitespace-normal font-sans text-black/65 underline decoration-black/25 underline-offset-4 transition-colors duration-300 ease-in-out hover:text-black hover:decoration-black/50 dark:text-white/65 dark:decoration-white/30 dark:hover:text-white dark:hover:decoration-white/50"
+            >
+              {segment.text}
+            </a>
+          ) : (
+            <a
+              href={segment.href}
+              class="whitespace-normal text-[color:var(--accent)] no-underline transition-colors duration-300 ease-in-out hover:underline focus-visible:underline"
+            >
+              {segment.text}
+            </a>
+          )
+        ) : (
+          <span class="whitespace-normal">{segment}</span>
+        )}
+      </span>
+    ))
+  }
+</p>

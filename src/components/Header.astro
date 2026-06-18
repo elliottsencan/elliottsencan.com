@@ -2,29 +2,48 @@
 import Container from "@components/Container.astro";
 import Link from "@components/Link.astro";
 import SignatureLogo from "./SignatureLogo.astro";
+
+const path = Astro.url.pathname;
+// True when the current URL is this section or a child of it.
+const isActive = (href: string) => path === href || path.startsWith(`${href}/`);
+
+// Single source of truth for the section index. Rendered twice — once as the
+// inline desktop bar, once inside the mobile disclosure panel — so the link
+// list never drifts between the two responsive shapes.
+const sections = [
+  { href: "/now", label: "now" },
+  { href: "/reading", label: "reading" },
+  { href: "/wiki", label: "wiki" },
+  { href: "/labs", label: "labs" },
+  { href: "/about", label: "about" },
+];
 ---
 
 <header transition:persist>
   <Container>
-    {/* Two-row editorial masthead under sm:. Below 640px the logo + utility
-        controls take row 1 and the section index drops to row 2 with a
-        hairline rule between them — every link visible without horizontal
-        scroll. At sm: and up the grid collapses to a single row in the
-        canonical order: logo · section links · utility. */}
+    {/* Single-row masthead at every breakpoint: logo · links · utility.
+        Below sm the inline links are hidden and the section index collapses
+        into the <details> disclosure (☰) in the utility cluster, which drops
+        an overlay panel. At sm: and up the disclosure is hidden and the links
+        render inline. */}
     <div class="header-grid items-center gap-x-3">
       <Link href="/" underline={false} class="header-logo shrink-0">
         <SignatureLogo />
       </Link>
+
       <nav
-        class="header-links flex items-center text-sm sm:justify-end sm:gap-x-5"
+        class="header-links hidden text-sm sm:flex sm:items-center sm:justify-end sm:gap-x-5"
+        aria-label="Primary"
       >
-        <!-- <Link href="/writing">writing</Link> -->
-        <Link href="/now">now</Link>
-        <Link href="/reading">reading</Link>
-        <Link href="/wiki">wiki</Link>
-        <Link href="/labs">labs</Link>
-        <Link href="/about">about</Link>
+        {
+          sections.map((s) => (
+            <Link href={s.href} aria-current={isActive(s.href) ? "page" : undefined}>
+              {s.label}
+            </Link>
+          ))
+        }
       </nav>
+
       <div class="header-utility flex items-center gap-x-3.5">
         <a
           href="/search"
@@ -102,54 +121,159 @@ import SignatureLogo from "./SignatureLogo.astro";
             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" />
           </svg>
         </button>
+
+        {/* Mobile section menu — native disclosure so it works without JS and
+            is keyboard-accessible by default. init() (Head.astro) adds
+            close-on-select / Escape / outside-tap. Hidden at sm: and up. */}
+        <details id="nav-menu" class="nav-disclosure sm:hidden">
+          <summary class="nav-toggle" aria-label="Menu">
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="size-5"
+            >
+              <line x1="3.5" y1="7" x2="20.5" y2="7" />
+              <line x1="3.5" y1="12" x2="20.5" y2="12" />
+              <line x1="3.5" y1="17" x2="20.5" y2="17" />
+            </svg>
+          </summary>
+          <nav class="nav-panel" aria-label="Primary">
+            {
+              sections.map((s) => (
+                <Link
+                  href={s.href}
+                  underline={false}
+                  aria-current={isActive(s.href) ? "page" : undefined}
+                >
+                  {s.label}
+                </Link>
+              ))
+            }
+          </nav>
+        </details>
       </div>
     </div>
   </Container>
 </header>
 
 <style>
-  /* Two-row grid below sm: — logo + utility on row 1, section links on
-     row 2 separated by a hairline rule. Single source of truth per item;
-     CSS handles the responsive shape, no markup duplication. */
+  /* Single-row masthead at every breakpoint. Below sm the center `links`
+     track is empty (inline nav hidden) and the 1fr column simply pushes the
+     utility cluster — which carries the ☰ disclosure — to the right edge. */
   .header-grid {
     display: grid;
     grid-template-columns: auto 1fr auto;
-    grid-template-areas:
-      "logo . utility"
-      "links links links";
-    row-gap: 0.625rem;
+    grid-template-areas: "logo links utility";
   }
   .header-logo {
     grid-area: logo;
   }
   .header-links {
     grid-area: links;
-    /* Mobile: links stretch edge-to-edge below the hairline rule —
-       first item flush-left, last flush-right, equal gaps between.
-       Maximizes tap targets and reads as primary navigation. */
-    justify-content: space-between;
-    white-space: nowrap;
-    padding-top: 0.625rem;
-    border-top: 1px solid rgb(0 0 0 / 0.1);
-  }
-  :global(.dark) .header-links {
-    border-top-color: rgb(255 255 255 / 0.1);
   }
   .header-utility {
     grid-area: utility;
   }
 
-  @media (min-width: 640px) {
-    /* sm: collapse to a single row — logo · links · utility. */
-    .header-grid {
-      grid-template-areas: "logo links utility";
-      row-gap: 0;
+  /* Active item: a single accent underline aligned with the inactive links —
+     recolours the link's own underline (from Link.astro) and thickens it,
+     rather than floating a separate bar beneath. */
+  :global(.header-links a[aria-current="page"]) {
+    color: var(--accent);
+    text-decoration-color: var(--accent);
+    text-decoration-thickness: 2px;
+  }
+  :global(.nav-panel a[aria-current="page"]) {
+    color: var(--accent);
+  }
+
+  /* ── Mobile disclosure menu ─────────────────────────────────────────── */
+  /* The <details> stays in normal flow (its summary is the click target);
+     the panel is taken out of flow and anchored to the fixed <header>. */
+  .nav-disclosure {
+    position: static;
+    display: inline-flex;
+  }
+  .nav-toggle {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    list-style: none;
+    color: rgb(0 0 0 / 0.75);
+    transition: color 300ms ease-in-out;
+  }
+  .nav-toggle::-webkit-details-marker {
+    display: none;
+  }
+  .nav-toggle:hover,
+  .nav-disclosure[open] .nav-toggle {
+    color: rgb(0 0 0);
+  }
+  :global(.dark) .nav-toggle {
+    color: rgb(255 255 255 / 0.75);
+  }
+  :global(.dark) .nav-toggle:hover,
+  :global(.dark) .nav-disclosure[open] .nav-toggle {
+    color: rgb(255 255 255);
+  }
+
+  /* Overlay panel anchored under the header's bottom hairline. Absolute, so
+     it floats over page content (the fixed header keeps a stable height).
+     `top: 100%` resolves against the fixed <header>, the nearest positioned
+     ancestor. Same translucent surface + blur as the header. */
+  .nav-panel {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.5rem 1.5rem 0.875rem;
+    background: rgb(246 244 239 / 0.96);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid rgb(0 0 0 / 0.08);
+  }
+  :global(.dark) .nav-panel {
+    background: rgb(24 22 26 / 0.96);
+    border-bottom-color: rgb(255 255 255 / 0.08);
+  }
+  .nav-panel :global(a) {
+    padding: 0.5rem 0;
+    font-size: 0.9375rem;
+  }
+
+  /* Subtle expand on open. Keyframe animation (not a transition) so it runs
+     as the panel goes from display:none to shown. Close is instant. */
+  @keyframes nav-expand {
+    from {
+      opacity: 0;
+      transform: translateY(-0.25rem);
     }
-    .header-links {
-      gap: 1.25rem;
-      justify-content: flex-end;
-      padding-top: 0;
-      border-top: 0;
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  .nav-disclosure[open] .nav-panel {
+    animation: nav-expand 150ms ease-out;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .nav-disclosure[open] .nav-panel {
+      animation: none;
+    }
+  }
+
+  @media (min-width: 640px) {
+    /* Belt-and-braces: the disclosure is also `sm:hidden` via utility class,
+       but guarantee the overlay never shows on desktop. */
+    .nav-disclosure {
+      display: none;
     }
   }
 </style>

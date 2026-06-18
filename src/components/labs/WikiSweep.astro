@@ -117,10 +117,10 @@ const nagCount = offTopicRows.filter((r) => r.nag).length;
   {/* ── Region 1: threshold sweep ── */}
   <div class="flex flex-col gap-3">
     <div class="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
-      <span class="font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55">
+      <span class="font-mono text-xs uppercase tracking-[0.18em] text-black/55 dark:text-white/55">
         Threshold sweep · precision vs recall
       </span>
-      <div class="flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-[0.65rem] uppercase tracking-widest">
+      <div class="flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-[0.65rem] uppercase tracking-[0.18em]">
         <span class="flex items-center gap-1.5 text-black/65 dark:text-white/65">
           <span class="inline-block h-[2px] w-4 bg-[color:var(--accent)]"></span>
           precision@1
@@ -257,11 +257,11 @@ const nagCount = offTopicRows.filter((r) => r.nag).length;
   {/* ── Region 2: per-prompt gate strip ── */}
   <div class="flex flex-col gap-4 border-t border-black/10 pt-6 dark:border-white/10">
     <div class="flex items-baseline justify-between gap-3">
-      <span class="font-mono text-xs uppercase tracking-widest text-black/65 dark:text-white/65">
+      <span class="font-mono text-xs uppercase tracking-[0.18em] text-black/65 dark:text-white/65">
         Per-prompt · top concept vs gate
       </span>
       <span
-        class="hidden font-mono text-[0.65rem] uppercase tracking-widest text-black/45 sm:inline dark:text-white/45"
+        class="hidden font-mono text-[0.65rem] uppercase tracking-[0.18em] text-black/45 sm:inline dark:text-white/45"
       >
         gate · {fmtThresh(recommendedThreshold)} →
       </span>
@@ -269,7 +269,7 @@ const nagCount = offTopicRows.filter((r) => r.nag).length;
 
     {/* on-topic group */}
     <div class="flex flex-col gap-2">
-      <span class="font-mono text-[0.65rem] uppercase tracking-widest text-black/45 dark:text-white/45">
+      <span class="font-mono text-[0.65rem] uppercase tracking-[0.18em] text-black/45 dark:text-white/45">
         On-topic · n={nOnTopic}
       </span>
       <div class="flex flex-col gap-1">
@@ -302,7 +302,7 @@ const nagCount = offTopicRows.filter((r) => r.nag).length;
                 </span>
                 <span
                   class:list={[
-                    "font-mono text-[0.6rem] uppercase tracking-widest",
+                    "font-mono text-[0.6rem] uppercase tracking-[0.18em]",
                     r.hit ? "text-[color:var(--accent)]" : "text-black/40 dark:text-white/40",
                   ]}
                 >
@@ -317,7 +317,7 @@ const nagCount = offTopicRows.filter((r) => r.nag).length;
 
     {/* off-topic group */}
     <div class="flex flex-col gap-2 border-t border-black/[0.06] pt-3 dark:border-white/[0.06]">
-      <span class="font-mono text-[0.65rem] uppercase tracking-widest text-black/45 dark:text-white/45">
+      <span class="font-mono text-[0.65rem] uppercase tracking-[0.18em] text-black/45 dark:text-white/45">
         Off-topic · n={nOffTopic} · {nagCount === 0 ? "0 nags" : `${nagCount} nag${nagCount === 1 ? "" : "s"}`}
       </span>
       <div class="flex flex-col gap-1">
@@ -350,7 +350,7 @@ const nagCount = offTopicRows.filter((r) => r.nag).length;
                 </span>
                 <span
                   class:list={[
-                    "font-mono text-[0.6rem] uppercase tracking-widest",
+                    "font-mono text-[0.6rem] uppercase tracking-[0.18em]",
                     r.nag ? "text-[color:var(--accent)]" : "text-black/40 dark:text-white/40",
                   ]}
                 >

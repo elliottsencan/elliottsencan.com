@@ -1,0 +1,237 @@
+---
+import type { CollectionEntry } from "astro:content";
+import Link from "@components/Link.astro";
+
+// Numbered-chapter directory of wiki concepts, grouped by neighbourhood.
+// Each cluster renders as a chapter: ghost instrument numeral, cluster
+// name, a cluster-color dot, and a right-pushed concept count, closed by
+// a dotted rule. Items flow in up-to-three columns with dot leaders
+// running from the concept name to its source count.
+//
+// Cluster colors come from the layout JSON hues, normalized so all
+// neighbourhoods share chroma/lightness: oklch(0.58 0.07 h) light /
+// oklch(0.74 0.06 h) dark. Groups without a cluster (the trailing
+// "Other") pass `hue: null` and get an ink dot.
+//
+// Each row keeps the data-* contract the bottom-right WikiInspector
+// reads (data-nb / data-ct / data-su + the `.wd-nm` text), and a
+// mobile-only one-line summary (hidden on desktop where the inspector
+// serves the same role).
+type Group = {
+  label: string;
+  short: string;
+  hue: number | null;
+  concepts: CollectionEntry<"wiki">[];
+};
+
+type Props = { groups: Group[] };
+
+const { groups } = Astro.props;
+---
+
+<div id="wiki-list" class="wd not-prose">
+  {
+    groups.map((group, gi) => (
+      <div class="wd-group">
+        <div class="wd-head">
+          <span class="num-display wd-num" aria-hidden="true">
+            {String(gi + 1).padStart(2, "0")}
+          </span>
+          <h2 class="wd-title font-heading">{group.label}</h2>
+          <span
+            class="wd-dot"
+            style={group.hue !== null ? `--hue: ${group.hue};` : undefined}
+            data-ink={group.hue === null ? "" : undefined}
+            aria-hidden="true"
+          />
+          <span class="wd-count font-mono">
+            {group.concepts.length} concept{group.concepts.length === 1 ? "" : "s"}
+          </span>
+        </div>
+        <div role="presentation" aria-hidden="true" class="dot-rule wd-rule h-px w-full" />
+        <div class="wd-cols">
+          {group.concepts.map((c) => (
+            <a
+              class="wd-row"
+              href={`/wiki/${c.id}/`}
+              data-nb={group.short}
+              data-ct={c.data.sources.length}
+              data-su={c.data.summary}
+            >
+              <span class="wd-top">
+                <span class="wd-nm">{c.data.title}</span>
+                <span class="wd-leader" aria-hidden="true" />
+                <span class="wd-ct font-mono">{c.data.sources.length}</span>
+              </span>
+              <span class="wd-mob">{c.data.summary}</span>
+            </a>
+          ))}
+        </div>
+      </div>
+    ))
+  }
+  {/* Footer — mirrors the slug page's "view in /reading →" idiom. */}
+  <p class="wd-foot font-mono text-xs tracking-wider text-black/55 dark:text-white/55">
+    <Link href="/reading">reading log &rarr;</Link>
+  </p>
+</div>
+
+<style>
+  .wd {
+    display: flex;
+    flex-direction: column;
+    gap: 3.5rem;
+  }
+  .wd-head {
+    display: flex;
+    align-items: baseline;
+    gap: 1.375rem;
+    min-width: 0;
+  }
+  .wd-num {
+    font-size: 2.75rem;
+    color: rgb(0 0 0 / 0.25);
+  }
+  :global(.dark) .wd-num {
+    color: rgb(255 255 255 / 0.27);
+  }
+  .wd-title {
+    margin: 0;
+    font-size: clamp(1.375rem, 1.15rem + 0.9vw, 1.9rem);
+    font-weight: 400;
+    letter-spacing: -0.016em;
+    line-height: 1.1;
+    color: #000;
+  }
+  :global(.dark) .wd-title {
+    color: #fff;
+  }
+  /* Cluster dot — normalized hue family so all neighbourhoods share
+     chroma/lightness. Baseline-aligned via translate, like the board. */
+  .wd-dot {
+    width: 9px;
+    height: 9px;
+    flex: none;
+    border-radius: 9999px;
+    background: oklch(0.58 0.07 var(--hue));
+    transform: translateY(-1px);
+  }
+  :global(.dark) .wd-dot {
+    background: oklch(0.74 0.06 var(--hue));
+  }
+  .wd-dot[data-ink] {
+    background: rgb(0 0 0 / 0.25);
+  }
+  :global(.dark) .wd-dot[data-ink] {
+    background: rgb(255 255 255 / 0.27);
+  }
+  .wd-count {
+    margin-left: auto;
+    flex: none;
+    font-size: 0.75rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgb(0 0 0 / 0.55);
+  }
+  :global(.dark) .wd-count {
+    color: rgb(255 255 255 / 0.55);
+  }
+  .wd-rule {
+    margin: 1rem 0 0.625rem;
+  }
+  .wd-cols {
+    column-count: 1;
+    column-gap: 4.5rem;
+  }
+  @media (min-width: 641px) {
+    .wd-cols {
+      column-count: 2;
+    }
+  }
+  @media (min-width: 1024px) {
+    .wd-cols {
+      column-count: 3;
+    }
+  }
+  .wd-row {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    break-inside: avoid;
+    padding: 0.4375rem 0;
+    color: inherit;
+    text-decoration: none;
+  }
+  .wd-top {
+    display: flex;
+    width: 100%;
+    align-items: baseline;
+    gap: 0.625rem;
+  }
+  .wd-nm {
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.4;
+    color: rgb(0 0 0 / 0.85);
+    transition: color 300ms ease;
+  }
+  :global(.dark) .wd-nm {
+    color: rgb(255 255 255 / 0.85);
+  }
+  .wd-row:hover .wd-nm,
+  .wd-row:focus-visible .wd-nm,
+  .wd-row[data-live] .wd-nm {
+    color: var(--accent);
+  }
+  /* Dot leader — a baseline-aligned dotted filler running name → count. */
+  .wd-leader {
+    flex: 1;
+    border-bottom: 1px dotted rgb(0 0 0 / 0.25);
+    transform: translateY(-4px);
+  }
+  :global(.dark) .wd-leader {
+    border-bottom-color: rgb(255 255 255 / 0.27);
+  }
+  .wd-ct {
+    flex: none;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: normal;
+    color: rgb(0 0 0 / 0.55);
+  }
+  :global(.dark) .wd-ct {
+    color: rgb(255 255 255 / 0.55);
+  }
+  .wd-mob {
+    display: none;
+  }
+  .wd-foot {
+    margin: 0;
+    text-align: right;
+  }
+  @media (max-width: 640px) {
+    .wd-head {
+      gap: 0.875rem;
+    }
+    .wd-num {
+      font-size: 2rem;
+    }
+    .wd-row {
+      padding: 0.625rem 0;
+    }
+    .wd-mob {
+      display: block;
+      overflow: hidden;
+      margin-top: 0.1875rem;
+      font-size: 0.8125rem;
+      line-height: 1.45;
+      color: rgb(0 0 0 / 0.6);
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    :global(.dark) .wd-mob {
+      color: rgb(255 255 255 / 0.6);
+    }
+  }
+</style>

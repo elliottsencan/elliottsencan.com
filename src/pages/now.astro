@@ -1,10 +1,11 @@
 ---
 import { getEntry, render } from "astro:content";
-import Container from "@components/Container.astro";
+import Breadcrumb from "@components/Breadcrumb.astro";
 import EditorialRule from "@components/EditorialRule.astro";
-import HeroMeta from "@components/HeroMeta.astro";
 import Link from "@components/Link.astro";
+import PageBody from "@components/PageBody.astro";
 import PageHero from "@components/PageHero.astro";
+import ProvenanceBadge from "@components/ProvenanceBadge.astro";
 import Layout from "@layouts/Layout.astro";
 
 // Source of truth: src/content/now/current.md. The site-ingest worker
@@ -19,38 +20,37 @@ if (!entry) {
 const { Content } = await render(entry);
 
 const updated = entry.data.updated;
-const lastUpdated = `${updated.toLocaleString("en-US", { month: "long", timeZone: "UTC" })} ${updated.getUTCFullYear()}`;
 const lastUpdatedISO = updated.toISOString().slice(0, 10);
 ---
 
 <Layout title="Now" description={entry.data.description}>
-  <Container>
-    <div
-      class="space-y-10"
-      data-pagefind-body
-      data-pagefind-filter="type:About"
-      data-pagefind-meta={`date:${lastUpdatedISO}`}
+  <PageBody
+    data-pagefind-body
+    data-pagefind-filter="type:About"
+    data-pagefind-meta={`date:${lastUpdatedISO}`}
+  >
+    <PageHero breadcrumb>
+      <Fragment slot="breadcrumb">
+        <Breadcrumb parent={{ label: "Home", href: "/" }} />
+      </Fragment>
+      <Fragment slot="title">Now</Fragment>
+      <ProvenanceBadge slot="meta" action="Updated" date={updated} />
+    </PageHero>
+
+    <section
+      class="prose prose-neutral dark:prose-invert max-w-none text-base leading-relaxed text-black/85 dark:text-white/85
+        prose-h2:mt-12 prose-h2:mb-4 prose-h2:font-heading prose-h2:text-sm prose-h2:font-medium prose-h2:text-black/65 dark:prose-h2:text-white/65
+        prose-h3:mt-8 prose-h3:mb-2 prose-h3:font-heading prose-h3:text-sm prose-h3:font-medium prose-h3:text-black/60 dark:prose-h3:text-white/60"
     >
-      <PageHero>
-        <Fragment slot="title">Now</Fragment>
-        <HeroMeta slot="meta" label={`Updated ${lastUpdated}`} />
-      </PageHero>
+      <Content />
+    </section>
 
-      <section
-        class="prose prose-neutral dark:prose-invert max-w-none text-base leading-relaxed text-black/85 dark:text-white/85
-          prose-h2:mt-12 prose-h2:mb-4 prose-h2:font-heading prose-h2:text-sm prose-h2:font-medium prose-h2:text-black/65 dark:prose-h2:text-white/65
-          prose-h3:mt-8 prose-h3:mb-2 prose-h3:font-heading prose-h3:text-sm prose-h3:font-medium prose-h3:text-black/60 dark:prose-h3:text-white/60"
-      >
-        <Content />
-      </section>
+    <EditorialRule />
 
-      <EditorialRule />
-
-      <p class="text-xs text-black/55 dark:text-white/55">
-        <Link href="/now/how-this-works">how this page works</Link>
-        &nbsp;&middot;&nbsp;
-        <Link href="/now/archive">archive</Link>
-      </p>
-    </div>
-  </Container>
+    <p class="text-xs text-black/55 dark:text-white/55">
+      <Link href="/now/how-this-works">how this page works</Link>
+      &nbsp;&middot;&nbsp;
+      <Link href="/now/archive">archive</Link>
+    </p>
+  </PageBody>
 </Layout>

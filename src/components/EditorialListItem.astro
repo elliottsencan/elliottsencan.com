@@ -62,19 +62,19 @@ const metaProps = metaDateTime ? { datetime: metaDateTime } : {};
     <div class="flex items-baseline justify-between gap-3 md:block">
       {
         hasTitleSlot ? (
-          <span class="font-heading font-medium text-black dark:text-white">
+          <span class="font-heading text-xl font-medium tracking-[-0.013em] text-black dark:text-white">
             <slot name="title" />
           </span>
         ) : href ? (
           <Link
             href={href}
             external={external}
-            class="font-heading font-medium text-black dark:text-white"
+            class="font-heading text-xl font-medium tracking-[-0.013em] text-black dark:text-white"
           >
             {title}
           </Link>
         ) : (
-          <span class="font-heading font-medium text-black dark:text-white">
+          <span class="font-heading text-xl font-medium tracking-[-0.013em] text-black dark:text-white">
             {title}
           </span>
         )

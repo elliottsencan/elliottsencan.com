@@ -46,3 +46,10 @@ src/content/labs/data/ingest-pipeline-cost.json
 # data above — never tracked, always fresh on dev/build.
 src/data/constellation-layout.json
 commands.md
+
+# Local design-migration reference bundle (not committed)
+migration/
+.migration-ref/
+
+# superpowers brainstorm companion (mockups, transient)
+.superpowers/

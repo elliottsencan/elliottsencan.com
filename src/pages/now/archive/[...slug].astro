@@ -1,9 +1,10 @@
 ---
 import { type CollectionEntry, getCollection, render } from "astro:content";
-import Container from "@components/Container.astro";
+import Breadcrumb from "@components/Breadcrumb.astro";
 import EditorialRule from "@components/EditorialRule.astro";
 import HeroMeta from "@components/HeroMeta.astro";
 import Link from "@components/Link.astro";
+import PageBody from "@components/PageBody.astro";
 import PageHero from "@components/PageHero.astro";
 import Layout from "@layouts/Layout.astro";
 
@@ -26,34 +27,31 @@ const archivedISO = archivedDate.toISOString().slice(0, 10);
 ---
 
 <Layout title={entry.data.title} description={entry.data.description}>
-  <Container>
-    <div
-      class="space-y-10"
-      data-pagefind-body
-      data-pagefind-filter="type:About"
-      data-pagefind-meta={`date:${archivedISO}`}
+  <PageBody
+    data-pagefind-body
+    data-pagefind-filter="type:About"
+    data-pagefind-meta={`date:${archivedISO}`}
+  >
+    <PageHero breadcrumb>
+      <Fragment slot="breadcrumb">
+        <Breadcrumb parent={{ label: "Archive", href: "/now/archive/" }} />
+      </Fragment>
+      <Fragment slot="title">{entry.data.title}</Fragment>
+      <HeroMeta slot="meta" label={`Archived ${formatted}`} />
+    </PageHero>
+
+    <section
+      class="prose prose-neutral dark:prose-invert max-w-none text-base leading-relaxed text-black/85 dark:text-white/85"
     >
-      <PageHero breadcrumb>
-        <Fragment slot="breadcrumb">
-          <Link href="/now/archive">Now / Archive</Link> / {entry.id}
-        </Fragment>
-        <Fragment slot="title">{entry.data.title}</Fragment>
-        <HeroMeta slot="meta" label={`Archived ${formatted}`} />
-      </PageHero>
+      <Content />
+    </section>
 
-      <section
-        class="prose prose-neutral dark:prose-invert max-w-none text-base leading-relaxed text-black/85 dark:text-white/85"
-      >
-        <Content />
-      </section>
+    <EditorialRule />
 
-      <EditorialRule />
-
-      <p class="text-xs text-black/55 dark:text-white/55">
-        <Link href="/now">current now</Link>
-        &nbsp;&middot;&nbsp;
-        <Link href="/now/archive">all archived</Link>
-      </p>
-    </div>
-  </Container>
+    <p class="text-xs text-black/55 dark:text-white/55">
+      <Link href="/now">current now</Link>
+      &nbsp;&middot;&nbsp;
+      <Link href="/now/archive">all archived</Link>
+    </p>
+  </PageBody>
 </Layout>

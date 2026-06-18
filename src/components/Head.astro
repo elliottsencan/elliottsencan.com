@@ -155,7 +155,7 @@ const breadcrumbSchema = breadcrumbs?.length
 <link rel="preload" href="/fonts/Satoshi-Regular.woff2" as="font" type="font/woff2" crossorigin />
 <link
   rel="preload"
-  href="/fonts/PPNeueMontreal-Medium.woff2"
+  href="/fonts/PPNeueMontreal-Book.woff2"
   as="font"
   type="font/woff2"
   crossorigin
@@ -180,6 +180,39 @@ const breadcrumbSchema = breadcrumbs?.length
   } else {
     sessionStorage.setItem("introPlayed", "1");
   }
+
+  // Motion layer ("Alive") pre-paint markers. `alive` scopes every
+  // initially-hidden entrance state — without JS the class never lands and
+  // nothing hides. data-motion picks the level (off/calm/full); reduced
+  // motion forces off here AND via !important media queries in global.css.
+  document.documentElement.classList.add("alive");
+  document.documentElement.dataset.motion = window.matchMedia(
+    "(prefers-reduced-motion: reduce)",
+  ).matches
+    ? "off"
+    : localStorage.getItem("motion") || "full";
+
+  // data-mounted starts the entrance stagger. Deliberately in THIS inline
+  // script — the same failure domain as the class that hides .reveal
+  // blocks, so nothing can stay hidden if a bundled script never loads.
+  // Anchored to DOMContentLoaded: this script runs while <head> is still
+  // parsing, and rAFs scheduled here would fire before the .reveal blocks
+  // exist, mounting them pre-settled with no entrance. The two rAFs after
+  // DCL guarantee one painted frame in the hidden state to transition from.
+  (function () {
+    var mount = function () {
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+          document.documentElement.dataset.mounted = "1";
+        });
+      });
+    };
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", mount);
+    } else {
+      mount();
+    }
+  })();
 </script>
 
 <!-- Primary Meta Tags.
@@ -262,6 +295,30 @@ const breadcrumbSchema = breadcrumbs?.length
       });
 
     document.addEventListener("scroll", onScroll);
+
+    initNavMenu();
+  }
+
+  // Mobile section menu (a native <details> in the header). Native handles
+  // open/close on the ☰ summary; here we add the conventional dismissals:
+  // close when a link is chosen, on Escape, and on a tap outside the menu.
+  function initNavMenu() {
+    const navMenu = document.getElementById("nav-menu");
+    if (!navMenu) return;
+
+    for (const link of navMenu.querySelectorAll(".nav-panel a")) {
+      link.addEventListener("click", () => navMenu.removeAttribute("open"));
+    }
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") navMenu.removeAttribute("open");
+    });
+
+    document.addEventListener("pointerdown", (event) => {
+      if (navMenu.hasAttribute("open") && !navMenu.contains(event.target)) {
+        navMenu.removeAttribute("open");
+      }
+    });
   }
 
   // The icon tracks the user-selected mode (system/light/dark), not the

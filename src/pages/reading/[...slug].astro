@@ -1,13 +1,15 @@
 ---
 import { type CollectionEntry, getCollection } from "astro:content";
-import Container from "@components/Container.astro";
+import Breadcrumb from "@components/Breadcrumb.astro";
 import EditorialRule from "@components/EditorialRule.astro";
 import HeroMeta from "@components/HeroMeta.astro";
 import Link from "@components/Link.astro";
+import PageBody from "@components/PageBody.astro";
 import PageHero from "@components/PageHero.astro";
+import ProvenanceBadge from "@components/ProvenanceBadge.astro";
 import Layout from "@layouts/Layout.astro";
 import { buildVocabularyFromWiki, canonicalizeTopics } from "@lib/topics";
-import { monthKey, SITE_TIMEZONE } from "@lib/utils";
+import { monthKey } from "@lib/utils";
 
 export async function getStaticPaths() {
   const entries = await getCollection("reading");
@@ -56,17 +58,10 @@ for (const e of allEntries) {
 }
 const relatedCapped = related.slice(0, 8);
 
-const dateFormatter = new Intl.DateTimeFormat("en-US", {
-  day: "2-digit",
-  month: "short",
-  year: "numeric",
-  timeZone: SITE_TIMEZONE,
-});
-
 const heroSourceLine = [entry.data.author, entry.data.source].filter(Boolean).join(", ");
-const heroMetaLabel = [dateFormatter.format(entry.data.added), entry.data.category, heroSourceLine]
-  .filter(Boolean)
-  .join(" · ");
+// Date moves to the provenance badge (see meta slot); the cell keeps the
+// source descriptors (category · author, publication).
+const heroMetaLabel = [entry.data.category, heroSourceLine].filter(Boolean).join(" · ");
 
 const breadcrumbs = [
   { name: "Home", url: "/" },
@@ -85,98 +80,95 @@ const breadcrumbs = [
   basedOn={entry.data.url}
   breadcrumbs={breadcrumbs}
 >
-  <Container>
-    <div
-      class="space-y-10"
-      data-pagefind-body
-      data-pagefind-filter="type:Reading"
-    >
-      <PageHero breadcrumb>
-        <Fragment slot="breadcrumb">
-          <Link href="/reading/">Reading</Link> / {entry.id}
-        </Fragment>
-        <Fragment slot="title">{entry.data.title}</Fragment>
-        <Fragment slot="summary">{entry.data.summary}</Fragment>
-        <HeroMeta slot="meta" label={heroMetaLabel} />
-      </PageHero>
-
-      {
-        entry.data.noindex && (
-          <div class="border-l-2 border-black/30 bg-black/5 px-3 py-2 font-mono text-xs uppercase tracking-wider text-black/60 dark:border-white/30 dark:bg-white/10 dark:text-white/60">
-            Publisher opt-out: this source asked AI tools not to index it. The
-            note below stands in for a summary.
-          </div>
-        )
-      }
-
-      <div>
-        <Link href={entry.data.url} external>
-          Read at the source &rarr;
-        </Link>
+  <PageBody data-pagefind-body data-pagefind-filter="type:Reading">
+    <PageHero breadcrumb>
+      <Fragment slot="breadcrumb">
+        <Breadcrumb parent={{ label: "Reading", href: "/reading/" }} />
+      </Fragment>
+      <Fragment slot="title">{entry.data.title}</Fragment>
+      <Fragment slot="summary">{entry.data.summary}</Fragment>
+      <div slot="meta" class="flex flex-wrap items-center gap-x-3 gap-y-2">
+        <HeroMeta label={heroMetaLabel} />
+        <ProvenanceBadge action="Summarized by Claude" date={entry.data.added} />
       </div>
+    </PageHero>
 
-      {
-        myCanonicalTopics.length > 0 && (
-          <section class="space-y-3">
-            <h2 class="font-mono text-xs uppercase tracking-wider text-black/50 dark:text-white/60">
-              Topics
-            </h2>
-            <ul class="not-prose flex flex-wrap gap-2 text-sm">
-              {myCanonicalTopics.map((topic) => (
-                <li class="rounded bg-black/5 px-2 py-1 font-mono text-xs dark:bg-white/10">
-                  {topic}
-                </li>
-              ))}
-            </ul>
-          </section>
-        )
-      }
+    {
+      entry.data.noindex && (
+        <div class="border-l-2 border-black/30 bg-black/5 px-3 py-2 font-mono text-xs uppercase tracking-[0.18em] text-black/60 dark:border-white/30 dark:bg-white/10 dark:text-white/60">
+          Publisher opt-out: this source asked AI tools not to index it. The
+          note below stands in for a summary.
+        </div>
+      )
+    }
 
-      {
-        citingConcepts.length > 0 && (
-          <section class="space-y-4">
-            <h2 class="font-mono text-xs uppercase tracking-wider text-black/50 dark:text-white/60">
-              Cited by
-            </h2>
-            <ul class="not-prose flex flex-col gap-3 text-sm">
-              {citingConcepts.map((c) => (
-                <li class="space-y-1">
-                  <Link href={`/wiki/${c.id}/`}>{c.data.title}</Link>
-                  <p class="text-sm leading-relaxed text-black/75 dark:text-white/75">
-                    {c.data.summary}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )
-      }
-
-      {
-        relatedCapped.length > 0 && (
-          <section class="space-y-4">
-            <h2 class="font-mono text-xs uppercase tracking-wider text-black/50 dark:text-white/60">
-              Related
-            </h2>
-            <ul class="not-prose flex flex-col gap-3 text-sm">
-              {relatedCapped.map(({ entry: e, reason }) => (
-                <li>
-                  <Link href={`/reading/${e.id}/`}>{e.data.title}</Link>
-                  <span class="ml-2 font-mono text-xs uppercase tracking-widest text-black/40 dark:text-white/40">
-                    {reason}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )
-      }
-
-      <EditorialRule />
-
-      <p class="text-xs text-black/55 dark:text-white/55">
-        <Link href="/reading">back to /reading</Link>
-      </p>
+    <div>
+      <Link href={entry.data.url} external>
+        Read at the source &rarr;
+      </Link>
     </div>
-  </Container>
+
+    {
+      myCanonicalTopics.length > 0 && (
+        <section class="space-y-3">
+          <h2 class="font-mono text-xs uppercase tracking-[0.18em] text-black/50 dark:text-white/60">
+            Topics
+          </h2>
+          <ul class="not-prose flex flex-wrap gap-2 text-sm">
+            {myCanonicalTopics.map((topic) => (
+              <li class="rounded bg-black/5 px-2 py-1 font-mono text-xs dark:bg-white/10">
+                {topic}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
+
+    {
+      citingConcepts.length > 0 && (
+        <section class="space-y-4">
+          <h2 class="font-mono text-xs uppercase tracking-[0.18em] text-black/50 dark:text-white/60">
+            Cited by
+          </h2>
+          <ul class="not-prose flex flex-col gap-3 text-sm">
+            {citingConcepts.map((c) => (
+              <li class="space-y-1">
+                <Link href={`/wiki/${c.id}/`}>{c.data.title}</Link>
+                <p class="text-sm leading-relaxed text-black/75 dark:text-white/75">
+                  {c.data.summary}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
+
+    {
+      relatedCapped.length > 0 && (
+        <section class="space-y-4">
+          <h2 class="font-mono text-xs uppercase tracking-[0.18em] text-black/50 dark:text-white/60">
+            Related
+          </h2>
+          <ul class="not-prose flex flex-col gap-3 text-sm">
+            {relatedCapped.map(({ entry: e, reason }) => (
+              <li>
+                <Link href={`/reading/${e.id}/`}>{e.data.title}</Link>
+                <span class="ml-2 font-mono text-xs uppercase tracking-[0.18em] text-black/40 dark:text-white/40">
+                  {reason}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
+
+    <EditorialRule />
+
+    <p class="text-xs text-black/55 dark:text-white/55">
+      <Link href="/reading">back to /reading</Link>
+    </p>
+  </PageBody>
 </Layout>

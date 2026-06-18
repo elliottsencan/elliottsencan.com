@@ -1,9 +1,10 @@
 ---
 import { getCollection } from "astro:content";
-import BackToPrevious from "@components/BackToPrevious.astro";
-import Container from "@components/Container.astro";
+import Breadcrumb from "@components/Breadcrumb.astro";
 import EditorialList from "@components/EditorialList.astro";
 import EditorialListItem from "@components/EditorialListItem.astro";
+import PageBody from "@components/PageBody.astro";
+import PageHero from "@components/PageHero.astro";
 import Layout from "@layouts/Layout.astro";
 
 export async function getStaticPaths() {
@@ -47,13 +48,14 @@ const breadcrumbs = [
   description={`Posts with the tag: ${id}`}
   breadcrumbs={breadcrumbs}
 >
-  <Container>
-    <div class="space-y-10" data-pagefind-ignore>
-      <BackToPrevious href="/tags"> All tags </BackToPrevious>
-      <h1 class="font-semibold text-black dark:text-white">
-        Posts tagged with "{id}"
-      </h1>
-      <EditorialList>
+  <PageBody data-pagefind-ignore>
+    <PageHero breadcrumb>
+      <Fragment slot="breadcrumb">
+          <Breadcrumb parent={{ label: "Tags", href: "/tags/" }} />
+        </Fragment>
+      <Fragment slot="title">Posts tagged with "{id}"</Fragment>
+    </PageHero>
+    <EditorialList>
         {
           sortedPosts.map((post) => (
             <EditorialListItem
@@ -66,7 +68,6 @@ const breadcrumbs = [
             </EditorialListItem>
           ))
         }
-      </EditorialList>
-    </div>
-  </Container>
+    </EditorialList>
+  </PageBody>
 </Layout>

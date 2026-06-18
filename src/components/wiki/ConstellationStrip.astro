@@ -21,12 +21,15 @@
  */
 import layout from "@data/constellation-layout.json";
 import {
+  type LayoutEdge,
+  type LayoutNode,
   STRIP_DEFAULT_WIDTH,
   STRIP_VH,
   STRIP_VW,
   STRIP_VX,
   STRIP_VY,
 } from "@lib/constellationGeometry";
+import { regionPath } from "@lib/constellationHull";
 
 type Props = {
   width?: number;
@@ -35,14 +38,6 @@ type Props = {
 
 const { width = STRIP_DEFAULT_WIDTH, activeSlug } = Astro.props;
 
-type LayoutNode = { id: string; x: number; y: number; weight: number };
-type LayoutEdge = {
-  a: string;
-  b: string;
-  weight: number;
-  via: { link: number; cocite: number };
-  display: boolean;
-};
 type Cluster = { id: string; title: string; short: string; hue: number };
 
 const nodes: LayoutNode[] = layout.global.nodes;
@@ -93,76 +88,16 @@ for (const e of visibleEdges) {
 const edgeStrokeW = (w: number) => 0.4 + Math.min(w, 6) * 0.15;
 const edgeOpacityMul = (w: number) => Math.min(1, w / 4);
 
-// ─── cluster region geometry (convex hull → inflate → cardinal-spline) ──
-type Pt = { x: number; y: number };
-
-function convexHull(points: Pt[]): Pt[] {
-  if (points.length <= 1) {
-    return points.slice();
-  }
-  const pts = points.slice().sort((p, q) => p.x - q.x || p.y - q.y);
-  const cross = (o: Pt, a: Pt, b: Pt) => (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
-  const lower: Pt[] = [];
-  for (const p of pts) {
-    while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], p) <= 0) {
-      lower.pop();
-    }
-    lower.push(p);
-  }
-  const upper: Pt[] = [];
-  for (let i = pts.length - 1; i >= 0; i--) {
-    const p = pts[i];
-    while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], p) <= 0) {
-      upper.pop();
-    }
-    upper.push(p);
-  }
-  return lower.slice(0, -1).concat(upper.slice(0, -1));
-}
-
-function inflateHull(hull: Pt[], pad: number): Pt[] {
-  if (hull.length === 0) {
-    return hull;
-  }
-  const cx = hull.reduce((s, p) => s + p.x, 0) / hull.length;
-  const cy = hull.reduce((s, p) => s + p.y, 0) / hull.length;
-  return hull.map((p) => {
-    const dx = p.x - cx;
-    const dy = p.y - cy;
-    const d = Math.hypot(dx, dy) || 1;
-    return { x: p.x + (dx / d) * pad, y: p.y + (dy / d) * pad };
-  });
-}
-
-function smoothClosed(points: Pt[]): string {
-  if (points.length < 3) {
-    return "";
-  }
-  const n = points.length;
-  let d = `M ${points[0].x} ${points[0].y}`;
-  for (let i = 0; i < n; i++) {
-    const p0 = points[(i - 1 + n) % n];
-    const p1 = points[i];
-    const p2 = points[(i + 1) % n];
-    const p3 = points[(i + 2) % n];
-    const t = 0.18;
-    const c1x = p1.x + (p2.x - p0.x) * t;
-    const c1y = p1.y + (p2.y - p0.y) * t;
-    const c2x = p2.x - (p3.x - p1.x) * t;
-    const c2y = p2.y - (p3.y - p1.y) * t;
-    d += ` C ${c1x} ${c1y}, ${c2x} ${c2y}, ${p2.x} ${p2.y}`;
-  }
-  return `${d} Z`;
-}
-
+// ─── cluster region geometry (hull math lives in @lib/constellationHull) ─
+// The raw hull path gets its pad from a fat round-joined stroke in CSS
+// (stroke-width 28 = 2 × pad 14) — see the .region rules below.
 const clusterGroups = clusters
   .map((cl) => {
     const members = nodes.filter((n) => clusterById[n.id] === cl.id);
     if (members.length < 2) {
       return null;
     }
-    const hull = convexHull(members.map((n) => ({ x: n.x, y: n.y })));
-    const path = smoothClosed(inflateHull(hull, 22));
+    const path = regionPath(members.map((n) => ({ x: n.x, y: n.y })));
     // Centroid x, top edge y (minus pad) — drives the focus-only italic label.
     const labelX = members.reduce((s, n) => s + n.x, 0) / members.length;
     const top = Math.min(...members.map((n) => n.y));
@@ -171,8 +106,12 @@ const clusterGroups = clusters
   .filter((g): g is NonNullable<typeof g> => g !== null);
 
 const nodeById = new Map(nodes.map((n) => [n.id, n]));
+const clusterHue = new Map(clusters.map((c) => [c.id, c.hue]));
 ---
 
+{/* Degrade-per-block: an empty layout (solver's empty-content fallback)
+    renders nothing rather than an empty frame. */}
+{nodes.length > 0 && (
 <div
   class="constellation-strip"
   style={`--cs-w: ${width}px; --cs-aspect: ${VW} / ${VH};`}
@@ -278,14 +217,16 @@ const nodeById = new Map(nodes.map((n) => [n.id, n]));
         const title = titles[n.id] ?? n.id;
         const cid = clusterById[n.id] ?? "";
         const neighbors = [...(adj.get(n.id) ?? [])].join(" ");
+        // Unclustered nodes omit data-cluster entirely — the membership
+        // tint below keys off attribute presence, currentColor otherwise.
         return (
           <a
             class="node"
             href={`/wiki/${n.id}/`}
             data-slug={n.id}
-            data-cluster={cid}
+            data-cluster={cid || null}
             data-neighbors={neighbors}
-            style={`--node-r: ${r};`}
+            style={`--node-r: ${r};${cid ? ` --hue: ${clusterHue.get(cid)};` : ""}`}
           >
             <title>{title}</title>
             {/* Wider transparent hit-target than the visible dot. */}
@@ -320,6 +261,7 @@ const nodeById = new Map(nodes.map((n) => [n.id, n]));
     }
   </svg>
 </div>
+)}
 
 <style is:global>
   /* ─── Sizing ─────────────────────────────────────────────────────────
@@ -345,52 +287,57 @@ const nodeById = new Map(nodes.map((n) => [n.id, n]));
   }
 
   /* ─── Cluster regions ───────────────────────────────────────────────── */
-  /* Opacity matches the local rail (0.5 base / 1.0 active) — consistent
-     color weight between global and per-concept views. */
+  /* Stroke-offset bubble: the path is the RAW convex hull; the pad comes
+     from a fat round-joined stroke (28 = 2 × pad 14) in the same color as
+     the fill, in viewBox user-units so it scales with the field — no
+     non-scaling-stroke here. Stroke-opacity sits above fill-opacity so the
+     boundary band defines the region while the interior stays a wash. */
+  /* Flat region: the fat round-joined stroke only supplies the rounded
+     offset shape — solid paints + one element-level opacity composite
+     fill and stroke as a single uniform blob (per-paint opacities would
+     render the stroke band as a visible rim). */
   #constellation-strip .region {
     fill: oklch(0.84 0.06 var(--hue));
-    opacity: 0.5;
-    stroke: oklch(0.62 0.08 var(--hue));
-    stroke-width: 1;
-    stroke-opacity: 0.35;
-    vector-effect: non-scaling-stroke;
+    stroke: oklch(0.84 0.06 var(--hue));
+    stroke-width: 28;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+    opacity: 0.34;
     transition:
       fill 200ms ease,
-      opacity 200ms ease,
-      stroke-opacity 200ms ease;
+      stroke 200ms ease,
+      opacity 200ms ease;
   }
   .dark #constellation-strip .region {
-    fill: oklch(0.36 0.06 var(--hue));
-    stroke: oklch(0.55 0.08 var(--hue));
-    stroke-opacity: 0.45;
+    fill: oklch(0.4 0.08 var(--hue));
+    stroke: oklch(0.4 0.08 var(--hue));
+    opacity: 0.4;
   }
-  /* Focused cluster swaps to higher chroma at full opacity. */
+  /* Focused cluster swaps to higher chroma and steps the opacity up. */
   #constellation-strip .region[data-on] {
-    fill: oklch(0.76 0.10 var(--hue));
-    opacity: 1;
-    stroke-opacity: 0.7;
+    fill: oklch(0.76 0.1 var(--hue));
+    stroke: oklch(0.76 0.1 var(--hue));
+    opacity: 0.6;
   }
   .dark #constellation-strip .region[data-on] {
-    fill: oklch(0.44 0.10 var(--hue));
-    stroke-opacity: 0.8;
+    fill: oklch(0.44 0.1 var(--hue));
+    stroke: oklch(0.44 0.1 var(--hue));
+    opacity: 0.65;
   }
 
   /* ─── Cluster names (focus-only italic labels) ──────────────────────── */
   /* Pre-rendered for all clusters but invisible by default; only the
-     focused cluster's label fades in. Paper-stroke halo separates the
-     italic from the region fill underneath. */
+     focused cluster's label fades in. Halo stroke matches the --canvas
+     surface the widget sits on (it tracks dark mode by itself). */
   #constellation-strip .cluster-name {
     paint-order: stroke fill;
-    stroke: #f6f4ef;
+    stroke: var(--canvas);
     stroke-width: 4px;
     stroke-linejoin: round;
     pointer-events: none;
     opacity: 0;
     font-feature-settings: "ss01" 1;
     transition: opacity 180ms ease;
-  }
-  .dark #constellation-strip .cluster-name {
-    stroke: #18161a;
   }
   #constellation-strip .cluster-name[data-on] {
     opacity: 0.75;
@@ -406,15 +353,14 @@ const nodeById = new Map(nodes.map((n) => [n.id, n]));
     stroke-width: var(--edge-w, 0.5);
     opacity: calc(0.22 * var(--edge-o-mul, 1));
   }
-  #constellation-strip .edge.cross {
-    stroke-width: var(--edge-w, 0.3);
-    opacity: calc(0.08 * var(--edge-o-mul, 1));
-  }
   .dark #constellation-strip .edge.same {
     opacity: calc(0.14 * var(--edge-o-mul, 1));
   }
-  .dark #constellation-strip .edge.cross {
-    opacity: calc(0.06 * var(--edge-o-mul, 1));
+  /* Cross-cluster edges only ever added center mud at their base opacity
+     (0.08/0.06 is invisible as line work) — render them solely when
+     focus-incident; the [data-on] accent rule below reveals them. */
+  #constellation-strip .edge.cross:not([data-on]) {
+    display: none;
   }
   /* When focus is active, dim non-incident edges hard. */
   #constellation-strip[data-focus] .edge {
@@ -437,7 +383,18 @@ const nodeById = new Map(nodes.map((n) => [n.id, n]));
   }
   #constellation-strip .node .dot {
     opacity: 0.75;
-    transition: opacity 150ms ease;
+    transition:
+      opacity 150ms ease,
+      fill 150ms ease;
+  }
+  /* Membership tint — clustered dots carry their region hue so overlap
+     zones stay legible; unclustered nodes keep currentColor. :where()
+     keeps specificity flat so the focus/hover accent rules below win. */
+  #constellation-strip .node:where([data-cluster]) .dot {
+    fill: oklch(0.42 0.07 var(--hue));
+  }
+  .dark #constellation-strip .node:where([data-cluster]) .dot {
+    fill: oklch(0.82 0.07 var(--hue));
   }
   /* When focus is active: dim non-focus, non-neighbor nodes. */
   #constellation-strip[data-focus] .node:not([data-focus-self]):not([data-neighbor]) .dot {
@@ -447,6 +404,17 @@ const nodeById = new Map(nodes.map((n) => [n.id, n]));
     fill: var(--accent);
     opacity: 1;
     filter: drop-shadow(0 0 4px color-mix(in oklch, var(--accent) 35%, transparent));
+  }
+
+  /* ─── Cluster focus (legend-driven) ─────────────────────────────────────
+     Set via the constellation:cluster-focus event — the focused cluster's
+     region + name light through the shared [data-on] rules above; member
+     dots hold full opacity while everything else recedes. */
+  #constellation-strip[data-cluster-focus] .node:not([data-member]) .dot {
+    opacity: 0.18;
+  }
+  #constellation-strip .node[data-member] .dot {
+    opacity: 1;
   }
 
   /* ─── Breathe ring (focus only) ─────────────────────────────────────── */
@@ -481,13 +449,10 @@ const nodeById = new Map(nodes.map((n) => [n.id, n]));
     pointer-events: none;
     transition: opacity 120ms ease-in-out;
     paint-order: stroke fill;
-    stroke: #f6f4ef;
+    stroke: var(--canvas);
     stroke-width: 5px;
     stroke-linejoin: round;
     vector-effect: non-scaling-stroke;
-  }
-  .dark #constellation-strip .label {
-    stroke: #18161a;
   }
   /* Only the actively-focused node ever shows its label — neighbors are
      identified by the highlighted edges and the cluster region focus, not
@@ -508,25 +473,10 @@ const nodeById = new Map(nodes.map((n) => [n.id, n]));
     opacity: 1;
   }
 
-  /* ─── Mobile / coarse-pointer adjustments ───────────────────────────────
-     Touch readers can't hover and taps follow links directly (no
-     tap-to-preview gesture), so we surface the structural cues that are
-     focus-only on desktop (italic neighborhood names) and trim the visual
-     noise that needs the hover protocol to be legible (cross-cluster
-     Béziers). Hit targets enlarge on coarse pointer for forgiving taps. */
-  @media (max-width: 640px) {
-    #constellation-strip .cluster-name {
-      opacity: 0.45;
-    }
-    #constellation-strip .cluster-name[data-on] {
-      opacity: 0.85;
-    }
-    /* Hide non-focus-incident cross-cluster edges; focus-state's
-       [data-on] override above keeps incident ones visible in accent. */
-    #constellation-strip .edge.cross:not([data-on]) {
-      display: none;
-    }
-  }
+  /* ─── Coarse-pointer adjustments ────────────────────────────────────────
+     Cluster names stay focus-only at every width (touch readers reach
+     focus via the tap-to-focus gate in the script). Hit targets enlarge
+     on coarse pointer for forgiving taps. */
   @media (pointer: coarse) {
     #constellation-strip .hit {
       r: 22;
@@ -556,9 +506,11 @@ const nodeById = new Map(nodes.map((n) => [n.id, n]));
       for (const n of nodes) {
         n.removeAttribute("data-focus-self");
         n.removeAttribute("data-neighbor");
+        n.removeAttribute("data-member");
       }
       for (const e of edges) e.removeAttribute("data-on");
       for (const r of regions) r.removeAttribute("data-on");
+      svg.removeAttribute("data-cluster-focus");
 
       if (!slug) {
         svg.removeAttribute("data-focus");
@@ -589,20 +541,61 @@ const nodeById = new Map(nodes.map((n) => [n.id, n]));
       }
     };
 
-    // Pointer/keyboard focus only — taps on touch devices follow the link
-    // directly. Touch readers get the structural mobile fallbacks (italic
-    // cluster names at low opacity, cross-cluster edges hidden) without
-    // any tap-to-preview gesture.
-    for (const n of nodes) {
-      const slug = n.dataset.slug ?? null;
-      n.addEventListener("mouseenter", () => setFocus(slug));
-      n.addEventListener("focusin", () => setFocus(slug));
-    }
-    svg.addEventListener("mouseleave", () => setFocus(null));
-    svg.addEventListener("focusout", (e) => {
-      const next = e.relatedTarget as Node | null;
-      if (!next || !svg.contains(next)) setFocus(null);
+    // Cluster-level focus — driven by the legend in ConstellationWell via a
+    // custom event dispatched at the SVG. The seam is an event (not direct
+    // DOM pokes from the Well) because this script is the single writer of
+    // the SVG's focus state; the legend only expresses intent. Reuses the
+    // same data-on the node protocol sets on the region + italic name, and
+    // marks member nodes so the CSS can dim the rest of the field.
+    const setClusterFocus = (cluster: string | null) => {
+      setFocus(null);
+      if (!cluster) return;
+      svg.setAttribute("data-cluster-focus", cluster);
+      for (const n of nodes) {
+        if (n.dataset.cluster === cluster) n.setAttribute("data-member", "");
+      }
+      for (const r of regions) {
+        if (r.getAttribute("data-cluster") === cluster) r.setAttribute("data-on", "");
+      }
+    };
+    svg.addEventListener("constellation:cluster-focus", (e) => {
+      setClusterFocus((e as CustomEvent<string | null>).detail);
     });
+
+    // Fine pointers get hover/keyboard focus; coarse pointers get a
+    // two-tap gate instead — first tap on a node focuses it (lighting up
+    // its neighborhood and region), second tap on the focused node follows
+    // its link, and a tap on the empty field clears focus. The hover
+    // listeners are skipped on coarse pointers because the emulated
+    // focusin a tap fires would mark the node focused before the click
+    // handler runs, collapsing the gate into single-tap navigation.
+    const coarse = window.matchMedia("(pointer: coarse)").matches;
+    if (coarse) {
+      for (const n of nodes) {
+        n.addEventListener("click", (e) => {
+          const slug = n.dataset.slug ?? "";
+          if (svg.getAttribute("data-focus") !== slug) {
+            e.preventDefault();
+            setFocus(slug);
+          }
+        });
+      }
+      svg.addEventListener("click", (e) => {
+        const target = e.target as Element | null;
+        if (target && !target.closest(".node")) setFocus(null);
+      });
+    } else {
+      for (const n of nodes) {
+        const slug = n.dataset.slug ?? null;
+        n.addEventListener("mouseenter", () => setFocus(slug));
+        n.addEventListener("focusin", () => setFocus(slug));
+      }
+      svg.addEventListener("mouseleave", () => setFocus(null));
+      svg.addEventListener("focusout", (e) => {
+        const next = e.relatedTarget as Node | null;
+        if (!next || !svg.contains(next)) setFocus(null);
+      });
+    }
 
     // If an `activeSlug` prop is set, surface it as the initial focus so
     // entry-page strips (none today, but the prop is part of the API) light

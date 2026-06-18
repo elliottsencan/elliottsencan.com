@@ -1,8 +1,9 @@
 ---
 import { getCollection } from "astro:content";
-import Container from "@components/Container.astro";
+import Breadcrumb from "@components/Breadcrumb.astro";
 import EditorialRule from "@components/EditorialRule.astro";
 import Link from "@components/Link.astro";
+import PageBody from "@components/PageBody.astro";
 import PageHero from "@components/PageHero.astro";
 import Layout from "@layouts/Layout.astro";
 
@@ -11,37 +12,38 @@ const tags = [...new Set(posts.flatMap((post) => post.data.tags || []))].sort();
 ---
 
 <Layout title="Tags" description="List of tags used.">
-  <Container>
-    <div class="space-y-10" data-pagefind-ignore>
-      <PageHero>
-        <Fragment slot="title">Tags</Fragment>
-        <Fragment slot="summary">
-          Tags drawn from blog post frontmatter. Click through to see all
-          posts under each tag.
-        </Fragment>
-      </PageHero>
+  <PageBody data-pagefind-ignore>
+    <PageHero breadcrumb>
+      <Fragment slot="breadcrumb">
+        <Breadcrumb parent={{ label: "Home", href: "/" }} />
+      </Fragment>
+      <Fragment slot="title">Tags</Fragment>
+      <Fragment slot="summary">
+        Tags drawn from blog post frontmatter. Click through to see all
+        posts under each tag.
+      </Fragment>
+    </PageHero>
 
-      <div class="flex flex-wrap gap-2">
-        {
-          tags.map((tag) => (
-            <a
-              href={`/tags/${tag}`}
-              class="inline-flex items-center rounded-sm bg-black/5 px-2 py-0.5 text-xs text-black/65 transition-colors hover:bg-black/10 hover:text-black focus-visible:bg-black/10 focus-visible:text-black dark:bg-white/5 dark:text-white/65 dark:hover:bg-white/10 dark:hover:text-white dark:focus-visible:bg-white/10 dark:focus-visible:text-white"
-            >
-              {tag}
-              <span class="ml-1.5 font-mono text-xs text-black/50 dark:text-white/50">
-                {posts.filter((post) => post.data.tags?.includes(tag)).length}
-              </span>
-            </a>
-          ))
-        }
-      </div>
-
-      <EditorialRule />
-
-      <p class="text-xs text-black/55 dark:text-white/55">
-        <Link href="/writing">writing →</Link>
-      </p>
+    <div class="flex flex-wrap gap-2">
+      {
+        tags.map((tag) => (
+          <a
+            href={`/tags/${tag}`}
+            class="inline-flex items-center whitespace-nowrap rounded-sm bg-black/5 px-2 py-0.5 text-xs text-black/65 underline-offset-2 transition-colors duration-300 ease-in-out hover:text-black hover:underline focus-visible:text-black focus-visible:underline dark:bg-white/5 dark:text-white/65 dark:hover:text-white dark:focus-visible:text-white"
+          >
+            {tag}
+            <span class="ml-1.5 font-mono text-xs text-black/50 dark:text-white/50">
+              {posts.filter((post) => post.data.tags?.includes(tag)).length}
+            </span>
+          </a>
+        ))
+      }
     </div>
-  </Container>
+
+    <EditorialRule />
+
+    <p class="text-xs text-black/55 dark:text-white/55">
+      <Link href="/writing">writing →</Link>
+    </p>
+  </PageBody>
 </Layout>

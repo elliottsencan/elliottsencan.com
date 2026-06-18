@@ -2271,5 +2271,29 @@
       "claude-haiku-4-5": 0.1429,
       "claude-sonnet-4-6": 0.4048
     }
+  },
+  "derived": {
+    "headline_agreement_pct": 89.32,
+    "total_agreement_claims": 103,
+    "judges": [
+      {
+        "model": "claude-haiku-4-5",
+        "claims": 103,
+        "supported": 88,
+        "partial": 11,
+        "unsupported": 4,
+        "accuracy_pct": 90.78,
+        "cost_usd": 0.1459
+      },
+      {
+        "model": "claude-sonnet-4-6",
+        "claims": 103,
+        "supported": 86,
+        "partial": 13,
+        "unsupported": 4,
+        "accuracy_pct": 89.81,
+        "cost_usd": 0.4136
+      }
+    ]
   }
 }

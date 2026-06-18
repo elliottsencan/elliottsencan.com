@@ -33,6 +33,7 @@ export function step(nodes, edges, opts) {
 
   const cx = width / 2;
   const cy = height / 2;
+  const byId = new Map(nodes.map((n) => [n.id, n]));
 
   for (const n of nodes) {
     n.fx = 0;
@@ -61,8 +62,8 @@ export function step(nodes, edges, opts) {
   }
 
   for (const e of edges) {
-    const a = nodes.find((n) => n.id === e.a);
-    const b = nodes.find((n) => n.id === e.b);
+    const a = byId.get(e.a);
+    const b = byId.get(e.b);
     if (!a || !b) {
       continue;
     }

@@ -29,7 +29,11 @@ const { as: Tag = "h1", class: className, accent = false } = Astro.props;
 <div class="flex items-center gap-4">
   <Tag
     class:list={[
-      "shrink-0 font-heading text-xs font-medium tracking-wider",
+      // min-w-0 (not shrink-0) so a long label — e.g. the home dateline on a
+      // phone — wraps inside the viewport instead of dragging the row past
+      // it; short labels are unaffected because flex only shrinks on
+      // overflow.
+      "min-w-0 font-mono text-xs uppercase tracking-[0.18em]",
       accent ? "text-[color:var(--accent)]" : "text-black/55 dark:text-white/60",
       className,
     ]}
@@ -43,4 +47,7 @@ const { as: Tag = "h1", class: className, accent = false } = Astro.props;
     class="dot-rule h-px flex-1 py-2"
   >
   </div>
+  {/* Optional right-aligned tail (e.g. the live-ingest ticker on the home
+      dateline) — sits after the rule filler, flush with the right edge. */}
+  <slot name="after" />
 </div>

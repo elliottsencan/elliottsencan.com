@@ -1,9 +1,10 @@
 ---
 import { getCollection } from "astro:content";
-import Container from "@components/Container.astro";
+import Breadcrumb from "@components/Breadcrumb.astro";
 import EditorialRule from "@components/EditorialRule.astro";
 import HeroMeta from "@components/HeroMeta.astro";
 import Link from "@components/Link.astro";
+import PageBody from "@components/PageBody.astro";
 import PageHero from "@components/PageHero.astro";
 import Layout from "@layouts/Layout.astro";
 
@@ -26,65 +27,59 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
   title="Now — archive"
   description="Past snapshots of the /now page."
 >
-  <Container>
-    <div
-      class="space-y-10"
-      data-pagefind-body
-      data-pagefind-filter="type:About"
-    >
-      <PageHero breadcrumb>
-        <Fragment slot="breadcrumb">
-          <Link href="/now">Now</Link> / Archive
-        </Fragment>
-        <Fragment slot="title">Archive</Fragment>
-        {
-          entries.length > 0 && (
-            <HeroMeta
-              slot="meta"
-              count={entries.length}
-              label={`${entries.length} snapshot${entries.length === 1 ? "" : "s"}`}
-            />
-          )
-        }
-      </PageHero>
-
+  <PageBody data-pagefind-body data-pagefind-filter="type:About">
+    <PageHero breadcrumb>
+      <Fragment slot="breadcrumb">
+        <Breadcrumb parent={{ label: "Now", href: "/now/" }} />
+      </Fragment>
+      <Fragment slot="title">Archive</Fragment>
       {
-        entries.length > 0 ? (
-          <section>
-            <h2 class="sr-only">Snapshots</h2>
-            <ul class="not-prose flex flex-col gap-2 text-sm">
-              {entries.map((entry) => (
-                <li class="flex items-baseline gap-4">
-                  <time
-                    datetime={entry.data.archivedDate.toISOString()}
-                    class="w-20 shrink-0 font-sans text-xs text-black/55 md:w-32 dark:text-white/55"
-                  >
-                    {dateFormatter.format(entry.data.archivedDate)}
-                  </time>
-                  <span>
-                    <Link href={`/now/archive/${entry.id}`}>
-                      {entry.data.title}
-                    </Link>
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </section>
-        ) : (
-          <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
-            Nothing archived yet. Every time the /now page updates, the prior
-            version is snapshotted here.
-          </p>
+        entries.length > 0 && (
+          <HeroMeta
+            slot="meta"
+            count={entries.length}
+            label={`${entries.length} snapshot${entries.length === 1 ? "" : "s"}`}
+          />
         )
       }
+    </PageHero>
 
-      <EditorialRule />
+    {
+      entries.length > 0 ? (
+        <section>
+          <h2 class="sr-only">Snapshots</h2>
+          <ul class="not-prose flex flex-col gap-2 text-sm">
+            {entries.map((entry) => (
+              <li class="flex items-baseline gap-4">
+                <time
+                  datetime={entry.data.archivedDate.toISOString()}
+                  class="w-20 shrink-0 font-sans text-xs text-black/55 md:w-32 dark:text-white/55"
+                >
+                  {dateFormatter.format(entry.data.archivedDate)}
+                </time>
+                <span>
+                  <Link href={`/now/archive/${entry.id}`}>
+                    {entry.data.title}
+                  </Link>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : (
+        <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
+          Nothing archived yet. Every time the /now page updates, the prior
+          version is snapshotted here.
+        </p>
+      )
+    }
 
-      <p class="text-xs text-black/55 dark:text-white/55">
-        <Link href="/now">back to now</Link>
-        &nbsp;&middot;&nbsp;
-        <Link href="/now/how-this-works">how this page works</Link>
-      </p>
-    </div>
-  </Container>
+    <EditorialRule />
+
+    <p class="text-xs text-black/55 dark:text-white/55">
+      <Link href="/now">back to now</Link>
+      &nbsp;&middot;&nbsp;
+      <Link href="/now/how-this-works">how this page works</Link>
+    </p>
+  </PageBody>
 </Layout>

@@ -133,5 +133,49 @@ const { title, description, ...headProps } = Astro.props;
 
       setup();
     </script>
+    <script>
+      // Motion layer ("Alive") runtime — the whole craft layer is CSS in
+      // global.css; this script only flips the attributes that trigger it.
+      // (data-mounted, which gates the entrance stagger, is flipped by the
+      // inline pre-paint script in Head.astro — same failure domain as the
+      // class that hides the blocks.)
+      //
+      // 1. One IntersectionObserver flips data-in on [data-observe]
+      //    elements, once — scroll rises (.rise) and chart draw-ins
+      //    (.spark-path / .bar-rise) both key off it.
+      // 2. [data-ticker-ts] elements re-render a relative timestamp every
+      //    30s — the "last ingest · N min ago" live line.
+      const io = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (entry.isIntersecting) {
+              entry.target.setAttribute("data-in", "1");
+              io.unobserve(entry.target);
+            }
+          }
+        },
+        { threshold: 0.25 },
+      );
+      document.querySelectorAll("[data-observe]").forEach((el) => io.observe(el));
+
+      const tickers = document.querySelectorAll("[data-ticker-ts]");
+      if (tickers.length > 0) {
+        const render = () => {
+          for (const el of tickers) {
+            const ts = Number(el.getAttribute("data-ticker-ts"));
+            if (!Number.isFinite(ts) || ts <= 0) continue;
+            const mins = Math.max(1, Math.round((Date.now() - ts) / 60000));
+            el.textContent =
+              mins < 60
+                ? `${mins} min ago`
+                : mins < 60 * 48
+                  ? `${Math.round(mins / 60)} h ago`
+                  : `${Math.round(mins / (60 * 24))} d ago`;
+          }
+        };
+        render();
+        setInterval(render, 30_000);
+      }
+    </script>
   </body>
 </html>

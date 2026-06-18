@@ -36,13 +36,7 @@
  * `pnpm predev` (so the file exists before astro dev imports it).
  */
 
-import {
-  mkdirSync,
-  readdirSync,
-  readFileSync,
-  statSync,
-  writeFileSync,
-} from "node:fs";
+import { mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { startOfISOWeek } from "date-fns";
@@ -121,8 +115,7 @@ function collectCompileCostRecords() {
       if (!compiledAt) {
         continue;
       }
-      const date =
-        compiledAt instanceof Date ? compiledAt : new Date(compiledAt);
+      const date = compiledAt instanceof Date ? compiledAt : new Date(compiledAt);
       if (Number.isNaN(date.valueOf())) {
         continue;
       }
@@ -145,18 +138,14 @@ function readSidecarJson(name) {
     if (err && err.code === "ENOENT") {
       return null;
     }
-    console.warn(
-      `[labs-aggregate] cost-fold: skipping ${name} (${err?.message ?? err})`,
-    );
+    console.warn(`[labs-aggregate] cost-fold: skipping ${name} (${err?.message ?? err})`);
     return null;
   }
   let json;
   try {
     json = JSON.parse(raw);
   } catch (err) {
-    console.warn(
-      `[labs-aggregate] cost-fold: ${name} is not valid JSON (${err?.message ?? err})`,
-    );
+    console.warn(`[labs-aggregate] cost-fold: ${name} is not valid JSON (${err?.message ?? err})`);
     return null;
   }
   return json && json.status === "no-data" ? null : json;
@@ -358,11 +347,7 @@ function writeCitationFaithfulness() {
         message:
           "POST /eval has not run yet — the sidecar will populate on the first non-dry-run pass.",
       };
-      writeFileSync(
-        sidecarPath,
-        `${JSON.stringify(sentinel, null, 2)}\n`,
-        "utf8",
-      );
+      writeFileSync(sidecarPath, `${JSON.stringify(sentinel, null, 2)}\n`, "utf8");
       return { out: sidecarPath, status: "sentinel" };
     }
     throw new Error(`failed to read ${sidecarPath}: ${err?.message ?? err}`);
@@ -416,8 +401,7 @@ function writeCitationFaithfulness() {
     .sort((a, b) => a.model.localeCompare(b.model))
     .map((j) => {
       const total = j.supported + j.partial + j.unsupported;
-      const accuracy =
-        total === 0 ? 0 : ((j.supported + 0.5 * j.partial) / total) * 100;
+      const accuracy = total === 0 ? 0 : ((j.supported + 0.5 * j.partial) / total) * 100;
       return {
         model: j.model,
         claims: j.claims,
@@ -429,9 +413,7 @@ function writeCitationFaithfulness() {
       };
     });
   const agreementPct =
-    totalAgreementClaims === 0
-      ? 0
-      : Math.round((totalAgree / totalAgreementClaims) * 10_000) / 100;
+    totalAgreementClaims === 0 ? 0 : Math.round((totalAgree / totalAgreementClaims) * 10_000) / 100;
   const enriched = {
     ...sidecar,
     derived: {
@@ -489,8 +471,7 @@ function syncLabHeadline(mdPath, newValue) {
   const fm = raw.slice(4, fmEnd);
   // headlineMetric: is a block scalar; its `value:` line is indented under it.
   // Match the indented `value: <text>` that follows headlineMetric:'s opening.
-  const pattern =
-    /(headlineMetric:\n(?:[ \t]+\w+: [^\n]*\n)*?[ \t]+value: )([^\n]+)/;
+  const pattern = /(headlineMetric:\n(?:[ \t]+\w+: [^\n]*\n)*?[ \t]+value: )([^\n]+)/;
   const m = pattern.exec(fm);
   if (!m) {
     return { status: "no-value-field" };
@@ -501,10 +482,7 @@ function syncLabHeadline(mdPath, newValue) {
   // Use a replacer function so $-tokens in `newValue` (like `$1.86`) aren't
   // interpreted as backreferences by String.replace. The string form would
   // corrupt the file.
-  const updatedFm = fm.replace(
-    pattern,
-    (_match, prefix) => `${prefix}${newValue}`,
-  );
+  const updatedFm = fm.replace(pattern, (_match, prefix) => `${prefix}${newValue}`);
   const updated = `---\n${updatedFm}${raw.slice(fmEnd)}`;
   writeFileSync(mdPath, updated, "utf8");
   return { status: "updated", from: m[2], to: newValue };
@@ -521,9 +499,7 @@ console.log(
 // with the freshly written sidecar so the page header and the chart match.
 const ingestMd = join(ROOT, "src/content/labs/ingest-pipeline-cost.md");
 const ingestSync = syncLabHeadline(ingestMd, payload.headlineValue);
-console.log(
-  `[labs-aggregate] ingest-pipeline-cost headline: ${ingestSync.status}`,
-);
+console.log(`[labs-aggregate] ingest-pipeline-cost headline: ${ingestSync.status}`);
 
 const cf = writeCitationFaithfulness();
 console.log(`[labs-aggregate] citation-faithfulness: ${cf.status} → ${cf.out}`);
@@ -544,8 +520,6 @@ if (cf.status === "enriched" || cf.status === "unchanged") {
         : `${pct}%`;
     const cfMd = join(ROOT, "src/content/labs/citation-faithfulness.md");
     const cfSync = syncLabHeadline(cfMd, value);
-    console.log(
-      `[labs-aggregate] citation-faithfulness headline: ${cfSync.status}`,
-    );
+    console.log(`[labs-aggregate] citation-faithfulness headline: ${cfSync.status}`);
   }
 }

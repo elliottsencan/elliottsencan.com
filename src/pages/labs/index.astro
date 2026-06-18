@@ -1,22 +1,23 @@
 ---
 import { getCollection } from "astro:content";
-import Container from "@components/Container.astro";
+import Breadcrumb from "@components/Breadcrumb.astro";
 import EditorialRule from "@components/EditorialRule.astro";
-import HeroMeta from "@components/HeroMeta.astro";
 import Link from "@components/Link.astro";
 import CodeCell from "@components/labs/CodeCell.astro";
 import Sparkline from "@components/labs/Sparkline.astro";
+import MetaLine from "@components/MetaLine.astro";
+import PageBody from "@components/PageBody.astro";
 import PageHero from "@components/PageHero.astro";
 import Layout from "@layouts/Layout.astro";
+import { splitMetricValue } from "@lib/format";
 import { loadLabData } from "@lib/lab-data";
-import { SITE_TIMEZONE } from "@lib/utils";
 
-// /labs — the measurement layer. Each cell stamps "what was the question,
-// what's the number, what does it mean." The index lists every cell in
-// reverse-chronological run order. Row chrome here matches /reading and
-// /writing: title + slug + summary on the left, headline metric pinned to
-// the right, status / when / tags below; sparkline (when the cell is a
-// chart with data) drops into a full-width row at the bottom of the cell.
+// /labs — the measurement layer, set as an instrument panel: one bordered
+// table on a graph-paper field, one ruled row per cell. Left column holds
+// the live dot + title + tldr + provenance MetaLine; middle is the
+// sparkline; right is the headline value as a thin instrument numeral.
+// The hero pairs the title/lede with the cell count numeral on the right
+// edge so the page leads with its own measurement.
 const cells = (await getCollection("labs")).sort(
   (a, b) => b.data.lastRunDate.valueOf() - a.data.lastRunDate.valueOf(),
 );
@@ -29,213 +30,170 @@ for (const cell of cells) {
 
 const liveCount = cells.filter((c) => c.data.status === "live").length;
 const pendingCount = cells.filter((c) => c.data.status === "draft").length;
+const countCaption =
+  pendingCount === 0
+    ? `${cells.length === 1 ? "cell" : "cells"} · all live`
+    : `${cells.length === 1 ? "cell" : "cells"} · ${liveCount} live`;
 
-const dateFormatter = new Intl.DateTimeFormat("en-US", {
-  year: "numeric",
-  month: "2-digit",
-  day: "2-digit",
-  timeZone: SITE_TIMEZONE,
-});
-
-const heroMetaFormatter = new Intl.DateTimeFormat("en-US", {
-  day: "numeric",
-  month: "short",
-  year: "numeric",
-  timeZone: SITE_TIMEZONE,
-});
 const lastRun = cells[0]?.data.lastRunDate;
-const heroMetaLabel = lastRun
-  ? `${cells.length} ${cells.length === 1 ? "cell" : "cells"} · ${heroMetaFormatter.format(lastRun)}`
-  : `${cells.length} ${cells.length === 1 ? "cell" : "cells"}`;
-
-function formatLastRun(date: Date): string {
-  // ISO-style YYYY-MM-DD reads as a build identifier, not a sentence.
-  const parts = dateFormatter.formatToParts(date);
-  const y = parts.find((p) => p.type === "year")?.value ?? "";
-  const m = parts.find((p) => p.type === "month")?.value ?? "";
-  const d = parts.find((p) => p.type === "day")?.value ?? "";
-  return `${y}-${m}-${d}`;
-}
-
-function statusLabel(status: string): string {
-  if (status === "draft") {
-    return "first-run pending";
-  }
-  return status;
-}
 ---
 
 <Layout
   title="Labs"
   description="Observable-style cells holding the data behind my writing — cost breakdowns, eval runs, telemetry."
 >
-  <Container>
-    <div
-      class="space-y-10"
-      data-pagefind-body
-      data-pagefind-filter="type:Labs"
-    >
-      <PageHero>
-        <Fragment slot="title">Labs</Fragment>
-        <Fragment slot="summary">
-          Numbers behind the AI pipeline that compiles{" "}
-          <Link href="/wiki">/wiki</Link>. Each cell asks one specific
-          question — does it cost too much, are its citations honest, do its
-          topic tags stay stable — and answers with a chart and a paragraph
-          in plain English.
-        </Fragment>
-        {
-          cells.length > 0 && (
-            <HeroMeta slot="meta" count={cells.length} label={heroMetaLabel} />
-          )
-        }
-      </PageHero>
-
-      <div class="space-y-3">
-        <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
-          Read top-down: the question being tested, the headline number, the
-          chart, then a short paragraph on what the number means and what to
-          watch for. The technical receipts (endpoint names, code, version
-          notes) sit at the bottom of each cell for anyone who wants to
-          verify the prose.
-        </p>
-        <p class="text-sm leading-relaxed text-black/65 dark:text-white/65">
-          Cells marked{" "}
-          <span class="font-mono text-black/65 dark:text-white/65">
-            first-run pending
-          </span>{" "}
-          have the question written and the methodology in place — they're
-          waiting on data, not on a decision.
-        </p>
-      </div>
-
+  <PageBody data-pagefind-body data-pagefind-filter="type:Labs">
+    {/* Hero — title + lede left, cell-count numeral pinned to the right
+        edge so the page opens with a measurement of its own. */}
+    <PageHero breadcrumb asideWidth="280px" asideAlign="end">
+      <Fragment slot="breadcrumb">
+        <Breadcrumb parent={{ label: "Home", href: "/" }} />
+      </Fragment>
+      <Fragment slot="title">Labs</Fragment>
+      <Fragment slot="summary">
+        Numbers behind the AI pipeline that compiles{" "}
+        <Link href="/wiki">/wiki</Link>. Each cell asks one question —
+        does it cost too much, are its citations honest — and answers
+        with a chart and a paragraph in plain English.
+      </Fragment>
       {
-        cells.length > 0 ? (
-          <section data-pagefind-ignore class="space-y-0">
-            <p class="pb-3 text-right font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55">
-              {liveCount} live · {pendingCount} pending
-            </p>
-            <ul class="not-prose flex flex-col">
-              {cells.map((cell, i) => {
-                const data = dataByCellId.get(cell.id);
-                const isPending = cell.data.status === "draft";
-                const sparkValues =
-                  cell.data.kind === "chart" &&
-                  typeof data === "object" &&
-                  data !== null &&
-                  Array.isArray((data as { values?: unknown }).values)
-                    ? (data as { values: number[] }).values
-                    : null;
-                return (
-                  <li
-                    class:list={[
-                      "group relative grid grid-cols-1 items-baseline gap-x-8 gap-y-3 border-t border-black/10 py-6 md:grid-cols-[minmax(0,1fr)_auto] dark:border-white/10",
-                      i === cells.length - 1 &&
-                        "border-b border-black/10 dark:border-white/10",
-                    ]}
-                  >
-                    <div class="flex flex-col gap-1.5">
+        cells.length > 0 && (
+          <div slot="aside" class="flex flex-col gap-2 md:items-end md:pb-1.5 md:text-right">
+            <span
+              class="num-display text-num-lg text-black dark:text-white"
+              aria-label={`${cells.length} cells`}
+            >
+              {cells.length}
+            </span>
+            <span class="font-mono text-xs uppercase tracking-[0.18em] text-black/55 dark:text-white/55">
+              {countCaption}
+            </span>
+            {lastRun && <MetaLine class="mt-2" segments={["Last run", { date: lastRun }]} />}
+          </div>
+        )
+      }
+    </PageHero>
+
+    {
+      cells.length > 0 ? (
+        <section data-pagefind-ignore class="flex flex-col gap-7">
+          {/* Instrument table — one bordered block on graph paper. Each
+              row washes a translucent canvas over the grid so the type
+              stays legible while the field shows through the gutters. */}
+          <ul class="graph-paper not-prose m-0 flex flex-col border border-black/10 p-0 dark:border-white/10">
+            {cells.map((cell) => {
+              const data = dataByCellId.get(cell.id);
+              const isPending = cell.data.status === "draft";
+              const sparkValues =
+                cell.data.kind === "chart" &&
+                typeof data === "object" &&
+                data !== null &&
+                Array.isArray((data as { values?: unknown }).values)
+                  ? (data as { values: number[] }).values
+                  : null;
+              return (
+                <li class="group relative grid grid-cols-1 gap-x-14 gap-y-6 border-b border-black/10 bg-[color-mix(in_oklab,var(--canvas)_55%,transparent)] px-6 py-8 last:border-b-0 md:grid-cols-[minmax(0,1fr)_220px_260px] md:items-center md:px-10 md:py-9 dark:border-white/10">
+                  <div class="flex min-w-0 flex-col gap-2.5">
+                    <div class="flex items-center gap-3">
+                      <span
+                        class:list={[
+                          "h-[7px] w-[7px] shrink-0 rounded-full",
+                          isPending
+                            ? "bg-black/25 dark:bg-white/25"
+                            : "bg-[color:var(--accent)]",
+                        ]}
+                        aria-hidden="true"
+                      />
                       {/* Title carries the stretched-link pseudo: clicking
-                          anywhere on the row routes to the cell's detail
-                          page. The cited-by link below opts out via
-                          relative z-10 so it remains independently clickable. */}
+                          anywhere on the row routes to the cell page. The
+                          MetaLine links opt back in via relative z-10. */}
                       <Link
                         href={`/labs/${cell.id}/`}
-                        class="font-heading text-base font-medium tracking-tight text-black no-underline group-hover:text-[color:var(--accent)] before:absolute before:inset-y-0 before:-inset-x-3 before:rounded-md before:transition-colors before:content-[''] hover:before:bg-black/[0.03] md:before:-inset-x-4 dark:text-white dark:hover:before:bg-white/[0.03]"
+                        class="font-heading text-xl font-medium leading-[1.12] tracking-[-0.013em] text-black no-underline transition-colors duration-300 ease-in-out group-hover:text-[color:var(--accent)] before:absolute before:inset-0 before:content-[''] dark:text-white"
                       >
                         {cell.data.title}
                       </Link>
-                      <div class="flex flex-wrap items-center gap-x-3 gap-y-0.5 font-mono text-xs">
-                        <span
-                          class:list={[
-                            "uppercase tracking-widest",
-                            cell.data.status === "live"
-                              ? "text-[color:var(--accent)]"
-                              : "text-black/55 dark:text-white/55",
-                          ]}
-                        >
-                          {statusLabel(cell.data.status)}
-                        </span>
-                        <span class="text-black/55 dark:text-white/55">
-                          {isPending
-                            ? "methodology shipped"
-                            : `last run · ${formatLastRun(cell.data.lastRunDate)}`}
-                        </span>
-                        {cell.data.blogPostSlug && (
-                          <span class="text-black/55 dark:text-white/55">
-                            cited by{" "}
-                            <Link
-                              href={`/writing/${cell.data.blogPostSlug}/`}
-                              class="relative z-10 font-sans text-xs"
-                            >
-                              {cell.data.blogPostSlug}
-                            </Link>
-                          </span>
-                        )}
-                      </div>
-                      <p class="m-0 max-w-[38rem] text-sm leading-relaxed text-black/65 dark:text-white/65">
-                        {cell.data.tldr}
-                      </p>
-                      {cell.data.tags.length > 0 && (
-                        <ul class="mt-1 flex flex-wrap gap-1.5">
-                          {cell.data.tags.map((t) => (
-                            <li class="inline-flex items-center rounded-sm bg-black/5 px-2 py-0.5 text-xs text-black/65 dark:bg-white/5 dark:text-white/65">
-                              {t}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
                     </div>
+                    <p class="m-0 max-w-[52ch] text-sm leading-relaxed text-black/65 dark:text-white/65">
+                      {cell.data.tldr}
+                    </p>
+                    <MetaLine
+                      class="relative z-10"
+                      segments={[
+                        isPending ? "first-run pending" : "Last run",
+                        { date: cell.data.lastRunDate },
+                        ...(cell.data.tags.length > 0 ? [cell.data.tags.join(" · ")] : []),
+                        ...(cell.data.blogPostSlug
+                          ? [
+                              {
+                                text: `cited by ${cell.data.blogPostSlug}`,
+                                href: `/writing/${cell.data.blogPostSlug}/`,
+                                sans: true,
+                              },
+                            ]
+                          : []),
+                      ]}
+                    />
+                  </div>
 
-                    <div class="flex min-w-[7rem] flex-col gap-1 md:items-end">
-                      <span class="font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55">
-                        {cell.data.headlineMetric.label}
-                      </span>
-                      <span
-                        class:list={[
-                          "font-heading font-medium leading-none tracking-tight",
-                          isPending
-                            ? "text-2xl text-black/40 dark:text-white/40"
-                            : "text-3xl text-black md:text-[2.1rem] dark:text-white",
-                        ]}
-                        style="font-variant-numeric: tabular-nums;"
-                      >
-                        {cell.data.headlineMetric.value}
-                      </span>
-                    </div>
-
+                  <div class="hidden text-black/65 md:block dark:text-white/65">
                     {sparkValues && (
-                      <div class="block w-full text-black/75 md:col-span-2 dark:text-white/75">
-                        <Sparkline data={sparkValues} height={36} />
-                      </div>
+                      <Sparkline data={sparkValues} width={220} height={52} variant="line" />
                     )}
-                  </li>
-                );
-              })}
-            </ul>
-          </section>
-        ) : (
-          <div class="space-y-6">
-            <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
-              Nothing here yet. The labs surface ships ahead of its first
-              populated cell so the IA is in place. Cells materialize when a
-              post needs receipts — cost numbers, eval runs, p95 by route —
-              and stay around so future posts can link forward to them.
-            </p>
-            <CodeCell lang="js">{`// the next cell will look something like this
+                  </div>
+
+                  <div class="md:text-right">
+                    {/* Composite values ("89% · 103 claims") split: numeral
+                        at display size, qualifier folded into the
+                        micro-label so the big number never wraps. */}
+                    <span
+                      class:list={[
+                        "num-display block text-[clamp(2.5rem,1.9rem+2.4vw,4rem)]",
+                        isPending
+                          ? "text-black/40 dark:text-white/40"
+                          : "text-black dark:text-white",
+                      ]}
+                    >
+                      {splitMetricValue(cell.data.headlineMetric.value).numeral}
+                    </span>
+                    <span class="mt-2 block font-mono text-xs uppercase tracking-[0.18em] text-black/55 dark:text-white/55">
+                      {[
+                        splitMetricValue(cell.data.headlineMetric.value).qualifier,
+                        cell.data.headlineMetric.label,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </span>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+          <p class="m-0 text-right font-mono text-xs text-black/40 dark:text-white/40">
+            receipts at the bottom of every cell — endpoint names, code, version notes
+          </p>
+        </section>
+      ) : (
+        <div class="space-y-6">
+          <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
+            Nothing here yet. The labs surface ships ahead of its first
+            populated cell so the IA is in place. Cells materialize when a
+            post needs receipts — cost numbers, eval runs, p95 by route —
+            and stay around so future posts can link forward to them.
+          </p>
+          <CodeCell lang="js">{`// the next cell will look something like this
 const { post, run } = await loadCell({
   hypothesis: "Haiku 4.5 is good enough at link-summary",
   data: "eval-haiku-vs-sonnet.json",
 });`}</CodeCell>
-          </div>
-        )
-      }
+        </div>
+      )
+    }
 
-      <EditorialRule />
+    <EditorialRule />
 
-      <p class="text-xs text-black/55 dark:text-white/55">
-        <Link href="/wiki">wiki →</Link>
-      </p>
-    </div>
-  </Container>
+    <p class="text-xs text-black/55 dark:text-white/55">
+      <Link href="/wiki">wiki →</Link>
+    </p>
+  </PageBody>
 </Layout>

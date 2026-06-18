@@ -1,8 +1,10 @@
 ---
 import { type CollectionEntry, getCollection, render } from "astro:content";
-import EditorialRule from "@components/EditorialRule.astro";
-import LabeledRule from "@components/LabeledRule.astro";
+import Breadcrumb from "@components/Breadcrumb.astro";
 import Link from "@components/Link.astro";
+import MetaLine from "@components/MetaLine.astro";
+import PageBody from "@components/PageBody.astro";
+import PageHero from "@components/PageHero.astro";
 import ConstellationLocal from "@components/wiki/ConstellationLocal.astro";
 import constellationLayout from "@data/constellation-layout.json";
 import Layout from "@layouts/Layout.astro";
@@ -13,9 +15,19 @@ export async function getStaticPaths() {
   const concepts = await getCollection("wiki");
   const graph = buildWikiLinkGraph(concepts.map((c) => ({ id: c.id, body: c.body ?? "" })));
   const knownSlugs = new Set(concepts.map((c) => c.id));
+  // "Concept N / total" header flourish — N is the concept's position in
+  // the same title ordering the index directory uses.
+  const byTitle = [...concepts].sort((a, b) => a.data.title.localeCompare(b.data.title));
+  const indexById = new Map(byTitle.map((c, i) => [c.id, i + 1]));
   return concepts.map((concept) => ({
     params: { slug: concept.id },
-    props: { concept, graph, knownSlugs },
+    props: {
+      concept,
+      graph,
+      knownSlugs,
+      conceptIndex: indexById.get(concept.id) ?? 0,
+      conceptTotal: concepts.length,
+    },
   }));
 }
 
@@ -23,8 +35,10 @@ type Props = {
   concept: CollectionEntry<"wiki">;
   graph: WikiLinkGraph;
   knownSlugs: Set<string>;
+  conceptIndex: number;
+  conceptTotal: number;
 };
-const { concept, graph, knownSlugs } = Astro.props;
+const { concept, graph, knownSlugs, conceptIndex, conceptTotal } = Astro.props;
 const { Content } = await render(concept);
 
 // ─── Sources ─────────────────────────────────────────────────────────────
@@ -73,6 +87,13 @@ if (missingSources.length > 0) {
   );
 }
 
+// Source-heavy concepts collapse the rail behind a no-JS <details> expander
+// past the first 8 entries. `sources` is citation-order (body-cited first),
+// so the visible 8 are the ones the prose actually leans on.
+const RAIL_VISIBLE = 8;
+const railSources = sources.length > RAIL_VISIBLE ? sources.slice(0, RAIL_VISIBLE) : sources;
+const railOverflow = sources.length > RAIL_VISIBLE ? sources.slice(RAIL_VISIBLE) : [];
+
 // JSON map shipped to the inline post-processor that injects `<sup>`s after
 // each `/reading/<slug>` link in the rendered body. Using slug → number
 // keeps the script trivial and resilient to legacy entries.
@@ -101,13 +122,6 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
   timeZone: SITE_TIMEZONE,
 });
 
-const longDateFormatter = new Intl.DateTimeFormat("en-US", {
-  day: "numeric",
-  month: "short",
-  year: "numeric",
-  timeZone: SITE_TIMEZONE,
-});
-
 // Citations point at the contributing /reading/<slug> entries — search engines
 // read this as "this synthesis cites these sources." Absolute URLs because
 // schema.org `citation` items should be dereferenceable.
@@ -120,12 +134,14 @@ const breadcrumbs = [
 
 // ─── Constellation caption data ──────────────────────────────────────────
 // The 3-row × 2-col hero grid mirrors /wiki — col 2 holds the local
-// constellation in rows 1-2 and a footer caption (cluster · neighbors) in
-// row 3 that grid-aligns with the EditorialRule below the prose in col 1.
+// constellation in rows 1-2 with its caption (cluster · neighbors) sitting
+// inside the well's bottom padding so figure + caption read as one object.
+// The layout caps drawn neighbors at 14; when the cluster has more, the
+// caption reads "<total> neighbors · <shown> shown".
 type ConstellationCluster = { id: string; title: string; short: string; hue: number };
 const constellationClusters: ConstellationCluster[] = constellationLayout.clusters;
 const constellationClusterById: Record<string, string | null> = constellationLayout.clusterById;
-const constellationLocal: Record<string, { nodes: { id: string }[] }> =
+const constellationLocal: Record<string, { nodes: { id: string }[]; neighborTotal?: number }> =
   constellationLayout.local;
 
 const localData = constellationLocal[concept.id];
@@ -134,7 +150,8 @@ const myClusterId = constellationClusterById[concept.id] ?? null;
 const myCluster = myClusterId
   ? (constellationClusters.find((c) => c.id === myClusterId) ?? null)
   : null;
-const neighborCount = hasLocal ? localData.nodes.length - 1 : 0;
+const neighborsShown = hasLocal ? localData.nodes.length - 1 : 0;
+const neighborTotal = hasLocal ? (localData.neighborTotal ?? neighborsShown) : 0;
 ---
 
 <Layout
@@ -147,184 +164,232 @@ const neighborCount = hasLocal ? localData.nodes.length - 1 : 0;
   citations={citations}
   breadcrumbs={breadcrumbs}
 >
-  <div class="mx-auto max-w-5xl px-6 md:px-8">
-    <div
-      class="space-y-10"
-      data-pagefind-body
-      data-pagefind-filter="type:Wiki"
-    >
-      {/*
-        Hero — 3-row × 2-col grid mirroring /wiki. Col 1 holds the editorial
-        rails: row 1 = LabeledRule with "Wiki" (linked back to the index)
-        as the back-nav, row 2 = title/summary/source-count stack with flex
-        justify-between, row 3 = EditorialRule compact (bottom dot row).
-        Col 2 holds the local constellation spanning rows 1-2 and a footer
-        caption (cluster · neighbors) in row 3 that grid-aligns with the
-        col-1 bottom rule. The h1 carries the current concept identity, so
-        the row-1 label stays minimal — just "Wiki" — to avoid double
-        labelling.
+  <PageBody data-pagefind-body data-pagefind-filter="type:Wiki">
+    {/*
+      Header zone (B2) — no tinted band. The breadcrumb row pairs the
+      back-nav with a "Concept N / total" mono flourish; PageHero sets
+      title + standfirst + MetaLine against the unboxed local
+      constellation and closes the zone with its dotted rule.
 
-        NB: must NOT use bare <header> — global.css fixes-positions every
-        <header> as site chrome (CLAUDE.md: "bare tags are reserved").
-      */}
-      <div
-        class="grid items-stretch gap-x-8 gap-y-3 md:grid-cols-[minmax(0,1fr)_auto] md:gap-x-10 md:[grid-template-rows:auto_1fr_auto]"
-      >
-        <div class="md:col-start-1 md:row-start-1">
-          <LabeledRule>
-            <Link href="/wiki/">Wiki</Link>
-          </LabeledRule>
+      NB: must NOT use bare <header> — global.css fixes-positions every
+      <header> as site chrome (CLAUDE.md: "bare tags are reserved").
+    */}
+    <PageHero breadcrumb asideWidth="420px" asideAlign="center">
+      <Fragment slot="breadcrumb">
+        <div class="flex items-center gap-4">
+          <div class="min-w-0 flex-1">
+            <Breadcrumb parent={{ label: "Wiki", href: "/wiki/" }} />
+          </div>
+          {
+            conceptIndex > 0 && (
+              <span
+                class="shrink-0 font-mono text-xs uppercase tracking-[0.18em] text-black/55 dark:text-white/55"
+                style="font-variant-numeric: tabular-nums;"
+              >
+                Concept {conceptIndex} / {conceptTotal}
+              </span>
+            )
+          }
         </div>
-
-        <div
-          class="flex min-w-0 max-w-[62ch] flex-col justify-between gap-4 md:col-start-1 md:row-start-2"
-        >
-          <div class="flex flex-col gap-3">
-            <h1 class="font-heading text-xl font-semibold tracking-tight text-black dark:text-white">
-              {concept.data.title}
-            </h1>
-            <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
-              {concept.data.summary}
-            </p>
-            <p
-              class="inline-flex w-fit items-center gap-2 rounded-sm border border-[color:var(--accent)]/35 px-2.5 py-1 font-mono text-xs text-[color:var(--accent)]"
-            >
-              <span class="flex gap-[2px]" aria-hidden="true">
-                {sources.map((_, i) => (
-                  <span
-                    class="block h-1 w-1 rounded-full bg-current"
-                    style={`opacity: ${0.7 + i * 0.04};`}
-                  />
-                ))}
+      </Fragment>
+      <Fragment slot="title">{concept.data.title}</Fragment>
+      <Fragment slot="summary">{concept.data.summary}</Fragment>
+      <MetaLine
+        slot="meta"
+        segments={[
+          "Compiled by Claude",
+          { date: concept.data.compiled_at },
+          `${sources.length} source${sources.length === 1 ? "" : "s"}`,
+          { text: "How this works →", href: "/wiki/how-this-works" },
+        ]}
+      />
+      {
+        hasLocal && (
+          <div slot="aside" class="flex min-w-0 flex-col gap-2">
+            <ConstellationLocal slug={concept.id} width={420} />
+            <p class="m-0 flex flex-wrap justify-end gap-x-2.5 font-mono text-xs tracking-wider text-black/55 dark:text-white/55">
+              {myCluster && (
+                <>
+                  <span>{myCluster.short}</span>
+                  <span aria-hidden="true" class="text-black/25 dark:text-white/25">
+                    &middot;
+                  </span>
+                </>
+              )}
+              <span>
+                {neighborTotal} neighbor{neighborTotal === 1 ? "" : "s"}
               </span>
-              <span class="tracking-wider">
-                {sources.length} source{sources.length === 1 ? "" : "s"}
-                {" · "}
-                {longDateFormatter.format(concept.data.compiled_at)}
-              </span>
+              {neighborTotal > neighborsShown && (
+                <>
+                  <span aria-hidden="true" class="text-black/25 dark:text-white/25">
+                    &middot;
+                  </span>
+                  <span>{neighborsShown} shown</span>
+                </>
+              )}
             </p>
           </div>
+        )
+      }
+    </PageHero>
 
-          <p class="text-xs text-black/55 dark:text-white/55">
-            Compiled by Claude
-            {" · "}
-            <Link href="/wiki/how-this-works">How this works →</Link>
-          </p>
-        </div>
+    {/*
+      Body row — prose on the left, sticky sources rail on the right. The
+      rail collapses below the body on narrow screens.
+      NB: must NOT use <article> — global.css applies `prose` (max-width:
+      65ch) to every <article>, which can win over Tailwind utilities and
+      collapse the body in this 2-col grid. The wiki-body class below
+      carries the prose styling without the global side-effect.
+    */}
+    <div class="grid gap-10 md:grid-cols-[minmax(0,1fr)_300px] md:gap-14">
+      <div id="wiki-body" class="wiki-body min-w-0">
+        <Content />
+      </div>
 
-        <EditorialRule compact class="md:col-start-1 md:row-start-3" />
-
+      <aside class="wiki-rail md:sticky md:top-28 md:self-start">
+        <p class="m-0 font-mono text-xs uppercase tracking-[0.18em] text-black/55 dark:text-white/55">
+          Sources
+        </p>
+        <div role="presentation" aria-hidden="true" class="dot-rule mt-3 h-px w-full"></div>
+        <ol class="not-prose m-0 flex list-none flex-col p-0 text-sm">
+          {railSources.map(({ slug, number, entry }) => (
+            <li class="rail-card" data-src={slug}>
+              <span class="rail-num" data-src={slug} aria-hidden="true">
+                {number}
+              </span>
+              <div class="flex min-w-0 flex-col gap-1">
+                <a
+                  href={entry.data.url}
+                  target="_blank"
+                  rel="noopener"
+                  class="rail-title text-sm font-medium leading-[1.35] text-black underline decoration-black/10 underline-offset-[3px] hover:decoration-black/55 dark:text-white dark:decoration-white/15 dark:hover:decoration-white/55"
+                >
+                  {entry.data.title}
+                </a>
+                <span class="font-mono text-xs tracking-wide text-black/45 dark:text-white/45">
+                  {(entry.data.author ?? entry.data.source) && (
+                    <>
+                      <span class="[overflow-wrap:anywhere]">
+                        {entry.data.author ?? entry.data.source}
+                      </span>
+                      {" · "}
+                    </>
+                  )}
+                  <span class="whitespace-nowrap">{dateFormatter.format(entry.data.added)}</span>
+                </span>
+              </div>
+            </li>
+          ))}
+        </ol>
         {
-          hasLocal && (
-            <div class="md:col-start-2 md:row-start-1 md:row-end-3">
-              <ConstellationLocal slug={concept.id} />
-            </div>
-          )
-        }
-
-        {
-          hasLocal && (
-            <p
-              class="font-mono text-xs tracking-wider text-black/55 dark:text-white/55 md:col-start-2 md:row-start-3 md:self-center"
-            >
-              {myCluster ? `${myCluster.short} · ` : ""}
-              {neighborCount} neighbor{neighborCount === 1 ? "" : "s"}
+          railOverflow.length > 0 ? (
+            <details class="rail-more">
+              <summary class="mt-2 w-fit cursor-pointer list-none font-mono text-xs tracking-wider text-black/55 hover:text-[color:var(--accent)] dark:text-white/55 [&::-webkit-details-marker]:hidden">
+                +{railOverflow.length} more source{railOverflow.length === 1 ? "" : "s"}
+              </summary>
+              <ol class="not-prose m-0 flex list-none flex-col p-0 text-sm">
+                {railOverflow.map(({ slug, number, entry }) => (
+                  <li class="rail-card" data-src={slug}>
+                    <span class="rail-num" data-src={slug} aria-hidden="true">
+                      {number}
+                    </span>
+                    <div class="flex min-w-0 flex-col gap-1">
+                      <a
+                        href={entry.data.url}
+                        target="_blank"
+                        rel="noopener"
+                        class="rail-title text-sm font-medium leading-[1.35] text-black underline decoration-black/10 underline-offset-[3px] hover:decoration-black/55 dark:text-white dark:decoration-white/15 dark:hover:decoration-white/55"
+                      >
+                        {entry.data.title}
+                      </a>
+                      <span class="font-mono text-xs tracking-wide text-black/45 dark:text-white/45">
+                        {(entry.data.author ?? entry.data.source) && (
+                          <>
+                            <span class="[overflow-wrap:anywhere]">
+                              {entry.data.author ?? entry.data.source}
+                            </span>
+                            {" · "}
+                          </>
+                        )}
+                        <span class="whitespace-nowrap">
+                          {dateFormatter.format(entry.data.added)}
+                        </span>
+                      </span>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+              <p class="mt-4">
+                <a
+                  href="/reading"
+                  class="font-mono text-xs tracking-wider text-[color:var(--accent)] no-underline transition-colors duration-300 ease-in-out hover:underline focus-visible:underline"
+                >
+                  view in /reading →
+                </a>
+              </p>
+            </details>
+          ) : (
+            <p class="mt-4">
+              <a
+                href="/reading"
+                class="font-mono text-xs tracking-wider text-[color:var(--accent)] no-underline transition-colors duration-300 ease-in-out hover:underline focus-visible:underline"
+              >
+                view in /reading →
+              </a>
             </p>
           )
         }
-      </div>
-
-      {/*
-        Body row — prose on the left, sticky sources rail on the right. The
-        rail collapses below the body on narrow screens.
-        NB: must NOT use <article> — global.css applies `prose` (max-width:
-        65ch) to every <article>, which can win over Tailwind utilities and
-        collapse the body in this 2-col grid. The wiki-body class below
-        carries the prose styling without the global side-effect.
-      */}
-      <div class="grid gap-8 md:grid-cols-[minmax(0,1fr)_220px] md:gap-12">
-        <div id="wiki-body" class="wiki-body min-w-0">
-          <Content />
-        </div>
-
-        <aside class="wiki-rail md:sticky md:top-28 md:self-start">
-          <p
-            class="mb-3 font-mono text-xs uppercase tracking-wider text-black/55 dark:text-white/55"
-          >
-            Sources
-          </p>
-          <ol class="not-prose flex flex-col gap-1 text-sm">
-            {sources.map(({ slug, number, entry }) => (
-              <li class="rail-card" data-src={slug}>
-                <span class="rail-chip" data-src={slug} aria-hidden="true">
-                  {number}
-                </span>
-                <div class="flex min-w-0 flex-col gap-0.5">
-                  <a
-                    href={entry.data.url}
-                    target="_blank"
-                    rel="noopener"
-                    class="text-xs font-medium leading-snug text-black underline decoration-black/15 underline-offset-[3px] hover:decoration-black/55 dark:text-white dark:decoration-white/20 dark:hover:decoration-white/55"
-                  >
-                    {entry.data.title}
-                  </a>
-                  <span class="text-xs text-black/55 dark:text-white/55">
-                    {entry.data.author ?? entry.data.source ?? ""}
-                  </span>
-                  <span class="font-mono text-xs tracking-wide text-black/40 dark:text-white/45">
-                    {[entry.data.source, dateFormatter.format(entry.data.added)]
-                      .filter(Boolean)
-                      .join(" · ")}
-                  </span>
-                </div>
-              </li>
-            ))}
-          </ol>
-          <p class="mt-3 font-mono text-xs tracking-wider text-black/55 dark:text-white/55">
-            <Link href="/reading">view in /reading →</Link>
-          </p>
-        </aside>
-      </div>
-
-      {/*
-        Ambient related-concepts strip — sits below the body. Soft cards, not
-        a list. Concept names link into their entry pages; summaries are
-        truncated so the strip stays scannable.
-      */}
-      {
-        relatedConcepts.length > 0 && (
-          <section class="space-y-4">
-            <LabeledRule>Related concepts</LabeledRule>
-            <ul class="not-prose grid grid-cols-[repeat(auto-fill,minmax(170px,1fr))] gap-3">
-              {relatedConcepts.map((slug) => {
-                const rc = conceptById.get(slug);
-                if (!rc) return null;
-                const blurb = rc.data.summary.split(/[,;]/)[0].slice(0, 96);
-                return (
-                  <li>
-                    <a
-                      href={`/wiki/${slug}/`}
-                      class="flex h-full flex-col gap-1.5 rounded-sm bg-black/5 px-3.5 py-3 no-underline transition-colors hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10"
-                    >
-                      <span class="font-heading text-sm font-medium leading-tight tracking-tight text-black dark:text-white">
-                        {rc.data.title} →
-                      </span>
-                      <span class="text-xs leading-relaxed text-black/55 dark:text-white/55">
-                        {blurb}…
-                      </span>
-                      <span class="mt-auto pt-1 font-mono text-xs uppercase tracking-widest text-black/40 dark:text-white/40">
-                        {rc.data.sources.length} sources
-                      </span>
-                    </a>
-                  </li>
-                );
-              })}
-            </ul>
-          </section>
-        )
-      }
+      </aside>
     </div>
-  </div>
+
+    {/*
+      Ambient related-concepts strip — sits below the body. Soft cards, not
+      a list. Concept names link into their entry pages; summaries are
+      truncated so the strip stays scannable.
+    */}
+    {
+      relatedConcepts.length > 0 && (
+        <section class="space-y-4">
+          {/* Mono-caps label + dot rule — same label idiom as the rail's
+              SOURCES heading and the index's group labels, fused with the
+              LabeledRule dot-row so the chapter break stays. */}
+          <div class="flex items-center gap-4">
+            <h2 class="shrink-0 font-mono text-xs uppercase tracking-[0.18em] text-black/55 dark:text-white/55">
+              Related concepts
+            </h2>
+            <div role="presentation" aria-hidden="true" class="dot-rule h-px flex-1 py-2" />
+          </div>
+          <ul class="not-prose grid grid-cols-[repeat(auto-fill,minmax(210px,1fr))] gap-3">
+            {relatedConcepts.map((slug) => {
+              const rc = conceptById.get(slug);
+              if (!rc) return null;
+              const blurb = rc.data.summary.split(/[,;]/)[0].slice(0, 96);
+              return (
+                <li>
+                  <a
+                    href={`/wiki/${slug}/`}
+                    class="group flex h-full flex-col gap-1.5 rounded-sm border border-black/5 bg-[color:var(--card)] px-3.5 py-3 no-underline dark:border-white/[0.06]"
+                  >
+                    <span class="font-heading text-sm font-medium leading-tight tracking-tight text-black transition-colors duration-300 ease-in-out group-hover:text-[color:var(--accent)] group-focus-visible:text-[color:var(--accent)] dark:text-white">
+                      {/* NBSP joins the arrow to the title's last word so it
+                          can't widow onto its own line. */}
+                      {`${rc.data.title}\u00A0→`}
+                    </span>
+                    <span class="text-xs leading-relaxed text-black/55 dark:text-white/55">
+                      {blurb}…
+                    </span>
+                    <span class="mt-auto pt-1 font-mono text-xs uppercase tracking-[0.18em] text-black/40 dark:text-white/40">
+                      {rc.data.sources.length} sources
+                    </span>
+                  </a>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )
+    }
+  </PageBody>
 
   {/*
     Build-time-computed slug → citation-number map, consumed by the inline
@@ -417,7 +482,7 @@ const neighborCount = hasLocal ? localData.nodes.length - 1 : 0;
      a class so it doesn't collide with the 2-column grid track sizing. */
   .wiki-body {
     font-family: var(--font-sans);
-    font-size: 1rem;
+    font-size: var(--text-base);
     line-height: 1.7;
     color: rgb(0 0 0 / 0.85);
   }
@@ -516,77 +581,70 @@ const neighborCount = hasLocal ? localData.nodes.length - 1 : 0;
     color: rgb(255 255 255 / 0.75);
   }
 
-  /* Inline citation superscripts — keyed to the right-margin rail. */
+  /* Inline citation superscripts — accent mono figures keyed to the
+     right-margin rail (matches the rail's hanging citation numbers). */
   .wiki-body .wlink-num {
     font-family: var(--font-mono);
     font-size: 10px;
     font-weight: 500;
-    color: rgb(0 0 0 / 0.55);
+    color: var(--accent);
     margin-left: 2px;
     vertical-align: super;
     line-height: 1;
     cursor: pointer;
-    transition: color 120ms ease-in-out;
-  }
-  .dark .wiki-body .wlink-num {
-    color: rgb(255 255 255 / 0.55);
+    transition: opacity 120ms ease-in-out;
+    font-feature-settings: normal;
   }
   .wiki-body .wlink-source {
     text-decoration-style: dotted;
   }
 
-  /* Right-margin rail card. CSS variables on light + dark for the hover
-     wash so the highlight is unambiguous in both themes. */
+  /* Sources rail — unboxed. Hanging accent citation number in a fixed
+     gutter, hairline separators between cards, no panel fill. */
   .wiki-rail .rail-card {
-    display: flex;
-    gap: 0.5rem;
-    margin: 0 -0.625rem;
-    padding: 0.5rem 0.625rem;
-    border-radius: 2px;
+    display: grid;
+    grid-template-columns: 26px minmax(0, 1fr);
+    column-gap: 0.625rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid rgb(0 0 0 / 0.05);
     line-height: 1.25;
-    transition: background-color 160ms ease-in-out;
     cursor: default;
   }
-  .wiki-rail .rail-chip {
-    flex-shrink: 0;
-    width: 18px;
-    height: 18px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 999px;
-    background: color-mix(in oklch, var(--accent) 15%, transparent);
-    color: var(--accent);
+  .dark .wiki-rail .rail-card {
+    border-bottom-color: rgb(255 255 255 / 0.06);
+  }
+  .wiki-rail .rail-num {
+    padding-top: 2px;
     font-family: var(--font-mono);
-    font-size: 11px;
+    font-size: 12.5px;
     font-weight: 500;
-    transition:
-      background-color 160ms ease-in-out,
-      color 160ms ease-in-out;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: normal;
+    transition: opacity 160ms ease-in-out;
+    opacity: 0.85;
   }
 
   /* Bidirectional hover sync — the JS toggles `.is-active` on every
      element that shares a `data-src` value with the hovered one, so
-     the rail card, rail chip, inline sup, and inline link all light
-     up together. Pure-CSS sibling matching can't do this. */
+     the rail card, hanging number, inline sup, and inline link all
+     light up together. Pure-CSS sibling matching can't do this. */
   .wiki-rail .rail-card.is-active,
   .wiki-rail .rail-card:hover {
-    background: color-mix(in oklch, var(--accent) 10%, transparent);
+    background: color-mix(in oklch, var(--accent) 7%, transparent);
   }
-  .wiki-rail .rail-card.is-active .rail-chip,
-  .wiki-rail .rail-card:hover .rail-chip,
-  .wiki-rail .rail-chip.is-active {
-    background: var(--accent);
-    color: var(--paper, #f6f4ef);
+  .wiki-rail .rail-card.is-active .rail-num,
+  .wiki-rail .rail-card:hover .rail-num,
+  .wiki-rail .rail-num.is-active {
+    opacity: 1;
+    font-weight: 700;
   }
-  .dark .wiki-rail .rail-card.is-active .rail-chip,
-  .dark .wiki-rail .rail-card:hover .rail-chip,
-  .dark .wiki-rail .rail-chip.is-active {
-    color: #18161a;
+  .wiki-rail .rail-card.is-active .rail-title {
+    text-decoration-color: var(--accent);
   }
   .wiki-body .wlink-num.is-active,
   .wiki-body .wlink-num:hover {
-    color: var(--accent);
+    font-weight: 700;
   }
   .wiki-body .wlink-source.is-active {
     text-decoration-color: var(--accent);

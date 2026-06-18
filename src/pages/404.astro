@@ -1,24 +1,26 @@
 ---
-import BackToPrevious from "@components/BackToPrevious.astro";
-import Container from "@components/Container.astro";
+import Breadcrumb from "@components/Breadcrumb.astro";
+import Link from "@components/Link.astro";
+import PageBody from "@components/PageBody.astro";
 import PageHero from "@components/PageHero.astro";
 import { SITE } from "@consts";
 import Layout from "@layouts/Layout.astro";
 ---
 
 <Layout title="404" description={SITE.DESCRIPTION}>
-  <Container>
-    <div class="space-y-10">
-      <PageHero>
-        <Fragment slot="title">404 — Not found</Fragment>
-        <Fragment slot="summary">
-          The URL you followed doesn't match anything published here. It may
-          have moved, or it may never have existed.
-        </Fragment>
-      </PageHero>
-      <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
-        <BackToPrevious href="/">Go to home page</BackToPrevious>
-      </p>
-    </div>
-  </Container>
+  <PageBody>
+    <PageHero breadcrumb>
+      <Fragment slot="breadcrumb">
+        <Breadcrumb parent={{ label: "Home", href: "/" }} />
+      </Fragment>
+      <Fragment slot="title">404 — Not found</Fragment>
+      <Fragment slot="summary">
+        The URL you followed doesn't match anything published here. It may
+        have moved, or it may never have existed.
+      </Fragment>
+    </PageHero>
+    <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
+      <Link href="/">Go to the home page →</Link>
+    </p>
+  </PageBody>
 </Layout>
