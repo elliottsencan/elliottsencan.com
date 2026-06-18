@@ -2,24 +2,25 @@
 title: raiyanyahya/how-to-train-your-gpt
 url: 'https://github.com/raiyanyahya/how-to-train-your-gpt'
 summary: >-
-  A heavily commented, beginner-friendly repository that walks through building
-  a modern LLM from scratch, with every line of code explained in plain
-  language.
+  A 12-chapter interactive textbook that walks Python developers through
+  building a modern GPT-style language model from scratch, covering
+  tokenization, attention, training, and inference with every line annotated.
 category: tech
+kind: repository
 added: '2026-05-11T04:36:09.019Z'
-source: GitHub
+author: Raiyan Yahya
 topics:
   - llm-engineering
+  - llm-fine-tuning
+  - llm-inference
   - open-source
   - software-engineering
-  - llm-fine-tuning
-compiled_at: '2026-05-11T04:36:09.019Z'
+compiled_at: '2026-06-18T22:38:49.000Z'
 compiled_with: claude-sonnet-4-6
-title_source: model
 compile_cost:
   usage:
-    input_tokens: 1969
-    output_tokens: 90
+    input_tokens: 6990
+    output_tokens: 115
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -30,6 +31,6 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.007257
+  cost_usd: 0.022695
 ---
 
