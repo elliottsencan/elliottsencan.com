@@ -2,25 +2,25 @@
 title: Your agent loves MCP as much as you love GUIs
 url: 'https://www.madaboutcode.com/mcp-as-a-gui-for-ai-agents.html'
 summary: >-
-  Argues that MCP is a GUI for AI agents — constrained, token-expensive, and
-  non-composable — and that agents capable of writing code are better served by
-  layered scripts and API skills than by MCP tool definitions loaded into
-  context each session.
+  Argues that MCP is effectively a GUI for AI agents — useful for non-developers
+  but wasteful for agents that can write code, which should use APIs, scripts,
+  and layered skills instead to avoid token costs and composability problems.
 category: tech
+kind: article
 added: '2026-04-23T22:04:24.354Z'
 author: Ajeesh Mohan
 source: Mad About Code
 topics:
-  - ai-agents
   - mcp
-  - developer-tools
-  - llm-inference
+  - llm-agents
   - agentic-workflows
-compiled_at: '2026-05-03T18:34:17.407Z'
+  - developer-tooling
+  - api-design
+compiled_at: '2026-06-18T22:30:15.683Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 4803
+    input_tokens: 5863
     output_tokens: 123
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
@@ -32,6 +32,6 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.016254
+  cost_usd: 0.019434
 ---
 

@@ -2,26 +2,27 @@
 title: The Orchestrator Isn't Your Moat
 url: 'https://www.aiyan.io/blog/orchestrator-isnt-your-moat/'
 summary: >-
-  Rather than building custom LLM orchestration harnesses that decay with each
-  model upgrade, teams should ship MCP tool servers and agent skills that arm
-  frontier agents like Claude Code with platform-specific context and
-  actions—making model improvements a gift, not an invoice.
+  Teams building LLM agents should skip custom orchestration frameworks and
+  instead ship MCP tool servers and agent skills that extend frontier agents
+  like Claude Code, letting Anthropic maintain the loop while you invest in your
+  platform's unique APIs and domain context.
 category: tech
+kind: article
 added: '2026-04-27T18:33:54.406Z'
 author: Aiyan
 source: aiyan.io
 topics:
+  - llm-orchestration
   - ai-agents
   - mcp
-  - developer-tools
-  - ai-infrastructure
+  - llm-engineering
   - platform-strategy
-compiled_at: '2026-05-03T18:34:39.732Z'
+compiled_at: '2026-06-18T22:30:40.746Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 3490
-    output_tokens: 115
+    input_tokens: 4550
+    output_tokens: 118
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -32,6 +33,6 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.012195
+  cost_usd: 0.01542
 ---
 
