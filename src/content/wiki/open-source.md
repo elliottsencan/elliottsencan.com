@@ -30,8 +30,6 @@ sources:
   - 2026-06/2026-06-14t091145-001tmfharness-forge
   - 2026-06/2026-06-17t075738-gunnargray-devunicode-animations
   - 2026-06/2026-06-17t075816-matt-palmer
-aliases:
-  - open-source-maintenance
 compiled_at: '2026-06-18T21:52:47.565Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
