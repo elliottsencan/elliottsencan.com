@@ -166,7 +166,7 @@ const neighborCount = hasLocal ? localData.nodes.length - 1 : 0;
         <header> as site chrome (CLAUDE.md: "bare tags are reserved").
       */}
       <div
-        class="grid items-stretch gap-x-8 gap-y-3 md:grid-cols-[minmax(0,1fr)_auto] md:gap-x-10 md:[grid-template-rows:1fr_auto]"
+        class="grid grid-cols-1 items-stretch gap-x-8 gap-y-3 md:grid-cols-[minmax(0,1fr)_auto] md:gap-x-10 md:[grid-template-rows:1fr_auto]"
       >
         <div
           class="flex min-w-0 max-w-[62ch] flex-col justify-between gap-4 md:col-start-1 md:row-start-1"
@@ -234,7 +234,7 @@ const neighborCount = hasLocal ? localData.nodes.length - 1 : 0;
         collapse the body in this 2-col grid. The wiki-body class below
         carries the prose styling without the global side-effect.
       */}
-      <div class="grid gap-8 md:grid-cols-[minmax(0,1fr)_220px] md:gap-12">
+      <div class="grid grid-cols-1 gap-8 md:grid-cols-[minmax(0,1fr)_220px] md:gap-12">
         <div id="wiki-body" class="wiki-body min-w-0">
           <Content />
         </div>

@@ -315,10 +315,11 @@
 
   @media (max-width: 767px) {
     main {
-      /* Two-row masthead on mobile (logo + utility, then section links
-         below a hairline rule) is taller than the single-row md: layout,
-         so it needs more top breathing room — not less. */
-      @apply pt-36;
+      /* The mobile masthead is now single-row (logo + utility with the ☰
+         disclosure; section links collapse into it), so it's a touch shorter
+         than the md: layout rather than taller. pt-28 clears the fixed header
+         with the same editorial breathing room the old two-row layout had. */
+      @apply pt-28;
     }
   }
 

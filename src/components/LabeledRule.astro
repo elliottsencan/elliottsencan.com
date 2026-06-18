@@ -29,7 +29,11 @@ const { as: Tag = "h1", class: className, accent = false } = Astro.props;
 <div class="flex items-center gap-4">
   <Tag
     class:list={[
-      "shrink-0 font-heading text-xs font-medium tracking-wider",
+      // min-w-0 (not shrink-0) so a long label — e.g. a slug-path breadcrumb
+      // on a slug page — wraps instead of forcing horizontal overflow on
+      // narrow viewports. Short labels never exceed the track, so they still
+      // render flush on one line with the dot rule filling the remainder.
+      "min-w-0 font-heading text-xs font-medium tracking-wider [overflow-wrap:anywhere]",
       accent ? "text-[color:var(--accent)]" : "text-black/55 dark:text-white/60",
       className,
     ]}
