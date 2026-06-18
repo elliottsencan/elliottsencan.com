@@ -1,9 +1,9 @@
 ---
 title: AI infrastructure
 summary: >-
-  The tooling and architectural choices underlying AI agent deployments,
-  covering orchestration strategy, memory systems, observability, and the
-  tradeoffs between single- and multi-agent approaches.
+  The stack beneath AI agents and LLM workloads, covering inference
+  optimization, memory systems, orchestration architecture, observability, and
+  the governance layers that connect agents to enterprise systems.
 sources:
   - 2026-04/2026-04-27t113354-the-orchestrator-isnt-your-moat
   - >-
@@ -24,14 +24,12 @@ sources:
   - >-
     2026-06/2026-06-04t194416-what-anthropic-got-right-about-agentic-analytics-and-got
   - 2026-06/2026-06-04t210834-ai-memory-systems-feature-comparison
-aliases:
-  - infrastructure
-compiled_at: '2026-05-04T03:37:09.740Z'
+compiled_at: '2026-06-18T21:40:27.808Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 2625
-    output_tokens: 581
+    input_tokens: 4307
+    output_tokens: 1061
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -42,15 +40,14 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.01659
-last_source_added: '2026-06-05T04:08:34.414Z'
+  cost_usd: 0.028836
 ---
-AI infrastructure refers to the layer of systems that makes AI agents operable in production: orchestration, memory, observability, and the primitives that connect models to real-world actions. The sources here collectively argue that these choices carry more long-term weight than model selection itself.
+AI infrastructure refers to the collection of systems that make LLM-powered applications operationally viable: inference serving, memory, orchestration, observability, and policy enforcement. The sources here collectively argue that getting this layer right matters more than model selection, and that common architectural shortcuts create compounding costs.
 
-[The Orchestrator Isn't Your Moat](/reading/2026-04/2026-04-27t113354-the-orchestrator-isnt-your-moat) makes the case that custom LLM orchestration harnesses are a liability. Each model upgrade can break bespoke wiring, turning model improvements into engineering debt. The recommended alternative is shipping MCP tool servers and agent skills that expose platform-specific context and actions directly to frontier agents, so that a better model is a free upgrade rather than a migration project.
+On the inference side, redundant prefill computation is one of the largest avoidable costs at scale. Persistent KV caching, which hashes prompt prefixes and injects precomputed attention tensors from fast shared storage, can cut time-to-first-token by up to 20x ["20x Faster Inference"](/reading/2026-05/2026-05-20t073157-20x-faster-inference-with-the-first-kv-cache-for-s3-and-nfs). Granular-prompt caching extends this further by segmenting prompts into reusable checkpoints so models only process token deltas [Pure KVA](/reading/2026-05/2026-05-20t073144-maximizing-llm-efficiency-granular-prompt-caching-with-pure). The broader pricing environment makes these optimizations strategically important: a 75x cost gap between cheapest and most expensive frontier models means infrastructure choices directly determine product margins [Superframeworks](/reading/2026-05/2026-05-31t072101-the-ai-model-pricing-war-is-here-and-your-margins-depend-on), and provider-agnostic design from day one avoids lock-in as that landscape shifts.
 
-Architectural complexity has a measurable cost. [Ben Dickson's analysis](/reading/2026-05/2026-05-03t115608-how-to-choose-between-single-and-multi-agent-solutions) draws on Stanford and Google/MIT research to show that multi-agent orchestration introduces a coordination tax: errors can amplify up to 17x across agent hops, and tool-handling efficiency drops 2 to 6x compared to single-agent setups. Single-agent systems should be the default until the task genuinely demands parallelism or specialization.
+Orchestration architecture is where teams most often over-build. Multi-agent setups introduce a coordination tax that can amplify errors up to 17x and cut tool-handling efficiency by 2-6x compared to single-agent baselines [AlphaSignal](/reading/2026-05/2026-05-03t115608-how-to-choose-between-single-and-multi-agent-solutions). Anthropic's Managed Agents work addresses this by decoupling the reasoning harness from sandboxes and session state, cutting p50 time-to-first-token by 60% and enabling multi-brain architectures only where the complexity is warranted [Anthropic Engineering](/reading/2026-05/2026-05-19t221631-scaling-managed-agents-decoupling-the-brain-from-the-hands). The alternative framing from aiyan.io argues that custom orchestration harnesses decay with each model release and teams should instead ship MCP tool servers that slot into frontier agents, turning model upgrades into gains rather than rewrites [aiyan.io](/reading/2026-04/2026-04-27t113354-the-orchestrator-isnt-your-moat).
 
-Memory is a persistent gap in most agent infrastructure. [vectorize-io/hindsight](/reading/2026-05/2026-05-03t173422-vectorize-iohindsight) addresses this with biomimetic data structures and multi-strategy retrieval, achieving state-of-the-art scores on LongMemEval. The system goes beyond conversation history to let agents build and update mental models over time.
+Memory is a distinct infrastructure concern. The hindsight library uses biomimetic data structures and multi-strategy retrieval to give agents persistent learning beyond conversation recall [hindsight](/reading/2026-05/2026-05-03t173422-vectorize-iohindsight), while a comparison of 71 agent memory systems shows the space is fragmented across architecture types, data models, and retrieval strategies [AI Memory Comparison](/reading/2026-06/2026-06-04t210834-ai-memory-systems-feature-comparison). The openagentd project packages memory, scheduling, and OpenTelemetry observability into a self-hosted agent OS [openagentd](/reading/2026-05/2026-05-03t173528-lthoanggopenagentd), pointing toward observability as a first-class infrastructure requirement rather than an afterthought.
 
-For teams that want full ownership of the stack, [lthoangg/openagentd](/reading/2026-05/2026-05-03t173528-lthoanggopenagentd) packages multi-agent operation, persistent three-tier memory, scheduling, and built-in OpenTelemetry observability into a self-hosted agent OS with no cloud dependency. The inclusion of observability by default reflects a broader recognition that production AI systems need the same operational visibility as any other distributed service.
+At the governance layer, the AI control plane pattern places a unified policy and identity enforcement layer between agents and every downstream system they touch [Speakeasy](/reading/2026-05/2026-05-09t110721-ai-control-plane-architecture-and-vendors). This becomes critical at enterprise scale, as Anthropic's internal analytics stack illustrates: 95% accuracy is achievable but requires months of senior data engineering and co-located maintenance that most organizations cannot replicate without deliberate infrastructure investment [Genloop](/reading/2026-06/2026-06-04t194416-what-anthropic-got-right-about-agentic-analytics-and-got).
