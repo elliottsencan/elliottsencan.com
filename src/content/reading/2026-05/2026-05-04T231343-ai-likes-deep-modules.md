@@ -3,25 +3,26 @@ title: AI Likes Deep Modules
 url: >-
   https://open.substack.com/pub/gomonk/p/ai-likes-deep-modules?utm_campaign=post&utm_medium=web
 summary: >-
-  Argues that AI coding tools work best with codebases built around deep modules
-  — interfaces that hide complexity — because shallow, leaky abstractions force
-  LLMs to reason across too many layers at once.
+  Argues that deep modules — small interfaces hiding large implementations —
+  reduce complexity and make systems easier for both humans and LLMs to
+  understand and evolve, contrasting shallow vs. deep Go examples.
 category: tech
+kind: article
 added: '2026-05-05T06:13:43.790Z'
-source: Go Monk
+author: Go Monk
+source: Substack
 topics:
-  - ai-assisted-coding
+  - software-architecture
   - software-engineering
   - api-design
-  - systems-design
-  - llm-engineering
-compiled_at: '2026-05-05T06:13:43.790Z'
+  - engineering-craft
+  - ai-assisted-coding
+compiled_at: '2026-06-18T22:36:19.612Z'
 compiled_with: claude-sonnet-4-6
-title_source: model
 compile_cost:
   usage:
-    input_tokens: 1914
-    output_tokens: 95
+    input_tokens: 3601
+    output_tokens: 108
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -32,6 +33,6 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.007167
+  cost_usd: 0.012423
 ---
 
