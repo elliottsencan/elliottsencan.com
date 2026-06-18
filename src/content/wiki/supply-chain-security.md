@@ -13,8 +13,6 @@ sources:
   - >-
     2026-05/2026-05-04t231548-using-ssh-keys-to-make-connectivity-simpler-and-secure
   - 2026-06/2026-06-04t163601-anthropicsdefending-code-reference-harness
-aliases:
-  - software-security
 compiled_at: '2026-06-18T21:56:21.606Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:

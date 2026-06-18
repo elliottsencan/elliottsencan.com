@@ -67,8 +67,6 @@ sources:
   - 2026-06/2026-06-18t024208-the-git-commands-i-run-before-reading-any-code
   - >-
     2026-06/2026-06-18t090801-how-i-audit-a-legacy-rails-codebase-in-the-first-week
-aliases:
-  - engineering-standards
 compiled_at: '2026-06-18T21:56:08.689Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
