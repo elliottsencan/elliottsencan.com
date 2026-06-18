@@ -1,17 +1,20 @@
 ---
 import { getCollection } from "astro:content";
 import EditorialRule from "@components/EditorialRule.astro";
+import LabeledRule from "@components/LabeledRule.astro";
 import Link from "@components/Link.astro";
 import ConstellationStrip from "@components/wiki/ConstellationStrip.astro";
+import WikiConceptCard from "@components/wiki/WikiConceptCard.astro";
 import constellationLayout from "@data/constellation-layout.json";
 import Layout from "@layouts/Layout.astro";
 import { SITE_TIMEZONE } from "@lib/utils";
 
-// Wiki index — concept-indexed synthesis. The constellation hero handles
-// the topic-spatial visualization, so the grid below is a single flat
-// alphabetical browse of every concept. Each card carries the title,
-// summary, and source-count signal; the topic surfaces through the
-// constellation, not as a per-card chip.
+// Wiki index — concept-indexed synthesis. The constellation hero draws the
+// corpus as hue-coded neighborhoods; the browse below is grouped by those
+// same neighborhoods (see `neighborhoodGroups`) so the list reads as the
+// structure the hero visualizes rather than a flat alphabetical wall. Each
+// card carries the title, summary, source-count signal, and a freshness
+// marker; the neighborhood surfaces through the section header + swatch.
 const wiki = (await getCollection("wiki")).sort((a, b) => a.data.title.localeCompare(b.data.title));
 
 // Last-compiled date for the hero meta cell — most recent compiled_at
@@ -43,6 +46,54 @@ const constellationNeighborhoodCount = constellationClusters.filter(
 ).length;
 const constellationConceptCount = constellationNodes.length;
 const constellationTieCount = constellationLayout.global.edges.length;
+
+// ─── Neighborhood-grouped browse ────────────────────────────────────────
+// Group the alphabetical concept list by the same clusters the hero renders
+// (read straight off the generated layout, so browse + SVG never drift).
+// Concepts with no cluster fall to a trailing "Other concepts" bucket.
+// Groups lead with the densest neighborhoods; concepts stay alphabetical
+// within a group. Degradation: if clustering yields no real groups, the
+// template falls back to a single flat grid rather than render bare headers.
+const neighborhoods: { id: string; title: string; short: string; hue: number }[] =
+  constellationLayout.clusters;
+const neighborhoodGroups = neighborhoods
+  .map((cl) => ({
+    ...cl,
+    concepts: wiki.filter((c) => constellationClusterById[c.id] === cl.id),
+  }))
+  .filter((g) => g.concepts.length > 0)
+  .sort((a, b) => b.concepts.length - a.concepts.length);
+const otherConcepts = wiki.filter((c) => !constellationClusterById[c.id]);
+const useGroupedBrowse = neighborhoodGroups.length > 0;
+
+// Jump-nav items — styled like the site header's section nav (lowercase,
+// underlined Link, gap-spaced). Labels are the lowercase cluster id (single
+// words); the section headers below carry the fuller "Agents · LLMs" form.
+const jumpItems = [
+  ...neighborhoodGroups.map((g) => ({ id: g.id, label: g.id })),
+  ...(otherConcepts.length > 0 ? [{ id: "other", label: "other" }] : []),
+];
+
+// Freshness — surface the active edge of the corpus without over-accenting.
+// A concept qualifies when its newest source landed within FRESH_WINDOW_DAYS
+// (the "this week" gate), but we mark only the FRESH_MAX most-recently-grown
+// of those. Growth is bursty (a single pipeline run can touch a dozen
+// concepts), so the cap keeps the terracotta marker a restrained minority and
+// lets it shrink to nothing on a quiet week. Both knobs tune in one place.
+const FRESH_WINDOW_DAYS = 7;
+const FRESH_MAX = 6;
+const freshCutoffMs = Date.now() - FRESH_WINDOW_DAYS * 24 * 60 * 60 * 1000;
+const freshSlugs = new Set(
+  wiki
+    .flatMap((c) => {
+      const t = c.data.last_source_added?.getTime();
+      return t != null && t >= freshCutoffMs ? [{ id: c.id, t }] : [];
+    })
+    .sort((a, b) => b.t - a.t)
+    .slice(0, FRESH_MAX)
+    .map((x) => x.id),
+);
+const isFresh = (c: (typeof wiki)[number]) => freshSlugs.has(c.id);
 ---
 
 <Layout
@@ -87,21 +138,9 @@ const constellationTieCount = constellationLayout.global.edges.length;
               one article per concept that has at least two contributing
               sources.
             </p>
-            <p
-              class="inline-flex w-fit items-center gap-2 rounded-sm border border-[color:var(--accent)]/35 px-2.5 py-1 font-mono text-xs text-[color:var(--accent)]"
-            >
-              <span class="flex gap-[2px]" aria-hidden="true">
-                {Array.from({ length: Math.min(wiki.length, 8) }).map((_, i) => (
-                  <span
-                    class="block h-1 w-1 rounded-full bg-current"
-                    style={`opacity: ${0.7 + i * 0.04};`}
-                  />
-                ))}
-              </span>
-              <span>
-                {readingSourceCount} source{readingSourceCount === 1 ? "" : "s"}
-                {lastCompiledFormatted ? ` · ${lastCompiledFormatted}` : ""}
-              </span>
+            <p class="font-mono text-xs text-black/55 dark:text-white/55">
+              {readingSourceCount} source{readingSourceCount === 1 ? "" : "s"}
+              {lastCompiledFormatted ? ` · compiled ${lastCompiledFormatted}` : ""}
             </p>
           </div>
 
@@ -135,51 +174,80 @@ const constellationTieCount = constellationLayout.global.edges.length;
         </p>
       </div>
 
-      <!-- <EditorialRule /> -->
+      {/* Jump-nav — a quiet sticky text line that anchors to each neighborhood
+          section, so the browse is navigable without scrolling the full corpus
+          (and gives the long mobile single-column a "skip ahead"). Pins just
+          under the fixed site header; sections carry a matching scroll-margin
+          so an anchored section lands below it. Same flat treatment as
+          /reading's archive nav. */}
+      {
+        useGroupedBrowse && (
+          <nav
+            class="sticky top-24 z-30 flex flex-wrap items-baseline gap-x-5 gap-y-1 bg-[#f6f4ef]/75 py-3 text-sm backdrop-blur-xs dark:bg-[#18161a]/75"
+            aria-label="Jump to neighborhood"
+          >
+            <span class="text-black/40 dark:text-white/45" aria-hidden="true">Jump</span>
+            {jumpItems.map((it) => (
+              <Link href={`#${it.id}`}>{it.label}</Link>
+            ))}
+          </nav>
+        )
+      }
 
       {
-        wiki.length > 0 ? (
-          <ul class="not-prose grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-x-6 gap-y-7">
-            {wiki.map((concept) => {
-              const sourceCount = concept.data.sources.length;
-              // Cap the dot row so high-source cards don't crowd the
-              // footer label. Beyond MAX_DOTS the dots saturate; the
-              // text "{n} src" still carries the precise count.
-              const MAX_DOTS = 8;
-              const visibleDots = Math.min(sourceCount, MAX_DOTS);
-              return (
-                <li class="border-t border-black/10 pt-2 dark:border-white/10">
-                  <a
-                    href={`/wiki/${concept.id}/`}
-                    class="group -mx-2 flex h-full flex-col gap-2 rounded-sm px-2 pt-2 pb-2 no-underline transition-colors hover:bg-black/[0.03] focus-visible:bg-black/[0.03] dark:hover:bg-white/[0.03] dark:focus-visible:bg-white/[0.03]"
-                  >
-                    <span class="font-display text-base font-medium text-black transition-colors group-hover:text-[color:var(--accent)] group-focus-visible:text-[color:var(--accent)] dark:text-white">
-                      {concept.data.title}
-                    </span>
-                    <p class="text-sm leading-relaxed text-black/75 dark:text-white/75">
-                      {concept.data.summary}
-                    </p>
-                    <div class="mt-auto flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-black/55 dark:text-white/55">
-                      <span class="flex gap-1" aria-hidden="true">
-                        {Array.from({ length: visibleDots }).map((_, i) => (
-                          <span
-                            class="block h-1 w-1 rounded-full bg-[color:var(--accent)]"
-                            style={`opacity: ${0.55 + (i / visibleDots) * 0.45};`}
-                          />
-                        ))}
-                      </span>
-                      <span>{sourceCount} src</span>
-                    </div>
-                  </a>
-                </li>
-              );
-            })}
-          </ul>
-        ) : (
+        wiki.length === 0 ? (
           <p class="text-base leading-relaxed text-black/85 dark:text-white/85">
             Nothing here yet. Wiki articles materialise when at least two
             reading-log entries share a topic.
           </p>
+        ) : useGroupedBrowse ? (
+          <div class="space-y-10">
+            {neighborhoodGroups.map((g) => (
+              <section id={g.id} class="scroll-mt-12 space-y-4">
+                <LabeledRule as="h2">
+                  <span class="inline-flex items-center gap-2">
+                    <span
+                      class="wiki-swatch h-2 w-2 shrink-0 rounded-full"
+                      style={`--hue: ${g.hue};`}
+                      aria-hidden="true"
+                    />
+                    <span>{g.short}</span>
+                    <span class="text-black/40 dark:text-white/40">{g.concepts.length}</span>
+                  </span>
+                </LabeledRule>
+                <ul class="not-prose grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-x-6 gap-y-7">
+                  {g.concepts.map((concept) => (
+                    <WikiConceptCard concept={concept} fresh={isFresh(concept)} />
+                  ))}
+                </ul>
+              </section>
+            ))}
+            {otherConcepts.length > 0 && (
+              <section id="other" class="scroll-mt-12 space-y-4">
+                <LabeledRule as="h2">
+                  <span class="inline-flex items-center gap-2">
+                    <span
+                      class="wiki-swatch wiki-swatch--none h-2 w-2 shrink-0 rounded-full"
+                      aria-hidden="true"
+                    />
+                    <span>Other concepts</span>
+                    <span class="text-black/40 dark:text-white/40">{otherConcepts.length}</span>
+                  </span>
+                </LabeledRule>
+                <ul class="not-prose grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-x-6 gap-y-7">
+                  {otherConcepts.map((concept) => (
+                    <WikiConceptCard concept={concept} fresh={isFresh(concept)} />
+                  ))}
+                </ul>
+              </section>
+            )}
+          </div>
+        ) : (
+          <ul class="not-prose grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-x-6 gap-y-7">
+            {wiki.map((concept) => (
+              <WikiConceptCard concept={concept} fresh={isFresh(concept)} />
+            ))}
+          </ul>
         )
       }
 
@@ -191,3 +259,24 @@ const constellationTieCount = constellationLayout.global.edges.length;
     </div>
   </div>
 </Layout>
+
+<style>
+  /* Neighborhood header swatch — a small solid dot tinted to the cluster's
+     hue so each browse section color-matches its region in the constellation
+     hero above. Chroma stays low (ink temperature, not a rainbow), the same
+     intent as the constellation regions in global.css; terracotta --accent
+     stays reserved for emphasis. Hue arrives via the inline --hue var. */
+  .wiki-swatch {
+    background: oklch(0.66 0.12 var(--hue));
+  }
+  :global(.dark) .wiki-swatch {
+    background: oklch(0.62 0.13 var(--hue));
+  }
+  /* Unclustered "Other" group — a neutral, hueless dot. */
+  .wiki-swatch--none {
+    background: oklch(0.68 0 0);
+  }
+  :global(.dark) .wiki-swatch--none {
+    background: oklch(0.5 0 0);
+  }
+</style>

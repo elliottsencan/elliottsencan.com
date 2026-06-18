@@ -1,0 +1,42 @@
+---
+/**
+ * One concept card in the /wiki browse. Extracted from the index so the
+ * markup stays defined once across the neighborhood-grouped layout and the
+ * flat fallback. Title → accent on hover, summary, and a quiet source-count
+ * label; freshly-grown concepts carry a terracotta `new` marker.
+ */
+import type { CollectionEntry } from "astro:content";
+
+type Props = {
+  concept: CollectionEntry<"wiki">;
+  fresh?: boolean;
+};
+
+const { concept, fresh = false } = Astro.props;
+
+const sourceCount = concept.data.sources.length;
+---
+
+<li class="flex">
+  {/* Border + hover wash live on the same element (the <a>), so the wash sits
+      flush under its own divider line and shares its width. h-full + the li's
+      flex make every card in a row stretch to equal height, so the row's
+      hover fills align. The -mx-2/px-2 pull-back keeps titles flush with the
+      column edge (aligned to the section headers) while the wash and border
+      breathe 8px into the gutter. */}
+  <a
+    href={`/wiki/${concept.id}/`}
+    class="group -mx-2 flex h-full w-full flex-col gap-2 rounded-b-sm border-t border-black/10 px-2 pt-3 pb-3 no-underline transition-colors hover:bg-black/[0.03] focus-visible:bg-black/[0.03] dark:border-white/10 dark:hover:bg-white/[0.03] dark:focus-visible:bg-white/[0.03]"
+  >
+    <span class="font-display text-base font-medium leading-snug text-black transition-colors group-hover:text-[color:var(--accent)] group-focus-visible:text-[color:var(--accent)] dark:text-white">
+      {concept.data.title}
+    </span>
+    <p class="line-clamp-3 text-sm leading-relaxed text-black/75 dark:text-white/75">
+      {concept.data.summary}
+    </p>
+    <div class="mt-auto flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-black/45 dark:text-white/45">
+      <span>{sourceCount} {sourceCount === 1 ? "source" : "sources"}</span>
+      {fresh && <span class="text-[color:var(--accent)]">· new</span>}
+    </div>
+  </a>
+</li>
