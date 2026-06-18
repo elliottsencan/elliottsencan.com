@@ -1,9 +1,10 @@
 ---
 title: Developer tools
 summary: >-
-  A broad category of platforms, libraries, and infrastructure spanning version
-  control, CI systems, language toolkits, AI coding agents, and operational
-  dashboards, increasingly shaped by AI-native patterns and the MCP ecosystem.
+  A broad category spanning CLIs, APIs, UIs, and agent-facing interfaces that
+  reduce friction in software development; recent sources show the category
+  being reshaped by AI coding agents, MCP tooling, and platform-specific skill
+  packs.
 sources:
   - 2026-04/2026-04-23t150424-your-agent-loves-mcp-as-much-as-you-love-guis
   - 2026-04/2026-04-27t113354-the-orchestrator-isnt-your-moat
@@ -42,12 +43,12 @@ sources:
   - 2026-05/2026-05-31t164554-jj-vcsjj
   - 2026-06/2026-06-04t163601-anthropicsdefending-code-reference-harness
   - 2026-06/2026-06-11t023723-gi-dellavzerostack
-compiled_at: '2026-05-20T15:01:47.219Z'
+compiled_at: '2026-06-18T21:44:51.717Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 6371
-    output_tokens: 1284
+    input_tokens: 6977
+    output_tokens: 1555
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -58,19 +59,18 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.038373
-last_source_added: '2026-06-11T09:37:23.684Z'
+  cost_usd: 0.044256
 ---
-Developer tools now span a continuum from foundational infrastructure to AI-augmented coding environments, and the sources here illustrate nearly every layer of that stack.
+Developer tools are the layer between intent and working software. Classically that meant version control, build systems, and language runtimes. What's shifted recently is the arrival of AI coding agents as first-class consumers of those tools, which has changed what "a tool" means and how it should be designed.
 
-At the infrastructure end, containers and reproducible environments remain fundamental. [A hands-on Linux tutorial](/reading/2026-05/2026-05-04t231858-how-container-filesystem-works-building-a-docker-like) shows how Docker-style filesystem isolation works by composing mount namespaces and `pivot_root`, making the mechanics visible rather than magical. Alongside that, [a DevOps guide on SSH keys](/reading/2026-05/2026-05-04t231548-using-ssh-keys-to-make-connectivity-simpler-and-secure) covers OpenSSH key pairs, agent forwarding, and SSH-based commit signing as the practical glue for authentication across machines. Version control platforms themselves are under scrutiny: [David Bushell argues](/reading/2026-05/2026-05-10t205349-github-is-sinking) that GitHub has degraded under Microsoft through AI noise and unreliability, and recommends alternatives like Codeberg or self-hosted Forgejo.
+On the infrastructure side, foundational primitives are being revisited. Jujutsu ([jj-vcs/jj](/reading/2026-05/2026-05-31t164554-jj-vcsjj)) is a Git-compatible VCS that rethinks branching, undo, and conflict resolution from the ground up. Temporal ([Temporal](/reading/2026-04/2026-04-30t231511-temporal)) handles durable workflow execution by persisting state at every step, removing the need for custom failure-recovery logic in distributed applications. Depot's CI scheduler ([Building CI with Lambda durable functions](/reading/2026-05/2026-05-19t110000-building-ci-with-lambda-durable-functions)) takes a similar approach, checkpointing CI orchestration in Lambda rather than keeping a long-lived process alive.
 
-Library and API ergonomics make up another persistent layer. [A JavaScript library roundup](/reading/2026-05/2026-05-12t165232-seven-cool-javascript-libraries-you-should-know-about) highlights tools like Knip for dead-code detection, Zod for schema validation, Biome for linting, and Orval for API codegen. [Conductor](/reading/2026-04/2026-04-30t231709-conductor) takes a similar ergonomic angle at the enterprise end, providing a fully-typed Python and Node.js API over QuickBooks Desktop that abstracts away qbXML and SOAP entirely. [Temporal](/reading/2026-04/2026-04-30t231511-temporal) offers durable execution that persists workflow state at every step, removing manual failure-recovery logic from distributed applications.
+Language-level and framework-level tooling is also seeing fresh entries. Seven focused JavaScript libraries ([Seven Cool JavaScript Libraries You Should Know About](/reading/2026-05/2026-05-12t165232-seven-cool-javascript-libraries-you-should-know-about)) address specific frontend pain points: dead code detection, URL state management, type-safe pattern matching, and API code generation. Conductor ([Conductor](/reading/2026-04/2026-04-30t231709-conductor)) wraps QuickBooks Desktop's qbXML/SOAP interface in a fully-typed REST, Python, and Node.js API so developers can integrate with 130+ QuickBooks objects without touching the underlying protocol. YAML's persistent Norway bug ([YAML? That's Norway problem](/reading/2026-05/2026-05-18t113714-yaml-thats-norway-problem)) is a reminder that configuration tooling carries legacy behavior even when specs change.
 
-Documentation as a developer tool has grown more complex with AI consumers. [Mintlify](/reading/2026-04/2026-04-30t231435-mintlify) positions itself as AI-native, supporting llms.txt and MCP so that knowledge can be served to both human readers and LLM agents. [MarkdownLM](/reading/2026-04/2026-04-30t231319-markdownlm) takes a stricter stance, centralizing architectural rules and security policies into a living knowledge base with Git-layer enforcement that blocks non-compliant code before it merges.
+For AI coding agents, MCP has become a central interface question. The Databricks AI Dev Kit ([databricks-solutions/ai-dev-kit](/reading/2026-04/2026-04-27t113526-databricks-solutionsai-dev-kit)) ships an MCP server, Python library, and skill pack giving assistants like Claude Code and Cursor 50+ executable tools for Spark pipelines and Databricks jobs. Storybloq ([Storybloq/storybloq](/reading/2026-05/2026-05-11t155625-storybloqstorybloq)) and Octowiz ([raelli/octowiz](/reading/2026-05/2026-05-18t222802-raellioctowiz)) both tackle cross-session context: the former persists tickets and handovers in a .story/ git directory, the latter stores role-scoped engineering doctrine in LiteLLM Proxy memory and fetches only the relevant slice per session. Mintlify ([Mintlify](/reading/2026-04/2026-04-30t231435-mintlify)) extends documentation platforms to serve context to LLMs directly via llms.txt and MCP. Anthropic's .mcpb format ([Build a Desktop Extension with MCPB](/reading/2026-05/2026-05-27t181732-build-a-desktop-extension-with-mcpb)) lets developers package local MCP servers as single-click bundles for Claude Desktop.
 
-The AI coding agent tier is now a distinct product category. [The Databricks AI Dev Kit](/reading/2026-04/2026-04-27t113526-databricks-solutionsai-dev-kit) bundles an MCP server, Python library, and skill pack to give coding agents trusted patterns and 50-plus executable tools for Spark and Databricks workflows. [Storybloq](/reading/2026-05/2026-05-11t155625-storybloqstorybloq) provides cross-session context persistence for AI coding via tickets and handovers stored in a `.story/` directory tracked by git. [Raelli/octowiz](/reading/2026-05/2026-05-18t222802-raellioctowiz) takes a complementary approach, scoping engineering doctrine per session so context windows stay small. Running these agents safely matters: [sandboxing Claude Code inside Docker](/reading/2026-05/2026-05-18t095002-if-youre-running-claude-code-please-run-it-in-a-box) prevents credential leaks while also removing confirmation prompts, making agentic workflows both safer and faster.
+Not everyone is sold on MCP as the right abstraction. Ajeesh Mohan ([Your agent loves MCP as much as you love GUIs](/reading/2026-04/2026-04-23t150424-your-agent-loves-mcp-as-much-as-you-love-guis)) argues it is token-expensive and non-composable, functioning more like a GUI than a programmatic interface, and that code-capable agents are better served by layered scripts and direct API calls. Aiyan ([The Orchestrator Isn't Your Moat](/reading/2026-04/2026-04-27t113354-the-orchestrator-isnt-your-moat)) takes the opposite view: ship MCP tool servers and agent skills rather than custom orchestration harnesses that decay with model upgrades.
 
-Some sources push back on current tool conventions. [The MCP-as-GUI critique](/reading/2026-04/2026-04-23t150424-your-agent-loves-mcp-as-much-as-you-love-guis) argues that loading MCP tool definitions into context each session is token-expensive and non-composable, and that agents capable of writing code are better served by layered scripts and API skills. A related piece [argues that orchestration harnesses are not a durable moat](/reading/2026-04/2026-04-27t113354-the-orchestrator-isnt-your-moat); platform-specific MCP servers and agent skills benefit from model improvements automatically, whereas bespoke orchestrators require rework with each model upgrade.
+Security and sandboxing have become first-class concerns. Running Claude Code inside Docker's sbx sandbox ([If You're Running Claude Code, PLEASE Run It in a Box](/reading/2026-05/2026-05-18t095002-if-youre-running-claude-code-please-run-it-in-a-box)) prevents credential leaks and filesystem damage; the author notes sandboxing also removes confirmation prompts, making agentic workflows faster. Anthropic's reference harness for autonomous vulnerability discovery ([anthropics/defending-code-reference-harness](/reading/2026-06/2026-06-04t163601-anthropicsdefending-code-reference-harness)) uses gVisor sandboxing alongside an agentic pipeline for threat modeling, scanning, and patching. SSH key management ([Using SSH Keys to Make Connectivity Simpler and Secure](/reading/2026-05/2026-05-04t231548-using-ssh-keys-to-make-connectivity-simpler-and-secure)) and container filesystem isolation ([How Container Filesystem Works](/reading/2026-05/2026-05-04t231858-how-container-filesystem-works-building-a-docker-like)) round out the lower-level infrastructure literacy that developer tooling still depends on.
 
-Operational tooling rounds out the picture. [Radar](/reading/2026-05/2026-05-03t105238-radar-or-the-missing-open-source-kubernetes-ui) is a single-binary open-source Kubernetes UI consolidating topology, Helm management, GitOps visibility, and MCP for AI agents. [Depot's CI orchestrator](/reading/2026-05/2026-05-19t110000-building-ci-with-lambda-durable-functions) uses AWS Lambda durable functions to run a stateful, checkpointed workflow scheduler without a long-lived process, illustrating how serverless primitives are reshaping build infrastructure.
+Platform trust is also surfacing as a concern. A critique of GitHub ([GitHub is Sinking](/reading/2026-05/2026-05-10t205349-github-is-sinking)) argues that Microsoft's ownership has degraded reliability and introduced AI-generated noise, pushing some developers toward Forgejo, Codeberg, or self-hosted forges. Meanwhile Radar ([Radar | The Missing Kubernetes UI](/reading/2026-05/2026-05-03t105238-radar-or-the-missing-open-source-kubernetes-ui)) ships as a single open-source binary with no cloud dependency, a direct counter to the managed-everything trend.
