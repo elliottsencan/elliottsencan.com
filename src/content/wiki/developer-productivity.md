@@ -34,6 +34,8 @@ sources:
   - >-
     2026-06/2026-06-17t130655-the-founders-playbook-building-an-ai-native-startup
   - 2026-06/2026-06-18t024208-the-git-commands-i-run-before-reading-any-code
+  - >-
+    2026-06/2026-06-18t090801-how-i-audit-a-legacy-rails-codebase-in-the-first-week
 compiled_at: '2026-05-20T15:01:18.268Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -51,7 +53,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.028065
-last_source_added: '2026-06-18T09:42:08.380Z'
+last_source_added: '2026-06-18T16:08:01.863Z'
 ---
 The word "productivity" in software development usually means writing more code faster. A cluster of recent thinking challenges that framing by pointing to where the actual bottlenecks live.
 

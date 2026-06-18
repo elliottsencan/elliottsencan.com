@@ -33,6 +33,8 @@ sources:
   - 2026-06/2026-06-11t083730-7-more-common-mistakes-in-architecture-diagrams
   - 2026-06/2026-06-15t021106-formal-methods-and-the-future-of-programming
   - 2026-06/2026-06-18t024208-the-git-commands-i-run-before-reading-any-code
+  - >-
+    2026-06/2026-06-18t090801-how-i-audit-a-legacy-rails-codebase-in-the-first-week
 compiled_at: 2026-05-04T04:07:42.371Z
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -50,7 +52,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.017049
-last_source_added: '2026-06-18T09:42:08.380Z'
+last_source_added: '2026-06-18T16:08:01.863Z'
 ---
 Engineering craft covers the habits, patterns, and safeguards that separate code that works from code that holds up. The sources here approach it from four distinct angles, but share a common thread: precision in design pays forward.
 
