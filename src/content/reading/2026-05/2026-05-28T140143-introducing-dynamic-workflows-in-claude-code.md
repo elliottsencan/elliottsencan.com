@@ -2,12 +2,14 @@
 title: Introducing Dynamic Workflows in Claude Code
 url: 'https://claude.com/blog/introducing-dynamic-workflows-in-claude-code'
 summary: >-
-  Anthropic's Claude Code now supports dynamic workflows that automatically
-  spawn tens to hundreds of parallel subagents to tackle large-scale engineering
-  tasks—codebase migrations, security audits, and multi-file rewrites—end-to-end
-  in days rather than weeks.
+  Anthropic launches dynamic workflows in Claude Code, letting Claude
+  automatically write orchestration scripts that spin up hundreds of parallel
+  subagents to handle large-scale tasks like codebase-wide migrations, security
+  audits, and framework ports end-to-end.
 category: tech
+kind: article
 added: '2026-05-28T21:01:43.756Z'
+author: Anthropic
 source: Anthropic
 topics:
   - agentic-workflows
@@ -15,13 +17,12 @@ topics:
   - ai-assisted-coding
   - llm-orchestration
   - developer-tooling
-compiled_at: '2026-05-28T21:01:43.756Z'
+compiled_at: '2026-06-18T22:42:26.857Z'
 compiled_with: claude-sonnet-4-6
-title_source: model
 compile_cost:
   usage:
-    input_tokens: 4467
-    output_tokens: 117
+    input_tokens: 6090
+    output_tokens: 124
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -32,6 +33,6 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.015156
+  cost_usd: 0.02013
 ---
 
