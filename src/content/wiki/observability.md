@@ -1,9 +1,10 @@
 ---
 title: Observability
 summary: >-
-  Observability in infrastructure means surfacing system state in real time;
-  Kubernetes tooling like Radar treats topology graphs, event timelines, and
-  live traffic flows as the primary medium for achieving it.
+  Observability spans distributed traces, Kubernetes topology, and AI agent
+  pipelines — the shared challenge across sources is turning raw telemetry into
+  actionable understanding, whether of system architecture, failure modes, or
+  agent behavior.
 sources:
   - 2026-05/2026-05-03t105219-radar-open-source-kubernetes-ui
   - 2026-05/2026-05-03t105238-radar-or-the-missing-open-source-kubernetes-ui
@@ -14,12 +15,12 @@ sources:
   - >-
     2026-06/2026-06-10t223404-how-to-read-distributed-traces-when-you-didnt-write-the-code
   - 2026-06/2026-06-11t024225-testing-a-security-tool-like-it-can-hurt-people
-compiled_at: '2026-05-04T04:09:40.819Z'
+compiled_at: '2026-06-18T21:51:49.296Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 2270
-    output_tokens: 374
+    input_tokens: 3111
+    output_tokens: 662
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -30,11 +31,16 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.01242
-last_source_added: '2026-06-11T09:42:25.250Z'
+  cost_usd: 0.019263
 ---
-Observability, in the infrastructure sense, is the ability to understand what a running system is doing from its external outputs. For Kubernetes specifically, that means correlating pod states, network traffic, events, and configuration drift into a coherent picture without requiring operators to grep through raw logs or kubectl one resource at a time.
+Observability is the practice of making system internals legible from outputs — logs, traces, metrics, events — without necessarily having written the code or been present when things broke.
 
-[Radar](/reading/2026-05/2026-05-03t105238-radar-or-the-missing-open-source-kubernetes-ui) treats this as the central problem its UI solves: real-time topology graphs, event timelines, and live traffic flows are all consolidated into a single binary. The goal is to reduce the cognitive gap between "something is wrong" and "here is why." The [Product Hunt listing](/reading/2026-05/2026-05-03t105219-radar-open-source-kubernetes-ui) adds that Radar also surfaces security and audit checks alongside those topology views, so compliance posture becomes part of the same observability surface rather than a separate tool.
+For distributed systems, that means reading spans. [SigNoz's guide](/reading/2026-06/2026-06-10t223404-how-to-read-distributed-traces-when-you-didnt-write-the-code) makes the case that trace shape, span types, and attributes carry enough structural information to locate bugs and reconstruct architecture in unfamiliar codebases. Traces are a form of recorded causality — follow the span tree and the system explains itself.
 
-What both sources point to is a shift in how Kubernetes observability is packaged. Rather than assembling a stack of agents, cloud accounts, and separate dashboards, the argument is that a self-hosted, no-dependency binary can provide sufficient signal for most operational needs. Whether that coverage is complete for large production clusters is not addressed; the framing is squarely at teams who want visibility without infrastructure overhead.
+For Kubernetes, observability means more than logs. [Radar](/reading/2026-05/2026-05-03t105238-radar-or-the-missing-open-source-kubernetes-ui) consolidates topology graphs, event timelines, Helm state, and GitOps visibility into a single local binary, treating the cluster's observable state as a unified surface rather than a collection of disconnected kubectl outputs.
+
+For AI agents, observability gets harder. Traces capture what happened but not whether it was good. [Harrison Chase at LangChain](/reading/2026-05/2026-05-10t140531-agent-observability-needs-feedback-to-power-learning) argues that attaching feedback signals — user ratings, behavioral cues, LLM judges — is what closes the loop and turns traces into a learning system. Without feedback, you have visibility without improvement. [Speakeasy's AI control plane framing](/reading/2026-05/2026-05-09t110721-ai-control-plane-architecture-and-vendors) extends this further, treating observability as one pillar of a governance layer that watches all agent traffic across identity, policy, and connection.
+
+Security tooling adds another angle. [Emphere](/reading/2026-06/2026-06-11t024225-testing-a-security-tool-like-it-can-hurt-people) builds observability into their assurance platform by requiring that the system fail loudly and visibly when it overclaims certainty — red runs that prove instrumentation works before trusting it in production.
+
+A through-line from [Anton Zaides](/reading/2026-06/2026-06-10t073045-the-unwritten-laws-of-software-engineering): roll back before you debug. That heuristic only works if observability is good enough to tell you something broke. Telemetry without interpretability is noise; the whole discipline is about closing that gap.

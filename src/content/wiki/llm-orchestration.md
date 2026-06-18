@@ -1,9 +1,9 @@
 ---
 title: LLM orchestration
 summary: >-
-  LLM orchestration coordinates multiple language model agents through
-  structured pipelines, separating planning, generation, and evaluation roles to
-  produce reliable outputs from long-running autonomous tasks.
+  LLM orchestration coordinates language models, agents, and supporting
+  infrastructure through structured control flow, harness design, and governance
+  layers to make multi-step AI work reliable and scalable.
 sources:
   - 2026-04/2026-04-30t231239-ibrahim-3dorchestrator-supaconductor
   - >-
@@ -18,12 +18,12 @@ sources:
   - 2026-06/2026-06-04t194033-the-potential-of-rlms
   - 2026-06/2026-06-14t091145-001tmfharness-forge
   - 2026-06/2026-06-14t094245-agentswarms
-compiled_at: '2026-05-04T04:08:00.148Z'
+compiled_at: '2026-06-18T21:50:37.223Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 2342
-    output_tokens: 436
+    input_tokens: 3864
+    output_tokens: 944
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -34,13 +34,16 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.013566
-last_source_added: '2026-06-14T16:42:45.928Z'
+  cost_usd: 0.025752
 ---
-LLM orchestration refers to the coordination of multiple language model agents through defined roles and control flow, rather than relying on a single model to handle an entire task end-to-end. The two sources here converge on a GAN-inspired decomposition: a planner that breaks work into subtasks, generators that execute in parallel, and evaluators that critique outputs before they advance downstream.
+Orchestrating LLMs means more than chaining prompts. The sources here converge on a common problem: a single model in a single context window is too fragile and too limited for long-running, high-stakes tasks. The solutions span architectures, governance, and tooling.
 
-Anthropic engineer Prithvi Rajasekaran describes a harness architecture built for multi-hour autonomous coding sessions [Harness Design for Long-Running Application Development](/reading/2026-05/2026-05-01t104137-harness-design-for-long-running-application-development). The core problems it addresses are context anxiety (models losing coherence as context windows fill) and self-evaluation bias (models rating their own outputs too favorably). Separating the generator and evaluator roles breaks the feedback loop that causes self-flattery, while an explicit planner keeps the task decomposition stable across a long session.
+The architectural consensus leans on role separation. Anthropic's harness work describes a GAN-inspired planner-generator-evaluator loop [Prithvi Rajasekaran](/reading/2026-05/2026-05-01t104137-harness-design-for-long-running-application-development) that sidesteps self-evaluation bias, and a two-agent initializer-plus-coding-agent design [Justin Young](/reading/2026-05/2026-05-19t221035-effective-harnesses-for-long-running-agents) that maintains progress across context windows. Ibrahim-3d's orchestrator plugin [Ibrahim-3d](/reading/2026-04/2026-04-30t231239-ibrahim-3dorchestrator-supaconductor) extends this to include a virtual Board of Directors for architectural decisions, while Claude Code's dynamic workflows [Anthropic](/reading/2026-05/2026-05-28t140143-introducing-dynamic-workflows-in-claude-code) now spawn hundreds of parallel subagents automatically.
 
-The orchestrator-supaconductor project applies a similar structure as a Claude Code plugin [Ibrahim-3d/orchestrator-supaconductor](/reading/2026-04/2026-04-30t231239-ibrahim-3dorchestrator-supaconductor), adding a virtual Board of Directors layer for high-stakes architectural decisions. A single natural-language command triggers planning, parallel agent execution, quality evaluation, and board review, encoding the orchestration pattern into a reusable pipeline.
+Brian Suh argues that prompts alone cannot make agents reliable; deterministic control flow encoded in software, with explicit state transitions and validation checkpoints, is what actually produces consistent behavior [Brian Suh](/reading/2026-05/2026-05-07t193804-agents-need-control-flow-not-more-prompts). Anthropic's Managed Agents work supports this by decoupling the reasoning harness from sandboxes and session state into stable, swappable interfaces, cutting p50 time-to-first-token by 60% [Lance Martin et al.](/reading/2026-05/2026-05-19t221631-scaling-managed-agents-decoupling-the-brain-from-the-hands).
 
-The consistent theme across both sources is role specialization. Orchestration gains its value precisely because no single model call is trusted to plan, execute, and judge simultaneously.
+At the governance layer, Speakeasy defines an AI control plane that sits between agents and every system they reach, enforcing identity, policy, and observability across all agent traffic [Sagar Batchu](/reading/2026-05/2026-05-09t110721-ai-control-plane-architecture-and-vendors). MCP provides a protocol-level substrate for tool connectivity, and despite periodic skepticism it retains institutional backing [Substack](/reading/2026-06/2026-06-02t212937-no-mcp-is-definitely-not-dead-the-nsa-agrees).
+
+Two sources address the context problem directly. Recursive Language Models split long inputs into programmatic and token pools so an LLM can navigate massive datasets via a REPL, and their execution traces can bootstrap optimized agent architectures [dbreunig](/reading/2026-06/2026-06-04t194033-the-potential-of-rlms). The harness-forge tool takes a meta-optimization angle, running a propose-score-Pareto-frontier loop to tune memory, retrieval, prompts, and context around a fixed model [Tristan Farmer](/reading/2026-06/2026-06-14t091145-001tmfharness-forge). AgentSwarms offers hands-on coverage of orchestration patterns including ReAct, RAG, and tool-calling [AgentSwarms](/reading/2026-06/2026-06-14t094245-agentswarms).
+
+Taken together, the field is moving from prompt engineering toward system engineering: harnesses, control planes, and formal interfaces replacing ad-hoc prompt chains as the primary reliability mechanism.
