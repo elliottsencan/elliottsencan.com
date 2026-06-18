@@ -17,6 +17,7 @@ import {
   buildPrBody,
   buildUserMessage,
   clusterByTopic,
+  coerceIsoTimestamp,
   type EnumerateReadingDeps,
   enumerateReading,
   prioritizeByStaleness,
@@ -410,6 +411,37 @@ describe("enumerateReading: noindex filter", () => {
       return;
     }
     expect(result.data).toHaveLength(1);
+  });
+});
+
+// ---------- coerceIsoTimestamp ----------
+
+describe("coerceIsoTimestamp", () => {
+  it("passes a quoted (string) frontmatter timestamp through unchanged", () => {
+    expect(coerceIsoTimestamp("2026-05-04T04:07:42.371Z")).toBe("2026-05-04T04:07:42.371Z");
+  });
+
+  it("converts a Date (from an UNQUOTED yaml timestamp) to an ISO string", () => {
+    expect(coerceIsoTimestamp(new Date("2026-06-18T16:08:01.863Z"))).toBe(
+      "2026-06-18T16:08:01.863Z",
+    );
+  });
+
+  it("returns undefined for missing or non-timestamp values", () => {
+    expect(coerceIsoTimestamp(undefined)).toBeUndefined();
+    expect(coerceIsoTimestamp(42)).toBeUndefined();
+    expect(coerceIsoTimestamp(new Date("not a date"))).toBeUndefined();
+  });
+
+  it("normalizes both yaml quoting styles identically (regression: 31 vs 41)", () => {
+    // gray-matter parses an unquoted ISO timestamp into a Date and a quoted one
+    // into a string. Both must coerce to the same ISO string so body-staleness
+    // detection doesn't silently skip Date-typed compiled_at values.
+    const quoted = matter("---\ncompiled_at: '2026-05-04T04:07:42.371Z'\n---\n").data;
+    const unquoted = matter("---\ncompiled_at: 2026-05-04T04:07:42.371Z\n---\n").data;
+    expect(typeof quoted.compiled_at).toBe("string");
+    expect(unquoted.compiled_at instanceof Date).toBe(true);
+    expect(coerceIsoTimestamp(quoted.compiled_at)).toBe(coerceIsoTimestamp(unquoted.compiled_at));
   });
 });
 

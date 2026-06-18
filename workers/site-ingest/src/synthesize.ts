@@ -128,6 +128,21 @@ interface ExistingWiki {
   last_source_added?: string;
 }
 
+// gray-matter/js-yaml parses an UNQUOTED ISO 8601 timestamp into a Date object
+// and a QUOTED one into a string — and frontmatter in this collection mixes
+// both styles. Normalize either (plus a stray number) to an ISO string so
+// timestamp comparison doesn't silently skip Date-typed values.
+// Exported for unit tests.
+export function coerceIsoTimestamp(v: unknown): string | undefined {
+  if (typeof v === "string") {
+    return v;
+  }
+  if (v instanceof Date && !Number.isNaN(v.getTime())) {
+    return v.toISOString();
+  }
+  return undefined;
+}
+
 // Body is stale when sources[] was extended (last_source_added) after the last
 // full synthesis (compiled_at). Missing/unparseable timestamps read as fresh —
 // the equality gate is the primary signal and this only widens it.
@@ -797,9 +812,11 @@ async function enumerateWiki(gh: GitHubClient): Promise<Result<ExistingWiki[]>> 
       sha: loaded.data.sha,
       sources,
       compiled_with: typeof data.compiled_with === "string" ? data.compiled_with : "",
-      ...(typeof data.compiled_at === "string" ? { compiled_at: data.compiled_at } : {}),
-      ...(typeof data.last_source_added === "string"
-        ? { last_source_added: data.last_source_added }
+      ...(coerceIsoTimestamp(data.compiled_at)
+        ? { compiled_at: coerceIsoTimestamp(data.compiled_at) }
+        : {}),
+      ...(coerceIsoTimestamp(data.last_source_added)
+        ? { last_source_added: coerceIsoTimestamp(data.last_source_added) }
         : {}),
     });
   }
