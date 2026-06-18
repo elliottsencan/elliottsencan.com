@@ -64,6 +64,7 @@ sources:
   - 2026-06/2026-06-13t083401-sgupai-fable5md
   - 2026-06/2026-06-15t021106-formal-methods-and-the-future-of-programming
   - 2026-06/2026-06-17t075738-gunnargray-devunicode-animations
+  - 2026-06/2026-06-18t024208-the-git-commands-i-run-before-reading-any-code
 compiled_at: '2026-05-06T16:17:24.293Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -81,7 +82,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.030135
-last_source_added: '2026-06-17T14:57:38.838Z'
+last_source_added: '2026-06-18T09:42:08.380Z'
 ---
 Software engineering as a discipline shows up in these sources less as a unified theory and more as a collection of recurring pressures: how to structure systems so they stay maintainable, how to choose tools that don't create new dependencies, and how to preserve the human judgment that holds everything together.
 

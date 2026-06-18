@@ -36,6 +36,7 @@ sources:
   - 2026-06/2026-06-11t083730-7-more-common-mistakes-in-architecture-diagrams
   - 2026-06/2026-06-17t075738-gunnargray-devunicode-animations
   - 2026-06/2026-06-17t075816-matt-palmer
+  - 2026-06/2026-06-18t024208-the-git-commands-i-run-before-reading-any-code
 compiled_at: '2026-05-06T16:07:54.231Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -53,7 +54,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.026787
-last_source_added: '2026-06-17T14:58:16.253Z'
+last_source_added: '2026-06-18T09:42:08.380Z'
 ---
 Developer tooling is the aggregate of environments, scripts, pipelines, and automated systems that shape how software is written, tested, and shipped. The sources here cut across several layers of that stack, and a common thread runs through them: tools that catch problems earlier, or that reduce the cognitive overhead of catching problems, pay compound dividends.
 
