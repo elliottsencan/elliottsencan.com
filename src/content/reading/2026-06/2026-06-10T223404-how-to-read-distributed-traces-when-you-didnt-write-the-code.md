@@ -2,10 +2,11 @@
 title: How to read distributed traces when you didn't write the code
 url: 'https://newsletter.signoz.io/p/how-to-read-distributed-traces-when'
 summary: >-
-  A practical guide to navigating unfamiliar distributed traces by reading span
-  types, shapes, and attributes to locate bugs and understand system
-  architecture without ever having touched the code.
+  A practical guide to reading distributed traces in unfamiliar codebases,
+  covering span anatomy, critical-path analysis, common trace patterns like N+1
+  staircases, and how to trace back from a span to the responsible code.
 category: tech
+kind: article
 added: '2026-06-11T05:34:04.803Z'
 author: Elizabeth
 source: SigNoz
@@ -13,15 +14,14 @@ topics:
   - observability
   - distributed-systems
   - production-systems
-  - developer-tooling
   - software-engineering
-compiled_at: '2026-06-11T05:34:04.803Z'
+  - developer-tooling
+compiled_at: '2026-06-18T22:44:53.061Z'
 compiled_with: claude-sonnet-4-6
-title_source: model
 compile_cost:
   usage:
-    input_tokens: 4318
-    output_tokens: 95
+    input_tokens: 4516
+    output_tokens: 114
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -32,6 +32,6 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.014379
+  cost_usd: 0.015258
 ---
 
