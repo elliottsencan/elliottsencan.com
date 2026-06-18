@@ -417,7 +417,12 @@ describe("enumerateReading: noindex filter", () => {
 
 type StaleTarget = Parameters<typeof prioritizeByStaleness>[0][number];
 
-function target(topic: string, sources: string[], existingSources?: string[]): StaleTarget {
+function target(
+  topic: string,
+  sources: string[],
+  existingSources?: string[],
+  timestamps?: { compiled_at?: string; last_source_added?: string },
+): StaleTarget {
   return {
     topic,
     sources: sources.map((slug) => source(slug, [topic])),
@@ -429,6 +434,7 @@ function target(topic: string, sources: string[], existingSources?: string[]): S
             sha: "deadbeef",
             sources: existingSources,
             compiled_with: "claude-sonnet-4-6",
+            ...timestamps,
           },
         }
       : {}),
@@ -481,6 +487,33 @@ describe("prioritizeByStaleness", () => {
     const original = targets.map((t) => t.topic);
     prioritizeByStaleness(targets);
     expect(targets.map((t) => t.topic)).toEqual(original);
+  });
+
+  it("ranks a body-stale article (sources match, prose lags) above a current one", () => {
+    const targets = [
+      // current: sources[] matches cluster, compiled after the last source add
+      target("current", ["a", "b"], ["a", "b"], {
+        compiled_at: "2026-06-10T00:00:00.000Z",
+        last_source_added: "2026-06-01T00:00:00.000Z",
+      }),
+      // body-stale: sources[] matches cluster, but a source was added AFTER the
+      // last compile, so the prose lags — symmetric diff is 0 but it needs work
+      target("stale", ["a", "b"], ["a", "b"], {
+        compiled_at: "2026-05-04T00:00:00.000Z",
+        last_source_added: "2026-06-17T00:00:00.000Z",
+      }),
+    ];
+    const out = prioritizeByStaleness(targets);
+    expect(out.map((t) => t.topic)).toEqual(["stale", "current"]);
+  });
+
+  it("treats sources-matched articles with no timestamps as current (not stale)", () => {
+    const targets = [
+      target("a", ["x", "y"], ["x"]), // real drift -> staleness 1
+      target("b", ["a", "b"], ["a", "b"]), // matches, no timestamps -> staleness 0
+    ];
+    const out = prioritizeByStaleness(targets);
+    expect(out.map((t) => t.topic)).toEqual(["a", "b"]);
   });
 });
 

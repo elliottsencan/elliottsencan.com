@@ -118,6 +118,29 @@ interface ExistingWiki {
   sha: string;
   sources: string[];
   compiled_with: string;
+  // ISO timestamps lifted from frontmatter so the planner can detect body
+  // staleness. `/link` extends an article's sources[] and bumps
+  // `last_source_added` without regenerating the body (the cheap incremental
+  // path); when that timestamp is newer than `compiled_at` the prose lags its
+  // own citations and the article needs re-synthesis even though its sources[]
+  // already equals the current cluster. Either may be absent on older articles.
+  compiled_at?: string;
+  last_source_added?: string;
+}
+
+// Body is stale when sources[] was extended (last_source_added) after the last
+// full synthesis (compiled_at). Missing/unparseable timestamps read as fresh —
+// the equality gate is the primary signal and this only widens it.
+function isBodyStale(existing: ExistingWiki): boolean {
+  if (!existing.last_source_added || !existing.compiled_at) {
+    return false;
+  }
+  const added = Date.parse(existing.last_source_added);
+  const compiled = Date.parse(existing.compiled_at);
+  if (Number.isNaN(added) || Number.isNaN(compiled)) {
+    return false;
+  }
+  return added > compiled;
 }
 
 type AliasOutcome = {
@@ -199,7 +222,10 @@ async function planSynthesis(
     }
     const existing = existingByTopic.get(topic);
     const sourceSlugs = sources.map((s) => s.slug).sort();
-    if (!req.force && existing && setEquals(existing.sources, sourceSlugs)) {
+    // Skip only when the cluster matches the article's sources[] AND its body
+    // is current. A `/link`-patched article matches on sources[] but its prose
+    // still lags (isBodyStale), so it must be re-selected here.
+    if (!req.force && existing && setEquals(existing.sources, sourceSlugs) && !isBodyStale(existing)) {
       continue;
     }
     targets.push({ topic, sources, ...(existing ? { existing } : {}) });
@@ -771,6 +797,10 @@ async function enumerateWiki(gh: GitHubClient): Promise<Result<ExistingWiki[]>> 
       sha: loaded.data.sha,
       sources,
       compiled_with: typeof data.compiled_with === "string" ? data.compiled_with : "",
+      ...(typeof data.compiled_at === "string" ? { compiled_at: data.compiled_at } : {}),
+      ...(typeof data.last_source_added === "string"
+        ? { last_source_added: data.last_source_added }
+        : {}),
     });
   }
   return { ok: true, data: all };
@@ -906,6 +936,12 @@ export function prioritizeByStaleness<T extends StalenessTarget>(targets: readon
       if (!current.has(slug)) {
         diff++;
       }
+    }
+    // A body-stale article (sources[] already matches the cluster, so diff===0,
+    // but the prose lags — see isBodyStale) still needs recompiling. Floor its
+    // score at 1 so the per-run cap ranks it above genuinely-current articles.
+    if (diff === 0 && isBodyStale(t.existing)) {
+      return 1;
     }
     return diff;
   };
