@@ -17,6 +17,7 @@ import {
   buildPrBody,
   buildUserMessage,
   clusterByTopic,
+  coerceIsoTimestamp,
   type EnumerateReadingDeps,
   enumerateReading,
   prioritizeByStaleness,
@@ -413,11 +414,47 @@ describe("enumerateReading: noindex filter", () => {
   });
 });
 
+// ---------- coerceIsoTimestamp ----------
+
+describe("coerceIsoTimestamp", () => {
+  it("passes a quoted (string) frontmatter timestamp through unchanged", () => {
+    expect(coerceIsoTimestamp("2026-05-04T04:07:42.371Z")).toBe("2026-05-04T04:07:42.371Z");
+  });
+
+  it("converts a Date (from an UNQUOTED yaml timestamp) to an ISO string", () => {
+    expect(coerceIsoTimestamp(new Date("2026-06-18T16:08:01.863Z"))).toBe(
+      "2026-06-18T16:08:01.863Z",
+    );
+  });
+
+  it("returns undefined for missing or non-timestamp values", () => {
+    expect(coerceIsoTimestamp(undefined)).toBeUndefined();
+    expect(coerceIsoTimestamp(42)).toBeUndefined();
+    expect(coerceIsoTimestamp(new Date("not a date"))).toBeUndefined();
+  });
+
+  it("normalizes both yaml quoting styles identically (regression: 31 vs 41)", () => {
+    // gray-matter parses an unquoted ISO timestamp into a Date and a quoted one
+    // into a string. Both must coerce to the same ISO string so body-staleness
+    // detection doesn't silently skip Date-typed compiled_at values.
+    const quoted = matter("---\ncompiled_at: '2026-05-04T04:07:42.371Z'\n---\n").data;
+    const unquoted = matter("---\ncompiled_at: 2026-05-04T04:07:42.371Z\n---\n").data;
+    expect(typeof quoted.compiled_at).toBe("string");
+    expect(unquoted.compiled_at instanceof Date).toBe(true);
+    expect(coerceIsoTimestamp(quoted.compiled_at)).toBe(coerceIsoTimestamp(unquoted.compiled_at));
+  });
+});
+
 // ---------- prioritizeByStaleness ----------
 
 type StaleTarget = Parameters<typeof prioritizeByStaleness>[0][number];
 
-function target(topic: string, sources: string[], existingSources?: string[]): StaleTarget {
+function target(
+  topic: string,
+  sources: string[],
+  existingSources?: string[],
+  timestamps?: { compiled_at?: string; last_source_added?: string },
+): StaleTarget {
   return {
     topic,
     sources: sources.map((slug) => source(slug, [topic])),
@@ -429,6 +466,7 @@ function target(topic: string, sources: string[], existingSources?: string[]): S
             sha: "deadbeef",
             sources: existingSources,
             compiled_with: "claude-sonnet-4-6",
+            ...timestamps,
           },
         }
       : {}),
@@ -481,6 +519,33 @@ describe("prioritizeByStaleness", () => {
     const original = targets.map((t) => t.topic);
     prioritizeByStaleness(targets);
     expect(targets.map((t) => t.topic)).toEqual(original);
+  });
+
+  it("ranks a body-stale article (sources match, prose lags) above a current one", () => {
+    const targets = [
+      // current: sources[] matches cluster, compiled after the last source add
+      target("current", ["a", "b"], ["a", "b"], {
+        compiled_at: "2026-06-10T00:00:00.000Z",
+        last_source_added: "2026-06-01T00:00:00.000Z",
+      }),
+      // body-stale: sources[] matches cluster, but a source was added AFTER the
+      // last compile, so the prose lags — symmetric diff is 0 but it needs work
+      target("stale", ["a", "b"], ["a", "b"], {
+        compiled_at: "2026-05-04T00:00:00.000Z",
+        last_source_added: "2026-06-17T00:00:00.000Z",
+      }),
+    ];
+    const out = prioritizeByStaleness(targets);
+    expect(out.map((t) => t.topic)).toEqual(["stale", "current"]);
+  });
+
+  it("treats sources-matched articles with no timestamps as current (not stale)", () => {
+    const targets = [
+      target("a", ["x", "y"], ["x"]), // real drift -> staleness 1
+      target("b", ["a", "b"], ["a", "b"]), // matches, no timestamps -> staleness 0
+    ];
+    const out = prioritizeByStaleness(targets);
+    expect(out.map((t) => t.topic)).toEqual(["a", "b"]);
   });
 });
 
