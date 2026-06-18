@@ -21,12 +21,9 @@ import LabeledRule from "@components/LabeledRule.astro";
 
 type Props = {
   breadcrumb?: boolean;
-  // h1 tier — "display" (default) or "statement" for pages where a full
-  // sentence is the title (e.g. the lab-cell question).
-  size?: "display" | "statement";
 };
 
-const { breadcrumb = false, size = "display" } = Astro.props;
+const { breadcrumb = false } = Astro.props;
 ---
 
 <div class="flex flex-col gap-4">
@@ -41,12 +38,7 @@ const { breadcrumb = false, size = "display" } = Astro.props;
   <div class="flex min-w-0 max-w-[62ch] flex-col gap-5">
     <div class="flex flex-col gap-4">
       <h1
-        class:list={[
-          "font-heading font-normal text-black dark:text-white",
-          size === "display"
-            ? "text-display leading-[1.0] tracking-[-0.022em]"
-            : "max-w-[24ch] text-balance text-statement leading-[1.14] tracking-[-0.018em]",
-        ]}
+        class="font-heading text-xl font-semibold tracking-tight text-black dark:text-white"
       >
         <slot name="title" />
       </h1>
