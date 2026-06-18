@@ -2,24 +2,25 @@
 title: Radar — Open-Source Kubernetes UI
 url: 'https://www.producthunt.com/products/radar-7'
 summary: >-
-  Radar is a single-binary, open-source Kubernetes UI offering real-time
-  topology, Helm/GitOps support, live traffic flows, security checks, and MCP
-  for AI agents — no cloud account or agents required.
+  Radar is an open-source Kubernetes UI that consolidates real-time topology,
+  resources, Helm, GitOps, live traffic, security checks, and MCP for AI agents
+  into a single binary with no cloud account required.
 category: tech
+kind: tool
 added: '2026-05-03T17:52:19.571Z'
 source: Product Hunt
 topics:
   - kubernetes
-  - developer-tools
   - open-source
   - observability
-  - infrastructure
-compiled_at: '2026-05-03T18:38:57.918Z'
+  - developer-tools
+  - mcp
+compiled_at: '2026-06-18T22:33:04.957Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 1854
-    output_tokens: 96
+    input_tokens: 2883
+    output_tokens: 101
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -30,6 +31,6 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.007002
+  cost_usd: 0.010164
 ---
 
