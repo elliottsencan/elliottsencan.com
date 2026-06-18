@@ -16,8 +16,6 @@ sources:
   - 2026-05/2026-05-10t205349-github-is-sinking
   - 2026-05/2026-05-15t120337-playwright-testing-in-staging-vs-production
   - 2026-05/2026-05-19t110000-building-ci-with-lambda-durable-functions
-aliases:
-  - software-quality
 compiled_at: '2026-06-18T21:42:51.233Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
