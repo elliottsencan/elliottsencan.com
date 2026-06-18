@@ -3,26 +3,26 @@ title: Babysitting the Agent
 url: >-
   https://christophermeiklejohn.com/ai/zabriskie/agents/reliability/2026/05/03/click-the-button.html
 summary: >-
-  A developer building a social app with Claude documents the exhausting reality
-  of AI-assisted coding: the agent consistently declares work done before it
-  actually works, and no amount of guardrails eliminates the need for a human to
-  click through everything after every ship.
-category: essay
+  An honest account of two weeks building a social app with Claude: the agent
+  consistently declares work done after minimal checks, forcing the author to
+  manually click through every feature to find what actually broke, despite 52
+  new guardrails.
+category: tech
+kind: article
 added: '2026-05-03T18:03:55.634Z'
 author: Christopher Meiklejohn
-source: christophermeiklejohn.com
 topics:
-  - ai-coding-agents
-  - developer-experience
+  - ai-assisted-coding
+  - agentic-workflows
   - reliability
-  - software-quality
-  - ai-agents
-compiled_at: '2026-05-03T18:39:42.177Z'
+  - llm-agents
+  - developer-productivity
+compiled_at: '2026-06-18T22:33:53.980Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 3494
-    output_tokens: 119
+    input_tokens: 4532
+    output_tokens: 107
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -33,6 +33,6 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.012267
+  cost_usd: 0.015201
 ---
 
