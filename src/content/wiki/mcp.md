@@ -1,9 +1,10 @@
 ---
 title: Model Context Protocol (MCP)
 summary: >-
-  MCP is a protocol for exposing tools and context to AI agents; sources debate
-  whether it is the right abstraction layer, a strategic moat, or a limiting
-  constraint analogous to a GUI.
+  MCP is Anthropic's open protocol for connecting AI agents to external tools
+  and data sources, attracting both broad adoption and pointed criticism about
+  token cost, composability limits, and where it fits relative to code-native
+  agent architectures.
 sources:
   - 2026-04/2026-04-23t150424-your-agent-loves-mcp-as-much-as-you-love-guis
   - 2026-04/2026-04-27t113354-the-orchestrator-isnt-your-moat
@@ -18,13 +19,13 @@ sources:
   - >-
     2026-06/2026-06-03t105229-putting-code-under-a-microscope-wavelet-based-context-for
 aliases:
-  - mcp-server
-compiled_at: '2026-05-04T03:35:41.359Z'
+  - model-context-protocol
+compiled_at: '2026-06-18T21:51:14.066Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 2455
-    output_tokens: 503
+    input_tokens: 3678
+    output_tokens: 979
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -35,15 +36,14 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.01491
-last_source_added: '2026-06-03T17:52:29.062Z'
+  cost_usd: 0.025719
 ---
-MCP (Model Context Protocol) standardizes how AI agents discover and invoke external tools and context at runtime. Three sources frame it differently, and the tension between them is instructive.
+The Model Context Protocol is a standard Anthropic introduced so that AI agents can discover and invoke external capabilities through a uniform interface. An agent-facing tool server advertises its capabilities via MCP, and the agent calls them without needing bespoke integration code for each system.
 
-[Ajeesh Mohan](/reading/2026-04/2026-04-23t150424-your-agent-loves-mcp-as-much-as-you-love-guis) argues MCP is to agents what a GUI is to humans: a constrained, token-expensive interface that must be reloaded each session and cannot be composed across tools without explicit orchestration. The analogy carries a pointed critique. An agent capable of writing code is better served by layered scripts and API skills than by MCP tool definitions occupying context window on every call.
+The protocol has genuine momentum. The NSA has endorsed it as part of AI tooling guidance [No, MCP is definitely not dead](/reading/2026-06/2026-06-02t212937-no-mcp-is-definitely-not-dead-the-nsa-agrees), and practical tooling around it keeps expanding. Anthropic now supports packaging a local MCP server as a single-click `.mcpb` bundle for Claude Desktop, handling Node.js runtime bundling and user configuration in one installable file [Build a Desktop Extension with MCPB](/reading/2026-05/2026-05-27t181732-build-a-desktop-extension-with-mcpb). That packaging story influenced at least one developer to choose TypeScript over Java for a Claude plugin, specifically to stay eligible for future MCPB support [Ruby vs. Java vs. TypeScript](/reading/2026-05/2026-05-27t181744-ruby-vs-java-vs-typescript-my-experience-on-building-a).
 
-[Aiyan](/reading/2026-04/2026-04-27t113354-the-orchestrator-isnt-your-moat) takes the opposite position on the strategic question. Rather than building custom LLM orchestration harnesses that break with each model upgrade, teams should ship MCP tool servers that give frontier agents platform-specific context and actions. On this view, model improvements become a benefit rather than a maintenance cost, because the integration surface is protocol-defined rather than harness-defined.
+Not everyone is convinced MCP is the right abstraction for capable agents. Ajeesh Mohan argues it functions as a GUI for AI agents: constrained, token-expensive, and non-composable [Your agent loves MCP as much as you love GUIs](/reading/2026-04/2026-04-23t150424-your-agent-loves-mcp-as-much-as-you-love-guis). Agents that can write code, the argument goes, are better served by layered scripts and direct API skills than by loading tool definitions into context each session. Aiyan takes a different angle, arguing teams should ship MCP tool servers rather than custom orchestration harnesses, because that way model improvements automatically benefit the integration rather than requiring rework [The Orchestrator Isn't Your Moat](/reading/2026-04/2026-04-27t113354-the-orchestrator-isnt-your-moat).
 
-[Mintlify](/reading/2026-04/2026-04-30t231435-mintlify) treats MCP as infrastructure for serving documentation to both humans and LLMs, alongside llms.txt and context-aware agents. That use case sidesteps the token-cost objection somewhat: documentation is already declarative context, and MCP gives agents a structured path to retrieve it on demand.
+On the infrastructure side, Speakeasy frames MCP traffic as something that needs governance: identity, policy enforcement, and observability sitting between agents and every downstream system they reach [AI Control Plane: Architecture and Vendors](/reading/2026-05/2026-05-09t110721-ai-control-plane-architecture-and-vendors). Storybloq ships an MCP server specifically to solve cross-session context loss in AI coding, persisting tickets and handover state in a git-tracked `.story/` directory [Storybloq](/reading/2026-05/2026-05-11t155625-storybloqstorybloq). WaveScope takes a different context problem and applies wavelet transforms through an MCP server to give LLMs a multi-resolution view of codebases, claiming up to 92% token reduction compared to grep or embedding retrieval [Putting Code Under a Microscope](/reading/2026-06/2026-06-03t105229-putting-code-under-a-microscope-wavelet-based-context-for). Documentation platforms like Mintlify have added MCP support to serve structured knowledge to agents alongside human readers [Mintlify](/reading/2026-04/2026-04-30t231435-mintlify).
 
-The disagreement is partly about use case. For action-heavy, code-capable agents, MCP's overhead may outweigh its interoperability gains. For teams exposing platform knowledge or capabilities to agents they do not control, a protocol boundary is precisely the point.
+The Val Town slow-mode post touches on MCP only implicitly, but its concern about agents that operate without human checkpoints applies directly to the agentic MCP use case [Slow Mode](/reading/2026-05/2026-05-19t193626-slow-mode). The protocol itself says nothing about when an agent should pause; that is a product and design question layered on top of it.

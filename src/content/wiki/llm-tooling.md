@@ -1,10 +1,10 @@
 ---
 title: LLM tooling
 summary: >-
-  The ecosystem of tools for running, serving, and organizing knowledge for LLMs
-  spans local inference runtimes, documentation platforms, and structured
-  knowledge bases, with transparency and context efficiency as recurring
-  concerns.
+  The growing ecosystem of software for running, directing, and maintaining
+  large language models, spanning local inference runtimes, agentic coding
+  environments, knowledge-base scaffolding, and distribution formats for model
+  integrations.
 sources:
   - 2026-04/2026-04-30t231435-mintlify
   - 2026-04/2026-04-30t232052-how-to-implement-karpathys-llm-knowledge-base
@@ -17,12 +17,12 @@ sources:
     2026-05/2026-05-18t095002-if-youre-running-claude-code-please-run-it-in-a-box
   - 2026-05/2026-05-27t181732-build-a-desktop-extension-with-mcpb
   - 2026-06/2026-06-02t212937-no-mcp-is-definitely-not-dead-the-nsa-agrees
-compiled_at: '2026-05-06T16:12:27.740Z'
+compiled_at: '2026-06-18T21:50:53.685Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 3065
-    output_tokens: 661
+    input_tokens: 3787
+    output_tokens: 824
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -33,15 +33,12 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.01911
-last_source_added: '2026-06-03T04:29:37.253Z'
+  cost_usd: 0.023721
 ---
-LLM tooling covers the software layer between raw model weights and useful outputs: runtimes that serve models locally, platforms that structure knowledge for LLM consumption, and utilities that manage the context passed to a model at query time.
+LLM tooling covers the practical infrastructure between a model and a working system: how the model runs, how it receives context, how it acts on the outside world, and how its outputs stay reliable over time.
 
-On the local inference side, [oobabooga/textgen](/reading/2026-05/2026-05-05t071908-oobaboogatextgen) offers a fully offline desktop app with support for tool-calling, LoRA fine-tuning, vision, and an OpenAI-compatible API, all with no telemetry. [Friends Don't Let Friends Use Ollama](/reading/2026-05/2026-05-05t071447-friends-dont-let-friends-use-ollama) argues that Ollama, a popular alternative, obscures its llama.cpp dependency, misleads users with model naming conventions, and has drifted toward cloud monetization, positioning more transparent tools as the better choice for users who want genuine local control.
+On the local inference side, choices matter more than they appear. [oobabooga/textgen](/reading/2026-05/2026-05-05t071908-oobaboogatextgen) offers a fully offline desktop runtime with tool-calling, LoRA fine-tuning, and an OpenAI-compatible API, with no telemetry. A pointed critique of Ollama — the more popular alternative — [argues](/reading/2026-05/2026-05-05t071447-friends-dont-let-friends-use-ollama) that it obscures its llama.cpp dependency, misleads on model naming, ships a closed-source GUI, and has drifted toward cloud monetization. LM Studio represents another path: [Zack Reed's walkthrough](/reading/2026-05/2026-05-12t215147-running-claude-code-with-a-local-model-via-lm-studio) shows how to redirect Claude Code's API calls to a locally-running model via environment variables, surfacing real quirks in the process.
 
-On the knowledge organization side, two approaches address how to feed structured information to models without burning unnecessary tokens. [LostWarrior/knowledge-base](/reading/2026-04/2026-04-30t232126-lostwarriorknowledge-base) is a zero-dependency bash CLI that organizes project context as tiered markdown files, generating both a human-readable INDEX.md and a machine-readable manifest.json so agents can navigate large knowledge bases efficiently. The Karpathy wiki pattern described in [a Reddit guide](/reading/2026-04/2026-04-30t232052-how-to-implement-karpathys-llm-knowledge-base) takes a different angle: rather than retrieval-augmented generation, it has the model itself ingest raw documents and maintain structured markdown files, then queries those files directly at scale, with periodic health checks to prevent knowledge drift.
+Agentic coding tools introduce their own safety surface. [Christian Ekrem argues](/reading/2026-05/2026-05-18t095002-if-youre-running-claude-code-please-run-it-in-a-box) that Claude Code should always run inside Docker's sbx sandbox, noting that sandboxing prevents credential leaks and filesystem damage while also removing confirmation prompts and speeding up agentic workflows. Distribution is also maturing: Anthropic's [MCPB format](/reading/2026-05/2026-05-27t181732-build-a-desktop-extension-with-mcpb) packages local MCP servers as single-click installable bundles for Claude Desktop. The underlying protocol has faced skepticism, but [a Substack defense](/reading/2026-06/2026-06-02t212937-no-mcp-is-definitely-not-dead-the-nsa-agrees) cites NSA endorsement as evidence MCP remains central to the AI tooling ecosystem.
 
-[Mintlify](/reading/2026-04/2026-04-30t231435-mintlify) sits at the documentation end of the stack, serving knowledge to both human users and LLMs through support for llms.txt, MCP, and context-aware agents. That positions it as infrastructure for teams whose documentation needs to be machine-readable as a first-class concern, not an afterthought.
-
-The through-line across these sources is context efficiency and transparency. Whether the question is which runtime to trust, how to structure a knowledge base, or how to serve docs to an agent, the practical pressure is the same: get the right information into the model's context window without waste, and do it with tools whose behavior you can actually inspect.
+Knowledge management for LLMs is its own sub-discipline. [Mintlify](/reading/2026-04/2026-04-30t231435-mintlify) approaches it from the documentation side, serving content to both humans and models via llms.txt and context-aware agents. More structural approaches appear in [a Reddit guide to Karpathy's LLM-compiled wiki pattern](/reading/2026-04/2026-04-30t232052-how-to-implement-karpathys-llm-knowledge-base), which has the model ingest raw documents, build structured Markdown, and query at scale without RAG. [LostWarrior/knowledge-base](/reading/2026-04/2026-04-30t232126-lostwarriorknowledge-base) goes lower-level: a zero-dependency bash CLI that organizes project context into tiered Markdown with a machine-readable manifest so agents can navigate without burning excess tokens.
