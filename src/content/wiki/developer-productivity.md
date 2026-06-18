@@ -1,10 +1,10 @@
 ---
 title: Developer productivity
 summary: >-
-  Developer productivity spans tooling choices, organizational alignment, and
-  the human skills those tools depend on, with a growing body of sources
-  questioning whether AI-assisted workflows deliver on their promise without
-  eroding the judgment they require.
+  Developer productivity spans tooling, workflow discipline, organizational
+  context, and the limits of AI assistance — and current sources collectively
+  argue that the real bottlenecks are rarely the ones that new tools promise to
+  eliminate.
 sources:
   - 2026-04/2026-04-27t145041-agentic-coding-is-a-trap
   - 2026-04/2026-04-30t231348-testdino
@@ -36,12 +36,12 @@ sources:
   - 2026-06/2026-06-18t024208-the-git-commands-i-run-before-reading-any-code
   - >-
     2026-06/2026-06-18t090801-how-i-audit-a-legacy-rails-codebase-in-the-first-week
-compiled_at: '2026-05-20T15:01:18.268Z'
+compiled_at: '2026-06-18T21:43:48.707Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 4645
-    output_tokens: 942
+    input_tokens: 7780
+    output_tokens: 1013
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -52,19 +52,16 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.028065
-last_source_added: '2026-06-18T16:08:01.863Z'
+  cost_usd: 0.038535
 ---
-The word "productivity" in software development usually means writing more code faster. A cluster of recent thinking challenges that framing by pointing to where the actual bottlenecks live.
+The narrative that developer productivity is primarily a tooling problem gets complicated the moment you look at where time actually goes. [The Typical Set](/reading/2026-05/2026-05-06t110728-the-bottleneck-was-never-the-code) argues that coding agents make the act of writing code cheap but leave the organizational bottlenecks — shared context, specification clarity, management coherence — entirely untouched. Agents amplify whatever alignment or misalignment already exists.
 
-[The Typical Set](/reading/2026-05/2026-05-06t110728-the-bottleneck-was-never-the-code) makes the structural case directly: coding agents reduce the cost of writing code, but the real constraints have always been organizational, shared context, specification clarity, and management coherence. Agents amplify whatever alignment or misalignment an organization already has. This reframes productivity as a function of process and communication, not output volume.
+That friction shows up at every scale. Bad onboarding [loads new hires with full sprint expectations from day one](/reading/2026-05/2026-05-08t112608-your-onboarding-is-a-hazing-ritual-and-you-call-it-agile), making the system's failures invisible behind Agile framing. Senior engineers lose influence not from lack of skill but from framing their work in terms of complexity management when the business is motivated by uncertainty reduction, a mismatch [Tuhin Nair identifies](/reading/2026-05/2026-05-13t060018-why-senior-developers-fail-to-communicate-their-expertise) as correctable once named.
 
-On the tooling side, gains are real but conditional. [TestDino](/reading/2026-04/2026-04-30t231348-testdino) claims 6-8 hours saved weekly by auto-categorizing Playwright test failures. [Mintlify](/reading/2026-04/2026-04-30t231435-mintlify) aims to reduce documentation friction by serving knowledge to both humans and LLMs in context. Shell-level gains are also available: [Christian Hofstede-Kuhn](/reading/2026-04/2026-04-30t231815-shell-tricks-that-actually-make-life-easier-and-save-your) documents Readline bindings, history search, and script safety flags that pay dividends without any AI dependency.
+On the AI side, the sources are more cautionary than promotional. [Lars Faye](/reading/2026-04/2026-04-27t145041-agentic-coding-is-a-trap) argues that full reliance on coding agents erodes the critical thinking and debugging skills required to supervise those same agents — a self-defeating loop compounded by vendor lock-in and unpredictable token costs. [Slow Mode](/reading/2026-05/2026-05-19t193626-slow-mode) proposes a corrective: keep humans involved at every planning and decision step, trading short-term throughput for long-term capability. The cost of AI-generated code is not in writing it but in owning it; [Yusuf Aytas](/reading/2026-05/2026-05-22t091746-when-code-is-cheap-does-quality-still-matter) puts it plainly — LLMs lower the cost of producing code, not the cost of maintaining it, leaving engineering judgment as the scarce asset.
 
-The AI-specific productivity claims get more complicated. [Lars Faye](/reading/2026-04/2026-04-27t145041-agentic-coding-is-a-trap) argues that full reliance on coding agents erodes the debugging and critical-thinking skills a developer needs to supervise those same agents, a paradox that makes agentic-first workflows a long-term liability. [Val Town's Pete Millspaugh](/reading/2026-05/2026-05-19t193626-slow-mode) proposes deliberate friction: a "Slow Mode" that keeps humans involved at every step, trading short-term throughput for durable understanding. [Jappie](/reading/2026-05/2026-05-17t204925-why-most-developers-cant-use-ai-effectively) locates the failure elsewhere, in weak type systems, org processes built for human-speed coding, and the absence of agent-management training rather than individual skill gaps.
+Tacit knowledge compounds this. [Christian Ekrem](/reading/2026-05/2026-05-19t110710-the-tacit-dimension-why-your-best-engineers-cant-tell-you) draws on Polanyi to argue that the most valuable engineering expertise — pattern recognition, system intuition, unwritten conventions — is structurally inaccessible to AI tools and can only transfer through apprenticeship.
 
-Knowledge transfer is a related constraint. [Christian Ekrem](/reading/2026-05/2026-05-19t110710-the-tacit-dimension-why-your-best-engineers-cant-tell-you) draws on Polanyi to argue that the most valuable engineering expertise, pattern recognition and system intuition, is structurally inaccessible to AI tools and transfers only through apprenticeship. [Tuhin Nair](/reading/2026-05/2026-05-13t060018-why-senior-developers-fail-to-communicate-their-expertise) adds that senior engineers lose influence when they speak in terms of complexity management rather than uncertainty reduction, a communication gap that slows organizational decision-making regardless of individual output.
+At the tooling layer, gains tend to be real but bounded. Shell fluency (Hofstede-Kuhn's guide to Readline bindings, history search, and script safety flags), resilient test design ([Playwright selector hierarchies](/reading/2026-05/2026-05-05t135218-designing-playwright-tests-that-survive-ui-refactors) that survive UI refactors), and targeted git diagnostics ([five log commands](/reading/2026-06/2026-06-18t024208-the-git-commands-i-run-before-reading-any-code) that map codebase health before reading a file) are the kind of low-ceremony, high-leverage habits that compound quietly. AI-assisted test analytics ([TestDino's](/reading/2026-04/2026-04-30t231348-testdino) auto-categorization of failures) and documentation platforms ([Mintlify](/reading/2026-04/2026-04-30t231435-mintlify)) address specific friction points without requiring organizational change.
 
-Onboarding is where these pressures concentrate. [Nguyen Duy Hung](/reading/2026-05/2026-05-08t112608-your-onboarding-is-a-hazing-ritual-and-you-call-it-agile) documents how Agile-branded onboarding loads new hires with full sprint expectations from day one, making systemic failures invisible through public reviews and probationary silence.
-
-Across these sources, productivity emerges as a multi-layered problem: tooling helps at the margins, but organizational alignment, knowledge transmission, and the preservation of engineering judgment determine whether those gains compound or erode.
+The consistent thread: productivity gains from individual tooling are real but capped. The larger multipliers — or the larger drags — come from how organizations set context, transfer knowledge, and decide what to build.

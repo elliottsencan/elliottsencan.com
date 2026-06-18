@@ -1,10 +1,10 @@
 ---
 title: Developer tooling
 summary: >-
-  Developer tooling spans shell ergonomics, CI infrastructure, type-safe
-  validation, test analytics, and AI-assisted automation, with sources
-  collectively showing that the best tools reduce friction and surface failures
-  earlier without adding their own failure modes.
+  The tooling layer of software development spans shell ergonomics, version
+  control workflows, CI infrastructure, test reliability, and AI-augmented
+  pipelines; recent sources show these layers converging as AI agents become
+  both consumers and producers of tooling.
 sources:
   - 2026-04/2026-04-30t195531-what-ci-actually-looks-like-at-a-100-person-team
   - >-
@@ -37,12 +37,12 @@ sources:
   - 2026-06/2026-06-17t075738-gunnargray-devunicode-animations
   - 2026-06/2026-06-17t075816-matt-palmer
   - 2026-06/2026-06-18t024208-the-git-commands-i-run-before-reading-any-code
-compiled_at: '2026-05-06T16:07:54.231Z'
+compiled_at: '2026-06-18T21:44:20.068Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 4729
-    output_tokens: 840
+    input_tokens: 10850
+    output_tokens: 1235
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -53,17 +53,16 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.026787
-last_source_added: '2026-06-18T09:42:08.380Z'
+  cost_usd: 0.051075
 ---
-Developer tooling is the aggregate of environments, scripts, pipelines, and automated systems that shape how software is written, tested, and shipped. The sources here cut across several layers of that stack, and a common thread runs through them: tools that catch problems earlier, or that reduce the cognitive overhead of catching problems, pay compound dividends.
+Developer tooling covers every layer between a developer and working software: the shell, version control, CI pipelines, test infrastructure, static analysis, and increasingly AI agents that operate across all of them. The sources here collectively show that each layer is undergoing its own inflection point, and the layers are starting to interact in new ways.
 
-At the shell level, [underused shell shortcuts and scripting safeguards](/reading/2026-04/2026-04-30t231815-shell-tricks-that-actually-make-life-easier-and-save-your) like Readline key bindings, brace expansion, and `set -euo pipefail` reduce the gap between intent and execution without requiring external dependencies. Similarly, [modern CSS primitives](/reading/2026-04/2026-04-30t231909-the-great-css-expansion) now handle anchor positioning, scroll-driven animations, and modal behavior natively, eliminating over 300 kB of JavaScript libraries and the maintenance surface they carried.
+At the shell and version control layer, the basics still matter. [Shell shortcuts and scripting safeguards](/reading/2026-04/2026-04-30t231815-shell-tricks-that-actually-make-life-easier-and-save-your) — Readline bindings, history search, brace expansion, `set -euo pipefail` — save compounding friction daily. Git's own history is a diagnostic tool: [five log commands](/reading/2026-06/2026-06-18t024208-the-git-commands-i-run-before-reading-any-code) covering churn hotspots, bus factor, and hotfix frequency can characterize a codebase's risk profile before reading a line of source. [Jujutsu offers a workflow](/reading/2026-05/2026-05-31t164252-reviewing-large-changes-with-jujutsu) for large pull request review by treating commits as malleable containers, inserting empty parents and squashing reviewed files incrementally.
 
-In test infrastructure, two sources converge on early failure classification as the core value. [TestDino](/reading/2026-04/2026-04-30t231348-testdino) provides a Playwright analytics layer that auto-categorizes failures as bugs, flaky tests, or UI changes. [Mendral's CI agent](/reading/2026-04/2026-04-30t195531-what-ci-actually-looks-like-at-a-100-person-team) ran across PostHog's monorepo at 1.18 billion log lines and 33 million weekly test executions, auto-diagnosing flaky tests and opening fix PRs, while finding that log ingestion speed and alert routing mattered more than the AI diagnosis itself.
+CI infrastructure carries reliability problems at scale. [Mendral's agent on PostHog's monorepo](/reading/2026-04/2026-04-30t195531-what-ci-actually-looks-like-at-a-100-person-team) processed 1.18 billion log lines and 33 million weekly test executions; the finding was that log ingestion speed and alert routing mattered more than the AI diagnosis itself. Merge queue correctness is its own failure surface: [a GitHub merge queue bug](/reading/2026-05/2026-05-03t150555-what-happens-if-a-merge-queue-builds-on-the-wrong-commit) silently rewrote main by constructing temp branches from stale divergence points, a class of error that only architectural choices about temp branch placement can prevent. Test reporting tools like [TestDino](/reading/2026-04/2026-04-30t231348-testdino) sit above the CI layer, auto-categorizing failures as bugs, flaky tests, or UI changes to cut manual triage.
 
-Type-level validation is another surface where tooling pays early. [Using Zod with a custom RxJS operator in Angular](/reading/2026-04/2026-04-30t230851-from-flaky-to-flawless-angular-api-response-management-with) catches unexpected backend response shapes at dev time rather than at runtime, moving failures left without requiring changes to backend contracts.
+Security is now a tooling concern, not just a deployment concern. [Four SAP-ecosystem npm packages](/reading/2026-05/2026-05-01t102345-sap-related-npm-packages-compromised-in-credential-stealing) were poisoned to harvest cloud secrets and browser passwords, using Claude Code and VS Code configuration files as persistence vectors. AI coding tools have become an attack surface their supply chains must defend.
 
-On the automation side, [orchestrator-supaconductor](/reading/2026-04/2026-04-30t231239-ibrahim-3dorchestrator-supaconductor) wraps Claude Code to turn a single natural-language command into a multi-agent pipeline covering planning, parallel execution, and architectural review. The [SAP npm supply chain attack](/reading/2026-05/2026-05-01t102345-sap-related-npm-packages-compromised-in-credential-stealing), however, is a direct counterpoint: the same Claude Code and VS Code configs exploited as persistence vectors show that tools with deep system access are attractive targets, and supply chain hygiene is part of the tooling surface.
+The AI tooling layer itself is expanding fast. [Claude Code's dynamic workflows](/reading/2026-05/2026-05-28t140143-introducing-dynamic-workflows-in-claude-code) spawn tens to hundreds of parallel subagents for codebase migrations and security audits. [WaveScope](/reading/2026-06/2026-06-03t105229-putting-code-under-a-microscope-wavelet-based-context-for) applies wavelet transforms to source code as an MCP server, reducing token usage by up to 92% versus grep-based retrieval. [MCPB packaging](/reading/2026-05/2026-05-27t181732-build-a-desktop-extension-with-mcpb) turns local MCP servers into single-click bundles, while a [developer comparing Ruby, Java, and TypeScript](/reading/2026-05/2026-05-27t181744-ruby-vs-java-vs-typescript-my-experience-on-building-a) for a Claude plugin found TypeScript preferable specifically because of potential MCPB support. Memory and context management for agents is settling toward simple formats: [zerostack's memory system](/reading/2026-06/2026-06-11t023157-memory-design-zerostack) uses plain Markdown files rather than vector stores, and [LostWarrior/knowledge-base](/reading/2026-04/2026-04-30t232126-lostwarriorknowledge-base) generates both human-readable and machine-readable manifests so agents navigate without burning excess tokens.
 
-CI correctness itself can be fragile at the infrastructure level. [Trunk's post-mortem on a GitHub merge queue bug](/reading/2026-05/2026-05-03t150555-what-happens-if-a-merge-queue-builds-on-the-wrong-commit) shows how silently building on stale divergence points instead of HEAD can rewrite main branches, and how architectural choices, like never pushing temp branches to main, determine immunity to that class of failure.
+Observability tooling is also extending into AI workflows. [Reading distributed traces in unfamiliar systems](/reading/2026-06/2026-06-10t223404-how-to-read-distributed-traces-when-you-didnt-write-the-code) by span type and shape now applies equally to microservices and to agent pipelines, where [openagentd](/reading/2026-05/2026-05-03t173528-lthoanggopenagentd) includes built-in OpenTelemetry as a first-class design requirement.
