@@ -1,9 +1,9 @@
 ---
 title: Responsive design
 summary: >-
-  Responsive design is shifting away from viewport breakpoints toward CSS-native
-  intrinsic layout, fluid values, and container-aware primitives that adapt
-  without explicit breakpoints.
+  Modern responsive design is shifting from viewport breakpoints toward
+  intrinsic CSS primitives — fluid sizing, container queries, and
+  component-level layouts — that adapt without explicit breakpoint declarations.
 sources:
   - 2026-04/2026-04-24t085352-building-a-ui-without-breakpoints
   - 2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp
@@ -15,14 +15,12 @@ sources:
   - 2026-05/2026-05-06t163329-multi-stroke-text-effect-in-css
   - >-
     2026-06/2026-06-10t220929-navigating-the-age-old-problem-of-checkmarks-in-ui-with
-aliases:
-  - container-queries
-compiled_at: '2026-05-06T16:15:56.223Z'
+compiled_at: '2026-06-18T21:53:59.568Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 3214
-    output_tokens: 662
+    input_tokens: 3567
+    output_tokens: 666
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -33,15 +31,16 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.019572
-last_source_added: '2026-06-11T05:09:29.079Z'
+  cost_usd: 0.020691
 ---
-The traditional responsive design model relied on viewport breakpoints to switch layouts at specific widths. Two complementary arguments have recently pushed against that model in favor of CSS-native solutions that respond to content rather than arbitrary viewport thresholds.
+The dominant pattern in responsive design for over a decade has been viewport breakpoints: pick a handful of pixel thresholds, write media queries for each, and override layout and type sizes at those points. A cluster of recent CSS writing argues this model should become the exception rather than the rule.
 
-[Building a UI Without Breakpoints](/reading/2026-04/2026-04-24t085352-building-a-ui-without-breakpoints) makes the case that intrinsic grid layouts, `clamp()` fluid values, container units, and container queries can handle most layout adaptation on their own, leaving media queries for device capabilities and user preferences rather than basic sizing. The underlying logic is that a component should respond to its container, not to the viewport, so the layout engine itself carries the responsive behavior.
+[Amit Sheen](/reading/2026-04/2026-04-24t085352-building-a-ui-without-breakpoints) makes the case directly: intrinsic grid layouts, `clamp()` fluid values, container units, and container queries do the work that breakpoints used to do, more accurately and with less code. Media queries get reserved for genuine device-capability differences — pointer type, color scheme preferences — not for pixel counts.
 
-Fluid typography is a significant sub-concern. [Modern Fluid Typography Using CSS Clamp](/reading/2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp) covers the math behind `clamp()` preferred-value parameters and flags an important accessibility constraint: viewport-unit-based scaling can override user browser font size settings, which rem-based approaches avoid. [Type Scale Graphs](/reading/2026-05/2026-05-05t183935-type-scale-graphs) extends this by visualizing how modular scale steps behave across viewport sizes, making it easier to reason about the full typographic system rather than individual breakpoints.
+Fluid typography is the clearest demonstration of the shift. [Adrian Bece](/reading/2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp) walks through the math behind `clamp()` preferred-value parameters, including the case for `rem`-based values to preserve accessibility when users scale their browser's default font size. [Utopia](/reading/2026-05/2026-05-05t183935-type-scale-graphs) extends this with a graph-based visualisation of fluid type scales, making it easier to reason about how modular scale steps behave across the full viewport range rather than at discrete breakpoints.
 
-This direction fits a broader CSS capability expansion. [The Great CSS Expansion](/reading/2026-04/2026-04-30t231909-the-great-css-expansion) documents how anchor positioning, scroll-driven animations, and view transitions are now platform-native, reducing the need for JavaScript to handle behaviors that previously required it. [Building Websites With LLMS](/reading/2026-05/2026-05-05t091632-building-websites-with-llms) extends that premise architecturally, arguing that CSS cross-document view transitions make separate HTML pages a simpler alternative to JavaScript-powered single-page interactions.
+The broader CSS platform is catching up in ways that reinforce this direction. [Pavel Laptev](/reading/2026-04/2026-04-30t231909-the-great-css-expansion) documents how anchor positioning, scroll-driven animations, and view transitions are now native CSS features, replacing JavaScript libraries that previously handled those concerns. [Jim Nielsen](/reading/2026-05/2026-05-05t091632-building-websites-with-llms) approaches the same platform-native impulse from an architecture angle, arguing that CSS cross-document view transitions make separate linked HTML pages a viable and simpler alternative to JavaScript-powered navigation.
 
-Font pairing and visual layout concerns are adjacent but only loosely responsive in the viewport sense. [50 Best Font Combinations for Graphic Design](/reading/2026-04/2026-04-30t231931-50-best-font-combinations-for-graphic-design) addresses typographic combinations for design contexts without engaging with fluid scaling. Similarly, [Micrographics Templates](/reading/2026-05/2026-05-02t145719-micrographics-templates-design-layouts) offers modular layout components for data-heavy compositions but is concerned with visual style rather than viewport adaptation.
+[Sunkanmi Fafowora](/reading/2026-06/2026-06-10t220929-navigating-the-age-old-problem-of-checkmarks-in-ui-with) adds a progressive-enhancement note: the native CSS `::checkmark` pseudo-element can replace custom JavaScript dropdown implementations, though limited Safari and Firefox support means breakpoint-style fallback thinking still applies at the browser-capability level.
+
+Taken together, the pattern is consistent: write CSS that responds to its content and container first, use platform primitives before reaching for scripting or explicit overrides, and treat media queries as a targeted tool for capability detection.
