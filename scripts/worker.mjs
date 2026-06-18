@@ -13,6 +13,7 @@
  *   synthesize            POST /synthesize  (--topics, --force, --dry-run)
  *   synthesize:run-all    chunked /synthesize loop (sidesteps 30s wall-time)
  *   recompile             POST /recompile   (--scope, --dry-run)
+ *   recompile:run-all     chunked /recompile loop (sidesteps 30s wall-time)
  *   lint                  POST /lint        (--json for raw)
  *   trigger               POST /trigger
  *   contribute --file=P   POST /contribute  (--dry-run)
@@ -652,6 +653,195 @@ async function runSynthesizeAll({ baseUrl, verbose, flags }) {
   }
 }
 
+function formatRecompileResumeCommand(remaining) {
+  return `pnpm worker recompile:run-all --slugs=${remaining.join(",")}`;
+}
+
+// Chunked /recompile loop. Mirrors runSynthesizeAll: probe the dry-run for the
+// would_recompile slug list, then run each chunk as a live slugs-scoped call.
+// Each /recompile call rebuilds its chunk via fetch + one Anthropic call per
+// entry and opens its own PR, so chunking keeps every call under Cloudflare's
+// wall time. Resume a partial run with --slugs=<remaining>.
+async function runRecompileAll({ baseUrl, verbose, flags }) {
+  const token = requireToken();
+  const chunkSize = flags["chunk-size"] ? Number.parseInt(flags["chunk-size"], 10) : 20;
+  if (!Number.isFinite(chunkSize) || chunkSize < 1) {
+    throw new Error("--chunk-size must be a positive integer");
+  }
+  const continueOnError = !!flags["continue-on-error"];
+  const jsonOut = !!flags.json;
+
+  // 1. Determine the slug list. --slugs short-circuits the dry-run probe so a
+  //    partial run can be resumed without re-walking the corpus.
+  let slugs;
+  if (flags.slugs) {
+    slugs = parseTopicsCsv(flags.slugs);
+    if (slugs.length === 0) {
+      process.stderr.write("error: --slugs was empty\n");
+      process.exit(1);
+    }
+  } else {
+    if (!jsonOut) {
+      process.stdout.write("probing /recompile for would_recompile list...\n");
+    }
+    const scope = parseScope(flags.scope ?? "all", "recompile");
+    const probe = await callEndpoint({
+      baseUrl,
+      token,
+      path: "/recompile",
+      body: { scope, dry_run: true },
+      verbose,
+    });
+    if (!probe.ok) {
+      const msg =
+        probe.body && typeof probe.body === "object" && "error" in probe.body
+          ? probe.body.error
+          : probe.raw;
+      process.stderr.write(`error: dry-run probe failed: HTTP ${probe.status}: ${msg}\n`);
+      process.exit(1);
+    }
+    slugs = Array.isArray(probe.body?.would_recompile) ? probe.body.would_recompile : [];
+  }
+
+  if (slugs.length === 0) {
+    if (jsonOut) {
+      process.stdout.write(
+        `${JSON.stringify({ recompiled: 0, chunks: 0, prs: [], total_cost_usd: 0 }, null, 2)}\n`,
+      );
+    } else {
+      process.stdout.write("Nothing to recompile.\n");
+    }
+    return;
+  }
+
+  // 2. Chunk and run sequentially. The worker's own rate limiters handle pacing.
+  const chunks = chunkArray(slugs, chunkSize);
+  const prUrls = [];
+  const failedChunks = []; // [{ index, slugs, message }]
+  const succeededSlugs = [];
+  let totalCost = 0;
+  let firstFailureIndex = -1;
+  let firstFailureMessage = "";
+
+  for (let i = 0; i < chunks.length; i++) {
+    const chunk = chunks[i];
+    if (!jsonOut) {
+      process.stdout.write(`[${i + 1}/${chunks.length}] recompiling ${chunk.length} entries\n`);
+    }
+    let result;
+    try {
+      result = await callEndpoint({
+        baseUrl,
+        token,
+        path: "/recompile",
+        body: { scope: { kind: "slugs", slugs: chunk }, dry_run: false },
+        verbose,
+      });
+    } catch (err) {
+      const message = `network error: ${err.message}`;
+      if (firstFailureIndex === -1) {
+        firstFailureIndex = i;
+        firstFailureMessage = message;
+      }
+      failedChunks.push({ index: i, slugs: chunk, message });
+      if (!continueOnError) {
+        break;
+      }
+      process.stderr.write(`chunk ${i + 1}/${chunks.length} failed: ${message}\n`);
+      continue;
+    }
+    const okBody = result.ok && result.body && result.body.ok !== false;
+    if (!okBody) {
+      const msg =
+        result.body && typeof result.body === "object" && "error" in result.body
+          ? result.body.error
+          : result.raw || `HTTP ${result.status}`;
+      const message = `HTTP ${result.status}: ${msg}`;
+      if (firstFailureIndex === -1) {
+        firstFailureIndex = i;
+        firstFailureMessage = message;
+      }
+      failedChunks.push({ index: i, slugs: chunk, message });
+      if (!continueOnError) {
+        break;
+      }
+      process.stderr.write(`chunk ${i + 1}/${chunks.length} failed: ${message}\n`);
+      continue;
+    }
+    succeededSlugs.push(...chunk);
+    if (result.body?.pr?.url) {
+      prUrls.push(result.body.pr.url);
+      if (!jsonOut) {
+        process.stdout.write(`  pr: ${result.body.pr.url}\n`);
+      }
+    } else if (result.body?.branch && !jsonOut) {
+      process.stdout.write(`  branch: ${result.body.branch}\n`);
+    }
+    // /recompile reports run_cost as an aggregate object ({ total_usd, ... }).
+    if (result.body?.run_cost?.total_usd !== undefined) {
+      totalCost += Number(result.body.run_cost.total_usd) || 0;
+    }
+  }
+
+  // 3. Abort path: first failure with resume instructions (no --continue-on-error).
+  if (firstFailureIndex !== -1 && !continueOnError) {
+    const remaining = chunks.slice(firstFailureIndex).flat();
+    process.stderr.write(
+      `error: chunk ${firstFailureIndex + 1}/${chunks.length} failed (${firstFailureMessage})\n`,
+    );
+    process.stderr.write(`remaining slugs: ${remaining.join(", ")}\n`);
+    process.stderr.write("resume with:\n");
+    process.stderr.write(`  ${formatRecompileResumeCommand(remaining)}\n`);
+    process.exit(1);
+  }
+
+  // 4. Summary (or partial summary with --continue-on-error).
+  const failedSlugs = failedChunks.flatMap((f) => f.slugs);
+  if (jsonOut) {
+    process.stdout.write(
+      `${JSON.stringify(
+        {
+          recompiled: succeededSlugs.length,
+          chunks: chunks.length,
+          succeeded_chunks: chunks.length - failedChunks.length,
+          prs: prUrls,
+          total_cost_usd: Number(totalCost.toFixed(4)),
+          failed_chunks: failedChunks.map((f) => ({
+            index: f.index + 1,
+            slugs: f.slugs,
+            message: f.message,
+          })),
+          remaining_slugs: failedSlugs,
+        },
+        null,
+        2,
+      )}\n`,
+    );
+    if (failedChunks.length > 0) {
+      process.exit(1);
+    }
+    return;
+  }
+  process.stdout.write(
+    `recompiled: ${succeededSlugs.length} entries across ${chunks.length - failedChunks.length} chunks\n`,
+  );
+  if (prUrls.length > 0) {
+    process.stdout.write(`PRs:\n${prUrls.map((u) => `  - ${u}`).join("\n")}\n`);
+  } else {
+    process.stdout.write("PRs: (none)\n");
+  }
+  process.stdout.write(`total cost: $${totalCost.toFixed(4)}\n`);
+  if (failedChunks.length > 0) {
+    process.stderr.write(
+      `note: ${failedChunks.length} chunk(s) failed under --continue-on-error\n`,
+    );
+    process.stderr.write(`remaining slugs: ${failedSlugs.join(", ")}\n`);
+    process.stderr.write("resume with:\n");
+    process.stderr.write(`  ${formatRecompileResumeCommand(failedSlugs)}\n`);
+    process.exit(1);
+  }
+}
+
 function resolveDryRun(flags, defaultValue) {
   if (flags["no-dry-run"]) {
     return false;
@@ -673,6 +863,7 @@ Commands:
   synthesize                 POST /synthesize (compile wiki concepts)
   synthesize:run-all         chunked /synthesize loop; always live, sequential
   recompile                  POST /recompile (rebuild reading entries)
+  recompile:run-all          chunked /recompile loop; always live, sequential
   lint                       POST /lint (read-only health check)
   trigger                    POST /trigger (run /now draft pipeline)
   contribute --file=PATH     POST /contribute (file a wiki article)
@@ -686,13 +877,14 @@ Flags:
   --dry-run / --no-dry-run   override endpoint default (synth/recomp/contrib/xlink)
   --topics=a,b               (synthesize/synthesize:run-all) restrict topic slugs
   --force                    (synthesize/contribute) overwrite existing
-  --chunk-size=N             (synthesize:run-all) topics per chunk; default 5
-  --continue-on-error        (synthesize:run-all) keep going past failed chunks
-  --scope=...                (recompile/crosslink) all | since:DATE | slugs:a,b |
-                             model:STR | slug:wiki/foo | slug:blog/bar
+  --chunk-size=N             (*:run-all) items per chunk; synth default 5, recomp 20
+  --continue-on-error        (*:run-all) keep going past failed chunks
+  --scope=...                (recompile/recompile:run-all/crosslink) all |
+                             since:DATE | slugs:a,b | model:STR | slug:wiki/foo
   --file=PATH                (contribute) markdown file with frontmatter
   --judges=a,b               (eval) judge models; default both haiku + sonnet
-  --slugs=a,b                (eval) wiki slugs to evaluate; default all
+  --slugs=a,b                (eval) wiki slugs to evaluate; default all.
+                             (recompile:run-all) resume from these slugs
   --max-articles=N           (eval) cap articles per run; default 20
   --max-claims=N             (eval) cap claims per article; default 10
 
@@ -767,6 +959,10 @@ async function main() {
         verbose,
       });
       emit(result, flags, printSynthesize);
+      return;
+    }
+    case "recompile:run-all": {
+      await runRecompileAll({ baseUrl, verbose, flags });
       return;
     }
     case "synthesize:run-all": {

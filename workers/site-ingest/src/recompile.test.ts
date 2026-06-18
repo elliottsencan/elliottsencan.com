@@ -377,6 +377,19 @@ describe("partitionSkips", () => {
     });
   });
 
+  it("does not count dry-run would-recompile rows as skips", () => {
+    // The cheap dry-run path emits `would-recompile` rows for matched entries;
+    // handle() passes the full result set through partitionSkips, so these must
+    // not inflate the skip tally.
+    const partition = partitionSkips([
+      { path: "a.md", status: "would-recompile" },
+      { path: "b.md", status: "would-recompile" },
+      { path: "c.md", status: "skipped", skip_reason: "frontmatter-invalid" },
+    ]);
+    expect(partition.total).toBe(1);
+    expect(partition.frontmatter_invalid).toBe(1);
+  });
+
   it("surfaces a frontmatter-invalid row in the partition", () => {
     // S3.3: malformed frontmatter must produce a skipped row, not a silent drop.
     const partition = partitionSkips([
