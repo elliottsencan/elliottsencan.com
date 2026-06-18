@@ -1,10 +1,9 @@
 ---
 title: Platform strategy
 summary: >-
-  How a product positions itself as infrastructure others build on top of,
-  whether by exposing tool interfaces for AI agents, offering end-to-end
-  capability suites to lock out point solutions, or outlasting competitors whose
-  ideas get recycled by later entrants.
+  Platform strategy covers how products, infrastructure layers, and ecosystems
+  are designed to create durable competitive positions, from internal developer
+  platforms to AI tooling and marketplace dynamics.
 sources:
   - 2026-04/2026-04-27t113354-the-orchestrator-isnt-your-moat
   - 2026-04/2026-04-30t231537-startupsrip
@@ -18,14 +17,12 @@ sources:
   - 2026-06/2026-06-17t124905-the-competitive-moat-that-ai-cant-replicate
   - >-
     2026-06/2026-06-17t130655-the-founders-playbook-building-an-ai-native-startup
-aliases:
-  - startup-ecosystem
-compiled_at: '2026-05-04T03:37:21.522Z'
+compiled_at: '2026-06-18T21:53:08.170Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 2462
-    output_tokens: 543
+    input_tokens: 5643
+    output_tokens: 793
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -36,13 +33,18 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.015531
-last_source_added: '2026-06-17T20:06:55.435Z'
+  cost_usd: 0.028824
 ---
-Platform strategy describes how a product or company positions itself as a substrate that others depend on, rather than a feature among competing features. The sources here illustrate three distinct angles on that idea.
+Platform strategy sits at the intersection of product design, infrastructure, and competitive positioning. Several distinct threads run through the sources here, and they are worth examining together rather than in isolation.
 
-[The Orchestrator Isn't Your Moat](/reading/2026-04/2026-04-27t113354-the-orchestrator-isnt-your-moat) argues that the durable platform position in the current AI moment belongs to teams that expose MCP tool servers and agent skills, not teams that build custom orchestration harnesses. The logic is straightforward: if your value lives in a fragile wrapper around a model, every model upgrade is a maintenance bill. If your value lives in platform-specific context and actions surfaced through a standard interface, model improvements compound in your favor. The platform layer here is the capability surface you expose to frontier agents, not the orchestration glue you write around them.
+The internal platform question is addressed directly by [Luca Cavallin's walkthrough of platform engineering](/reading/2026-05/2026-05-06t204115-platform-engineering-end-to-end), which argues that an internal developer platform is best treated as a product with its own roadmap, on-call operations, and user research, not just a set of shared tools maintained by whoever has time. The platform-as-product mindset changes what gets prioritized and how migrations are handled.
 
-[Optimal Workshop's comparison page](/reading/2026-04/2026-04-30t231745-optimal-vs-usertesting) shows platform strategy from a different angle: end-to-end suite versus point solution. Optimal Workshop claims its moat is breadth, covering card sorting, tree testing, live-site testing, AI synthesis, and enterprise compliance in one product. UserTesting's narrower focus on moderated usability sessions becomes a weakness under that framing. Whether breadth actually wins depends on buyer priorities, but the competitive argument is a classic platform-versus-tool positioning.
+On the external, competitive side, [The Orchestrator Isn't Your Moat](/reading/2026-04/2026-04-27t113354-the-orchestrator-isnt-your-moat) makes the argument that custom LLM orchestration layers are not durable strategic assets because they decay with every model upgrade. The durable play is to ship MCP tool servers and agent skills that give frontier models platform-specific context, turning model improvements into a benefit rather than a liability. [No, MCP is definitely not dead](/reading/2026-06/2026-06-02t212937-no-mcp-is-definitely-not-dead-the-nsa-agrees) reinforces that this protocol layer has institutional staying power, citing NSA endorsement against skeptics.
 
-[Startups.RIP](/reading/2026-04/2026-04-30t231745-optimal-vs-usertesting) surfaces a less-discussed platform dynamic: the gap between a good idea and the right moment or execution to turn it into a platform. Its catalog of 1,700+ dead YC startups paired with rebuild playbooks suggests that platform opportunities are often recycled, companies like Wit.ai and Squire.ai failed not because the category was wrong but because timing, distribution, or capitalization broke down. A later entrant with better infrastructure or distribution can pick up the same platform thesis and succeed.
+The pricing war in AI infrastructure adds another layer. [Superframeworks on the AI model pricing war](/reading/2026-05/2026-05-31t072101-the-ai-model-pricing-war-is-here-and-your-margins-depend-on) observes that a 75x gap between cheapest and most expensive frontier models has collapsed API costs, making previously unviable products profitable, but warns that model lock-in creates fragility. The strategic response is provider-agnostic infrastructure from day one.
+
+[The Founder's Playbook for AI-native startups](/reading/2026-06/2026-06-17t130655-the-founders-playbook-building-an-ai-native-startup) extends this into startup architecture: how you build during the MVP stage determines what is possible later. Platform decisions made early, including persistent context files and architectural constraints, compound over time in ways that are hard to unwind.
+
+The platform enshittification pattern gets concrete treatment in [GitHub is Sinking](/reading/2026-05/2026-05-10t205349-github-is-sinking), where post-acquisition platform degradation pushes developers toward alternatives. And [Ghost in the Data on competitive moats](/reading/2026-06/2026-06-17t124905-the-competitive-moat-that-ai-cant-replicate) argues that organizations which automate away human connection destroy trust that no AI personalization layer can rebuild, a reminder that platform moats are not purely technical.
+
+Finally, [Optimal Workshop's competitive comparison](/reading/2026-04/2026-04-30t231745-optimal-vs-usertesting) demonstrates one common platform positioning move: breadth of integrated capability against a narrower, more modular competitor.

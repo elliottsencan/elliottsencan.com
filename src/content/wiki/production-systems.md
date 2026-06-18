@@ -1,10 +1,9 @@
 ---
 title: Production systems
 summary: >-
-  Production systems span durable workflow execution, credential management, and
-  deployment tooling; the cited sources collectively highlight how reliability,
-  transparency, and operational simplicity are the recurring concerns across
-  each layer.
+  Production systems demand failure resilience, durable state, observability,
+  and disciplined rollback — sources across CI orchestration, workflow engines,
+  inference infrastructure, and testing converge on these recurring pressures.
 sources:
   - 2026-04/2026-04-30t231206-poolday
   - 2026-04/2026-04-30t231511-temporal
@@ -24,12 +23,14 @@ sources:
   - 2026-06/2026-06-11t111011-hows-linear-so-fast-a-technical-breakdown
   - >-
     2026-06/2026-06-18t090801-how-i-audit-a-legacy-rails-codebase-in-the-first-week
-compiled_at: '2026-05-06T16:14:57.352Z'
+aliases:
+  - production-engineering
+compiled_at: '2026-06-18T21:53:25.492Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 2732
-    output_tokens: 482
+    input_tokens: 4548
+    output_tokens: 780
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -40,15 +41,16 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.015426
-last_source_added: '2026-06-18T16:08:01.863Z'
+  cost_usd: 0.025344
 ---
-The concerns that recur across production infrastructure are reliability under failure, trust in the tools being used, and predictable credential handling. Each of these surfaces in different layers of the stack.
+The hard lessons of running software in production cluster around a handful of recurring themes: state must survive failures, rollback beats debugging, dependencies will fail, and tests need to reflect real-world risk.
 
-[Temporal](/reading/2026-04/2026-04-30t231511-temporal) addresses the reliability layer directly: by persisting workflow state at every step, it lets distributed applications recover from failures automatically, removing the need to hand-write reconciliation logic. That durability guarantee is what separates production-grade orchestration from scripts that simply hope nothing crashes.
+[Temporal](/reading/2026-04/2026-04-30t231511-temporal) addresses the state-survival problem directly, persisting workflow state at every step so distributed applications recover from failures without manual reconciliation. Depot CI's orchestrator applies the same principle at a different layer: [AWS Lambda durable functions](/reading/2026-05/2026-05-19t110000-building-ci-with-lambda-durable-functions) run a stateful, checkpointed CI scheduler without any long-lived process, using a two-tier Lambda hierarchy and callback-driven job coordination.
 
-Credential handling is a quieter concern but equally load-bearing. Using SSH keys shows how OpenSSH key pairs, agent forwarding, and SSH-based commit signing can replace PAT tokens across local and remote Linux machines, reducing the credential surface that production pipelines have to manage.
+Observability under unfamiliar conditions is a companion concern. [Reading distributed traces in code you didn't write](/reading/2026-06/2026-06-10t223404-how-to-read-distributed-traces-when-you-didnt-write-the-code) treats span shapes and attributes as the primary diagnostic surface, which pairs with the blunt rule from [The Unwritten Laws of Software Engineering](/reading/2026-06/2026-06-10t073045-the-unwritten-laws-of-software-engineering): roll back first, debug second, and treat every external dependency as a scheduled outage.
 
-Tool transparency is a third axis. The critique of Ollama in Friends Don't Let Friends Use Ollama points out that opaque dependencies, misleading model naming, and a drift toward closed-source components create operational risk in production AI deployments. The argument is that faster, more auditable alternatives exist and that production decisions should prefer them.
+Testing strategy reflects these pressures in environment design. [Playwright Testing in Staging vs Production](/reading/2026-05/2026-05-15t120337-playwright-testing-in-staging-vs-production) frames staging and production as having distinct risk profiles, not just as clones at different scales. [Emphere's security testing approach](/reading/2026-06/2026-06-11t024225-testing-a-security-tool-like-it-can-hurt-people) pushes further, requiring real-kernel runners and "red runs" that prove the system fails loudly rather than silently overclaiming correctness.
 
-[Poolday's Creator-1](/reading/2026-04/2026-04-30t231206-poolday) is a more specialized case: a multi-agent system that orchestrates 100+ generative models to execute video editing end-to-end, outputting editable projects rather than static files. It illustrates how production AI pipelines increasingly depend on the same orchestration and reliability properties as conventional distributed systems.
+At the infrastructure layer, production LLM serving adds cost and latency concerns that stateless request handling cannot address alone. [KV caching](/reading/2026-05/2026-05-20t073125-how-to-cut-llm-inference-costs-with-kv-caching) persists precomputed attention states across sessions, cutting time-to-first-token by up to 20x at scale, with [Pure Storage's KVA](/reading/2026-05/2026-05-20t073157-20x-faster-inference-with-the-first-kv-cache-for-s3-and-nfs) demonstrating this on NFS and S3 without model or infrastructure changes.
+
+Authentication hygiene across production machines is a lower-level but persistent concern; [SSH key-based authentication](/reading/2026-05/2026-05-04t231548-using-ssh-keys-to-make-connectivity-simpler-and-secure) with agent forwarding eliminates PAT tokens from the credential surface across distributed Linux environments.
