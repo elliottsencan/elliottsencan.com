@@ -1,0 +1,111 @@
+- generic [active] [ref=e1]:
+  - link "Skip to content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - banner [ref=e3]:
+    - generic [ref=e5]:
+      - link "Elliott Sencan" [ref=e6] [cursor=pointer]:
+        - /url: /
+        - img "Elliott Sencan" [ref=e7]
+      - navigation [ref=e11]:
+        - link "now" [ref=e12] [cursor=pointer]:
+          - /url: /now
+        - link "reading" [ref=e13] [cursor=pointer]:
+          - /url: /reading
+        - link "wiki" [ref=e14] [cursor=pointer]:
+          - /url: /wiki
+        - link "labs" [ref=e15] [cursor=pointer]:
+          - /url: /labs
+        - link "about" [ref=e16] [cursor=pointer]:
+          - /url: /about
+      - generic [ref=e17]:
+        - link "Search" [ref=e18] [cursor=pointer]:
+          - /url: /search
+          - img [ref=e19]
+        - button "Switch theme to light" [ref=e22] [cursor=pointer]:
+          - img [ref=e23]
+  - main [ref=e26]:
+    - generic [ref=e28]:
+      - generic [ref=e29]:
+        - heading "Elliott Sencan" [level=1] [ref=e30]
+        - heading "Currently in San Diego, CA · June 18, 2026" [level=2] [ref=e32]
+        - paragraph [ref=e34]: Engineer in San Diego. Building Grupblox, advising at ShopTickets.net, the Same Same But Different Festival app, and a Karpathy LLM-wiki pipeline for this site.
+      - list [ref=e36]:
+        - listitem [ref=e37]:
+          - generic [ref=e38]:
+            - link "/wiki" [ref=e39] [cursor=pointer]:
+              - /url: /wiki
+            - generic [ref=e40]:
+              - generic [ref=e41]: compiled · 2026-06-02
+              - generic [ref=e42]: 614 citations
+              - generic [ref=e43]:
+                - text: latest ·
+                - link "Future of work" [ref=e44] [cursor=pointer]:
+                  - /url: /wiki/future-of-work/
+            - paragraph [ref=e45]: Concept-indexed synthesis. One article per topic with two or more contributing sources from the reading log, recompiled per batch with a citation-faithfulness sidecar attached.
+          - generic [ref=e46]:
+            - generic [ref=e47]: concepts
+            - generic [ref=e48]: "45"
+            - img [ref=e50]
+        - listitem [ref=e61]:
+          - generic [ref=e62]:
+            - link "/reading" [ref=e63] [cursor=pointer]:
+              - /url: /reading
+            - generic [ref=e64]:
+              - generic [ref=e65]: +7 this week
+              - generic [ref=e66]: 12-week cadence
+              - generic [ref=e67]:
+                - text: latest ·
+                - link "How I Audit a Legacy Rails Codebase in the First Week" [ref=e68] [cursor=pointer]:
+                  - /url: /reading/2026-06/2026-06-18t090801-how-i-audit-a-legacy-rails-codebase-in-the-first-week/
+            - paragraph [ref=e69]: Per-source citation log. One file per URL I've saved from my phone, summarized and topic-tagged at ingest. The raw input the wiki compiles over.
+          - generic [ref=e70]:
+            - generic [ref=e71]: sources
+            - generic [ref=e72]: "153"
+        - listitem [ref=e73]:
+          - generic [ref=e74]:
+            - link "/labs" [ref=e75] [cursor=pointer]:
+              - /url: /labs
+            - generic [ref=e76]:
+              - generic [ref=e77]: last run · 2026-06-02
+              - generic [ref=e78]: 4 cells
+              - generic [ref=e79]:
+                - text: latest ·
+                - link "Citation faithfulness" [ref=e80] [cursor=pointer]:
+                  - /url: /labs/citation-faithfulness/
+            - paragraph [ref=e81]: Numbers behind the posts. Cost breakdowns, eval runs, telemetry — each cell names a question and reports a measurement against it.
+          - generic [ref=e82]:
+            - generic [ref=e83]: judge agreement
+            - generic [ref=e84]: 89% · 103 claims
+      - paragraph [ref=e86]:
+        - link "about →" [ref=e87] [cursor=pointer]:
+          - /url: /about
+  - contentinfo [ref=e88]:
+    - generic [ref=e89]:
+      - generic [ref=e90]:
+        - button "Back to top":
+          - img
+          - generic: Back to top
+      - generic [ref=e91]:
+        - list [ref=e92]:
+          - listitem [ref=e93]: © 2026
+          - listitem [ref=e94]:
+            - generic [ref=e95]: ·
+            - link "Elliott Sencan on LinkedIn" [ref=e96] [cursor=pointer]:
+              - /url: https://linkedin.com/in/elliottsencan
+              - text: LinkedIn
+          - listitem [ref=e97]:
+            - generic [ref=e98]: ·
+            - link "Email Elliott Sencan" [ref=e99] [cursor=pointer]:
+              - /url: mailto:elliottsencan88@gmail.com
+              - text: Email
+          - listitem [ref=e100]:
+            - generic [ref=e101]: ·
+            - link "RSS Feed" [ref=e102] [cursor=pointer]:
+              - /url: /rss.xml
+              - text: RSS
+        - link "GitHub profile — one year of contributions" [ref=e103] [cursor=pointer]:
+          - /url: https://github.com/elliottsencan
+          - 'img "GitHub contributions: 2,634 from Jun ''25 to Jun ''26" [ref=e105]':
+            - img [ref=e106]
+            - generic [ref=e109]:
+              - status
