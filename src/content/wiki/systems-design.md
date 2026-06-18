@@ -1,10 +1,10 @@
 ---
 title: Systems design
 summary: >-
-  Systems design is the practice of structuring software components so each can
-  evolve, fail, or be replaced independently; sources here address this through
-  agent architecture, interpreter construction, durable execution, module depth,
-  and container isolation.
+  Systems design spans decisions about modularity, interface boundaries, data
+  flow, and failure handling; sources here illustrate those principles across
+  distributed services, language runtimes, container primitives, UI
+  architectures, and documentation.
 sources:
   - >-
     2026-04/2026-04-27t114138-scaling-managed-agents-decoupling-the-brain-from-the-hands
@@ -19,12 +19,12 @@ sources:
   - 2026-06/2026-06-11t083730-7-more-common-mistakes-in-architecture-diagrams
   - 2026-06/2026-06-11t111011-hows-linear-so-fast-a-technical-breakdown
   - 2026-06/2026-06-13t081411-signals-the-push-pull-based-algorithm
-compiled_at: '2026-05-06T16:19:10.396Z'
+compiled_at: '2026-06-18T21:56:45.234Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 2831
-    output_tokens: 663
+    input_tokens: 4035
+    output_tokens: 1072
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -35,17 +35,20 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.018438
-last_source_added: '2026-06-13T15:14:11.621Z'
+  cost_usd: 0.028185
 ---
-Good systems design centers on boundary drawing: deciding what each component knows, what it hides, and how it communicates. The sources here approach that problem from several angles.
+Systems design is the discipline of deciding how components divide responsibility, communicate, and recover from failure. The concerns are consistent across very different scales and problem domains.
 
-Anthropics engineering team illustrates the stakes directly. Their Managed Agents service [decouples the agent harness, session log, and sandbox](/reading/2026-04/2026-04-27t114138-scaling-managed-agents-decoupling-the-brain-from-the-hands) into independent interfaces, so any one piece can be swapped or fail without cascading. The payoff is concrete: p50 time-to-first-token dropped ~60% and p95 fell over 90% once the boundaries were drawn correctly.
+Interface depth is one recurring theme. [AI Likes Deep Modules](/reading/2026-05/2026-05-04t231343-ai-likes-deep-modules) argues that hiding complexity behind narrow interfaces is not just an aesthetic preference but a functional requirement: shallow, leaky abstractions force any reasoner, human or LLM, to track too many layers simultaneously. This maps directly to the module cohesion reading of the Single Responsibility Principle. [Single Responsibility, the Distorted Principle](/reading/2026-06/2026-06-04t073318-single-responsibility-the-distorted-principle) argues that SRP is about grouping behaviors under one clearly named responsibility, not splitting code into the smallest possible units; over-granularity destroys the cognitive simplicity the principle was meant to provide.
 
-The same logic appears at a smaller scale in language implementation. Robert Nystrom's [Crafting Interpreters](/reading/2026-04/2026-04-30t231027-munificentcraftinginterpreters) builds two complete Lox interpreters, and the architectural lesson is implicit in the two-implementation structure: the same language can be realized with a tree-walking interpreter in Java or a bytecode VM in C, because the language specification and the execution engine are properly separated.
+Distributed systems add failure as a first-class design constraint. [Temporal](/reading/2026-04/2026-04-30t231511-temporal) addresses this by persisting workflow state at every step so applications recover automatically without manual reconciliation. Anthropic's [Scaling Managed Agents](/reading/2026-04/2026-04-27t114138-scaling-managed-agents-decoupling-the-brain-from-the-hands) applies a related idea at the agent layer: separating the agent harness, session log, and sandbox into independent interfaces so each can evolve or fail without cascading, cutting p95 time-to-first-token by over 90%.
 
-[Temporal](/reading/2026-04/2026-04-30t231511-temporal) addresses the boundary between application logic and failure recovery. By persisting workflow state at every step, it removes the need for manual reconciliation code scattered across a distributed system. The design decision is to make durability a platform concern rather than an application concern.
+Performance is often a design decision made early or paid for later. [How's Linear so fast?](/reading/2026-06/2026-06-11t111011-hows-linear-so-fast-a-technical-breakdown) traces Linear's speed to architectural choices, including local-first IndexedDB sync, optimistic updates, and aggressive code splitting, not to micro-optimizations applied after the fact. By contrast, [5× faster fast_blur](/reading/2026-05/2026-05-14t151252-5-faster-fastblur-in-image-rs) shows a case where algorithmic substitution at a low level, replacing float accumulators with integer arithmetic and division with precomputed reciprocals, yields a 5.9× speedup within an existing design.
 
-Module depth is the vocabulary Go Monk uses in [AI Likes Deep Modules](/reading/2026-05/2026-05-04t231343-ai-likes-deep-modules). Shallow abstractions that leak implementation details force any consumer, human or LLM, to reason across too many layers simultaneously. Deep modules with narrow interfaces reduce that cognitive surface. The article frames this as especially urgent for AI-assisted codebases, but the principle predates LLMs.
+Data representation choices propagate unpredictably. [YAML? That's Norway problem](/reading/2026-05/2026-05-18t113714-yaml-thats-norway-problem) shows how implicit boolean coercion baked into YAML's original spec still breaks configurations in 2026 because popular libraries never adopted the corrective 1.2 spec. Format decisions are interface decisions, and interfaces outlive their authors.
 
-Container filesystem isolation, as Ivan Velichko shows in [building a Docker-like container from scratch](/reading/2026-05/2026-05-04t231858-how-container-filesystem-works-building-a-docker-like), is another instance of the same idea: Linux mount namespaces and pivot_root let the kernel enforce a hard boundary between what a process sees and what the host exposes. The mechanism is low-level, but the design intent is identical to Temporals durability layer or Anthropics decoupled sandbox: hide the complexity, expose only a clean interface.
+Container primitives illustrate how layered abstractions build upward from narrow Linux interfaces. [How Container Filesystem Works](/reading/2026-05/2026-05-04t231858-how-container-filesystem-works-building-a-docker-like) reconstructs Docker-style isolation using only mount namespaces, pivot_root, and pseudo-filesystems, making visible the design seams that higher-level tooling papers over.
+
+Documentation is part of system design too. [7 More Common Mistakes in Architecture Diagrams](/reading/2026-06/2026-06-11t083730-7-more-common-mistakes-in-architecture-diagrams) catalogs failures in communicating architecture, including overloaded master diagrams and unlabeled nodes, that cause the same confusion as poorly named interfaces in code. [Crafting Interpreters](/reading/2026-04/2026-04-30t231027-munificentcraftinginterpreters) demonstrates the opposite: a build system that weaves code and prose together so the implementation and its explanation remain structurally aligned.
+
+Reactive state management adds another dimension. [Signals, the push-pull based algorithm](/reading/2026-06/2026-06-13t081411-signals-the-push-pull-based-algorithm) shows how combining push-based cache invalidation with pull-based lazy re-evaluation avoids redundant computation while keeping dependent state consistent, a microcosm of the broader systems design tension between eagerness and laziness.
