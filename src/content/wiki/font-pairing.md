@@ -1,23 +1,20 @@
 ---
 title: Font pairing
 summary: >-
-  Font pairing is the practice of combining typefaces to create typographic
-  hierarchy and visual contrast; sources here cover curated Google Fonts
-  combinations organized by style category and how typeface choices integrate
-  into modular design systems.
+  Font pairing is the practice of combining typefaces to create hierarchy,
+  contrast, and cohesion in a composition, drawing on principles of style
+  category, scale relationships, and visual texture.
 sources:
   - 2026-04/2026-04-30t231931-50-best-font-combinations-for-graphic-design
   - 2026-05/2026-05-02t145719-micrographics-templates-design-layouts
   - 2026-05/2026-05-05t183935-type-scale-graphs
   - 2026-05/2026-05-06t163329-multi-stroke-text-effect-in-css
-aliases:
-  - graphic-design
-compiled_at: '2026-05-04T04:08:43.943Z'
+compiled_at: '2026-06-18T21:47:05.953Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 2381
-    output_tokens: 432
+    input_tokens: 2723
+    output_tokens: 429
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -28,13 +25,10 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.013623
-last_source_added: '2026-05-06T23:33:29.365Z'
+  cost_usd: 0.014604
 ---
-Font pairing is the selection of two or more typefaces that work together without competing. The goal is contrast that still coheres: a display face that sets tone, a body face that sustains readability, and enough structural difference between them to signal hierarchy.
+Selecting typefaces that work together depends on understanding contrast and harmony simultaneously. A combination that shares similar proportions but differs in stroke character, such as a serif headline with a sans-serif body, reads as intentional rather than accidental. [Design Your Way's curated set](/reading/2026-04/2026-04-30t231931-50-best-font-combinations-for-graphic-design) organizes 50 Google Fonts pairings by style category, serif-plus-sans, display, editorial, and monospace, with usage guidance for specific design contexts.
 
-[50 Best Font Combinations for Graphic Design](/reading/2026-04/2026-04-30t231931-50-best-font-combinations-for-graphic-design) organizes 50 tested Google Fonts pairings by style category, serif+sans, display, editorial, and monospace, with live previews and context-specific usage notes. The organizing logic is practical: different design contexts (editorial layouts, branding, data-heavy interfaces) call for different pairing strategies. A serif body with a geometric sans heading reads differently from a slab serif paired with a humanist sans, even when the contrast ratio between them is similar.
+Typographic scale matters as much as typeface selection. How a pairing behaves across viewport sizes is a distinct concern from which faces are chosen. [Utopia's graph-based type scale visualization](/reading/2026-05/2026-05-05t183935-type-scale-graphs) makes fluid scale relationships visible, showing where modular steps diverge or compress at different viewport widths.
 
-The [Micrographics Templates](/reading/2026-05/2026-05-02t145719-micrographics-templates-design-layouts) Figma library approaches font pairing from a compositional angle. Its post-WWII industrial and automotive aesthetic implies tight, utilitarian type choices, where monospace or condensed sans-serifs integrate with vector schematics. Here pairing is less about elegance and more about typefaces supporting a visual system's overall texture.
-
-Across both sources, the consistent principle is that font pairing is a structural decision, not a cosmetic one. The typefaces chosen shape how a layout is read, how information is weighted, and how a composition holds together at a glance.
+Font choices are also shaped by the broader compositional context. In technical or data-heavy layouts, as seen in [Zachary Winterton's micrographic template library](/reading/2026-05/2026-05-02t145719-micrographics-templates-design-layouts), the industrial register of the surrounding visual language constrains which typefaces feel appropriate. Decorative treatments like [multi-stroke CSS text effects](/reading/2026-05/2026-05-06t163329-multi-stroke-text-effect-in-css) place additional demands on typeface selection, since high-contrast or display faces hold up better under layered stroke widths than neutral text faces do.

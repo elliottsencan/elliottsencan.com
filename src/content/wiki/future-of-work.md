@@ -1,22 +1,21 @@
 ---
 title: Future of work
 summary: >-
-  AI and automation are reshaping labor markets in ways that differ from prior
-  technological waves, with near-term job displacement risks compounded by a
-  structural trap where cutting human workers undermines the oversight capacity
-  firms need to run AI safely.
+  AI automation is reshaping labor across short and long timescales: near-term
+  layoffs erode the human oversight firms still need, while further out, human
+  connection and judgment may be the last durable advantages workers hold.
 sources:
   - >-
     2026-05/2026-05-02t155432-cognitive-offloading-and-ai-how-reliance-on-llms-affects
   - 2026-05/2026-05-28t074225-welcome-robot-overlords-please-dont-fire-us
   - 2026-06/2026-06-09t190614-what-it-feels-like-to-work-with-mythos
   - 2026-06/2026-06-17t124905-the-competitive-moat-that-ai-cant-replicate
-compiled_at: '2026-06-03T04:30:24.420Z'
+compiled_at: '2026-06-18T21:47:19.482Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 2371
-    output_tokens: 403
+    input_tokens: 2748
+    output_tokens: 577
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -27,11 +26,12 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.013158
-last_source_added: '2026-06-17T19:49:05.729Z'
+  cost_usd: 0.016899
 ---
-The standard optimistic framing of automation holds that new technologies displace some jobs while creating others, leaving employment roughly intact over time. [Kevin Drum's 2013 essay](/reading/2026-05/2026-05-28t074225-welcome-robot-overlords-please-dont-fire-us) challenges that pattern directly: Moore's Law trajectories suggest AI will reach human-level capability around 2040, and unlike previous automation waves, this one targets cognitive work broadly enough that entire job classes may be eliminated without equivalent replacements emerging on a useful timescale.
+The question of what AI does to work splits along a time axis. Kevin Drum, writing in 2013, argued that Moore's Law would deliver human-level AI around 2040, and that unlike earlier waves of automation, this one would eliminate entire occupational categories rather than just routine tasks [Welcome, Robot Overlords](/reading/2026-05/2026-05-28t074225-welcome-robot-overlords-please-dont-fire-us). The robot paradise he imagines in the long run is real, but so is the transitional wreckage.
 
-A more immediate problem sits inside firms already adopting AI. [Falk and Tsoukalas](/reading/2026-05/2026-05-02t155432-cognitive-offloading-and-ai-how-reliance-on-llms-affects) model a structural trap: companies lay off workers to capture short-run cost savings from AI, but those workers carried the human capital needed to supervise and correct AI outputs. Once that capacity is gone, error rates rise and long-run productivity suffers. The cost savings are front-loaded; the quality risk is deferred and compounding.
+The near-term dynamic is more treacherous than simple displacement. Falk and Tsoukalas identify a structural trap: firms that cut headcount to capture AI cost savings also shed the human capital required to catch AI errors and maintain quality [The AI Layoff Trap](/reading/2026-05/2026-05-02t155432-cognitive-offloading-and-ai-how-reliance-on-llms-affects). The oversight function is not separable from the labor being replaced, so the productivity gains can reverse.
 
-Together the two sources frame the future-of-work question at two levels. Drum is concerned with macro displacement across the economy. Falk and Tsoukalas are concerned with what happens inside the firm when the displacement happens too fast. Both arguments converge on the same warning: the transition period, not the eventual equilibrium, is where the serious damage occurs.
+Ethan Mollick's test of Claude 5 Fable shows what the accelerating capability curve actually feels like on the ground: the human role shifts from active collaborator to something closer to a patron commissioning work, while sub-agents handle multi-hour research and coding autonomously [What it feels like to work with Mythos](/reading/2026-06/2026-06-09t190614-what-it-feels-like-to-work-with-mythos). That shift is not simply about fewer jobs; it is a qualitative change in what human contribution means.
+
+One answer to where human value persists comes from the trust argument: organizations that automate away direct human contact destroy accumulated loyalty that no AI personalization can rebuild [The Competitive Moat That AI Can't Replicate](/reading/2026-06/2026-06-17t124905-the-competitive-moat-that-ai-cant-replicate). The moat is not skill or speed but the unmeasurable residue of real relationships. Taken together, these sources suggest the future of work is less about whether AI displaces humans than about which firms and workers understand what genuine human contribution is still worth preserving.

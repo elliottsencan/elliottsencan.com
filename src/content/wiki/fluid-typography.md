@@ -1,9 +1,9 @@
 ---
 title: Fluid typography
 summary: >-
-  Fluid typography uses CSS clamp() to scale type continuously across viewport
-  widths, replacing discrete breakpoints with math-driven size ranges that
-  balance readability, accessibility, and responsive flexibility.
+  Fluid typography uses CSS clamp() and viewport-relative units to scale type
+  continuously across screen sizes, replacing discrete breakpoints with
+  mathematical relationships between minimum, maximum, and preferred values.
 sources:
   - 2026-04/2026-04-24t085352-building-a-ui-without-breakpoints
   - 2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp
@@ -11,14 +11,12 @@ sources:
   - 2026-05/2026-05-02t145719-micrographics-templates-design-layouts
   - 2026-05/2026-05-05t183935-type-scale-graphs
   - 2026-05/2026-05-06t163329-multi-stroke-text-effect-in-css
-aliases:
-  - css-clamp
-compiled_at: '2026-05-04T03:36:48.803Z'
+compiled_at: '2026-06-18T21:46:56.056Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 2706
-    output_tokens: 461
+    input_tokens: 3047
+    output_tokens: 541
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -29,13 +27,12 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.015033
-last_source_added: '2026-05-06T23:33:29.365Z'
+  cost_usd: 0.017256
 ---
-Fluid typography is the practice of letting font sizes scale proportionally with the viewport rather than jumping between fixed values at media query breakpoints. The core tool is CSS `clamp()`, which takes a minimum, a preferred, and a maximum value; the preferred value is typically a viewport-width expression that interpolates smoothly between the two bounds.
+Fluid typography treats type size as a function of available space rather than a fixed value at specific breakpoints. The core mechanism is CSS `clamp()`, which accepts a minimum size, a preferred value expressed as a viewport-relative calculation, and a maximum size. [Adrian Bece's breakdown](/reading/2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp) covers the math in detail, including why the preferred value should use `rem`-based arithmetic rather than pure `vw` to preserve user font-size preferences and maintain accessibility.
 
-[Adrian Bece's breakdown](/reading/2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp) covers the math in detail: the preferred parameter is derived from a linear equation relating viewport width to font size, and using `rem` units for the min and max values (rather than `px`) preserves browser-level text zoom, which is critical for accessibility. Without that adjustment, fluid sizing can override a user's default font-size preference and fail WCAG criteria.
+Scaling individual sizes is only part of the problem. A full type system needs to maintain consistent ratios between heading levels, body text, and captions as the viewport changes. [Utopia's graph visualisation](/reading/2026-05/2026-05-05t183935-type-scale-graphs) addresses this by plotting each modular scale step as a line across the viewport range, making it easier to see when steps converge or cross and to reason about the typographic hierarchy at any size.
 
-[Amit Sheen's argument for breakpoint-free UI](/reading/2026-04/2026-04-24t085352-building-a-ui-without-breakpoints) treats fluid typography as one piece of a larger shift: intrinsic CSS primitives like `clamp()`, container queries, and container units should handle the continuous adaptation work, while media queries are reserved for device capabilities and user preferences. Under this model, fluid type is not a workaround but the default approach.
+Fluid sizing fits into a broader argument about responsive design. [Amit Sheen's piece](/reading/2026-04/2026-04-24t085352-building-a-ui-without-breakpoints) positions `clamp()` alongside intrinsic grid layouts and container queries as primitives that should handle layout and sizing by default, with media queries reserved for device capabilities and user preferences rather than arbitrary width thresholds.
 
-Fluid sizing interacts directly with type selection. [Font pairing references](/reading/2026-04/2026-04-30t231931-50-best-font-combinations-for-graphic-design) that preview combinations at specific sizes assume static sizing; when type scales fluidly, pairing choices need to hold up across a range rather than at a single set point. The two concerns are separable in code but linked in practice.
+The other sources in this cluster are adjacent but not directly about fluid typography. [Font pairing references](/reading/2026-04/2026-04-30t231931-50-best-font-combinations-for-graphic-design) and [CSS text effects](/reading/2026-05/2026-05-06t163329-multi-stroke-text-effect-in-css) deal with typographic aesthetics rather than responsive scaling, and the [Micrographics Figma library](/reading/2026-05/2026-05-02t145719-micrographics-templates-design-layouts) is about layout composition, not type sizing.
