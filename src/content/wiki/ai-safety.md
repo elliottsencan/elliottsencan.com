@@ -20,6 +20,8 @@ sources:
     2026-06/2026-06-10t221112-estimating-no-cot-task-completion-time-horizons-of-frontier
   - 2026-06/2026-06-11t024225-testing-a-security-tool-like-it-can-hurt-people
   - 2026-06/2026-06-13t083239-claude-fable-is-relentlessly-proactive
+  - >-
+    2026-06/2026-06-20t053342-if-llms-have-human-like-attributes-then-so-does-age-of
 compiled_at: '2026-06-18T21:40:48.981Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -37,6 +39,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.02574
+last_source_added: '2026-06-20T12:33:42.447Z'
 ---
 The term covers a wide range of concerns that rarely appear on the same page: what models do to users' beliefs, what autonomous agents do to production systems, and what the AI industry's rhetoric does to public understanding of risk.
 

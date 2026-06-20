@@ -46,6 +46,8 @@ sources:
   - 2026-06/2026-06-13t083401-sgupai-fable5md
   - 2026-06/2026-06-14t091145-001tmfharness-forge
   - 2026-06/2026-06-17t124905-the-competitive-moat-that-ai-cant-replicate
+  - >-
+    2026-06/2026-06-20t053342-if-llms-have-human-like-attributes-then-so-does-age-of
 compiled_at: '2026-06-18T21:49:07.628Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -63,6 +65,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.051978
+last_source_added: '2026-06-20T12:33:42.447Z'
 ---
 LLM engineering is the practice of building production systems on top of large language models, from low-level inference mechanics to high-level agent architectures. The sources gathered here map a wide territory, and a few tensions recur across them.
 
