@@ -1,10 +1,11 @@
 ---
 title: Platform strategy
 summary: >-
-  Platform strategy covers how products, infrastructure layers, and ecosystems
-  are designed to create durable competitive positions, from internal developer
-  platforms to AI tooling and marketplace dynamics.
+  How platforms define their competitive position through control of key
+  interfaces, moat-building, and decisions about where to own versus where to
+  extend incumbent infrastructure.
 sources:
+  - 2026-04/2026-04-24t162154-he-came-he-saw-he-cooked
   - 2026-04/2026-04-27t113354-the-orchestrator-isnt-your-moat
   - 2026-04/2026-04-30t231537-startupsrip
   - 2026-04/2026-04-30t231745-optimal-vs-usertesting
@@ -13,16 +14,15 @@ sources:
   - 2026-05/2026-05-10t205349-github-is-sinking
   - >-
     2026-05/2026-05-31t072101-the-ai-model-pricing-war-is-here-and-your-margins-depend-on
-  - 2026-06/2026-06-02t212937-no-mcp-is-definitely-not-dead-the-nsa-agrees
   - 2026-06/2026-06-17t124905-the-competitive-moat-that-ai-cant-replicate
   - >-
     2026-06/2026-06-17t130655-the-founders-playbook-building-an-ai-native-startup
-compiled_at: '2026-06-18T21:53:08.170Z'
+compiled_at: '2026-06-20T22:14:04.222Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 5643
-    output_tokens: 793
+    input_tokens: 6356
+    output_tokens: 638
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -33,18 +33,18 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.028824
+  cost_usd: 0.028638
 ---
-Platform strategy sits at the intersection of product design, infrastructure, and competitive positioning. Several distinct threads run through the sources here, and they are worth examining together rather than in isolation.
+Platform strategy is fundamentally about deciding what you control, what you build on top of, and where you sit in a value chain relative to others. Several sources here illuminate that question from different angles.
 
-The internal platform question is addressed directly by [Luca Cavallin's walkthrough of platform engineering](/reading/2026-05/2026-05-06t204115-platform-engineering-end-to-end), which argues that an internal developer platform is best treated as a product with its own roadmap, on-call operations, and user research, not just a set of shared tools maintained by whoever has time. The platform-as-product mindset changes what gets prioritized and how migrations are handled.
+The clearest technical take comes from [The Orchestrator Isn't Your Moat](/reading/2026-04/2026-04-27t113354-the-orchestrator-isnt-your-moat), which argues that teams building LLM agents should skip custom orchestration layers and instead ship MCP tool servers and skills that extend frontier agents like Claude Code. The strategic logic: Anthropic owns the loop, so fighting that is waste. Your moat is the domain context and proprietary APIs that no one else has. That is a platform positioning argument, not an engineering one.
 
-On the external, competitive side, [The Orchestrator Isn't Your Moat](/reading/2026-04/2026-04-27t113354-the-orchestrator-isnt-your-moat) makes the argument that custom LLM orchestration layers are not durable strategic assets because they decay with every model upgrade. The durable play is to ship MCP tool servers and agent skills that give frontier models platform-specific context, turning model improvements into a benefit rather than a liability. [No, MCP is definitely not dead](/reading/2026-06/2026-06-02t212937-no-mcp-is-definitely-not-dead-the-nsa-agrees) reinforces that this protocol layer has institutional staying power, citing NSA endorsement against skeptics.
+[Platform Engineering End-to-End](/reading/2026-05/2026-05-06t204115-platform-engineering-end-to-end) applies the same logic internally. Internal developer platforms exist to absorb complexity on behalf of product teams, giving platform engineers control of a shared surface area while freeing others from infrastructure decisions. Who owns the platform layer owns the defaults.
 
-The pricing war in AI infrastructure adds another layer. [Superframeworks on the AI model pricing war](/reading/2026-05/2026-05-31t072101-the-ai-model-pricing-war-is-here-and-your-margins-depend-on) observes that a 75x gap between cheapest and most expensive frontier models has collapsed API costs, making previously unviable products profitable, but warns that model lock-in creates fragility. The strategic response is provider-agnostic infrastructure from day one.
+Pricing is another axis of platform control. The AI Model Pricing War documents how a 75x price spread between frontier models has opened up previously unviable business models. The strategic implication is that building provider-agnostic from day one is a hedge against being locked into a platform whose economics shift under you.
 
-[The Founder's Playbook for AI-native startups](/reading/2026-06/2026-06-17t130655-the-founders-playbook-building-an-ai-native-startup) extends this into startup architecture: how you build during the MVP stage determines what is possible later. Platform decisions made early, including persistent context files and architectural constraints, compound over time in ways that are hard to unwind.
+[GitHub is Sinking](/reading/2026-05/2026-05-10t205349-github-is-sinking) is a cautionary case: when a platform owner deprioritizes reliability and quality, the switching costs that kept users in place erode. Platform lock-in is only durable when the platform continues to deliver.
 
-The platform enshittification pattern gets concrete treatment in [GitHub is Sinking](/reading/2026-05/2026-05-10t205349-github-is-sinking), where post-acquisition platform degradation pushes developers toward alternatives. And [Ghost in the Data on competitive moats](/reading/2026-06/2026-06-17t124905-the-competitive-moat-that-ai-cant-replicate) argues that organizations which automate away human connection destroy trust that no AI personalization layer can rebuild, a reminder that platform moats are not purely technical.
+[The Competitive Moat That AI Can't Replicate](/reading/2026-06/2026-06-17t124905-the-competitive-moat-that-ai-cant-replicate) adds a non-technical dimension: human trust accumulated through consistent, personal service is a moat that automation systematically destroys when organizations optimize for measurable metrics and cut the interactions that build it. Platforms that automate away their own relationship layer may be trading durable advantage for short-term efficiency.
 
-Finally, [Optimal Workshop's competitive comparison](/reading/2026-04/2026-04-30t231745-optimal-vs-usertesting) demonstrates one common platform positioning move: breadth of integrated capability against a narrower, more modular competitor.
+Across these sources, the through-line is consistent: platform strategy is a question of where you sit in a stack, what interfaces you control, and what dependencies you accept or resist.

@@ -1,27 +1,30 @@
 ---
 title: Enterprise software
 summary: >-
-  Enterprise software sits at the intersection of compliance demands, internal
-  tooling culture, and supply chain risk, as illustrated by sources spanning
-  documentation platforms, analytics automation, UX research tooling, and npm
-  supply chain attacks targeting SAP ecosystems.
+  Enterprise software sits at the intersection of organizational process,
+  developer tooling, and institutional trust, where adoption decisions carry
+  workforce, security, and governance consequences that consumer software does
+  not.
 sources:
+  - 2026-04/2026-04-24t162154-he-came-he-saw-he-cooked
   - 2026-04/2026-04-30t231435-mintlify
   - 2026-04/2026-04-30t231537-startupsrip
+  - 2026-04/2026-04-30t231709-conductor
   - 2026-04/2026-04-30t231745-optimal-vs-usertesting
   - >-
     2026-05/2026-05-01t102345-sap-related-npm-packages-compromised-in-credential-stealing
   - >-
-    2026-05/2026-05-08t112608-your-onboarding-is-a-hazing-ritual-and-you-call-it-agile
+    2026-05/2026-05-02t155432-cognitive-offloading-and-ai-how-reliance-on-llms-affects
   - >-
-    2026-06/2026-06-04t195339-how-anthropic-enables-self-service-data-analytics-with
+    2026-05/2026-05-08t112608-your-onboarding-is-a-hazing-ritual-and-you-call-it-agile
+  - 2026-06/2026-06-02t212937-no-mcp-is-definitely-not-dead-the-nsa-agrees
   - 2026-06/2026-06-17t124905-the-competitive-moat-that-ai-cant-replicate
-compiled_at: '2026-06-18T21:46:28.103Z'
+compiled_at: '2026-06-20T22:10:07.756Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 3295
-    output_tokens: 698
+    input_tokens: 4506
+    output_tokens: 748
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -32,16 +35,18 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.020355
+  cost_usd: 0.024738
 ---
-The defining pressures on enterprise software are compliance, scale, and the organizational behaviors that accumulate around both. These pressures show up across the stack.
+Enterprise software is distinguished less by feature count than by the weight of decisions made around it. Procurement, integration, compliance, and workforce implications all compound in ways that consumer software does not face.
 
-At the tooling layer, platforms competing for enterprise adoption increasingly lead with compliance and security certifications. [Optimal Workshop's comparison with UserTesting](/reading/2026-04/2026-04-30t231745-optimal-vs-usertesting) positions enterprise compliance features as a primary differentiator, not a footnote. Similarly, [Mintlify](/reading/2026-04/2026-04-30t231435-mintlify) frames its documentation platform around serving knowledge to both humans and LLMs at enterprise scale, with MCP and llms.txt support pointing at the AI integration requirements that enterprise buyers increasingly impose.
+The security surface is one place this weight shows up clearly. The supply chain attack on SAP-ecosystem npm packages [described here](/reading/2026-05/2026-05-01t102345-sap-related-npm-packages-compromised-in-credential-stealing) illustrates how deeply embedded enterprise platforms become attack targets: compromising packages adjacent to SAP gave the threat actor access to cloud credentials and browser secrets across every organization that depended on that ecosystem. Enterprise adjacency amplifies blast radius.
 
-The supply chain risk that enterprise software carries is concrete. [A 2025 attack on SAP-ecosystem npm packages](/reading/2026-05/2026-05-01t102345-sap-related-npm-packages-compromised-in-credential-stealing) demonstrated how deeply third-party dependencies are embedded in enterprise deployments: the payload harvested cloud secrets and browser passwords, using GitHub as an exfiltration channel and abusing VS Code configs as persistence vectors. SAP's ubiquity in enterprise infrastructure made its surrounding package ecosystem a high-value target.
+Governance pressure shapes tooling choices too. [Derosiaux argues](/reading/2026-06/2026-06-02t212937-no-mcp-is-definitely-not-dead-the-nsa-agrees) that MCP's real value proposition is enterprise governance: a policy-aware, auditable proxy between AI agents and internal resources, something a developer CLI cannot provide at organizational scale. Enterprise buyers need controls that developer-first tools defer.
 
-Internally, enterprise software shapes and is shaped by organizational process. [Anthropic's self-service analytics work](/reading/2026-06/2026-06-04t195339-how-anthropic-enables-self-service-data-analytics-with) shows what it takes to automate 95% of business analytics queries reliably: canonical data foundations, structured sources of truth, domain-specific skills, and continuous validation. The engineering investment required to eliminate ambiguity and staleness from internal tooling is substantial, and the 95% accuracy threshold still implies human review for edge cases.
+Workforce consequences follow procurement decisions closely. [Falk and Tsoukalas](/reading/2026-05/2026-05-02t155432-cognitive-offloading-and-ai-how-reliance-on-llms-affects) show that competitive pressure pushes firms to automate and reduce headcount before the productivity gains of AI tools are actually proven, creating a strategic trap where individually rational decisions produce collectively worse outcomes.
 
-The cultural dimension surfaces in onboarding. [Hung's critique of Agile onboarding](/reading/2026-05/2026-05-08t112608-your-onboarding-is-a-hazing-ritual-and-you-call-it-agile) describes how enterprise process orthodoxy can actively harm new employees, loading them with full sprint expectations from day one while making structural failures invisible through probation-era silence. The rituals enterprises build around their software practices carry their own costs.
+Integration complexity is another persistent theme. [Conductor](/reading/2026-04/2026-04-30t231709-conductor) exists precisely because QuickBooks Desktop still runs real accounting workflows inside small and mid-sized enterprises, requiring an API layer that abstracts decades of qbXML and SOAP conventions so developers can interact with those systems without becoming historians of legacy protocols.
 
-[Ghost in the Data](/reading/2026-06/2026-06-17t124905-the-competitive-moat-that-ai-cant-replicate) adds a counterweight: organizations that automate human connection out of their customer touchpoints destroy trust that no downstream AI personalization can recover. Enterprise software decisions compound over time in ways that balance sheets rarely capture.
+Even documentation and onboarding carry enterprise-specific weight. [Mintlify](/reading/2026-04/2026-04-30t231435-mintlify) markets enterprise compliance alongside AI-native knowledge serving, because regulated organizations cannot simply adopt any documentation tool. And the dysfunction [DHg describes](/reading/2026-05/2026-05-08t112608-your-onboarding-is-a-hazing-ritual-and-you-call-it-agile) in engineering onboarding, where packed calendars and same-sprint workloads mask structural failure, is most acute inside organizations large enough for those practices to become invisible to leadership.
+
+Human trust is what enterprise software ultimately mediates, and it erodes faster than it builds. [Ghost in the Data notes](/reading/2026-06/2026-06-17t124905-the-competitive-moat-that-ai-cant-replicate) that organizations automating away human connection destroy loyalty that no personalization engine can reconstruct. The same logic applies inside enterprises: tools that strip out relationship and accountability leave costs that rarely appear in the original business case.

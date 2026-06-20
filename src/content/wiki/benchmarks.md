@@ -1,14 +1,26 @@
 ---
 title: Benchmarks
 summary: >-
-  Benchmarks in AI and systems engineering reveal capability gaps, validate
-  optimizations, and set baselines for comparison, but they consistently expose
-  the distance between measured performance and real-world behavior.
+  Benchmarks are the primary tool for measuring AI model and system capability,
+  but multiple sources show that most existing benchmarks measure the wrong
+  things, producing numbers that mislead more than they inform.
 sources:
+  - 2026-04/2026-04-29t171532-vision-language-models-better-faster-stronger
+  - 2026-04/2026-04-29t173553-canitrun-can-my-gpu-run-this-llm
+  - >-
+    2026-05/2026-05-03t103643-sycophantic-chatbots-cause-delusional-spiraling-even-in
   - >-
     2026-05/2026-05-03t110011-getting-up-to-speed-on-multi-agent-systems-part-1-the
   - >-
     2026-05/2026-05-03t110027-getting-up-to-speed-on-multi-agent-systems-part-2-the
+  - >-
+    2026-05/2026-05-03t110032-getting-up-to-speed-on-multi-agent-systems-part-3-wave-1
+  - >-
+    2026-05/2026-05-03t110046-getting-up-to-speed-on-multi-agent-systems-part-4-wave-2
+  - 2026-05/2026-05-03t110102-getting-up-to-speed-on-multi-agent-systems-part-6
+  - 2026-05/2026-05-03t110114-getting-up-to-speed-on-multi-agent-systems-part-7
+  - >-
+    2026-05/2026-05-03t110130-getting-up-to-speed-on-multi-agent-systems-part-8-open
   - >-
     2026-05/2026-05-03t115608-how-to-choose-between-single-and-multi-agent-solutions
   - 2026-05/2026-05-04t235011-plurai
@@ -18,19 +30,19 @@ sources:
     2026-05/2026-05-14t190300-opus-47-low-vs-medium-vs-high-vs-xhigh-vs-max-the-reasoning
   - >-
     2026-05/2026-05-20t073157-20x-faster-inference-with-the-first-kv-cache-for-s3-and-nfs
+  - 2026-05/2026-05-28t074225-welcome-robot-overlords-please-dont-fire-us
   - 2026-06/2026-06-04t210834-ai-memory-systems-feature-comparison
   - >-
     2026-06/2026-06-10t221112-estimating-no-cot-task-completion-time-horizons-of-frontier
+  - 2026-06/2026-06-14t091145-001tmfharness-forge
   - >-
     2026-06/2026-06-20t053342-if-llms-have-human-like-attributes-then-so-does-age-of
-aliases:
-  - benchmarking
-compiled_at: '2026-06-18T21:42:07.296Z'
+compiled_at: '2026-06-20T22:06:38.423Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 3981
-    output_tokens: 963
+    input_tokens: 6006
+    output_tokens: 924
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -41,19 +53,18 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.026388
-last_source_added: '2026-06-20T12:33:42.447Z'
+  cost_usd: 0.031878
 ---
-A benchmark produces a number. What that number means depends on what the test actually exercises, and several recent sources show the gap between metric and reality closing more slowly than headline results suggest.
+A benchmark is only as useful as what it actually measures. That gap between the metric and the thing it is supposed to represent runs through nearly every AI benchmark discussed across these sources.
 
-The clearest example is SysMoBench, which tests leading LLMs on generating TLA+ specifications for real distributed systems [Can LLMs model real-world systems in TLA+?](/reading/2026-05/2026-05-08t175639-can-llms-model-real-world-systems-in-tla). Syntax scores approach perfection, but conformance to actual system behavior lands around 46% and invariant accuracy around 41%. The models reproduce textbook protocol descriptions rather than the implementations they were asked to model. High scores on one axis can obscure failures on another.
+The clearest case is in multi-agent systems. [Meiklejohn's benchmarks post](/reading/2026-05/2026-05-03t110114-getting-up-to-speed-on-multi-agent-systems-part-7) argues directly that HumanEval, SWE-bench, and similar suites were designed for single-agent evaluation and cannot measure coordination quality, communication overhead, or failure recovery. When researchers apply those tests to multi-agent systems and report improvements, the numbers say nothing about the properties that actually distinguish multi-agent architectures. The vocabulary post in the same series identifies missing benchmarks as one of the structural gaps in the field — alongside unevolved agents — suggesting the problem is recognized but unsolved [Meiklejohn, Part 2](/reading/2026-05/2026-05-03t110027-getting-up-to-speed-on-multi-agent-systems-part-2-the).
 
-A similar structure appears in reasoning-effort benchmarking. Running Claude Opus 4.7 across five effort levels on 29 real GraphQL tasks shows a non-monotonic curve: medium effort outperforms high, xhigh, and max on pass rate and code-review quality, while costing less [Opus 4.7 reasoning curve](/reading/2026-05/2026-05-14t190300-opus-47-low-vs-medium-vs-high-vs-xhigh-vs-max-the-reasoning). More compute does not reliably produce better outputs, which matters when benchmarks are used to justify inference spend.
+SysMoBench is an attempt to fill a similar gap in LLM formal reasoning. [Cheng et al.](/reading/2026-05/2026-05-08t175639-can-llms-model-real-world-systems-in-tla) benchmark frontier models on generating TLA+ specifications from real system code, finding near-perfect syntax scores but only around 46% conformance and 41% invariant accuracy. The syntax score looks impressive; the specification score exposes that models are reciting textbook protocols rather than modeling actual code. That pattern — high score on a surface metric, low score on the substantive one — recurs elsewhere.
 
-For multi-agent systems, benchmarks measuring task completion at the single-agent level undercount coordination costs. Research cited in the AlphaSignal piece finds that multi-agent orchestration can amplify errors up to 17x and reduce tool-handling efficiency by 2 to 6x relative to single-agent baselines [How to Choose Between Single- and Multi-Agent Solutions](/reading/2026-05/2026-05-03t115608-how-to-choose-between-single-and-multi-agent-solutions). A benchmark that only measures final output misses the coordination tax entirely.
+The Opus 4.7 reasoning-effort benchmark [on stet.sh](/reading/2026-05/2026-05-14t190300-opus-47-low-vs-medium-vs-high-vs-xhigh-vs-max-the-reasoning) finds a non-monotonic curve across effort levels: medium effort outperforms high, xhigh, and max on pass rate, equivalence, and cost. That result matters for benchmarking methodology because it means a benchmark run at a single effort level can produce systematically misleading capability estimates.
 
-On the infrastructure side, benchmarks motivate and validate specific optimizations. A 5.9x speedup on image-rs fast_blur was demonstrated by swapping float accumulators for integer arithmetic and replacing division with precomputed reciprocal multiplication [5x faster fast_blur in image-rs](/reading/2026-05/2026-05-14t151252-5-faster-fastblur-in-image-rs). Pure Storage's KV cache for S3 and NFS claims 20x faster inference by eliminating redundant prefill computation [20x Faster Inference with KV Cache for S3 and NFS](/reading/2026-05/2026-05-20t073157-20x-faster-inference-with-the-first-kv-cache-for-s3-and-nfs). In both cases the benchmark is the argument, making reproducibility and scope important.
+Task-completion horizon benchmarks introduce a different dimension. [Woodruff et al.](/reading/2026-06/2026-06-10t221112-estimating-no-cot-task-completion-time-horizons-of-frontier) measure how well frontier models complete tasks without chain-of-thought, finding GPT-5.5 handles roughly 3-minute human tasks at 50% reliability, with capability doubling approximately every year since 2019. The no-CoT framing is itself a methodological choice with safety implications: CoT-based monitoring breaks down if models can complete consequential tasks without it.
 
-Capability benchmarks also carry safety implications. Measuring no-chain-of-thought task completion across frontier models finds GPT-5.5 handles roughly three-minute human tasks at 50% reliability, with this capability doubling approximately every year [Estimating No-CoT Task-Completion Time Horizons](/reading/2026-06/2026-06-10t221112-estimating-no-cot-task-completion-time-horizons-of-frontier). The benchmark here is not a product claim but an early warning instrument for reasoning that happens outside observable output.
+On the infrastructure side, [CanItRun](/reading/2026-04/2026-04-29t173553-canitrun-can-my-gpu-run-this-llm) uses tokens-per-second estimates derived from model weights, KV cache, and activation overhead as a practical benchmark for GPU compatibility — a narrower, deployment-oriented use of the term. The [AI memory systems comparison](/reading/2026-06/2026-06-04t210834-ai-memory-systems-feature-comparison) similarly includes benchmarks as one filterable axis across 74 systems, treating benchmark coverage itself as a feature worth tracking.
 
-The memory systems comparison across 71 AI agent tools lists benchmarks as a tracked dimension alongside architecture and retrieval methods [AI Memory Systems Feature Comparison](/reading/2026-06/2026-06-04t210834-ai-memory-systems-feature-comparison), reflecting that benchmark coverage is itself a signal of maturity for a given tool. Taken together, the pattern is consistent: benchmarks are necessary but narrow, and interpreting them requires knowing which axis they leave unmeasured.
+The through-line is that benchmark numbers are only meaningful when the benchmark was designed for the system under test and measures the property that actually matters in deployment. That condition is met less often than benchmark-citing papers imply.

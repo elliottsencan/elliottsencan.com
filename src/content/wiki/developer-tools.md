@@ -1,54 +1,33 @@
 ---
 title: Developer tools
 summary: >-
-  A broad category spanning CLIs, APIs, UIs, and agent-facing interfaces that
-  reduce friction in software development; recent sources show the category
-  being reshaped by AI coding agents, MCP tooling, and platform-specific skill
-  packs.
+  A broad category of software that helps engineers build, test, run, and
+  maintain other software, spanning local LLM tooling, CI infrastructure,
+  documentation platforms, Kubernetes UIs, and security-aware package
+  ecosystems.
 sources:
-  - 2026-04/2026-04-23t150424-your-agent-loves-mcp-as-much-as-you-love-guis
-  - 2026-04/2026-04-27t113354-the-orchestrator-isnt-your-moat
-  - 2026-04/2026-04-27t113526-databricks-solutionsai-dev-kit
-  - >-
-    2026-04/2026-04-27t114138-scaling-managed-agents-decoupling-the-brain-from-the-hands
-  - 2026-04/2026-04-27t114426-dont-prompt-your-agent-for-reliability-engineer-it
+  - 2026-04/2026-04-24t093356-unsloth
+  - 2026-04/2026-04-29t173553-canitrun-can-my-gpu-run-this-llm
   - 2026-04/2026-04-30t231027-munificentcraftinginterpreters
   - 2026-04/2026-04-30t231206-poolday
-  - 2026-04/2026-04-30t231319-markdownlm
+  - 2026-04/2026-04-30t231412-form-model-design-angular-signal-forms
   - 2026-04/2026-04-30t231435-mintlify
   - 2026-04/2026-04-30t231511-temporal
-  - 2026-04/2026-04-30t231709-conductor
+  - >-
+    2026-04/2026-04-30t231634-supply-chain-attack-using-invisible-code-hits-github-and
   - 2026-04/2026-04-30t231745-optimal-vs-usertesting
   - 2026-05/2026-05-03t105219-radar-open-source-kubernetes-ui
-  - 2026-05/2026-05-03t105238-radar-or-the-missing-open-source-kubernetes-ui
-  - 2026-05/2026-05-03t173422-vectorize-iohindsight
-  - >-
-    2026-05/2026-05-04t231548-using-ssh-keys-to-make-connectivity-simpler-and-secure
-  - >-
-    2026-05/2026-05-04t231858-how-container-filesystem-works-building-a-docker-like
-  - 2026-05/2026-05-05t071447-friends-dont-let-friends-use-ollama
-  - 2026-05/2026-05-10t205349-github-is-sinking
-  - 2026-05/2026-05-11t155625-storybloqstorybloq
-  - >-
-    2026-05/2026-05-12t165232-seven-cool-javascript-libraries-you-should-know-about
-  - >-
-    2026-05/2026-05-12t215147-running-claude-code-with-a-local-model-via-lm-studio
+  - 2026-05/2026-05-03t173528-lthoanggopenagentd
   - 2026-05/2026-05-14t222554-piyush-mishra-00helply
-  - >-
-    2026-05/2026-05-18t095002-if-youre-running-claude-code-please-run-it-in-a-box
-  - 2026-05/2026-05-18t113714-yaml-thats-norway-problem
-  - 2026-05/2026-05-18t222802-raellioctowiz
   - 2026-05/2026-05-19t110000-building-ci-with-lambda-durable-functions
   - 2026-05/2026-05-27t181732-build-a-desktop-extension-with-mcpb
-  - 2026-05/2026-05-31t164554-jj-vcsjj
   - 2026-06/2026-06-04t163601-anthropicsdefending-code-reference-harness
-  - 2026-06/2026-06-11t023723-gi-dellavzerostack
-compiled_at: '2026-06-18T21:44:51.717Z'
+compiled_at: '2026-06-20T22:00:14.524Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 6977
-    output_tokens: 1555
+    input_tokens: 4430
+    output_tokens: 1081
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -59,18 +38,20 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.044256
+  cost_usd: 0.029505
 ---
-Developer tools are the layer between intent and working software. Classically that meant version control, build systems, and language runtimes. What's shifted recently is the arrival of AI coding agents as first-class consumers of those tools, which has changed what "a tool" means and how it should be designed.
+The sources here span a wide slice of what gets called developer tooling: local model infrastructure, CI orchestration, documentation platforms, UI frameworks, and package-ecosystem security. What ties them is the underlying question of what it costs to build and run software reliably.
 
-On the infrastructure side, foundational primitives are being revisited. Jujutsu ([jj-vcs/jj](/reading/2026-05/2026-05-31t164554-jj-vcsjj)) is a Git-compatible VCS that rethinks branching, undo, and conflict resolution from the ground up. Temporal ([Temporal](/reading/2026-04/2026-04-30t231511-temporal)) handles durable workflow execution by persisting state at every step, removing the need for custom failure-recovery logic in distributed applications. Depot's CI scheduler ([Building CI with Lambda durable functions](/reading/2026-05/2026-05-19t110000-building-ci-with-lambda-durable-functions)) takes a similar approach, checkpointing CI orchestration in Lambda rather than keeping a long-lived process alive.
+On the model-side, [Unsloth](/reading/2026-04/2026-04-24t093356-unsloth) targets the gap between consumer hardware and LLM fine-tuning by delivering up to 30x faster training and 90% less memory usage versus FlashAttention 2, while [CanItRun](/reading/2026-04/2026-04-29t173553-canitrun-can-my-gpu-run-this-llm) solves the preceding question: whether a given GPU can run a chosen model at all, including quantization tradeoffs and estimated tokens-per-second. Both tools reduce friction at the infrastructure layer before any application code is written.
 
-Language-level and framework-level tooling is also seeing fresh entries. Seven focused JavaScript libraries ([Seven Cool JavaScript Libraries You Should Know About](/reading/2026-05/2026-05-12t165232-seven-cool-javascript-libraries-you-should-know-about)) address specific frontend pain points: dead code detection, URL state management, type-safe pattern matching, and API code generation. Conductor ([Conductor](/reading/2026-04/2026-04-30t231709-conductor)) wraps QuickBooks Desktop's qbXML/SOAP interface in a fully-typed REST, Python, and Node.js API so developers can integrate with 130+ QuickBooks objects without touching the underlying protocol. YAML's persistent Norway bug ([YAML? That's Norway problem](/reading/2026-05/2026-05-18t113714-yaml-thats-norway-problem)) is a reminder that configuration tooling carries legacy behavior even when specs change.
+For running agents locally, [openagentd](/reading/2026-05/2026-05-03t173528-lthoanggopenagentd) provides a desktop cockpit with persistent wiki memory and multi-agent coordination across 15 LLM providers, while [Helply](/reading/2026-05/2026-05-14t222554-piyush-mishra-00helply) takes a narrower scope as an Electron meeting assistant with real-time transcription and pluggable cloud or local LLM backends.
 
-For AI coding agents, MCP has become a central interface question. The Databricks AI Dev Kit ([databricks-solutions/ai-dev-kit](/reading/2026-04/2026-04-27t113526-databricks-solutionsai-dev-kit)) ships an MCP server, Python library, and skill pack giving assistants like Claude Code and Cursor 50+ executable tools for Spark pipelines and Databricks jobs. Storybloq ([Storybloq/storybloq](/reading/2026-05/2026-05-11t155625-storybloqstorybloq)) and Octowiz ([raelli/octowiz](/reading/2026-05/2026-05-18t222802-raellioctowiz)) both tackle cross-session context: the former persists tickets and handovers in a .story/ git directory, the latter stores role-scoped engineering doctrine in LiteLLM Proxy memory and fetches only the relevant slice per session. Mintlify ([Mintlify](/reading/2026-04/2026-04-30t231435-mintlify)) extends documentation platforms to serve context to LLMs directly via llms.txt and MCP. Anthropic's .mcpb format ([Build a Desktop Extension with MCPB](/reading/2026-05/2026-05-27t181732-build-a-desktop-extension-with-mcpb)) lets developers package local MCP servers as single-click bundles for Claude Desktop.
+On the infrastructure side, [Temporal](/reading/2026-04/2026-04-30t231511-temporal) persists workflow state at every step so distributed applications recover from failures without manual reconciliation, and [Depot CI](/reading/2026-05/2026-05-19t110000-building-ci-with-lambda-durable-functions) applies a similar durability idea to CI orchestration via AWS Lambda durable functions and a two-layer Run/Workflow hierarchy.
 
-Not everyone is sold on MCP as the right abstraction. Ajeesh Mohan ([Your agent loves MCP as much as you love GUIs](/reading/2026-04/2026-04-23t150424-your-agent-loves-mcp-as-much-as-you-love-guis)) argues it is token-expensive and non-composable, functioning more like a GUI than a programmatic interface, and that code-capable agents are better served by layered scripts and direct API calls. Aiyan ([The Orchestrator Isn't Your Moat](/reading/2026-04/2026-04-27t113354-the-orchestrator-isnt-your-moat)) takes the opposite view: ship MCP tool servers and agent skills rather than custom orchestration harnesses that decay with model upgrades.
+Documentation is itself a tool. [Mintlify](/reading/2026-04/2026-04-30t231435-mintlify) positions itself as an AI-native documentation platform serving both human users and LLMs, with MCP and llms.txt support. [Angular Signal Forms](/reading/2026-04/2026-04-30t231412-form-model-design-angular-signal-forms) exemplifies a different kind of tooling artifact: framework documentation that encodes architectural opinion, covering type specificity and form-to-domain-model translation.
 
-Security and sandboxing have become first-class concerns. Running Claude Code inside Docker's sbx sandbox ([If You're Running Claude Code, PLEASE Run It in a Box](/reading/2026-05/2026-05-18t095002-if-youre-running-claude-code-please-run-it-in-a-box)) prevents credential leaks and filesystem damage; the author notes sandboxing also removes confirmation prompts, making agentic workflows faster. Anthropic's reference harness for autonomous vulnerability discovery ([anthropics/defending-code-reference-harness](/reading/2026-06/2026-06-04t163601-anthropicsdefending-code-reference-harness)) uses gVisor sandboxing alongside an agentic pipeline for threat modeling, scanning, and patching. SSH key management ([Using SSH Keys to Make Connectivity Simpler and Secure](/reading/2026-05/2026-05-04t231548-using-ssh-keys-to-make-connectivity-simpler-and-secure)) and container filesystem isolation ([How Container Filesystem Works](/reading/2026-05/2026-05-04t231858-how-container-filesystem-works-building-a-docker-like)) round out the lower-level infrastructure literacy that developer tooling still depends on.
+[Radar](/reading/2026-05/2026-05-03t105219-radar-open-source-kubernetes-ui) consolidates Kubernetes topology, Helm, GitOps, traffic, and security into a single binary with no cloud account required, including MCP for AI agents. The [MCPB guide](/reading/2026-05/2026-05-27t181732-build-a-desktop-extension-with-mcpb) from Anthropic shows how local MCP servers can be packaged as single-click bundles for Claude Desktop, suggesting that distribution and discoverability are now first-class tooling concerns.
 
-Platform trust is also surfacing as a concern. A critique of GitHub ([GitHub is Sinking](/reading/2026-05/2026-05-10t205349-github-is-sinking)) argues that Microsoft's ownership has degraded reliability and introduced AI-generated noise, pushing some developers toward Forgejo, Codeberg, or self-hosted forges. Meanwhile Radar ([Radar | The Missing Kubernetes UI](/reading/2026-05/2026-05-03t105238-radar-or-the-missing-open-source-kubernetes-ui)) ships as a single open-source binary with no cloud dependency, a direct counter to the managed-everything trend.
+Security cuts across all of it. [The npm Unicode attack](/reading/2026-04/2026-04-30t231634-supply-chain-attack-using-invisible-code-hits-github-and) embedded payloads in invisible variation-selector characters across 151 packages, defeating both code review and static analysis. The [defending-code-reference-harness](/reading/2026-06/2026-06-04t163601-anthropicsdefending-code-reference-harness) from Anthropic shows the countermove: an agentic pipeline using Claude for autonomous vulnerability discovery, triage, and patching inside a gVisor sandbox.
+
+[Crafting Interpreters](/reading/2026-04/2026-04-30t231027-munificentcraftinginterpreters) and [Optimal Workshop](/reading/2026-04/2026-04-30t231745-optimal-vs-usertesting) sit at the edges of this grouping. The former is a resource for building language tools from scratch; the latter is a UX research platform whose inclusion here reflects that research tooling is part of the broader developer workflow even when not writing code directly.
