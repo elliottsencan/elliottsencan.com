@@ -1,38 +1,33 @@
 ---
 title: Distributed systems
 summary: >-
-  Distributed systems thinking appears across fault tolerance, durable
-  execution, multi-agent LLM coordination, and observability, with a recurring
-  theme that the field's hard-won theory about state, failure, and coordination
-  is underused in newer engineering contexts.
+  Distributed systems concepts — coordination, state, failure, and observability
+  — recur across modern infrastructure, durable execution, multi-agent AI, and
+  formal verification, often rediscovered independently by practitioners in
+  adjacent fields.
 sources:
   - 2026-05/2026-05-01t112302-the-three-durable-function-forms
-  - >-
-    2026-05/2026-05-03t110011-getting-up-to-speed-on-multi-agent-systems-part-1-the
+  - 2026-05/2026-05-03t105238-radar-or-the-missing-open-source-kubernetes-ui
   - >-
     2026-05/2026-05-03t110027-getting-up-to-speed-on-multi-agent-systems-part-2-the
-  - >-
-    2026-05/2026-05-03t110032-getting-up-to-speed-on-multi-agent-systems-part-3-wave-1
-  - >-
-    2026-05/2026-05-03t110046-getting-up-to-speed-on-multi-agent-systems-part-4-wave-2
   - >-
     2026-05/2026-05-03t110055-getting-up-to-speed-on-multi-agent-systems-part-5-debate
   - >-
     2026-05/2026-05-03t110130-getting-up-to-speed-on-multi-agent-systems-part-8-open
   - >-
-    2026-05/2026-05-03t150555-what-happens-if-a-merge-queue-builds-on-the-wrong-commit
+    2026-05/2026-05-04t231858-how-container-filesystem-works-building-a-docker-like
   - 2026-05/2026-05-05t135637-reddit-rdevops
   - 2026-05/2026-05-08t175639-can-llms-model-real-world-systems-in-tla
   - 2026-05/2026-05-19t110000-building-ci-with-lambda-durable-functions
   - 2026-05/2026-05-31t164554-jj-vcsjj
   - >-
     2026-06/2026-06-10t223404-how-to-read-distributed-traces-when-you-didnt-write-the-code
-compiled_at: '2026-06-18T21:45:09.664Z'
+compiled_at: '2026-06-20T12:44:37.453Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 4497
-    output_tokens: 839
+    input_tokens: 3962
+    output_tokens: 760
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -43,14 +38,16 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.026076
+  cost_usd: 0.023286
 ---
-The core problems of distributed systems, managing state across nodes, handling partial failure gracefully, and coordinating concurrent actors, keep resurfacing in domains that don't always acknowledge the lineage. Two clusters of sources make this pattern visible.
+The core problems of distributed systems — how to coordinate state across multiple nodes, handle partial failures, and reason about ordering — appear across infrastructure layers that don't always acknowledge their shared lineage.
 
-On the infrastructure side, durable execution frameworks like Temporal, Restate, DBOS, and Resonate each encode different answers to the state-vs-behavior tradeoff. [Vanlightly's taxonomy](/reading/2026-05/2026-05-01t112302-the-three-durable-function-forms) maps these onto three forms: stateless functions, sessions, and actors, each with different concurrency guarantees. [Depot's CI orchestrator](/reading/2026-05/2026-05-19t110000-building-ci-with-lambda-durable-functions) is a practical instance of the same tradeoff, using AWS Lambda durable functions with a two-layer hierarchy to get checkpointed, stateful workflow execution without a long-lived process. A [GitHub merge queue bug](/reading/2026-05/2026-05-03t150555-what-happens-if-a-merge-queue-builds-on-the-wrong-commit) illustrates what happens when distributed state assumptions break silently: constructing temp branches from stale divergence points rather than HEAD quietly corrupted main branches.
+On the observability side, reading distributed traces is a learnable skill even in unfamiliar codebases. [SigNoz's guide](/reading/2026-06/2026-06-10t223404-how-to-read-distributed-traces-when-you-didnt-write-the-code) covers span anatomy, critical-path analysis, and trace patterns like N+1 staircases as a structured method for diagnosing latency without needing to know the code that produced the spans.
 
-On the multi-agent LLM side, Christopher Meiklejohn's series makes the distributed systems connection explicit. [Part 5](/reading/2026-05/2026-05-03t110055-getting-up-to-speed-on-multi-agent-systems-part-5-debate) argues that coordination structure must match task structure and that distributed systems theory offers vocabulary the MAS field is ignoring, specifically citing the CALM theorem. [Part 8](/reading/2026-05/2026-05-03t110130-getting-up-to-speed-on-multi-agent-systems-part-8-open) catalogs open problems including topology-to-reliability mapping and CRDTs for shared agent state. [Part 4](/reading/2026-05/2026-05-03t110046-getting-up-to-speed-on-multi-agent-systems-part-4-wave-2) establishes why this matters: MAS systems fail 41-87% of the time across empirical benchmarks, with information synthesis rather than coordination being the core bottleneck.
+Durable execution frameworks tackle the coordination problem differently: by making workflow state persistent and resumable. [Vanlightly's taxonomy](/reading/2026-05/2026-05-01t112302-the-three-durable-function-forms) maps Temporal, Restate, DBOS, and Resonate onto three forms — stateless functions, sessions, and actors — along a behavior-state continuum. That framing applies directly to CI: [Depot's orchestrator](/reading/2026-05/2026-05-19t110000-building-ci-with-lambda-durable-functions) implements the session pattern using AWS Lambda durable functions, checkpointing a CI workflow scheduler without any long-lived process.
 
-Formal verification runs into a parallel gap. [SysMoBench](/reading/2026-05/2026-05-08t175639-can-llms-model-real-world-systems-in-tla) found that LLMs generate TLA+ with near-perfect syntax but only ~46% conformance to actual distributed system implementations, meaning they reproduce textbook protocols rather than the real systems they're asked to model.
+Formal verification of distributed systems is where LLM limitations surface most clearly. [SysMoBench](/reading/2026-05/2026-05-08t175639-can-llms-model-real-world-systems-in-tla) benchmarks leading models on generating TLA+ specs from real system code and finds near-perfect syntax scores but only ~46% conformance and ~41% invariant accuracy. Models recite textbook protocols rather than modeling actual implementations.
 
-Observability closes the loop. [SigNoz's guide to distributed traces](/reading/2026-06/2026-06-10t223404-how-to-read-distributed-traces-when-you-didnt-write-the-code) treats span shapes and attributes as the primary artifact for understanding unfamiliar system architecture, which presupposes that traces are the ground truth of what a distributed system actually did, not what its design said it would do.
+The multi-agent AI field is quietly re-encountering classical distributed systems theory. [Meiklejohn's series](/reading/2026-05/2026-05-03t110055-getting-up-to-speed-on-multi-agent-systems-part-5-debate) identifies the CALM theorem — which links coordination requirements to logical monotonicity — as an underused formalism for deciding when agents need explicit coordination. His [open questions post](/reading/2026-05/2026-05-03t110130-getting-up-to-speed-on-multi-agent-systems-part-8-open) names CRDTs for shared agent state, failure recovery, and backpressure protocols as unsolved problems the field is rediscovering without the vocabulary to name them.
+
+At the infrastructure layer, Kubernetes clusters are themselves distributed systems whose operational complexity prompted tools like [Radar](/reading/2026-05/2026-05-03t105238-radar-or-the-missing-open-source-kubernetes-ui), which unifies topology, events, Helm, GitOps, and image inspection across multiple clusters into a single UI.
