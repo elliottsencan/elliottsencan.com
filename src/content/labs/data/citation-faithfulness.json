@@ -3116,7 +3116,7 @@
     }
   ],
   "totals": {
-    "articles_evaluated": 1,
+    "articles_evaluated": 20,
     "total_claims": 161,
     "total_cost_usd_by_judge": {
       "claude-haiku-4-5": 0.2264,
