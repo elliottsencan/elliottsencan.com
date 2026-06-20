@@ -17,6 +17,7 @@ sources:
     2026-05/2026-05-18t095002-if-youre-running-claude-code-please-run-it-in-a-box
   - 2026-05/2026-05-27t181732-build-a-desktop-extension-with-mcpb
   - 2026-06/2026-06-02t212937-no-mcp-is-definitely-not-dead-the-nsa-agrees
+  - 2026-06/2026-06-20t145835-chopratejasheadroom
 compiled_at: '2026-06-18T21:50:53.685Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -34,6 +35,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.023721
+last_source_added: '2026-06-20T21:58:35.318Z'
 ---
 LLM tooling covers the practical infrastructure between a model and a working system: how the model runs, how it receives context, how it acts on the outside world, and how its outputs stay reliable over time.
 

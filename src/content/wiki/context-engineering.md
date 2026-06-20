@@ -41,6 +41,7 @@ sources:
     2026-06/2026-06-11t090709-agent-memory-is-a-belief-maintenance-problem-not-a-storage
   - 2026-06/2026-06-13t083401-sgupai-fable5md
   - 2026-06/2026-06-14t091145-001tmfharness-forge
+  - 2026-06/2026-06-20t145835-chopratejasheadroom
 aliases:
   - context-management
 compiled_at: '2026-06-18T21:42:33.866Z'
@@ -60,6 +61,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.044178
+last_source_added: '2026-06-20T21:58:35.318Z'
 ---
 Context engineering sits at the intersection of systems design and language model behavior: the premise is that model quality is largely fixed, so the leverage point is controlling what the model sees. That framing appears across the sources here in different forms, from infrastructure-level caching to belief-maintenance theory.
 

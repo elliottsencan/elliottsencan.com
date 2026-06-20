@@ -18,6 +18,7 @@ sources:
   - 2026-06/2026-06-02t212937-no-mcp-is-definitely-not-dead-the-nsa-agrees
   - >-
     2026-06/2026-06-03t105229-putting-code-under-a-microscope-wavelet-based-context-for
+  - 2026-06/2026-06-20t145835-chopratejasheadroom
 aliases:
   - model-context-protocol
 compiled_at: '2026-06-18T21:51:14.066Z'
@@ -37,6 +38,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.025719
+last_source_added: '2026-06-20T21:58:35.318Z'
 ---
 The Model Context Protocol is a standard Anthropic introduced so that AI agents can discover and invoke external capabilities through a uniform interface. An agent-facing tool server advertises its capabilities via MCP, and the agent calls them without needing bespoke integration code for each system.
 

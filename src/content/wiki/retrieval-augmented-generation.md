@@ -18,6 +18,7 @@ sources:
   - >-
     2026-06/2026-06-11t090709-agent-memory-is-a-belief-maintenance-problem-not-a-storage
   - 2026-06/2026-06-14t094245-agentswarms
+  - 2026-06/2026-06-20t145835-chopratejasheadroom
 compiled_at: '2026-06-18T21:54:48.586Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -35,6 +36,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.025413
+last_source_added: '2026-06-20T21:58:35.318Z'
 ---
 Retrieval-augmented generation pairs an LLM with a retrieval step that pulls relevant documents into the prompt at query time, letting the model answer from up-to-date or domain-specific sources without baking that knowledge into weights. The canonical implementation uses vector embeddings to find semantically similar chunks, but that architecture has challengers.
 
