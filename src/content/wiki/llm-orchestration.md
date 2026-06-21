@@ -19,6 +19,7 @@ sources:
   - 2026-06/2026-06-14t091145-001tmfharness-forge
   - 2026-06/2026-06-14t094245-agentswarms
   - 2026-06/2026-06-21t112220-agentic-engineering
+  - 2026-06/2026-06-21t130526-agentic-engineering
 compiled_at: '2026-06-18T21:50:37.223Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -36,7 +37,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.025752
-last_source_added: '2026-06-21T18:22:20.908Z'
+last_source_added: '2026-06-21T20:05:26.957Z'
 ---
 Orchestrating LLMs means more than chaining prompts. The sources here converge on a common problem: a single model in a single context window is too fragile and too limited for long-running, high-stakes tasks. The solutions span architectures, governance, and tooling.
 

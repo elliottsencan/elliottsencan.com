@@ -59,6 +59,7 @@ sources:
   - 2026-06/2026-06-13t083401-sgupai-fable5md
   - 2026-06/2026-06-14t094245-agentswarms
   - 2026-06/2026-06-21t112220-agentic-engineering
+  - 2026-06/2026-06-21t130526-agentic-engineering
 compiled_at: '2026-06-18T21:39:17.616Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -76,7 +77,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.05985
-last_source_added: '2026-06-21T18:22:20.908Z'
+last_source_added: '2026-06-21T20:05:26.957Z'
 ---
 An AI agent is an LLM-based system that loops over perception, reasoning, and action across multiple steps, often invoking external tools and maintaining some form of state between turns. The category spans single-model coding assistants, multi-agent pipelines with specialized sub-agents, and fully autonomous systems that run for hours without human input.
 
