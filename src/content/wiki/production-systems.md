@@ -1,21 +1,33 @@
 ---
 title: Production systems
 summary: >-
-  Production systems demand failure resilience, durable state, observability,
-  and disciplined rollback — sources across CI orchestration, workflow engines,
-  inference infrastructure, and testing converge on these recurring pressures.
+  The operational concerns of running software in production: reliability,
+  observability, testing strategy, workflow durability, and the infrastructure
+  decisions that determine how systems behave under real load.
 sources:
+  - >-
+    2026-04/2026-04-29t172018-how-to-build-scalable-web-apps-with-openais-privacy-filter
   - 2026-04/2026-04-30t231206-poolday
   - 2026-04/2026-04-30t231511-temporal
+  - 2026-05/2026-05-01t112302-the-three-durable-function-forms
   - >-
-    2026-05/2026-05-04t231548-using-ssh-keys-to-make-connectivity-simpler-and-secure
+    2026-05/2026-05-03t150555-what-happens-if-a-merge-queue-builds-on-the-wrong-commit
+  - >-
+    2026-05/2026-05-04t231858-how-container-filesystem-works-building-a-docker-like
   - 2026-05/2026-05-05t071447-friends-dont-let-friends-use-ollama
   - 2026-05/2026-05-05t135637-reddit-rdevops
+  - >-
+    2026-05/2026-05-10t140531-agent-observability-needs-feedback-to-power-learning
   - 2026-05/2026-05-15t120337-playwright-testing-in-staging-vs-production
+  - 2026-05/2026-05-18t113714-yaml-thats-norway-problem
   - 2026-05/2026-05-19t110000-building-ci-with-lambda-durable-functions
   - 2026-05/2026-05-20t073125-how-to-cut-llm-inference-costs-with-kv-caching
   - >-
+    2026-05/2026-05-20t073144-maximizing-llm-efficiency-granular-prompt-caching-with-pure
+  - >-
     2026-05/2026-05-20t073157-20x-faster-inference-with-the-first-kv-cache-for-s3-and-nfs
+  - >-
+    2026-06/2026-06-04t195339-how-anthropic-enables-self-service-data-analytics-with
   - 2026-06/2026-06-10t073045-the-unwritten-laws-of-software-engineering
   - >-
     2026-06/2026-06-10t223404-how-to-read-distributed-traces-when-you-didnt-write-the-code
@@ -23,14 +35,12 @@ sources:
   - 2026-06/2026-06-11t111011-hows-linear-so-fast-a-technical-breakdown
   - >-
     2026-06/2026-06-18t090801-how-i-audit-a-legacy-rails-codebase-in-the-first-week
-aliases:
-  - production-engineering
-compiled_at: '2026-06-18T21:53:25.492Z'
+compiled_at: '2026-06-21T18:31:49.628Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 4548
-    output_tokens: 780
+    input_tokens: 5842
+    output_tokens: 959
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -41,16 +51,18 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.025344
+  cost_usd: 0.031911
 ---
-The hard lessons of running software in production cluster around a handful of recurring themes: state must survive failures, rollback beats debugging, dependencies will fail, and tests need to reflect real-world risk.
+Running software in production is a distinct discipline from building it. The gap between a working prototype and a system that survives real users, hardware failures, and accumulated edge cases is where most engineering complexity lives.
 
-[Temporal](/reading/2026-04/2026-04-30t231511-temporal) addresses the state-survival problem directly, persisting workflow state at every step so distributed applications recover from failures without manual reconciliation. Depot CI's orchestrator applies the same principle at a different layer: [AWS Lambda durable functions](/reading/2026-05/2026-05-19t110000-building-ci-with-lambda-durable-functions) run a stateful, checkpointed CI scheduler without any long-lived process, using a two-tier Lambda hierarchy and callback-driven job coordination.
+Reliability starts with how failures are handled. [Temporal](/reading/2026-04/2026-04-30t231511-temporal) persists workflow state at every step so distributed applications recover from failures automatically, without manual reconciliation. [Jack Vanlightly's taxonomy](/reading/2026-05/2026-05-01t112302-the-three-durable-function-forms) organizes this space into three durable execution forms — stateless functions, sessions, and actors — and maps how Temporal, Restate, DBOS, and Resonate each implement them. [Depot's CI orchestrator](/reading/2026-05/2026-05-19t110000-building-ci-with-lambda-durable-functions) applies the same principle differently, using AWS Lambda durable functions in a two-layer hierarchy so a stateful CI scheduler runs without keeping a long-lived process alive.
 
-Observability under unfamiliar conditions is a companion concern. [Reading distributed traces in code you didn't write](/reading/2026-06/2026-06-10t223404-how-to-read-distributed-traces-when-you-didnt-write-the-code) treats span shapes and attributes as the primary diagnostic surface, which pairs with the blunt rule from [The Unwritten Laws of Software Engineering](/reading/2026-06/2026-06-10t073045-the-unwritten-laws-of-software-engineering): roll back first, debug second, and treat every external dependency as a scheduled outage.
+Observability is the other side of reliability. [Distributed traces](/reading/2026-06/2026-06-10t223404-how-to-read-distributed-traces-when-you-didnt-write-the-code) let engineers diagnose systems they didn't write by reading span anatomy and critical-path patterns like N+1 staircases. But traces alone don't improve agentic systems; [LangChain's Harrison Chase argues](/reading/2026-05/2026-05-10t140531-agent-observability-needs-feedback-to-power-learning) that attaching feedback signals — user ratings, indirect behavior, LLM-as-judge — to traces is what turns observability into a learning loop.
 
-Testing strategy reflects these pressures in environment design. [Playwright Testing in Staging vs Production](/reading/2026-05/2026-05-15t120337-playwright-testing-in-staging-vs-production) frames staging and production as having distinct risk profiles, not just as clones at different scales. [Emphere's security testing approach](/reading/2026-06/2026-06-11t024225-testing-a-security-tool-like-it-can-hurt-people) pushes further, requiring real-kernel runners and "red runs" that prove the system fails loudly rather than silently overclaiming correctness.
+Testing strategy under production conditions requires choosing what to verify where. [Currents' framework](/reading/2026-05/2026-05-15t120337-playwright-testing-in-staging-vs-production) for Playwright tests separates flows by environment based on risk and operational cost. [Emphere's approach](/reading/2026-06/2026-06-11t024225-testing-a-security-tool-like-it-can-hurt-people) goes further for high-stakes tooling, requiring red runs that prove the system fails loudly when it would otherwise overclaim certainty.
 
-At the infrastructure layer, production LLM serving adds cost and latency concerns that stateless request handling cannot address alone. [KV caching](/reading/2026-05/2026-05-20t073125-how-to-cut-llm-inference-costs-with-kv-caching) persists precomputed attention states across sessions, cutting time-to-first-token by up to 20x at scale, with [Pure Storage's KVA](/reading/2026-05/2026-05-20t073157-20x-faster-inference-with-the-first-kv-cache-for-s3-and-nfs) demonstrating this on NFS and S3 without model or infrastructure changes.
+Infrastructure choices compound over time. [Ivan Velichko's walkthrough](/reading/2026-05/2026-05-04t231858-how-container-filesystem-works-building-a-docker-like) of assembling a container from Linux primitives shows how mount namespaces and root filesystem isolation actually work beneath the abstraction layer. A GitHub merge queue bug described by [Trunk](/reading/2026-05/2026-05-03t150555-what-happens-if-a-merge-queue-builds-on-the-wrong-commit) silently deleted thousands of lines from main branches; their architectural choice to avoid pushing temp branches to main was the specific decision that prevented the incident.
 
-Authentication hygiene across production machines is a lower-level but persistent concern; [SSH key-based authentication](/reading/2026-05/2026-05-04t231548-using-ssh-keys-to-make-connectivity-simpler-and-secure) with agent forwarding eliminates PAT tokens from the credential surface across distributed Linux environments.
+At scale, configuration format bugs become production hazards. [YAML's Norway problem](/reading/2026-05/2026-05-18t113714-yaml-thats-norway-problem) — where the country code NO parses as false — persists in widely used libraries a decade after the spec fix, a reminder that format choices carry long operational tails.
+
+[Anton Zaides distills](/reading/2026-06/2026-06-10t073045-the-unwritten-laws-of-software-engineering) several hard-won production rules from real incidents: roll back before debugging, and treat every external dependency as a future outage. The lesson underlying most production failures is that systems behave differently under real conditions than under designed ones, and the engineering disciplines around reliability, observability, and testing exist to close that gap.

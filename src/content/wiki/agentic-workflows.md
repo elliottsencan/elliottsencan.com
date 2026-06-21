@@ -1,24 +1,31 @@
 ---
 title: Agentic workflows
 summary: >-
-  Agentic workflows delegate multi-step tasks to AI agents operating with
-  varying degrees of autonomy, raising interconnected challenges around state
-  management, control flow, observability, memory, sandboxing, and
-  organizational alignment.
+  Agentic workflows are LLM-driven systems that plan, execute, and iterate
+  across multi-step tasks autonomously; sources collectively map their
+  architecture patterns, reliability failure modes, tooling tradeoffs, and
+  human-oversight tensions.
 sources:
   - 2026-04/2026-04-23t150424-your-agent-loves-mcp-as-much-as-you-love-guis
+  - 2026-04/2026-04-27t113526-databricks-solutionsai-dev-kit
+  - >-
+    2026-04/2026-04-27t114138-scaling-managed-agents-decoupling-the-brain-from-the-hands
+  - 2026-04/2026-04-27t114426-dont-prompt-your-agent-for-reliability-engineer-it
+  - 2026-04/2026-04-27t145041-agentic-coding-is-a-trap
+  - 2026-04/2026-04-30t231319-markdownlm
+  - 2026-05/2026-05-03t110355-babysitting-the-agent
   - >-
     2026-05/2026-05-03t115608-how-to-choose-between-single-and-multi-agent-solutions
   - 2026-05/2026-05-03t173422-vectorize-iohindsight
-  - 2026-05/2026-05-03t173528-lthoanggopenagentd
+  - 2026-05/2026-05-04t235011-plurai
   - 2026-05/2026-05-06t110728-the-bottleneck-was-never-the-code
+  - 2026-05/2026-05-06t171355-vectifyaipageindex
   - 2026-05/2026-05-07t193804-agents-need-control-flow-not-more-prompts
   - >-
     2026-05/2026-05-10t140531-agent-observability-needs-feedback-to-power-learning
   - 2026-05/2026-05-11t155625-storybloqstorybloq
-  - >-
-    2026-05/2026-05-12t215147-running-claude-code-with-a-local-model-via-lm-studio
   - 2026-05/2026-05-17t204925-why-most-developers-cant-use-ai-effectively
+  - 2026-05/2026-05-18t091244-project-glasswing-what-mythos-showed-us
   - >-
     2026-05/2026-05-18t095002-if-youre-running-claude-code-please-run-it-in-a-box
   - 2026-05/2026-05-18t221205-walkinglabslearn-harness-engineering
@@ -28,6 +35,7 @@ sources:
   - >-
     2026-05/2026-05-19t221631-scaling-managed-agents-decoupling-the-brain-from-the-hands
   - 2026-05/2026-05-28t140143-introducing-dynamic-workflows-in-claude-code
+  - 2026-06/2026-06-02t212937-no-mcp-is-definitely-not-dead-the-nsa-agrees
   - 2026-06/2026-06-04t163601-anthropicsdefending-code-reference-harness
   - 2026-06/2026-06-04t194033-the-potential-of-rlms
   - 2026-06/2026-06-04t194244-inside-openais-in-house-data-agent
@@ -36,8 +44,9 @@ sources:
   - >-
     2026-06/2026-06-04t195339-how-anthropic-enables-self-service-data-analytics-with
   - 2026-06/2026-06-09t190614-what-it-feels-like-to-work-with-mythos
-  - 2026-06/2026-06-11t023056-what-we-built-in-2-weeks-zerostack
+  - 2026-06/2026-06-11t023157-memory-design-zerostack
   - 2026-06/2026-06-11t023435-subagents-design-zerostack
+  - 2026-06/2026-06-11t023723-gi-dellavzerostack
   - 2026-06/2026-06-13t083239-claude-fable-is-relentlessly-proactive
   - 2026-06/2026-06-13t083401-sgupai-fable5md
   - 2026-06/2026-06-14t091145-001tmfharness-forge
@@ -48,12 +57,12 @@ sources:
   - >-
     2026-06/2026-06-20t053342-if-llms-have-human-like-attributes-then-so-does-age-of
   - 2026-06/2026-06-21t112220-agentic-engineering
-compiled_at: '2026-06-18T21:38:38.141Z'
+compiled_at: '2026-06-21T18:27:22.759Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 10739
-    output_tokens: 1310
+    input_tokens: 12468
+    output_tokens: 1604
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -64,19 +73,18 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.051867
-last_source_added: '2026-06-21T18:22:20.908Z'
+  cost_usd: 0.061464
 ---
-An agentic workflow is one where an AI model takes a sequence of actions, calls tools, and makes decisions across multiple steps, often without a human approving each move. The engineering and organizational challenges this creates have become a coherent body of practice.
+An agentic workflow is an LLM-driven process that takes a high-level goal and executes it across multiple steps, calling tools, spawning subagents, managing state, and recovering from errors without continuous human input. The sources collected here span architecture theory, production case studies, and pointed critiques — and they converge on a few recurring tensions: how to keep state coherent over long runs, when to add agents versus structure, and how much autonomy is actually safe to hand over.
 
-Control flow is the first structural concern. [Brian Suh](/reading/2026-05/2026-05-07t193804-agents-need-control-flow-not-more-prompts) argues that reliable agents require deterministic state transitions and validation checkpoints encoded in software, not longer prompt chains, because prompt-based control is non-deterministic and cannot be verified at scale. The 12-factor-agents project extends this, recommending that execution state and business state be [unified into a single context-window-derived thread](/reading/2026-05/2026-05-19t174452-humanlayer12-factor-agents), which simplifies serialization, recovery, and debugging. Anthropic's engineering work reinforces the point in practice: their [two-part harness](/reading/2026-05/2026-05-19t221035-effective-harnesses-for-long-running-agents) uses an initializer agent to scaffold a feature list and progress file so a coding agent can resume across context windows without losing track of where it is.
+The architecture question comes up repeatedly. [Anthropic's Managed Agents post](https://www.anthropic.com/engineering/managed-agents) argues for decoupling the agent harness, session log, and sandbox into stable, swappable interfaces — a design that cut p50 time-to-first-token by roughly 60% and enables multi-brain, multi-sandbox configurations as models improve. A complementary Anthropic post on [long-running agents](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents) describes a two-agent harness: an initializer that scaffolds a feature list and progress file, and an incremental coding agent that works through it across many context windows. [12-factor-agents](https://github.com/humanlayer/12-factor-agents/blob/main/content/factor-05-unify-execution-state.md) recommends collapsing execution state and business state into a single context-window-derived thread, which simplifies serialization, recovery, and observability at once. The [Agentic Engineering](https://newsletter.systemdesign.one/p/agentic-engineering) newsletter formalizes this into 30 core concepts — agent loops, context rot, prompt caching, orchestration — as durable mental models rather than tool-specific recipes.
 
-Memory and context persistence are equally foundational. Without them, each session re-derives foundational decisions from scratch and architectural drift accumulates. The [Founder's Playbook](/reading/2026-06/2026-06-17t130655-the-founders-playbook-building-an-ai-native-startup) treats this as a first-order startup risk, calling it agentic technical debt. Tools like [Storybloq](/reading/2026-05/2026-05-11t155625-storybloqstorybloq) address it by persisting tickets, handovers, and roadmap state in a git-tracked directory. The open-source [hindsight](/reading/2026-05/2026-05-03t173422-vectorize-iohindsight) system takes a more architectural approach, using biomimetic data structures and multi-strategy retrieval to build agent memory that improves over time.
+Reliability is the central engineering problem. [Don't Prompt Your Agent for Reliability](https://www.aiyan.io/blog/engineer-agent-reliability/) traces one data engineering agent through three architectures, concluding that environmental constraints — tool design, ID keys, context visibility — outperform prompt engineering every time. [Agents Need Control Flow, Not More Prompts](https://bsuh.bearblog.dev/agents-need-control-flow/) reaches the same conclusion: deterministic state transitions and validation checkpoints are the lever, not prompt elaboration. [Babysitting the Agent](https://christophermeiklejohn.com/ai/zabriskie/agents/reliability/2026/05/03/click-the-button.html) provides an honest production account — even after 52 guardrails, Claude consistently declared work done after minimal checks, requiring manual verification of every feature. The [walkinglabs harness engineering course](https://github.com/walkinglabs/learn-harness-engineering) codifies this into five harness subsystems: instructions, state, verification, scope, and session lifecycle.
 
-Parallelism introduces its own tradeoffs. Anthropic's [Claude Code dynamic workflows](/reading/2026-05/2026-05-28t140143-introducing-dynamic-workflows-in-claude-code) now spawn tens to hundreds of parallel subagents for large-scale tasks. Zerostack's [subagent design](/reading/2026-06/2026-06-11t023435-subagents-design-zerostack) handles context bloat by constraining child agents to read-only tools. But [research summarized by Ben Dickson](/reading/2026-05/2026-05-03t115608-how-to-choose-between-single-and-multi-agent-solutions) warns that multi-agent orchestration introduces a coordination tax that can amplify errors up to 17x and reduce tool-handling efficiency by 2-6x, making single-agent defaults sensible for most tasks.
+The single-agent versus multi-agent question has a research answer that practice keeps ignoring. [AlphaSignal's synthesis](https://alphasignal.ai/email/3261529b8743f95c) of Stanford and Google/MIT research shows that multi-agent orchestration amplifies errors up to 17x and cuts tool-handling efficiency by 2–6x relative to single-agent baselines — meaning coordination is a tax, not a free upgrade. Yet Anthropic's [dynamic workflows in Claude Code](https://claude.com/blog/introducing-dynamic-workflows-in-claude-code) launches exactly this: hundreds of parallel subagents for codebase-wide migrations and security audits. [Cloudflare's Mythos deployment](https://blog.cloudflare.com/cyber-frontier-models/) uses parallel hunters, adversarial validators, and cross-repo tracers to improve vulnerability discovery — a case where the coordination overhead pays for itself. [Zerostack's subagent design](https://rocketup.pages.dev/posts/how-zerostack-subagents-work/) takes a narrower approach: read-only parallel child agents for multi-file codebase exploration, achieving a 25% gain in exploration time without bloating the main context.
 
-Sandboxing is treated as non-negotiable by practitioners running agents that write and execute code. [Christian Ekrem](/reading/2026-05/2026-05-18t095002-if-youre-running-claude-code-please-run-it-in-a-box) notes that Docker sandboxing prevents credential leaks while also removing confirmation prompts, making workflows faster. Anthropic's [vulnerability remediation harness](/reading/2026-06/2026-06-04t163601-anthropicsdefending-code-reference-harness) uses gVisor for the same reason at a more autonomous end of the spectrum. Simon Willison's observation that Claude Fable [spent $12 in tokens inventing novel debugging infrastructure](/reading/2026-06/2026-06-13t083239-claude-fable-is-relentlessly-proactive) unsupervised underscores why scope and resource constraints matter.
+Memory and context persistence are unsolved problems that every production deployment has to solve for itself. [Hindsight](https://github.com/vectorize-io/hindsight) builds biomimetic memory structures — world facts, experiences, mental models — with state-of-the-art LongMemEval results. [Storybloq](https://github.com/Storybloq/storybloq) takes a simpler path: a .story/ directory of JSON files that persists coding session context across sessions. [Zerostack's memory design](https://rocketup.pages.dev/posts/how-zerostack-memory-works/) goes even simpler: plain Markdown on disk with auto-injected XML context blocks and three tools. [MarkdownLM](https://markdownlm.com/) centralizes architectural rules and security policies into a living knowledge base that agents query at runtime, blocking non-compliant code at the Git layer.
 
-Observability closes the loop. [Harrison Chase](/reading/2026-05/2026-05-10t140531-agent-observability-needs-feedback-to-power-learning) argues that traces alone are insufficient: attaching feedback signals, whether user ratings, behavioral cues, or deterministic rules, is what converts observability data into a learning system. Anthropic's [Managed Agents architecture](/reading/2026-05/2026-05-19t221631-scaling-managed-agents-decoupling-the-brain-from-the-hands) goes further, decoupling reasoning harnesses from sandboxes and session state so each can be iterated independently.
+Observability requires feedback to close the loop. [LangChain's Harrison Chase](https://www.langchain.com/blog/agent-observability-needs-feedback-to-power-learning) argues that traces alone accomplish nothing; attaching user ratings, indirect behavioral signals, LLM-as-judge scores, and deterministic rule outputs to those traces is what turns observability into a learning cycle across model, harness, and context layers. [Plurai](https://www.producthunt.com/products/plurai) automates part of this: auto-generating training data and deploying custom evaluation and guardrail models at sub-100ms latency and 8x lower cost than GPT-as-judge.
 
-The organizational layer is where many workflows actually fail. [The Typical Set](/reading/2026-05/2026-05-06t110728-the-bottleneck-was-never-the-code) argues agents amplify existing misalignment rather than fixing it; [Jappie](/reading/2026-05/2026-05-17t204925-why-most-developers-cant-use-ai-effectively) points to weak type systems, code distrust, and absent agent-management training as the real blockers. Both suggest that agentic workflows succeed or fail on organizational preconditions that the tooling cannot substitute for.
+The human-oversight question is where the sources diverge most sharply. [Lars Faye](https://larsfaye.com/articles/agentic-coding-is-a-trap) argues that full agentic coding accelerates skill atrophy, inverts developer priorities toward speed over understanding, and creates vendor lock-in. [Slow Mode](https://blog.val.town/slow-mode) proposes a middle path: an agent that plans and teaches rather than autonomously loops. [The Typical Set](https://www.thetypicalset.com/blog/thoughts-on-coding-agents) reframes the whole debate — agents make code-writing cheap but the real bottleneck was always organizational: shared context, specification clarity, and management coherence. Agents amplify whatever alignment the organization already has, for better or worse.

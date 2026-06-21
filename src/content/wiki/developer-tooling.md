@@ -1,17 +1,22 @@
 ---
 title: Developer tooling
 summary: >-
-  The tooling layer of software development spans shell ergonomics, version
-  control workflows, CI infrastructure, test reliability, and AI-augmented
-  pipelines; recent sources show these layers converging as AI agents become
-  both consumers and producers of tooling.
+  The landscape of developer tools spans version control, testing, shell
+  ergonomics, AI coding assistants, and platform engineering, with a shared
+  pressure to reduce friction, enforce correctness, and keep humans in
+  meaningful control of complex systems.
 sources:
-  - 2026-04/2026-04-30t195531-what-ci-actually-looks-like-at-a-100-person-team
+  - 2026-04/2026-04-23t150424-your-agent-loves-mcp-as-much-as-you-love-guis
+  - 2026-04/2026-04-27t113526-databricks-solutionsai-dev-kit
+  - >-
+    2026-04/2026-04-29t172018-how-to-build-scalable-web-apps-with-openais-privacy-filter
   - >-
     2026-04/2026-04-30t230851-from-flaky-to-flawless-angular-api-response-management-with
   - 2026-04/2026-04-30t230919-dmytro-mezhenskyi-udmezhenskyi-on-reddit
   - 2026-04/2026-04-30t231239-ibrahim-3dorchestrator-supaconductor
+  - 2026-04/2026-04-30t231319-markdownlm
   - 2026-04/2026-04-30t231348-testdino
+  - 2026-04/2026-04-30t231709-conductor
   - >-
     2026-04/2026-04-30t231815-shell-tricks-that-actually-make-life-easier-and-save-your
   - 2026-04/2026-04-30t231909-the-great-css-expansion
@@ -19,30 +24,46 @@ sources:
   - 2026-04/2026-04-30t232126-lostwarriorknowledge-base
   - >-
     2026-05/2026-05-01t102345-sap-related-npm-packages-compromised-in-credential-stealing
+  - 2026-05/2026-05-03t105238-radar-or-the-missing-open-source-kubernetes-ui
   - >-
     2026-05/2026-05-03t150555-what-happens-if-a-merge-queue-builds-on-the-wrong-commit
-  - 2026-05/2026-05-03t173528-lthoanggopenagentd
+  - >-
+    2026-05/2026-05-04t231548-using-ssh-keys-to-make-connectivity-simpler-and-secure
+  - >-
+    2026-05/2026-05-05t135218-designing-playwright-tests-that-survive-ui-refactors
+  - 2026-05/2026-05-06t204115-platform-engineering-end-to-end
+  - 2026-05/2026-05-10t205349-github-is-sinking
+  - 2026-05/2026-05-11t155625-storybloqstorybloq
+  - >-
+    2026-05/2026-05-12t165232-seven-cool-javascript-libraries-you-should-know-about
+  - >-
+    2026-05/2026-05-12t215147-running-claude-code-with-a-local-model-via-lm-studio
+  - >-
+    2026-05/2026-05-14t190300-opus-47-low-vs-medium-vs-high-vs-xhigh-vs-max-the-reasoning
+  - >-
+    2026-05/2026-05-18t095002-if-youre-running-claude-code-please-run-it-in-a-box
+  - 2026-05/2026-05-18t113714-yaml-thats-norway-problem
+  - 2026-05/2026-05-18t222802-raellioctowiz
   - 2026-05/2026-05-27t181732-build-a-desktop-extension-with-mcpb
   - >-
     2026-05/2026-05-27t181744-ruby-vs-java-vs-typescript-my-experience-on-building-a
   - 2026-05/2026-05-28t140143-introducing-dynamic-workflows-in-claude-code
   - 2026-05/2026-05-31t164252-reviewing-large-changes-with-jujutsu
-  - >-
-    2026-06/2026-06-03t105229-putting-code-under-a-microscope-wavelet-based-context-for
+  - 2026-05/2026-05-31t164554-jj-vcsjj
   - >-
     2026-06/2026-06-10t223404-how-to-read-distributed-traces-when-you-didnt-write-the-code
   - 2026-06/2026-06-11t023056-what-we-built-in-2-weeks-zerostack
-  - 2026-06/2026-06-11t023157-memory-design-zerostack
+  - 2026-06/2026-06-11t023723-gi-dellavzerostack
   - 2026-06/2026-06-11t083730-7-more-common-mistakes-in-architecture-diagrams
   - 2026-06/2026-06-17t075738-gunnargray-devunicode-animations
   - 2026-06/2026-06-17t075816-matt-palmer
   - 2026-06/2026-06-18t024208-the-git-commands-i-run-before-reading-any-code
-compiled_at: '2026-06-18T21:44:20.068Z'
+compiled_at: '2026-06-21T18:25:00.685Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 10850
-    output_tokens: 1235
+    input_tokens: 13271
+    output_tokens: 1394
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -53,16 +74,20 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.051075
+  cost_usd: 0.060723
 ---
-Developer tooling covers every layer between a developer and working software: the shell, version control, CI pipelines, test infrastructure, static analysis, and increasingly AI agents that operate across all of them. The sources here collectively show that each layer is undergoing its own inflection point, and the layers are starting to interact in new ways.
+Developer tooling is the category of software, libraries, and practices that shape how engineers write, test, ship, and reason about code. The sources here span enough ground to reveal recurring tensions: automation versus oversight, abstraction versus transparency, and local ergonomics versus system-wide safety.
 
-At the shell and version control layer, the basics still matter. [Shell shortcuts and scripting safeguards](/reading/2026-04/2026-04-30t231815-shell-tricks-that-actually-make-life-easier-and-save-your) — Readline bindings, history search, brace expansion, `set -euo pipefail` — save compounding friction daily. Git's own history is a diagnostic tool: [five log commands](/reading/2026-06/2026-06-18t024208-the-git-commands-i-run-before-reading-any-code) covering churn hotspots, bus factor, and hotfix frequency can characterize a codebase's risk profile before reading a line of source. [Jujutsu offers a workflow](/reading/2026-05/2026-05-31t164252-reviewing-large-changes-with-jujutsu) for large pull request review by treating commits as malleable containers, inserting empty parents and squashing reviewed files incrementally.
+At the version control layer, [Jujutsu](/reading/2026-05/2026-05-31t164554-jj-vcsjj) challenges Git's model by auto-committing the working copy and treating conflicts as first-class objects. This makes large PR review tractable in practice: [a documented workflow](/reading/2026-05/2026-05-31t164252-reviewing-large-changes-with-jujutsu) uses jj to insert an empty parent commit and squash files into it as review progresses, persisting partial work in version control rather than stashes. Meanwhile, [David Bushell's case against GitHub](/reading/2026-05/2026-05-10t205349-github-is-sinking) argues that reliability and quality on the dominant Git forge have declined sharply enough under Microsoft to warrant migration to Codeberg or self-hosted alternatives. The [GitHub merge queue incident documented by Trunk](/reading/2026-05/2026-05-03t150555-what-happens-if-a-merge-queue-builds-on-the-wrong-commit) adds concrete evidence: a bug silently deleted thousands of lines from main branches by building temp branches off the wrong base. Their architectural choice to never push temp branches to main avoided the incident entirely.
 
-CI infrastructure carries reliability problems at scale. [Mendral's agent on PostHog's monorepo](/reading/2026-04/2026-04-30t195531-what-ci-actually-looks-like-at-a-100-person-team) processed 1.18 billion log lines and 33 million weekly test executions; the finding was that log ingestion speed and alert routing mattered more than the AI diagnosis itself. Merge queue correctness is its own failure surface: [a GitHub merge queue bug](/reading/2026-05/2026-05-03t150555-what-happens-if-a-merge-queue-builds-on-the-wrong-commit) silently rewrote main by constructing temp branches from stale divergence points, a class of error that only architectural choices about temp branch placement can prevent. Test reporting tools like [TestDino](/reading/2026-04/2026-04-30t231348-testdino) sit above the CI layer, auto-categorizing failures as bugs, flaky tests, or UI changes to cut manual triage.
+Testing tooling surfaces a similar pattern. [TestDino](/reading/2026-04/2026-04-30t231348-testdino) layers AI-powered analytics over Playwright to auto-categorize failures and claims to recover 6-8 engineer-hours weekly. But the [Currents team](/reading/2026-05/2026-05-05t135218-designing-playwright-tests-that-survive-ui-refactors) argues the root problem is architectural: tests that couple to CSS classes and DOM structure rather than semantic roles break during UI refactors regardless of how they are reported. Fixing the reporting layer without fixing the authoring layer just makes failures easier to see.
 
-Security is now a tooling concern, not just a deployment concern. [Four SAP-ecosystem npm packages](/reading/2026-05/2026-05-01t102345-sap-related-npm-packages-compromised-in-credential-stealing) were poisoned to harvest cloud secrets and browser passwords, using Claude Code and VS Code configuration files as persistence vectors. AI coding tools have become an attack surface their supply chains must defend.
+Shell-level tooling remains underinvested relative to its impact. [Christian Hofstede-Kuhn's guide](/reading/2026-04/2026-04-30t231815-shell-tricks-that-actually-make-life-easier-and-save-your) covers Readline key bindings, history search, brace expansion, process substitution, and script safety flags across POSIX, Bash, and Zsh. These are capabilities that have existed for decades but are still widely unknown. Similarly, [a practical SSH guide](/reading/2026-05/2026-05-04t231548-using-ssh-keys-to-make-connectivity-simpler-and-secure) covers key generation, agent forwarding, and commit signing as the baseline for secure multi-machine workflows.
 
-The AI tooling layer itself is expanding fast. [Claude Code's dynamic workflows](/reading/2026-05/2026-05-28t140143-introducing-dynamic-workflows-in-claude-code) spawn tens to hundreds of parallel subagents for codebase migrations and security audits. [WaveScope](/reading/2026-06/2026-06-03t105229-putting-code-under-a-microscope-wavelet-based-context-for) applies wavelet transforms to source code as an MCP server, reducing token usage by up to 92% versus grep-based retrieval. [MCPB packaging](/reading/2026-05/2026-05-27t181732-build-a-desktop-extension-with-mcpb) turns local MCP servers into single-click bundles, while a [developer comparing Ruby, Java, and TypeScript](/reading/2026-05/2026-05-27t181744-ruby-vs-java-vs-typescript-my-experience-on-building-a) for a Claude plugin found TypeScript preferable specifically because of potential MCPB support. Memory and context management for agents is settling toward simple formats: [zerostack's memory system](/reading/2026-06/2026-06-11t023157-memory-design-zerostack) uses plain Markdown files rather than vector stores, and [LostWarrior/knowledge-base](/reading/2026-04/2026-04-30t232126-lostwarriorknowledge-base) generates both human-readable and machine-readable manifests so agents navigate without burning excess tokens.
+For API and schema tooling, [Daniel Sogl's Zod-with-Angular approach](/reading/2026-04/2026-04-30t230851-from-flaky-to-flawless-angular-api-response-management-with) catches unexpected backend response shapes at development time via a custom RxJS operator, preventing runtime errors from silent schema drift. [A JS library roundup](/reading/2026-05/2026-05-12t165232-seven-cool-javascript-libraries-you-should-know-about) surfaces Biome as a single-binary linter and formatter replacing ESLint plus Prettier, Knip for eliminating dead code, and Orval for generating typed API clients from OpenAPI specs. These tools share the goal of enforcing correctness mechanically so engineers can spend attention elsewhere.
 
-Observability tooling is also extending into AI workflows. [Reading distributed traces in unfamiliar systems](/reading/2026-06/2026-06-10t223404-how-to-read-distributed-traces-when-you-didnt-write-the-code) by span type and shape now applies equally to microservices and to agent pipelines, where [openagentd](/reading/2026-05/2026-05-03t173528-lthoanggopenagentd) includes built-in OpenTelemetry as a first-class design requirement.
+Platform engineering formalizes this logic at organizational scale. [Luca Cavallin's end-to-end treatment](/reading/2026-05/2026-05-06t204115-platform-engineering-end-to-end) frames internal developer platforms as the infrastructure layer that lets product teams move without accumulating coordination overhead. [Radar](/reading/2026-05/2026-05-03t105238-radar-or-the-missing-open-source-kubernetes-ui) applies the same logic to Kubernetes observability: a single open-source UI replacing kubectl plus five other tools that platform teams typically juggle across clusters.
+
+Security runs through the tooling stack in ways that are easy to overlook until something breaks. [The SAP npm supply chain attack](/reading/2026-05/2026-05-01t102345-sap-related-npm-packages-compromised-in-credential-stealing) shows threat actors targeting developer tooling directly: four SAP-ecosystem packages were poisoned to harvest cloud secrets and browser passwords, with Claude Code and VS Code configs used as persistence vectors. [Running Claude Code inside Docker](/reading/2026-05/2026-05-18t095002-if-youre-running-claude-code-please-run-it-in-a-box) addresses the adjacent risk: an AI coding assistant with full filesystem and credential access needs a sandbox boundary before auto-approve mode is usable safely.
+
+[Git log patterns as a diagnostic tool](/reading/2026-06/2026-06-18t024208-the-git-commands-i-run-before-reading-any-code) closes the loop between version history and situational awareness: churn hotspots, bus factor analysis, bug clustering, and firefighting frequency are all readable from commit metadata before opening a single file. Developer tooling, at its best, makes the invisible structure of a codebase legible.
