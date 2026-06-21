@@ -23,6 +23,7 @@ sources:
   - 2026-06/2026-06-11t111011-hows-linear-so-fast-a-technical-breakdown
   - >-
     2026-06/2026-06-18t090801-how-i-audit-a-legacy-rails-codebase-in-the-first-week
+  - 2026-06/2026-06-21t130559-what-is-inference-engineering
 aliases:
   - production-engineering
 compiled_at: '2026-06-18T21:53:25.492Z'
@@ -42,6 +43,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.025344
+last_source_added: '2026-06-21T20:05:59.188Z'
 ---
 The hard lessons of running software in production cluster around a handful of recurring themes: state must survive failures, rollback beats debugging, dependencies will fail, and tests need to reflect real-world risk.
 
