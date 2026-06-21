@@ -1,36 +1,39 @@
 ---
 title: AI infrastructure
 summary: >-
-  The stack beneath AI agents and LLM workloads, covering inference
-  optimization, memory systems, orchestration architecture, observability, and
-  the governance layers that connect agents to enterprise systems.
+  The physical and architectural layer underneath AI systems, from compute
+  economics and inference optimization to hosted agent runtimes, storage-backed
+  KV caches, and enterprise governance planes.
 sources:
-  - 2026-04/2026-04-27t113354-the-orchestrator-isnt-your-moat
+  - 2026-04/2026-04-24t162154-he-came-he-saw-he-cooked
+  - >-
+    2026-04/2026-04-27t114138-scaling-managed-agents-decoupling-the-brain-from-the-hands
+  - >-
+    2026-04/2026-04-29t172018-how-to-build-scalable-web-apps-with-openais-privacy-filter
   - >-
     2026-05/2026-05-03t115608-how-to-choose-between-single-and-multi-agent-solutions
-  - 2026-05/2026-05-03t173422-vectorize-iohindsight
-  - 2026-05/2026-05-03t173528-lthoanggopenagentd
-  - 2026-05/2026-05-06t171355-vectifyaipageindex
+  - 2026-05/2026-05-04t235011-plurai
+  - 2026-05/2026-05-05t071447-friends-dont-let-friends-use-ollama
   - 2026-05/2026-05-09t110721-ai-control-plane-architecture-and-vendors
-  - >-
-    2026-05/2026-05-19t221631-scaling-managed-agents-decoupling-the-brain-from-the-hands
   - 2026-05/2026-05-20t073125-how-to-cut-llm-inference-costs-with-kv-caching
   - >-
     2026-05/2026-05-20t073144-maximizing-llm-efficiency-granular-prompt-caching-with-pure
   - >-
     2026-05/2026-05-20t073157-20x-faster-inference-with-the-first-kv-cache-for-s3-and-nfs
+  - 2026-05/2026-05-27t181732-build-a-desktop-extension-with-mcpb
   - >-
     2026-05/2026-05-31t072101-the-ai-model-pricing-war-is-here-and-your-margins-depend-on
+  - 2026-06/2026-06-02t212937-no-mcp-is-definitely-not-dead-the-nsa-agrees
+  - 2026-06/2026-06-11t023157-memory-design-zerostack
   - >-
-    2026-06/2026-06-04t194416-what-anthropic-got-right-about-agentic-analytics-and-got
-  - 2026-06/2026-06-04t210834-ai-memory-systems-feature-comparison
+    2026-06/2026-06-11t023620-designing-memory-for-zerostack-plain-files-no-vector-store
   - 2026-06/2026-06-21t130559-what-is-inference-engineering
-compiled_at: '2026-06-18T21:40:27.808Z'
+compiled_at: '2026-06-21T20:10:14.855Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 4307
-    output_tokens: 1061
+    input_tokens: 5652
+    output_tokens: 1118
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -41,15 +44,12 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.028836
-last_source_added: '2026-06-21T20:05:59.188Z'
+  cost_usd: 0.033726
 ---
-AI infrastructure refers to the collection of systems that make LLM-powered applications operationally viable: inference serving, memory, orchestration, observability, and policy enforcement. The sources here collectively argue that getting this layer right matters more than model selection, and that common architectural shortcuts create compounding costs.
+AI infrastructure spans everything below the model weights: how inference is served cheaply, how agents are hosted and orchestrated, how session state is stored, and how enterprises enforce policy across all of it. The sources here trace those concerns from raw hardware economics down to individual deployment choices.
 
-On the inference side, redundant prefill computation is one of the largest avoidable costs at scale. Persistent KV caching, which hashes prompt prefixes and injects precomputed attention tensors from fast shared storage, can cut time-to-first-token by up to 20x ["20x Faster Inference"](/reading/2026-05/2026-05-20t073157-20x-faster-inference-with-the-first-kv-cache-for-s3-and-nfs). Granular-prompt caching extends this further by segmenting prompts into reusable checkpoints so models only process token deltas [Pure KVA](/reading/2026-05/2026-05-20t073144-maximizing-llm-efficiency-granular-prompt-caching-with-pure). The broader pricing environment makes these optimizations strategically important: a 75x cost gap between cheapest and most expensive frontier models means infrastructure choices directly determine product margins [Superframeworks](/reading/2026-05/2026-05-31t072101-the-ai-model-pricing-war-is-here-and-your-margins-depend-on), and provider-agnostic design from day one avoids lock-in as that landscape shifts.
+On the compute side, Ben Thompson notes that AI compute strategy has become a geopolitical variable, with Cold War 2.0 dynamics shaping who can build and where [He Came, He Saw, He Cooked](/reading/2026-04/2026-04-24t162154-he-came-he-saw-he-cooked). Below that headline level, the biggest lever for reducing inference cost at the infrastructure layer is the KV cache. Everpure Engineering argues that treating the KV cache as a persistent, shared data asset injected via RDMA can cut prefill costs by up to 20x [How to Cut LLM Inference Costs with KV Caching](/reading/2026-05/2026-05-20t073125-how-to-cut-llm-inference-costs-with-kv-caching). Their Pure KVA product extends this by persisting attention states to NFS and S3, achieving up to 20x faster inference without changing model architecture [20x Faster Inference with the First KV Cache for S3 and NFS](/reading/2026-05/2026-05-20t073157-20x-faster-inference-with-the-first-kv-cache-for-s3-and-nfs), and granular-prompt caching further reduces GPU spend by only processing changed tokens [Maximizing LLM Efficiency: Granular-Prompt Caching with Pure KVA](/reading/2026-05/2026-05-20t073144-maximizing-llm-efficiency-granular-prompt-caching-with-pure). Gergely Orosz surveys the broader inference engineering discipline, covering quantization, speculative decoding, parallelism, and disaggregation as the toolkit for this work [What is Inference Engineering?](/reading/2026-06/2026-06-21t130559-what-is-inference-engineering).
 
-Orchestration architecture is where teams most often over-build. Multi-agent setups introduce a coordination tax that can amplify errors up to 17x and cut tool-handling efficiency by 2-6x compared to single-agent baselines [AlphaSignal](/reading/2026-05/2026-05-03t115608-how-to-choose-between-single-and-multi-agent-solutions). Anthropic's Managed Agents work addresses this by decoupling the reasoning harness from sandboxes and session state, cutting p50 time-to-first-token by 60% and enabling multi-brain architectures only where the complexity is warranted [Anthropic Engineering](/reading/2026-05/2026-05-19t221631-scaling-managed-agents-decoupling-the-brain-from-the-hands). The alternative framing from aiyan.io argues that custom orchestration harnesses decay with each model release and teams should instead ship MCP tool servers that slot into frontier agents, turning model upgrades into gains rather than rewrites [aiyan.io](/reading/2026-04/2026-04-27t113354-the-orchestrator-isnt-your-moat).
+At the agent hosting layer, Anthropic's Managed Agents architecture separates the agent harness, session log, and sandbox into stable, swappable interfaces so the system can evolve as models improve without breaking clients [Scaling Managed Agents](/reading/2026-04/2026-04-27t114138-scaling-managed-agents-decoupling-the-brain-from-the-hands). Memory storage is a related design decision: zerostack shows that plain Markdown files with regex retrieval can outperform vector stores when RAM, daemon dependencies, and provider neutrality are real constraints [Designing Memory for zerostack](/reading/2026-06/2026-06-11t023620-designing-memory-for-zerostack-plain-files-no-vector-store). At the governance level, Speakeasy describes an AI control plane that unifies identity, policy enforcement, tool routing, and observability across every agent an enterprise runs [AI Control Plane: Architecture and Vendors](/reading/2026-05/2026-05-09t110721-ai-control-plane-architecture-and-vendors), a framing reinforced by the argument that MCP's real value is as an auditable, policy-aware proxy between agents and resources rather than a developer convenience [No, MCP is Definitely Not Dead](/reading/2026-06/2026-06-02t212937-no-mcp-is-definitely-not-dead-the-nsa-agrees).
 
-Memory is a distinct infrastructure concern. The hindsight library uses biomimetic data structures and multi-strategy retrieval to give agents persistent learning beyond conversation recall [hindsight](/reading/2026-05/2026-05-03t173422-vectorize-iohindsight), while a comparison of 71 agent memory systems shows the space is fragmented across architecture types, data models, and retrieval strategies [AI Memory Comparison](/reading/2026-06/2026-06-04t210834-ai-memory-systems-feature-comparison). The openagentd project packages memory, scheduling, and OpenTelemetry observability into a self-hosted agent OS [openagentd](/reading/2026-05/2026-05-03t173528-lthoanggopenagentd), pointing toward observability as a first-class infrastructure requirement rather than an afterthought.
-
-At the governance layer, the AI control plane pattern places a unified policy and identity enforcement layer between agents and every downstream system they touch [Speakeasy](/reading/2026-05/2026-05-09t110721-ai-control-plane-architecture-and-vendors). This becomes critical at enterprise scale, as Anthropic's internal analytics stack illustrates: 95% accuracy is achievable but requires months of senior data engineering and co-located maintenance that most organizations cannot replicate without deliberate infrastructure investment [Genloop](/reading/2026-06/2026-06-04t194416-what-anthropic-got-right-about-agentic-analytics-and-got).
+Economics thread through all of it. A 75x spread between the cheapest and most expensive frontier models means infrastructure choices now directly determine product margin [The AI Model Pricing War Is Here](/reading/2026-05/2026-05-31t072101-the-ai-model-pricing-war-is-here-and-your-margins-depend-on). The critique of Ollama illustrates what happens when infrastructure tooling drifts from its original design constraints toward a VC-driven cloud pivot [Friends Don't Let Friends Use Ollama](/reading/2026-05/2026-05-05t071447-friends-dont-let-friends-use-ollama). Evaluation infrastructure is also part of the stack: Plurai generates training data and deploys guardrail models at sub-100ms latency and a fraction of GPT-as-judge costs [Plurai](/reading/2026-05/2026-05-04t235011-plurai).

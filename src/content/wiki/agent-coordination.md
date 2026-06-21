@@ -1,26 +1,31 @@
 ---
 title: Agent coordination
 summary: >-
-  How multiple LLM-based agents divide work, share state, and resolve
-  disagreements, and why coordination structure that mismatches task structure
-  is a primary source of multi-agent system failure.
+  How multiple LLM agents divide work, communicate, and manage shared state —
+  and why the coordination overhead frequently outweighs the benefits the
+  architecture promises.
 sources:
+  - >-
+    2026-05/2026-05-03t110011-getting-up-to-speed-on-multi-agent-systems-part-1-the
+  - >-
+    2026-05/2026-05-03t110027-getting-up-to-speed-on-multi-agent-systems-part-2-the
+  - >-
+    2026-05/2026-05-03t110032-getting-up-to-speed-on-multi-agent-systems-part-3-wave-1
   - >-
     2026-05/2026-05-03t110046-getting-up-to-speed-on-multi-agent-systems-part-4-wave-2
   - >-
     2026-05/2026-05-03t110055-getting-up-to-speed-on-multi-agent-systems-part-5-debate
+  - 2026-05/2026-05-03t110114-getting-up-to-speed-on-multi-agent-systems-part-7
+  - >-
+    2026-05/2026-05-03t110130-getting-up-to-speed-on-multi-agent-systems-part-8-open
   - >-
     2026-05/2026-05-03t115608-how-to-choose-between-single-and-multi-agent-solutions
-  - 2026-05/2026-05-03t173528-lthoanggopenagentd
-aliases:
-  - ai-coordination
-  - coordination
-compiled_at: 2026-05-04T04:10:14.743Z
+compiled_at: '2026-06-21T20:16:37.285Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 2751
-    output_tokens: 585
+    input_tokens: 3653
+    output_tokens: 737
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -31,14 +36,12 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.017028
+  cost_usd: 0.022014
 ---
-Agent coordination in LLM-based systems is the set of mechanisms by which [multiple agents divide tasks, exchange information, and arrive at consistent outputs](/wiki/multi-agent-systems). The field is still working out when coordination helps versus when it simply multiplies costs.
+Agent coordination is the set of mechanisms by which multiple LLM-based agents exchange information, divide tasks, and reconcile outputs. Christopher Meiklejohn's eight-part series traces the problem from its origins in 2023 proof-of-concept systems to the reliability crisis documented in 2025 empirical work.
 
-The empirical picture is sobering. [Meiklejohn's survey of MAST, MAS-FIRE, and Silo-Bench](/reading/2026-05/2026-05-03t110046-getting-up-to-speed-on-multi-agent-systems-part-4-wave-2) found that multi-agent LLM systems fail 41-87% of the time across 1,600 traced runs. Crucially, the dominant failure mode is not coordination breakdown but information synthesis, meaning agents fail to integrate results correctly even when the coordination scaffolding works as intended.
+The first wave of systems — CAMEL, ChatDev, MetaGPT, AutoGen, and Generative Agents — demonstrated that agents could coordinate at all, but each relied on brittle conventions: fixed role assignments, sequential message passing, no concurrency control, and no escalation paths when an agent produced bad output [Getting Up to Speed, Part 3](/reading/2026-05/2026-05-03t110032-getting-up-to-speed-on-multi-agent-systems-part-3-wave-1). The second wave measured what that brittleness costs. MAST, MAS-FIRE, and Silo-Bench found failure rates between 41% and 87% in production scenarios, with inter-agent reasoning failures structurally harder to fix than prompt-level issues [Part 4](/reading/2026-05/2026-05-03t110046-getting-up-to-speed-on-multi-agent-systems-part-4-wave-2).
 
-The coordination mechanisms themselves are varied. [Meiklejohn's follow-up](/reading/2026-05/2026-05-03t110055-getting-up-to-speed-on-multi-agent-systems-part-5-debate) surveys convergent debate, adversarial debate, shared-notebook state management, and the CALM theorem from distributed systems. The central argument there is that coordination structure must match task structure, and that [distributed systems theory already supplies the vocabulary the AI field keeps rediscovering](/wiki/distributed-systems).
+The coordination structure itself matters. Convergent debate, adversarial debate, shared-notebook state, and the CALM theorem each suit different task shapes, and choosing the wrong topology degrades reliability systematically [Part 5](/reading/2026-05/2026-05-03t110055-getting-up-to-speed-on-multi-agent-systems-part-5-debate). Ben Dickson's synthesis of Stanford and Google/MIT research puts a number on the penalty: multi-agent orchestration can amplify errors up to 17x and cut tool-handling efficiency by 2–6x compared to a single-agent baseline, making single-agent systems the correct default for most tasks [How to Choose](/reading/2026-05/2026-05-03t115608-how-to-choose-between-single-and-multi-agent-solutions).
 
-The cost of getting this wrong is quantified by [Dickson's survey of Stanford and Google/MIT research](/reading/2026-05/2026-05-03t115608-how-to-choose-between-single-and-multi-agent-solutions): multi-agent orchestration can amplify errors up to 17x and cut tool-handling efficiency by 2-6x relative to a single-agent baseline. The practical implication is that single-agent systems should be the default unless the task structure genuinely requires parallelism or specialization.
-
-When multi-agent architectures are warranted, [observability becomes critical](/wiki/production-systems). [openagentd](/reading/2026-05/2026-05-03t173528-lthoanggopenagentd) is one example of a self-hosted agent runtime that builds in OpenTelemetry tracing alongside persistent memory and scheduling, treating coordination transparency as a first-class concern rather than an afterthought.
+Benchmarks compound the confusion. HumanEval and SWE-bench were designed for single agents and cannot measure coordination quality, communication overhead, or failure recovery — the properties that distinguish multi-agent architectures in practice [Part 7](/reading/2026-05/2026-05-03t110114-getting-up-to-speed-on-multi-agent-systems-part-7). Open problems include mapping topology choices to reliability guarantees, applying CRDTs to shared agent state, and defining backpressure protocols — problems the field is quietly rediscovering from distributed systems without yet having the vocabulary to name them [Part 8](/reading/2026-05/2026-05-03t110130-getting-up-to-speed-on-multi-agent-systems-part-8-open).

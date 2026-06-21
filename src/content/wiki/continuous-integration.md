@@ -1,11 +1,12 @@
 ---
 title: Continuous integration
 summary: >-
-  Continuous integration at scale surfaces problems across test reliability,
-  infrastructure architecture, merge queue correctness, supply chain security,
-  and environment strategy, each demanding different mitigations.
+  CI at scale demands more than automated builds: flaky test management, merge
+  queue correctness, secure dependency chains, and increasingly AI-driven triage
+  are all now part of keeping a pipeline trustworthy.
 sources:
   - 2026-04/2026-04-30t195531-what-ci-actually-looks-like-at-a-100-person-team
+  - 2026-04/2026-04-30t231319-markdownlm
   - 2026-04/2026-04-30t231348-testdino
   - >-
     2026-05/2026-05-01t102345-sap-related-npm-packages-compromised-in-credential-stealing
@@ -16,12 +17,12 @@ sources:
   - 2026-05/2026-05-10t205349-github-is-sinking
   - 2026-05/2026-05-15t120337-playwright-testing-in-staging-vs-production
   - 2026-05/2026-05-19t110000-building-ci-with-lambda-durable-functions
-compiled_at: '2026-06-18T21:42:51.233Z'
+compiled_at: '2026-06-21T20:21:36.838Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 3501
-    output_tokens: 872
+    input_tokens: 3578
+    output_tokens: 855
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -32,16 +33,18 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.023583
+  cost_usd: 0.023559
 ---
-CI pipelines are no longer just about running tests on every commit. At sufficient scale, the problems compound: flaky tests drown signal in noise, merge queue bugs corrupt history silently, compromised dependencies inject malware before code ships, and test environments multiply configuration drift.
+Continuous integration is the practice of merging code frequently and verifying each change with automated builds and tests. The operational reality at scale diverges sharply from the textbook description.
 
-Flaky tests are probably the most chronic friction point. Mendral's AI agent, operating against PostHog's monorepo, processed 1.18 billion log lines weekly and found that auto-diagnosing flakiness and routing alerts mattered more than the diagnostic model itself [What CI Actually Looks Like at a 100-Person Team](/reading/2026-04/2026-04-30t195531-what-ci-actually-looks-like-at-a-100-person-team). TestDino approaches the same problem from the reporting layer, auto-categorizing Playwright failures as bugs, flaky tests, or UI changes and claiming 6-8 hours saved weekly [TestDino](/reading/2026-04/2026-04-30t231348-testdino). Playwright suites themselves become fragile when selectors couple to CSS classes and DOM structure rather than semantic roles and explicit test attributes; page-object patterns and a tiered selector hierarchy reduce churn during UI refactors [Designing Playwright Tests That Survive UI Refactors](/reading/2026-05/2026-05-05t135218-designing-playwright-tests-that-survive-ui-refactors).
+At PostHog's scale, 575K weekly jobs and 33 million test executions, the volume of CI output is too large for engineers to triage manually. [Mendral's AI agent](/reading/2026-04/2026-04-30t195531-what-ci-actually-looks-like-at-a-100-person-team) ingests billions of log lines, traces flaky tests to root causes, and opens fix PRs automatically. That pattern, AI handling the signal-to-noise problem inside CI, represents a genuine shift in how pipeline health is maintained rather than a marginal productivity gain.
 
-Merge queue correctness is a separate class of problem. A GitHub merge queue bug built temp branches from stale divergence points rather than HEAD, silently rewriting main. Trunk's architecture avoided the failure entirely because it never pushes temp branches to main [What Happens If a Merge Queue Builds on the Wrong Commit](/reading/2026-05/2026-05-03t150555-what-happens-if-a-merge-queue-builds-on-the-wrong-commit). That incident is a concrete argument for understanding the architectural assumptions behind whatever merge infrastructure you adopt.
+Test reliability is its own sub-discipline. [TestDino](/reading/2026-04/2026-04-30t231348-testdino) auto-categorizes Playwright failures as bugs, flaky tests, or UI changes, and claims to recover 6 to 8 engineering hours weekly. Separately, [Currents](/reading/2026-05/2026-05-05t135218-designing-playwright-tests-that-survive-ui-refactors) argues that tests break during UI refactors not because of selector hygiene alone but because they couple to CSS classes and DOM structure instead of semantic roles and accessible names. The two sources agree that flakiness and refactor-fragility are distinct problems requiring distinct solutions.
 
-CI infrastructure itself can be a security vector. The TeamPCP actor poisoned four SAP-ecosystem npm packages with a self-propagating, credential-stealing payload that exfiltrated cloud secrets via GitHub and used editor configs as persistence vectors [SAP-Related npm Packages Compromised in Credential-Stealing Supply Chain Attack](/reading/2026-05/2026-05-01t102345-sap-related-npm-packages-compromised-in-credential-stealing). CI environments have broad secret access, which makes dependency hygiene higher stakes there than elsewhere.
+Merge queue correctness matters too. A [GitHub merge queue bug](/reading/2026-05/2026-05-03t150555-what-happens-if-a-merge-queue-builds-on-the-wrong-commit) silently deleted thousands of lines by building temp branches off the wrong base commit; Trunk avoided it by never pushing temp branches to main. Architectural choices at the queue layer have real data-integrity consequences.
 
-On the infrastructure side, Depot's orchestrator runs CI workflows on AWS Lambda durable functions, checkpointing state without keeping a long-lived process alive [Building CI with Lambda durable functions](/reading/2026-05/2026-05-19t110000-building-ci-with-lambda-durable-functions). That trades some operational simplicity for resilience and cost efficiency at scale.
+CI infrastructure itself is a design space. [Depot](/reading/2026-05/2026-05-19t110000-building-ci-with-lambda-durable-functions) runs its orchestrator on AWS Lambda durable functions, using a two-layer Run/Workflow hierarchy and callback-driven job coordination to achieve stateful scheduling without a long-lived process. The approach trades conventional server complexity for the cold-start and state-management constraints of serverless.
 
-Environment strategy adds another decision layer. Splitting Playwright runs between staging and production depends on risk profile, operational overhead, and what each environment can realistically validate [Playwright Testing in Staging vs Production](/reading/2026-05/2026-05-15t120337-playwright-testing-in-staging-vs-production). GitHub's reliability issues have pushed some teams to evaluate alternatives like Codeberg or self-hosted forges [GitHub is Sinking](/reading/2026-05/2026-05-10t205349-github-is-sinking), which changes the calculus for where CI lives.
+Security intersects with CI through the dependency chain. [Poisoned SAP npm packages](/reading/2026-05/2026-05-01t102345-sap-related-npm-packages-compromised-in-credential-stealing) harvested cloud secrets and browser passwords from developer machines, exfiltrating via GitHub and using VS Code configs as persistence vectors. Supply chain attacks arrive through the same package install steps that CI pipelines run on every build. [MarkdownLM's Lun tool](/reading/2026-04/2026-04-30t231319-markdownlm) takes a complementary stance, blocking non-compliant code at the Git layer before it merges by querying a centralized policy knowledge base at commit time.
+
+Platform reliability underpins all of this. [Concerns about GitHub's declining reliability](/reading/2026-05/2026-05-10t205349-github-is-sinking) under Microsoft add weight to the architectural argument for not coupling CI correctness too tightly to any single platform's internals.

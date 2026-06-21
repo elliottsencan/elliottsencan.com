@@ -1,22 +1,23 @@
 ---
 title: AI-assisted coding
 summary: >-
-  AI coding assistants range from autocomplete tools to autonomous multi-agent
-  systems; the central questions across the field concern how much autonomy to
-  delegate, what structural conditions make delegation reliable, and what skills
-  and context humans must still supply.
+  LLMs and agentic tools that generate, review, or refactor code, raising
+  questions about skill atrophy, code quality, organizational bottlenecks, and
+  security that the tooling ecosystem is still working to answer.
 sources:
   - 2026-04/2026-04-27t113526-databricks-solutionsai-dev-kit
   - 2026-04/2026-04-27t145041-agentic-coding-is-a-trap
   - 2026-04/2026-04-30t231239-ibrahim-3dorchestrator-supaconductor
+  - 2026-04/2026-04-30t231319-markdownlm
   - >-
     2026-05/2026-05-01t102345-sap-related-npm-packages-compromised-in-credential-stealing
   - >-
     2026-05/2026-05-01t104137-harness-design-for-long-running-application-development
-  - 2026-05/2026-05-03t110102-getting-up-to-speed-on-multi-agent-systems-part-6
-  - 2026-05/2026-05-03t110114-getting-up-to-speed-on-multi-agent-systems-part-7
+  - 2026-05/2026-05-02t094735-approaching-zero-bugs
+  - 2026-05/2026-05-03t110355-babysitting-the-agent
   - 2026-05/2026-05-04t231343-ai-likes-deep-modules
   - 2026-05/2026-05-06t110728-the-bottleneck-was-never-the-code
+  - 2026-05/2026-05-08t175639-can-llms-model-real-world-systems-in-tla
   - 2026-05/2026-05-11t155625-storybloqstorybloq
   - >-
     2026-05/2026-05-12t215147-running-claude-code-with-a-local-model-via-lm-studio
@@ -25,7 +26,6 @@ sources:
   - >-
     2026-05/2026-05-14t223612-the-perils-of-ai-to-the-software-engineering-profession
   - 2026-05/2026-05-17t204925-why-most-developers-cant-use-ai-effectively
-  - 2026-05/2026-05-18t091244-project-glasswing-what-mythos-showed-us
   - >-
     2026-05/2026-05-18t095002-if-youre-running-claude-code-please-run-it-in-a-box
   - 2026-05/2026-05-18t221205-walkinglabslearn-harness-engineering
@@ -39,25 +39,23 @@ sources:
   - 2026-05/2026-05-28t140143-introducing-dynamic-workflows-in-claude-code
   - >-
     2026-06/2026-06-03t105229-putting-code-under-a-microscope-wavelet-based-context-for
-  - 2026-06/2026-06-09t190614-what-it-feels-like-to-work-with-mythos
   - 2026-06/2026-06-11t023056-what-we-built-in-2-weeks-zerostack
   - 2026-06/2026-06-11t023435-subagents-design-zerostack
-  - >-
-    2026-06/2026-06-11t023620-designing-memory-for-zerostack-plain-files-no-vector-store
   - 2026-06/2026-06-11t023723-gi-dellavzerostack
   - 2026-06/2026-06-13t083239-claude-fable-is-relentlessly-proactive
+  - 2026-06/2026-06-13t083401-sgupai-fable5md
   - 2026-06/2026-06-15t021106-formal-methods-and-the-future-of-programming
   - 2026-06/2026-06-17t075816-matt-palmer
   - >-
     2026-06/2026-06-17t130655-the-founders-playbook-building-an-ai-native-startup
 aliases:
-  - ai-coding-agents
-compiled_at: '2026-06-18T21:40:05.502Z'
+  - ai-coding-assistants
+compiled_at: '2026-06-21T20:13:47.539Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 9509
-    output_tokens: 2074
+    input_tokens: 9412
+    output_tokens: 1569
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -68,22 +66,14 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.059637
+  cost_usd: 0.051771
 ---
-AI-assisted coding now spans a wide spectrum. At one end sit tools that autocomplete lines or answer questions in a chat window. At the other, fully autonomous agents run for hours, spawn subagents in parallel, and commit changes across entire codebases without a human in the loop. The shift from the first kind to the second is the defining pressure in the field right now.
+AI-assisted coding covers a spectrum from autocomplete suggestions to fully autonomous agents that plan, implement, and verify software across multi-hour sessions. The tooling side has moved fast: Claude Code now supports dynamic workflows that spawn hundreds of parallel subagents for codebase-wide migrations and security audits [introducing dynamic workflows](/reading/2026-05/2026-05-28t140143-introducing-dynamic-workflows-in-claude-code), and multi-agent architectures like the GAN-inspired planner-generator-evaluator pattern at Anthropic attempt to overcome context limits and self-evaluation bias during long autonomous runs [harness design](/reading/2026-05/2026-05-01t104137-harness-design-for-long-running-application-development). Lightweight alternatives have emerged too: zerostack is a Rust-built coding agent running at roughly 16MB RAM with subagent support and multi-provider LLM routing [zerostack repo](/reading/2026-06/2026-06-11t023723-gi-dellavzerostack), and its parallel read-only child agents achieve a 25% gain in code exploration time by delegating multi-file traversal without bloating the main context [zerostack subagents](/reading/2026-06/2026-06-11t023435-subagents-design-zerostack).
 
-The tooling infrastructure around these agents has grown quickly. Databricks ships an MCP server and skill pack that give assistants like Cursor and Claude Code 50+ executable tools for Spark pipelines and jobs databricks-solutions/ai-dev-kit. Storybloq persists cross-session context in a git-tracked `.story/` directory so agents don't re-derive project state on every run [Storybloq/storybloq](/reading/2026-05/2026-05-11t155625-storybloqstorybloq). Octowiz stores role-scoped engineering doctrine in LiteLLM Proxy memory, fetching only the relevant slice per session to keep context windows small [raelli/octowiz](/reading/2026-05/2026-05-18t222802-raellioctowiz). WaveScope applies wavelet transforms to source code, reducing token usage by up to 92% compared to grep-based retrieval [Putting Code Under a Microscope](/reading/2026-06/2026-06-03t105229-putting-code-under-a-microscope-wavelet-based-context-for). These are all attempts to solve the same underlying problem: agents lose coherence when context degrades.
+Context persistence is a recurring engineering problem. Tools like Storybloq address it by storing session history in a .story/ directory so the agent accumulates institutional knowledge rather than starting cold each time [storybloq](/reading/2026-05/2026-05-11t155625-storybloqstorybloq). MarkdownLM takes a different angle, centralizing architectural rules and security policies in a living knowledge base that agents query in real time, with a Git-layer hook that blocks non-compliant code before merge [markdownlm](/reading/2026-04/2026-04-30t231319-markdownlm). The Databricks AI Dev Kit surfaces domain expertise through an MCP server and markdown skills across multiple coding assistants [ai-dev-kit](/reading/2026-04/2026-04-27t113526-databricks-solutionsai-dev-kit). For AI-native startups, persisting context from day one via specs and architecture documents prevents each new session from re-deriving foundational decisions from scratch, which compounds into incoherent codebases [founder's playbook](/reading/2026-06/2026-06-17t130655-the-founders-playbook-building-an-ai-native-startup).
 
-Context management is also a startup concern. Founders who skip specs and architectural decision records hit a wall where each new session re-derives foundational choices and the codebase drifts from its own mental model; persistent context files like CLAUDE.md are what keep AI a force multiplier rather than a source of entropy [The Founder's Playbook](/reading/2026-06/2026-06-17t130655-the-founders-playbook-building-an-ai-native-startup).
+The security surface is real and already being exploited. The TeamPCP supply-chain attack poisoned SAP-ecosystem npm packages specifically abusing Claude Code and VS Code configuration files as persistence vectors [sap npm attack](/reading/2026-05/2026-05-01t102345-sap-related-npm-packages-compromised-in-credential-stealing). The autonomous resourcefulness that makes agents useful, illustrated by Claude Fable inventing elaborate browser automation techniques to debug a two-line CSS fix, is the same property that makes unsandboxed agents dangerous [claude fable](/reading/2026-06/2026-06-13t083239-claude-fable-is-relentlessly-proactive). Running agents inside Docker sandboxes is the practical mitigation [run it in a box](/reading/2026-05/2026-05-18t095002-if-youre-running-claude-code-please-run-it-in-a-box).
 
-On architecture, Anthropic's own engineering describes a GAN-inspired planner/generator/evaluator structure that overcomes self-evaluation bias during multi-hour autonomous sessions [Harness Design for Long-Running Application Development](/reading/2026-05/2026-05-01t104137-harness-design-for-long-running-application-development). The orchestrator-supaconductor plugin takes this further, routing high-stakes architectural decisions through a virtual Board of Directors [Ibrahim-3d/orchestrator-supaconductor](/reading/2026-04/2026-04-30t231239-ibrahim-3dorchestrator-supaconductor). Anthropic's dynamic workflows feature now spawns tens to hundreds of parallel subagents for migrations, security audits, and multi-file rewrites [Introducing Dynamic Workflows in Claude Code](/reading/2026-05/2026-05-28t140143-introducing-dynamic-workflows-in-claude-code). Zerostack, a Rust agent optimized for low memory, handles parallel codebase exploration by spawning read-only child agents with strict tool constraints [Subagents Design @ Zerostack](/reading/2026-06/2026-06-11t023435-subagents-design-zerostack), keeping memory in plain Markdown files rather than a vector store [Designing Memory for zerostack](/reading/2026-06/2026-06-11t023620-designing-memory-for-zerostack-plain-files-no-vector-store).
+Quality and reliability remain open problems. Agents routinely declare work complete after minimal verification, requiring humans to manually check every path [babysitting the agent](/reading/2026-05/2026-05-03t110355-babysitting-the-agent). LLMs score near-perfect syntax on TLA+ generation but only about 46% conformance and 41% invariant scores, meaning they recite textbook protocols rather than faithfully modeling actual implementations [llms and tla+](/reading/2026-05/2026-05-08t175639-can-llms-model-real-world-systems-in-tla). Despite powerful AI-assisted static analysis, curl's vulnerability data shows no measurable sign that open-source projects are approaching zero latent bugs [approaching zero bugs](/reading/2026-05/2026-05-02t094735-approaching-zero-bugs). AI lowers the cost of producing code but not the cost of owning it; LLMs can generate polished, well-formatted technical debt faster than any individual engineer [code quality](/reading/2026-05/2026-05-22t091746-when-code-is-cheap-does-quality-still-matter).
 
-The verification problem runs through all of this. Christopher Meiklejohn's work on multi-agent systems argues that modality shift, checking work in a different representation than it was produced in, is what separates weak self-verification from structural gates [Getting Up to Speed on Multi-Agent Systems, Part 6](/reading/2026-05/2026-05-03t110102-getting-up-to-speed-on-multi-agent-systems-part-6). Jane Street finds that agentic coding has lowered proof costs enough to make formal verification newly attractive as a check on AI-generated code [Formal Methods and the Future of Programming](/reading/2026-06/2026-06-15t021106-formal-methods-and-the-future-of-programming).
-
-Code quality and codebase structure matter more than they might seem to. AI tools work best with deep modules, interfaces that hide complexity, because shallow abstractions force LLMs to reason across too many layers [AI Likes Deep Modules](/reading/2026-05/2026-05-04t231343-ai-likes-deep-modules). LLMs lower the cost of producing code but not the cost of owning it; engineering judgment remains the scarce asset because AI-generated code can look polished while encoding bad decisions at machine speed When Code Is Cheap, Does Quality Still Matter?.
-
-The strongest warnings in the literature concern skill atrophy and misplaced autonomy. Lars Faye argues that full reliance on coding agents erodes exactly the critical-thinking and debugging skills needed to supervise those agents, a self-undermining loop [Agentic Coding is a Trap](/reading/2026-04/2026-04-27t145041-agentic-coding-is-a-trap). Val Town proposes a "Slow Mode" that keeps humans involved at every planning step, trading short-term velocity for durable understanding [Slow Mode](/reading/2026-05/2026-05-19t193626-slow-mode). The tacit knowledge argument goes further: pattern recognition, system intuition, and unwritten conventions are structurally inaccessible to AI tools and can only be transmitted through human apprenticeship [The Tacit Dimension](/reading/2026-05/2026-05-19t110710-the-tacit-dimension-why-your-best-engineers-cant-tell-you). Shipping AI-generated code without review compounds LLM errors in safety-critical systems [The perils of "AI" to the software engineering profession](/reading/2026-05/2026-05-14t223612-the-perils-of-ai-to-the-software-engineering-profession).
-
-Security is a concrete failure mode, not just a theoretical one. Compromised SAP-ecosystem npm packages used Claude Code and VS Code configs as persistence vectors for credential theft [SAP-Related npm Packages Compromised](/reading/2026-05/2026-05-01t102345-sap-related-npm-packages-compromised-in-credential-stealing); sandboxing agents in Docker removes that attack surface while also removing confirmation prompts [If You're Running Claude Code, PLEASE Run It in a Box](/reading/2026-05/2026-05-18t095002-if-youre-running-claude-code-please-run-it-in-a-box). Simon Willison documents a case where Claude Fable autonomously invented multiple workarounds, spending $12 in tokens to debug a single CSS scrollbar bug, and flags the security implications of such unconstrained agency [Claude Fable is relentlessly proactive](/reading/2026-06/2026-06-13t083239-claude-fable-is-relentlessly-proactive).
-
-Organizational fit shapes outcomes as much as model capability. Coding agents amplify whatever alignment or misalignment an organization already has; the bottleneck was never code production but shared context and specification clarity [The bottleneck was never the code](/reading/2026-05/2026-05-06t110728-the-bottleneck-was-never-the-code). Agentic development also fails when type systems are weak, processes are built for human-speed coding, and there is no structured training for managing agents [Why Most Developers Can't Use AI Effectively](/reading/2026-05/2026-05-17t204925-why-most-developers-cant-use-ai-effectively). Harness design, the practice of wrapping agents in structured environments of instructions, state, verification, and scope, is emerging as its own engineering discipline to address exactly this [walkinglabs/learn-harness-engineering](/reading/2026-05/2026-05-18t221205-walkinglabslearn-harness-engineering).
+Skill and organizational concerns cut across many sources. Full agentic workflows accelerate skill atrophy and create vendor dependency [agentic coding trap](/reading/2026-04/2026-04-27t145041-agentic-coding-is-a-trap). The most valuable engineering knowledge, pattern recognition and design intuition, is structurally inaccessible to AI and transmits only through apprenticeship [tacit dimension](/reading/2026-05/2026-05-19t110710-the-tacit-dimension-why-your-best-engineers-cant-tell-you). Five structural barriers including weak type systems and org processes built for human-speed development explain why the tools often fail to deliver promised productivity gains [why devs can't use ai](/reading/2026-05/2026-05-17t204925-why-most-developers-cant-use-ai-effectively). The real bottleneck was always organizational: shared context, specification clarity, and management coherence, and agents amplify whatever alignment or misalignment already exists [bottleneck](/reading/2026-05/2026-05-06t110728-the-bottleneck-was-never-the-code). One practical response is "Slow Mode": keeping the human involved at every planning and implementation step to trade short-term throughput for genuine learning [slow mode](/reading/2026-05/2026-05-19t193626-slow-mode). Jane Street argues in the other direction, that agentic coding has made formal methods newly cost-effective precisely because it creates demand for verification that tests alone cannot satisfy [formal methods](/reading/2026-06/2026-06-15t021106-formal-methods-and-the-future-of-programming).
