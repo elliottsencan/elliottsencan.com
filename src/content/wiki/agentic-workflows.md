@@ -47,6 +47,7 @@ sources:
     2026-06/2026-06-17t130655-the-founders-playbook-building-an-ai-native-startup
   - >-
     2026-06/2026-06-20t053342-if-llms-have-human-like-attributes-then-so-does-age-of
+  - 2026-06/2026-06-21t112220-agentic-engineering
 compiled_at: '2026-06-18T21:38:38.141Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -64,7 +65,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.051867
-last_source_added: '2026-06-20T12:33:42.447Z'
+last_source_added: '2026-06-21T18:22:20.908Z'
 ---
 An agentic workflow is one where an AI model takes a sequence of actions, calls tools, and makes decisions across multiple steps, often without a human approving each move. The engineering and organizational challenges this creates have become a coherent body of practice.
 

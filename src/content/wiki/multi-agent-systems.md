@@ -27,6 +27,7 @@ sources:
   - 2026-06/2026-06-09t190614-what-it-feels-like-to-work-with-mythos
   - 2026-06/2026-06-11t023435-subagents-design-zerostack
   - 2026-06/2026-06-14t094245-agentswarms
+  - 2026-06/2026-06-21t112220-agentic-engineering
 compiled_at: '2026-06-18T21:51:34.704Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -44,6 +45,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.030099
+last_source_added: '2026-06-21T18:22:20.908Z'
 ---
 Multi-agent systems (MAS) assign distinct roles or subtasks to separate LLM-powered agents that must coordinate to produce a joint result. Christopher Meiklejohn's eight-part survey maps the field across two research waves [Part 1](/reading/2026-05/2026-05-03t110011-getting-up-to-speed-on-multi-agent-systems-part-1-the): a 2023 wave asking whether coordination was possible at all, and a 2025 wave asking why it keeps failing.
 
