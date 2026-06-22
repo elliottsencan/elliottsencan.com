@@ -38,6 +38,7 @@ sources:
     2026-06/2026-06-17t130655-the-founders-playbook-building-an-ai-native-startup
   - >-
     2026-06/2026-06-18t090801-how-i-audit-a-legacy-rails-codebase-in-the-first-week
+  - 2026-06/2026-06-21t192306-how-we-built-digitalocean-inference-router
 compiled_at: '2026-06-18T22:00:54.595Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -55,6 +56,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.045978
+last_source_added: '2026-06-22T02:23:06.597Z'
 ---
 Architecture is the set of structural decisions that determine what a system can do and how hard it is to change. Those decisions accumulate silently: good ones enable scale, bad ones surface late as compounding debt.
 

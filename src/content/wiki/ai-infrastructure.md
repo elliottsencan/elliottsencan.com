@@ -25,6 +25,7 @@ sources:
     2026-06/2026-06-04t194416-what-anthropic-got-right-about-agentic-analytics-and-got
   - 2026-06/2026-06-04t210834-ai-memory-systems-feature-comparison
   - 2026-06/2026-06-21t130559-what-is-inference-engineering
+  - 2026-06/2026-06-21t192306-how-we-built-digitalocean-inference-router
 compiled_at: '2026-06-18T21:40:27.808Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -42,7 +43,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.028836
-last_source_added: '2026-06-21T20:05:59.188Z'
+last_source_added: '2026-06-22T02:23:06.597Z'
 ---
 AI infrastructure refers to the collection of systems that make LLM-powered applications operationally viable: inference serving, memory, orchestration, observability, and policy enforcement. The sources here collectively argue that getting this layer right matters more than model selection, and that common architectural shortcuts create compounding costs.
 
