@@ -131,6 +131,68 @@ export function readingSlugFromPath(path: string): string {
   return tail.replace(/\.md$/, "").toLowerCase();
 }
 
+// ---------- url canonicalization ----------
+
+/**
+ * Query parameters dropped during URL normalization. These carry campaign /
+ * click attribution, never resource identity, so two shares of the same
+ * article that differ only by tracking cruft must compare equal. `utm_*` is
+ * matched by prefix separately; this set covers the non-`utm_` families.
+ */
+const TRACKING_PARAMS = new Set([
+  "fbclid",
+  "gclid",
+  "gclsrc",
+  "dclid",
+  "msclkid",
+  "yclid",
+  "mc_cid",
+  "mc_eid",
+  "igshid",
+  "ref",
+  "ref_src",
+  "ref_url",
+  "_hsenc",
+  "_hsmi",
+]);
+
+/**
+ * Canonical form of a URL for duplicate detection. Two URLs that point at the
+ * same resource modulo cosmetic/tracking differences normalize to the same
+ * string:
+ *  - host lowercased, leading `www.` stripped
+ *  - fragment dropped
+ *  - tracking params (`utm_*`, `fbclid`, `ref`, …) dropped
+ *  - remaining query params sorted, so order doesn't matter
+ *  - trailing slash on a non-root path dropped
+ *
+ * Never throws: an unparseable URL falls back to its trimmed, lowercased raw
+ * form so the comparison degrades to a literal string match rather than
+ * crashing the ingest.
+ */
+export function normalizeUrl(raw: string): string {
+  try {
+    const u = new URL(raw.trim());
+    u.hostname = u.hostname.toLowerCase().replace(/^www\./, "");
+    u.hash = "";
+    const params = u.searchParams;
+    for (const key of [...params.keys()]) {
+      const lower = key.toLowerCase();
+      if (lower.startsWith("utm_") || TRACKING_PARAMS.has(lower)) {
+        params.delete(key);
+      }
+    }
+    params.sort();
+    u.search = params.toString();
+    if (u.pathname.length > 1 && u.pathname.endsWith("/")) {
+      u.pathname = u.pathname.replace(/\/+$/, "");
+    }
+    return u.toString();
+  } catch {
+    return raw.trim().toLowerCase();
+  }
+}
+
 // ---------- response helpers ----------
 
 /**

@@ -48,7 +48,6 @@ sources:
   - >-
     2026-06/2026-06-20t053342-if-llms-have-human-like-attributes-then-so-does-age-of
   - 2026-06/2026-06-21t112220-agentic-engineering
-  - 2026-06/2026-06-21t130526-agentic-engineering
 compiled_at: '2026-06-18T21:38:38.141Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:

@@ -24,7 +24,7 @@ import matter from "gray-matter";
 import type { z } from "zod";
 import { CORPORA } from "./crosslink-config.ts";
 import type { Result } from "./types.ts";
-import { log, readingSlugFromPath } from "./util.ts";
+import { log, normalizeUrl, readingSlugFromPath } from "./util.ts";
 
 type DirEntry = { type: "file" | "dir"; name: string; path: string; sha: string };
 
@@ -190,4 +190,73 @@ export async function enumerateReadingTopics(
     });
   }
   return out;
+}
+
+/**
+ * Slug of the first existing reading entry whose `url` matches `normalizedUrl`
+ * (compared via `normalizeUrl`), or `null` if none. Backs /link's pre-commit
+ * duplicate guard: the iOS shortcut has no memory of what's already been
+ * saved, so accidental re-shares of the same article are common, and we want
+ * to reject them before spending an Anthropic call.
+ *
+ * Walks month dirs and returns on the first hit, so a duplicate short-circuits
+ * the scan while a genuinely new URL costs a full corpus walk. Malformed or
+ * unparseable entries are skipped — a stored entry only blocks ingest when it
+ * parses and its normalized URL matches. A 404 on the reading dir (empty
+ * corpus) returns null, never an error.
+ *
+ * Note: `normalizedUrl` is expected to already be normalized by the caller;
+ * stored URLs are normalized here at comparison time.
+ */
+export async function findReadingEntryByUrl(
+  readingDir: string,
+  normalizedUrl: string,
+  deps: EnumerateDeps,
+): Promise<string | null> {
+  const months = await deps.listDir(readingDir);
+  if (!months.ok) {
+    if (months.error.includes("404") || months.error.toLowerCase().includes("not found")) {
+      return null;
+    }
+    log.warn("enumerate", "reading-urls", "listDir-failed", {
+      dir: readingDir,
+      error: months.error,
+    });
+    return null;
+  }
+  for (const month of months.data) {
+    if (month.type !== "dir") {
+      continue;
+    }
+    const files = await deps.listDir(month.path);
+    if (!files.ok) {
+      log.warn("enumerate", "reading-urls", "month-listDir-failed", {
+        month: month.path,
+        error: files.error,
+      });
+      continue;
+    }
+    for (const file of files.data) {
+      if (file.type !== "file" || !file.name.endsWith(".md")) {
+        continue;
+      }
+      const loaded = await deps.getFile(file.path);
+      if (!loaded.ok) {
+        log.warn("enumerate", "reading-urls", "getFile-failed", {
+          path: file.path,
+          error: loaded.error,
+        });
+        continue;
+      }
+      const parsed = matter(loaded.data.content);
+      const fm = ReadingFrontmatterSchema.safeParse(parsed.data);
+      if (!fm.success) {
+        continue;
+      }
+      if (normalizeUrl(fm.data.url) === normalizedUrl) {
+        return readingSlugFromPath(file.path);
+      }
+    }
+  }
+  return null;
 }
