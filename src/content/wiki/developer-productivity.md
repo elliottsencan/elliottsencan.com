@@ -36,6 +36,7 @@ sources:
   - 2026-06/2026-06-18t024208-the-git-commands-i-run-before-reading-any-code
   - >-
     2026-06/2026-06-18t090801-how-i-audit-a-legacy-rails-codebase-in-the-first-week
+  - 2026-06/2026-06-22t000701-the-idiot-index-for-code
 compiled_at: '2026-06-18T21:43:48.707Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -53,6 +54,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.038535
+last_source_added: '2026-06-22T07:07:01.124Z'
 ---
 The narrative that developer productivity is primarily a tooling problem gets complicated the moment you look at where time actually goes. [The Typical Set](/reading/2026-05/2026-05-06t110728-the-bottleneck-was-never-the-code) argues that coding agents make the act of writing code cheap but leave the organizational bottlenecks — shared context, specification clarity, management coherence — entirely untouched. Agents amplify whatever alignment or misalignment already exists.
 

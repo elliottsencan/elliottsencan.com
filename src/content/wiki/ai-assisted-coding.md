@@ -50,6 +50,7 @@ sources:
   - 2026-06/2026-06-17t075816-matt-palmer
   - >-
     2026-06/2026-06-17t130655-the-founders-playbook-building-an-ai-native-startup
+  - 2026-06/2026-06-22t000701-the-idiot-index-for-code
 aliases:
   - ai-coding-agents
 compiled_at: '2026-06-18T21:40:05.502Z'
@@ -69,6 +70,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.059637
+last_source_added: '2026-06-22T07:07:01.124Z'
 ---
 AI-assisted coding now spans a wide spectrum. At one end sit tools that autocomplete lines or answer questions in a chat window. At the other, fully autonomous agents run for hours, spawn subagents in parallel, and commit changes across entire codebases without a human in the loop. The shift from the first kind to the second is the defining pressure in the field right now.
 
