@@ -36,6 +36,7 @@ sources:
     2026-06/2026-06-18t090801-how-i-audit-a-legacy-rails-codebase-in-the-first-week
   - 2026-06/2026-06-21t231758-nasa-technical-report-20070005136
   - 2026-06/2026-06-22t000701-the-idiot-index-for-code
+  - 2026-06/2026-06-22t001042-how-to-leave
 compiled_at: '2026-06-18T21:45:40.563Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -53,7 +54,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.037104
-last_source_added: '2026-06-22T07:07:01.124Z'
+last_source_added: '2026-06-22T07:10:42.318Z'
 ---
 Engineering craft names the cluster of skills, habits, and judgment that distinguish engineers who understand their work from those who merely produce output. The sources here span a wide range of sub-domains, but a shared concern runs through them: that technical quality requires active attention, and that shortcuts — whether cultural, tooling-related, or cognitive — compound into serious failures.
 

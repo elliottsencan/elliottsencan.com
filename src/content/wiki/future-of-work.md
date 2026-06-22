@@ -11,6 +11,7 @@ sources:
   - 2026-06/2026-06-09t190614-what-it-feels-like-to-work-with-mythos
   - 2026-06/2026-06-17t124905-the-competitive-moat-that-ai-cant-replicate
   - 2026-06/2026-06-21t231454-spacex-and-the-sentient-sun
+  - 2026-06/2026-06-22t001042-how-to-leave
 compiled_at: '2026-06-18T21:47:19.482Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -28,7 +29,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.016899
-last_source_added: '2026-06-22T06:14:54.016Z'
+last_source_added: '2026-06-22T07:10:42.318Z'
 ---
 The question of what AI does to work splits along a time axis. Kevin Drum, writing in 2013, argued that Moore's Law would deliver human-level AI around 2040, and that unlike earlier waves of automation, this one would eliminate entire occupational categories rather than just routine tasks [Welcome, Robot Overlords](/reading/2026-05/2026-05-28t074225-welcome-robot-overlords-please-dont-fire-us). The robot paradise he imagines in the long run is real, but so is the transitional wreckage.
 

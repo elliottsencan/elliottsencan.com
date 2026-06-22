@@ -9,6 +9,7 @@ sources:
   - 2026-04/2026-04-30t231537-startupsrip
   - 2026-05/2026-05-03t103944-the-lobster-in-the-hot-pot
   - 2026-06/2026-06-21t231454-spacex-and-the-sentient-sun
+  - 2026-06/2026-06-22t001042-how-to-leave
 aliases:
   - founder-resources
 compiled_at: '2026-05-06T16:17:56.456Z'
@@ -28,7 +29,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.011637
-last_source_added: '2026-06-22T06:14:54.016Z'
+last_source_added: '2026-06-22T07:10:42.318Z'
 ---
 Most startup post-mortems vanish. [Startups.RIP](https://startups.rip/) catalogs over 1,700 dead YC companies alongside retrospectives and rebuild playbooks, making the case that the ideas outlive the companies that first pursued them. The implication is that the ecosystem recycles; failure is data, not just loss.
 
