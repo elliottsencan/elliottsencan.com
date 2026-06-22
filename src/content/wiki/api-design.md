@@ -1,27 +1,29 @@
 ---
 title: API design
 summary: >-
-  API design spans both the surface contracts between systems and the internal
-  module interfaces within a codebase, with themes of type safety, validation,
-  abstraction depth, and composability appearing across libraries, frameworks,
-  and backend integrations.
+  API design governs how software exposes functionality to callers, with
+  principles spanning interface narrowness, type safety, schema validation, and
+  the tradeoff between abstraction depth and surface complexity.
 sources:
+  - 2026-04/2026-04-23t150424-your-agent-loves-mcp-as-much-as-you-love-guis
   - >-
     2026-04/2026-04-30t230851-from-flaky-to-flawless-angular-api-response-management-with
+  - 2026-04/2026-04-30t231412-form-model-design-angular-signal-forms
   - 2026-04/2026-04-30t231709-conductor
   - >-
     2026-04/2026-04-30t232001-a-better-way-to-build-angular-components-from-inputs-to
   - 2026-05/2026-05-04t231343-ai-likes-deep-modules
   - >-
     2026-05/2026-05-12t165232-seven-cool-javascript-libraries-you-should-know-about
+  - 2026-05/2026-05-18t113714-yaml-thats-norway-problem
   - 2026-06/2026-06-13t081411-signals-the-push-pull-based-algorithm
   - 2026-06/2026-06-17t075738-gunnargray-devunicode-animations
-compiled_at: '2026-06-18T21:41:36.942Z'
+compiled_at: '2026-06-22T07:24:57.111Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 7425
-    output_tokens: 576
+    input_tokens: 7893
+    output_tokens: 724
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -32,14 +34,14 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.030915
+  cost_usd: 0.034539
 ---
-Good API design balances expressiveness with constraint. A narrow, well-typed surface forces callers to interact correctly; a bloated or leaky one shifts that burden onto every consumer.
+Good API design is fundamentally about managing what callers need to know. The principle of deep modules, described in [AI Likes Deep Modules](/reading/2026-05/2026-05-04t231343-ai-likes-deep-modules), puts this directly: a small interface hiding a large implementation reduces cognitive load for both human developers and LLMs working with the codebase. Shallow modules that expose implementation detail create the opposite effect, spreading complexity outward.
 
-Runtime validation is one place where that principle becomes concrete. [Angular with Zod](/reading/2026-04/2026-04-30t230851-from-flaky-to-flawless-angular-api-response-management-with) illustrates the cost of trusting backend shapes implicitly: unexpected fields or missing properties propagate silently until they surface as UI bugs. Using Zod schemas inside a custom RxJS operator catches contract violations at the boundary, failing fast in development rather than degrading quietly in production. Zod also appears in a broader JS library roundup [alongside Orval](/reading/2026-05/2026-05-12t165232-seven-cool-javascript-libraries-you-should-know-about), which generates fully-typed API clients from OpenAPI specs, pushing the contract definition upstream into a schema that both server and client agree on.
+The same logic applies to component APIs. [A Better Way to Build Angular Components](/reading/2026-04/2026-04-30t232001-a-better-way-to-build-angular-components-from-inputs-to) argues that components accumulating dozens of inputs become unworkable; the fix is the Composite Components pattern, pushing concerns into directives and sub-components so each piece exposes only what it must.
 
-Abstraction depth matters on the module side too. The argument in [AI Likes Deep Modules](/reading/2026-05/2026-05-04t231343-ai-likes-deep-modules) is that interfaces hiding complexity behind simple surfaces serve both human and AI consumers better than shallow ones that expose implementation details. A deep module requires callers to understand less while accomplishing more.
+Type safety is a recurring mechanism for enforcing API contracts. [From Flaky to Flawless](/reading/2026-04/2026-04-30t230851-from-flaky-to-flawless-angular-api-response-management-with) shows how Zod schema validation inside a custom RxJS operator catches unexpected backend response shapes at development time rather than at runtime. Zod also appears in [Seven Cool JavaScript Libraries](/reading/2026-05/2026-05-12t165232-seven-cool-javascript-libraries-you-should-know-about) as a general-purpose runtime type validation tool. [Conductor](/reading/2026-04/2026-04-30t231709-conductor) takes this further at the product level, wrapping the qbXML and SOAP surface of QuickBooks Desktop behind a fully-typed Python, Node.js, and REST interface, abstracting away protocol complexity entirely.
 
-The same logic applies at the component level. [Composite Angular components](/reading/2026-04/2026-04-30t232001-a-better-way-to-build-angular-components-from-inputs-to) argue that components with dozens of inputs are a design smell: each input is a point of contract, and too many of them make the API brittle. Distributing behavior into directives and sub-components keeps each surface small.
+Data format choices carry their own API risks. [YAML? That's Norway Problem](/reading/2026-05/2026-05-18t113714-yaml-thats-norway-problem) illustrates how implicit type coercion in YAML — where the string `NO` parses as boolean false — can silently corrupt configuration data passed between systems, and how the fix in the YAML 1.2 spec went unimplemented in major libraries for over a decade.
 
-[Conductor](/reading/2026-04/2026-04-30t231709-conductor) shows what good abstraction looks like at the integration layer. QuickBooks Desktop exposes qbXML and SOAP; Conductor replaces that with a typed REST and SDK interface covering 130+ objects. The underlying protocol complexity disappears entirely behind a surface designed for modern tooling.
+For AI agents specifically, [Your Agent Loves MCP as Much as You Love GUIs](/reading/2026-04/2026-04-23t150424-your-agent-loves-mcp-as-much-as-you-love-guis) argues that MCP-style interfaces are analogous to GUIs: useful for humans but inefficient for agents that can consume raw APIs and scripts directly, avoiding token overhead and composability constraints. The implication is that API surface should be designed with the actual consumer in mind, whether that consumer is a human, a framework, or an autonomous agent.

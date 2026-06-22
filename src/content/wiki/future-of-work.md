@@ -1,23 +1,36 @@
 ---
 title: Future of work
 summary: >-
-  AI automation is reshaping labor across short and long timescales: near-term
-  layoffs erode the human oversight firms still need, while further out, human
-  connection and judgment may be the last durable advantages workers hold.
+  How automation, AI capability, and organizational design are reshaping what
+  workers do, which skills remain irreplaceable, and what happens when firms
+  optimize for output at the expense of human judgment and connection.
 sources:
   - >-
     2026-05/2026-05-02t155432-cognitive-offloading-and-ai-how-reliance-on-llms-affects
+  - >-
+    2026-05/2026-05-08t112608-your-onboarding-is-a-hazing-ritual-and-you-call-it-agile
+  - >-
+    2026-05/2026-05-13t060018-why-senior-developers-fail-to-communicate-their-expertise
+  - >-
+    2026-05/2026-05-14t223612-the-perils-of-ai-to-the-software-engineering-profession
+  - >-
+    2026-05/2026-05-19t110710-the-tacit-dimension-why-your-best-engineers-cant-tell-you
+  - >-
+    2026-05/2026-05-19t134831-finite-attention-why-burnout-isnt-your-fault-and-how
   - 2026-05/2026-05-28t074225-welcome-robot-overlords-please-dont-fire-us
   - 2026-06/2026-06-09t190614-what-it-feels-like-to-work-with-mythos
   - 2026-06/2026-06-17t124905-the-competitive-moat-that-ai-cant-replicate
   - 2026-06/2026-06-21t231454-spacex-and-the-sentient-sun
   - 2026-06/2026-06-22t001042-how-to-leave
-compiled_at: '2026-06-18T21:47:19.482Z'
+aliases:
+  - automation-history
+  - labor-market
+compiled_at: '2026-06-22T07:22:20.387Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 2748
-    output_tokens: 577
+    input_tokens: 3944
+    output_tokens: 794
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -28,13 +41,12 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.016899
-last_source_added: '2026-06-22T07:10:42.318Z'
+  cost_usd: 0.023742
 ---
-The question of what AI does to work splits along a time axis. Kevin Drum, writing in 2013, argued that Moore's Law would deliver human-level AI around 2040, and that unlike earlier waves of automation, this one would eliminate entire occupational categories rather than just routine tasks [Welcome, Robot Overlords](/reading/2026-05/2026-05-28t074225-welcome-robot-overlords-please-dont-fire-us). The robot paradise he imagines in the long run is real, but so is the transitional wreckage.
+The question of what work looks like under advancing automation has two distinct registers: the macroeconomic and the organizational. Kevin Drum's 2013 piece [Welcome, Robot Overlords](/reading/2026-05/2026-05-28t074225-welcome-robot-overlords-please-dont-fire-us) argued that unlike previous automation waves, human-level AI would permanently displace whole labor categories rather than redirect them. A decade later, Ethan Mollick's hands-on report with a frontier model [confirms the capability leap is real](/reading/2026-06/2026-06-09t190614-what-it-feels-like-to-work-with-mythos): multi-hour autonomous workflows, sub-agent delegation, and complex software delivery are here, but the human role has shifted from doing to commissioning.
 
-The near-term dynamic is more treacherous than simple displacement. Falk and Tsoukalas identify a structural trap: firms that cut headcount to capture AI cost savings also shed the human capital required to catch AI errors and maintain quality [The AI Layoff Trap](/reading/2026-05/2026-05-02t155432-cognitive-offloading-and-ai-how-reliance-on-llms-affects). The oversight function is not separable from the labor being replaced, so the productivity gains can reverse.
+At the firm level, the picture is less triumphant. Falk and Tsoukalas [argue that competitive pressure creates a strategic trap](/reading/2026-05/2026-05-02t155432-cognitive-offloading-and-ai-how-reliance-on-llms-affects): firms lay off workers prematurely to keep pace with rivals, even when automation's productivity gains remain uncertain, producing collectively suboptimal outcomes. The human skills being discarded are not trivially replaceable. Tacit knowledge, the pattern recognition and design intuition that experienced engineers carry, [is structurally inaccessible to AI tools](/reading/2026-05/2026-05-19t110710-the-tacit-dimension-why-your-best-engineers-cant-tell-you) and can only transfer through apprenticeship. Abednego Gomes adds that shipping AI-generated code without review [accelerates skill atrophy](/reading/2026-05/2026-05-14t223612-the-perils-of-ai-to-the-software-engineering-profession) and is incompatible with safety-critical systems.
 
-Ethan Mollick's test of Claude 5 Fable shows what the accelerating capability curve actually feels like on the ground: the human role shifts from active collaborator to something closer to a patron commissioning work, while sub-agents handle multi-hour research and coding autonomously [What it feels like to work with Mythos](/reading/2026-06/2026-06-09t190614-what-it-feels-like-to-work-with-mythos). That shift is not simply about fewer jobs; it is a qualitative change in what human contribution means.
+Organizational dysfunction compounds these pressures. Poor onboarding [systematically fails new hires](/reading/2026-05/2026-05-08t112608-your-onboarding-is-a-hazing-ritual-and-you-call-it-agile) while making the failure invisible to management, burning through exactly the junior talent that would otherwise develop the tacit knowledge firms now claim AI can substitute. Systems designed to maximize data output [ignore human attention limits](/reading/2026-05/2026-05-19t134831-finite-attention-why-burnout-isnt-your-fault-and-how), producing burnout as a structural outcome rather than an individual failing.
 
-One answer to where human value persists comes from the trust argument: organizations that automate away direct human contact destroy accumulated loyalty that no AI personalization can rebuild [The Competitive Moat That AI Can't Replicate](/reading/2026-06/2026-06-17t124905-the-competitive-moat-that-ai-cant-replicate). The moat is not skill or speed but the unmeasurable residue of real relationships. Taken together, these sources suggest the future of work is less about whether AI displaces humans than about which firms and workers understand what genuine human contribution is still worth preserving.
+At the customer-facing layer, Ghost in the Data [argues that automating away human connection](/reading/2026-06/2026-06-17t124905-the-competitive-moat-that-ai-cant-replicate) destroys trust and loyalty that no AI personalization engine can rebuild. The thread across these sources: efficiency gains are real, but the things being optimized away, tacit expertise, human contact, attention headroom, new-hire development, are not line items that reappear once cut.
