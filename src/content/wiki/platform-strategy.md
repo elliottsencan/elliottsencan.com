@@ -17,6 +17,7 @@ sources:
   - 2026-06/2026-06-17t124905-the-competitive-moat-that-ai-cant-replicate
   - >-
     2026-06/2026-06-17t130655-the-founders-playbook-building-an-ai-native-startup
+  - 2026-06/2026-06-21t231454-spacex-and-the-sentient-sun
 compiled_at: '2026-06-18T21:53:08.170Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -34,6 +35,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.028824
+last_source_added: '2026-06-22T06:14:54.016Z'
 ---
 Platform strategy sits at the intersection of product design, infrastructure, and competitive positioning. Several distinct threads run through the sources here, and they are worth examining together rather than in isolation.
 

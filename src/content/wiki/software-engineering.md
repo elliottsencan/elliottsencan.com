@@ -68,6 +68,7 @@ sources:
   - >-
     2026-06/2026-06-18t090801-how-i-audit-a-legacy-rails-codebase-in-the-first-week
   - 2026-06/2026-06-21t130526-agentic-engineering
+  - 2026-06/2026-06-21t231454-spacex-and-the-sentient-sun
 compiled_at: '2026-06-18T21:56:08.689Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -85,7 +86,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.070254
-last_source_added: '2026-06-21T20:05:26.957Z'
+last_source_added: '2026-06-22T06:14:54.016Z'
 ---
 Software engineering as a discipline resists clean definition, but a common thread across recent technical writing is that the hard problems have never been purely about writing code. [The Typical Set](/reading/2026-05/2026-05-06t110728-the-bottleneck-was-never-the-code) puts it plainly: the real bottleneck is organizational — shared context, specification clarity, and management coherence. Code generation, whether by hand or by agent, amplifies whatever alignment or misalignment already exists in a team.
 
