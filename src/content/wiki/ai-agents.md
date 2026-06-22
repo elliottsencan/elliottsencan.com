@@ -59,7 +59,6 @@ sources:
   - 2026-06/2026-06-13t083401-sgupai-fable5md
   - 2026-06/2026-06-14t094245-agentswarms
   - 2026-06/2026-06-21t112220-agentic-engineering
-  - 2026-06/2026-06-21t130526-agentic-engineering
 compiled_at: '2026-06-18T21:39:17.616Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:

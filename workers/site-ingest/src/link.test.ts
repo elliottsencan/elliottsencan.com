@@ -1148,6 +1148,158 @@ describe("selectThresholdTriggers", () => {
   });
 });
 
+// ---------- duplicate guard: integration via makeLinkStrategy.plan ----------
+
+describe("makeLinkStrategy.plan — duplicate guard", () => {
+  beforeEach(() => {
+    __resetRobotsCacheForTests();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+    __resetRobotsCacheForTests();
+  });
+
+  it("rejects with 409 and skips the Anthropic call when the URL is already catalogued", async () => {
+    stubFetch((url) => {
+      if (url.endsWith("/robots.txt")) {
+        return new Response("", { status: 404 });
+      }
+      return new Response("<html><title>T</title></html>", { status: 200 });
+    });
+    const summarizeSpy = vi.spyOn(anthropicModule, "summarizeLink");
+    const corpusFiles: Record<string, string> = {
+      "src/content/reading/2026-06/2026-06-21t112220-agentic-engineering.md":
+        readingEntryWithTopics(["ai-agents"], { url: "https://example.com/agentic" }),
+    };
+    vi.spyOn(githubModule, "listDir").mockImplementation(thresholdReadingListDir(corpusFiles));
+    vi.spyOn(githubModule, "getFile").mockImplementation(async (path: string) => {
+      const content = corpusFiles[path];
+      if (content === undefined) {
+        return { ok: false as const, error: "HTTP 404: Not Found" };
+      }
+      return { ok: true as const, data: { content, sha: "x" } };
+    });
+    // Re-share of the same article with a trailing slash + tracking param —
+    // normalizeUrl collapses it onto the stored URL, so the guard still fires.
+    const strategy = makeLinkStrategy({
+      url: "https://www.example.com/agentic/?utm_source=twitter",
+      topic_priors: false,
+      dry_run: false,
+    });
+    const env = baseEnv();
+    const result = await strategy.plan({ env }, env);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.status).toBe(409);
+      expect(result.error).toMatch(/duplicate/);
+      expect(result.error).toContain("2026-06/2026-06-21t112220-agentic-engineering");
+    }
+    expect(summarizeSpy).not.toHaveBeenCalled();
+  });
+
+  it("proceeds to summarize when the URL is new", async () => {
+    stubFetch((url) => {
+      if (url.endsWith("/robots.txt")) {
+        return new Response("", { status: 404 });
+      }
+      return new Response("<html><title>T</title></html>", { status: 200 });
+    });
+    const summarizeSpy = vi.spyOn(anthropicModule, "summarizeLink").mockResolvedValue({
+      ok: true,
+      data: {
+        title: "Article",
+        summary: "x.",
+        category: "tech",
+        kind: "article",
+        topics: [],
+        model: "claude-sonnet-4-6",
+        cost: {
+          usage: {
+            input_tokens: 0,
+            output_tokens: 0,
+            cache_creation_input_tokens: 0,
+            cache_read_input_tokens: 0,
+          },
+          model: "claude-sonnet-4-6",
+          pricing: null,
+          cost_usd: 0,
+        },
+      },
+    });
+    const corpusFiles: Record<string, string> = {
+      "src/content/reading/2026-06/2026-06-01t000000-other.md": readingEntryWithTopics(["x"], {
+        url: "https://example.com/different",
+      }),
+    };
+    vi.spyOn(githubModule, "listDir").mockImplementation(thresholdReadingListDir(corpusFiles));
+    vi.spyOn(githubModule, "getFile").mockImplementation(async (path: string) => {
+      if (path.startsWith("src/content/wiki/")) {
+        return { ok: false as const, error: "HTTP 404: Not Found" };
+      }
+      const content = corpusFiles[path];
+      if (content === undefined) {
+        return { ok: false as const, error: "HTTP 404: Not Found" };
+      }
+      return { ok: true as const, data: { content, sha: "x" } };
+    });
+    const strategy = makeLinkStrategy({
+      url: "https://example.com/brand-new",
+      topic_priors: false,
+      dry_run: false,
+    });
+    const env = baseEnv();
+    const result = await strategy.plan({ env }, env);
+    expect(result.ok).toBe(true);
+    expect(summarizeSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not run the duplicate guard in dry_run mode", async () => {
+    stubFetch((url) => {
+      if (url.endsWith("/robots.txt")) {
+        return new Response("", { status: 404 });
+      }
+      return new Response("<html><title>T</title></html>", { status: 200 });
+    });
+    const summarizeSpy = vi.spyOn(anthropicModule, "summarizeLink").mockResolvedValue({
+      ok: true,
+      data: {
+        title: "Article",
+        summary: "x.",
+        category: "tech",
+        kind: "article",
+        topics: [],
+        model: "claude-sonnet-4-6",
+        cost: {
+          usage: {
+            input_tokens: 0,
+            output_tokens: 0,
+            cache_creation_input_tokens: 0,
+            cache_read_input_tokens: 0,
+          },
+          model: "claude-sonnet-4-6",
+          pricing: null,
+          cost_usd: 0,
+        },
+      },
+    });
+    // A corpus that WOULD match — the guard is skipped in dry_run so the
+    // listDir below should never be consulted for a duplicate decision.
+    const listDirSpy = vi.spyOn(githubModule, "listDir");
+    const strategy = makeLinkStrategy({
+      url: "https://example.com/agentic",
+      topic_priors: false,
+      dry_run: true,
+    });
+    const env = baseEnv();
+    const result = await strategy.plan({ env }, env);
+    expect(result.ok).toBe(true);
+    expect(summarizeSpy).toHaveBeenCalledTimes(1);
+    expect(listDirSpy).not.toHaveBeenCalled();
+  });
+});
+
 // ---------- A2: integration via makeLinkStrategy.plan ----------
 
 describe("makeLinkStrategy.plan — threshold trigger surfaces in summary", () => {

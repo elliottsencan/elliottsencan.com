@@ -67,7 +67,7 @@ sources:
   - 2026-06/2026-06-18t024208-the-git-commands-i-run-before-reading-any-code
   - >-
     2026-06/2026-06-18t090801-how-i-audit-a-legacy-rails-codebase-in-the-first-week
-  - 2026-06/2026-06-21t130526-agentic-engineering
+  - 2026-06/2026-06-21t112220-agentic-engineering
   - 2026-06/2026-06-21t231454-spacex-and-the-sentient-sun
   - 2026-06/2026-06-22t000701-the-idiot-index-for-code
 compiled_at: '2026-06-18T21:56:08.689Z'

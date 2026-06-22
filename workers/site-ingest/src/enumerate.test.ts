@@ -4,7 +4,9 @@ import {
   enumerateBlogWithBodies,
   enumerateReadingTopics,
   enumerateWikiWithBodies,
+  findReadingEntryByUrl,
 } from "./enumerate.ts";
+import { normalizeUrl } from "./util.ts";
 
 const fakeDeps = (files: Record<string, string>): EnumerateDeps => ({
   listDir: vi.fn().mockImplementation(async (path: string) => {
@@ -212,5 +214,75 @@ describe("enumerateReadingTopics: noindex filter", () => {
     });
     const map = await enumerateReadingTopics("src/content/reading", deps);
     expect(map.size).toBe(1);
+  });
+});
+
+describe("findReadingEntryByUrl", () => {
+  it("returns the slug of an entry whose url matches exactly", async () => {
+    const deps = fakeReadingDeps({
+      "src/content/reading/2026-04/2026-04-01t000000-a.md": readingFm({
+        url: "https://example.com/post",
+      }),
+    });
+    const slug = await findReadingEntryByUrl(
+      "src/content/reading",
+      normalizeUrl("https://example.com/post"),
+      deps,
+    );
+    expect(slug).toBe("2026-04/2026-04-01t000000-a");
+  });
+
+  it("matches modulo tracking params, trailing slash, www, and fragment", async () => {
+    const deps = fakeReadingDeps({
+      "src/content/reading/2026-04/2026-04-01t000000-a.md": readingFm({
+        url: "https://example.com/post",
+      }),
+    });
+    const slug = await findReadingEntryByUrl(
+      "src/content/reading",
+      normalizeUrl("https://www.example.com/post/?utm_source=twitter#top"),
+      deps,
+    );
+    expect(slug).toBe("2026-04/2026-04-01t000000-a");
+  });
+
+  it("returns null when no entry matches", async () => {
+    const deps = fakeReadingDeps({
+      "src/content/reading/2026-04/2026-04-01t000000-a.md": readingFm({
+        url: "https://example.com/post",
+      }),
+    });
+    const slug = await findReadingEntryByUrl(
+      "src/content/reading",
+      normalizeUrl("https://example.com/other"),
+      deps,
+    );
+    expect(slug).toBeNull();
+  });
+
+  it("returns null on an empty corpus (reading dir 404s)", async () => {
+    const deps = fakeReadingDeps({});
+    const slug = await findReadingEntryByUrl(
+      "src/content/reading",
+      normalizeUrl("https://example.com/post"),
+      deps,
+    );
+    expect(slug).toBeNull();
+  });
+
+  it("skips malformed entries rather than treating them as a match", async () => {
+    const deps = fakeReadingDeps({
+      // Missing required fields → ReadingFrontmatterSchema rejects it.
+      "src/content/reading/2026-04/2026-04-01t000000-bad.md": "---\ntitle: Broken\n---\n",
+      "src/content/reading/2026-04/2026-04-02t000000-good.md": readingFm({
+        url: "https://example.com/post",
+      }),
+    });
+    const slug = await findReadingEntryByUrl(
+      "src/content/reading",
+      normalizeUrl("https://example.com/post"),
+      deps,
+    );
+    expect(slug).toBe("2026-04/2026-04-02t000000-good");
   });
 });

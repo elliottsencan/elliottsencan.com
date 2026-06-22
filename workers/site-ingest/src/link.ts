@@ -20,7 +20,7 @@ import { decode as decodeHtmlEntities } from "html-entities";
 import { z } from "zod";
 import { summarizeLink } from "./anthropic.ts";
 import type { CostRecord } from "./cost.ts";
-import { enumerateReadingTopics } from "./enumerate.ts";
+import { enumerateReadingTopics, findReadingEntryByUrl } from "./enumerate.ts";
 import { createGitHubClient, type GitHubClient, getFile, listDir } from "./github.ts";
 import { checkOptOutSignals, isHostExcluded } from "./optout.ts";
 import type { Mutation, PlanResult, Strategy } from "./pipeline.ts";
@@ -40,6 +40,7 @@ import {
   jsonResponse,
   log,
   monthKey,
+  normalizeUrl,
   readingSlugFromPath,
   slugify,
 } from "./util.ts";
@@ -156,8 +157,43 @@ export function makeLinkStrategy(req: LinkRequest): Strategy<LinkSummaryRow> {
         });
       }
 
-      // kind === "allow": reuse the title we already extracted in
-      // checkOptOutSignals so we don't re-fetch the article.
+      // kind === "allow". One GitHub client serves the duplicate guard below,
+      // the wiki-sources patch (A1+A3), and the threshold-trigger enumeration
+      // (A2) — reusing it keeps connection pooling/coalescing tidy and gives
+      // tests a single `getFile`/`listDir` surface to spy on.
+      const gh = createGitHubClient(env.GITHUB_TOKEN, env.GITHUB_REPO);
+      const ghDeps = {
+        listDir: (p: string, ref?: string) => listDir(p, ref ?? "main", gh),
+        getFile: (p: string, ref?: string) => getFile(p, ref ?? "main", gh),
+      };
+
+      // Pre-commit duplicate guard. The iOS share-sheet has no memory of what's
+      // already in the corpus, so re-sharing the same article is common. Reject
+      // a URL we've already catalogued BEFORE the page fetch + Anthropic call,
+      // so a duplicate costs a corpus walk rather than a wasted summarization.
+      // Skipped in dry_run — the topic-stability A/B driver re-runs the same
+      // URLs on purpose and never commits.
+      if (!req.dry_run) {
+        const existingSlug = await findReadingEntryByUrl(
+          env.READING_DIR,
+          normalizeUrl(req.url),
+          ghDeps,
+        );
+        if (existingSlug) {
+          log.info("link", "duplicate", "url already in reading corpus; skipping ingest", {
+            url: req.url,
+            existing: existingSlug,
+          });
+          return {
+            ok: false,
+            status: 409,
+            error: `duplicate: already saved as /reading/${existingSlug}`,
+          };
+        }
+      }
+
+      // Reuse the title we already extracted in checkOptOutSignals so we don't
+      // re-fetch the article.
       const resolvedTitle = req.title ?? optOut.title ?? (await fetchPageTitle(req.url));
       // topic_priors=false short-circuits the canonical-vocabulary fetch so the
       // model summarizes without seeing in-use slugs. Used by the rigor-
@@ -234,11 +270,6 @@ export function makeLinkStrategy(req: LinkRequest): Strategy<LinkSummaryRow> {
           },
         };
       }
-      // Hoisted: a single GitHub client shared by patchExistingWikiSources
-      // (PR 4) and the threshold-trigger reading enumeration below (PR 5).
-      // Reusing the client keeps connection pooling/coalescing tidy and
-      // makes it cheap for tests to spy on `getFile` once.
-      const gh = createGitHubClient(env.GITHUB_TOKEN, env.GITHUB_REPO);
       // A1 + A3: incremental wiki sources[] patch. For every canonical topic
       // on the new entry that already has a wiki article, append the new
       // reading slug to that article's `sources[]` and bump

@@ -156,10 +156,9 @@ const heroMetaLabel = lastAdded
                         {dateFormatter.format(entry.data.added)}
                       </time>
                       <div class="flex-1 space-y-1.5">
-                        {/* Mobile: title-led row with the source pinned to
-                            the right (truncated). On md+ the source drops
-                            back to its own line under the title. */}
-                        <div class="flex items-baseline justify-between gap-3 md:block">
+                        {/* Title on its own line at every breakpoint, with the
+                            source/author on the line below it. */}
+                        <div class="block">
                           {/* Title carries the stretched-link pseudo: clicking
                               anywhere on the row routes to the source URL
                               (same destination as the title text). The cited-
@@ -172,14 +171,9 @@ const heroMetaLabel = lastAdded
                           >
                             {entry.data.title}
                           </Link>
-                          {sourceLine && (
-                            <span class="max-w-[40%] shrink-0 truncate text-xs text-black/55 md:hidden dark:text-white/60">
-                              {sourceLine}
-                            </span>
-                          )}
                         </div>
                         {sourceLine && (
-                          <p class="hidden text-xs text-black/55 md:block dark:text-white/60">
+                          <p class="text-xs text-black/55 [overflow-wrap:anywhere] dark:text-white/60">
                             {sourceLine}
                           </p>
                         )}

@@ -19,7 +19,6 @@ sources:
   - 2026-06/2026-06-14t091145-001tmfharness-forge
   - 2026-06/2026-06-14t094245-agentswarms
   - 2026-06/2026-06-21t112220-agentic-engineering
-  - 2026-06/2026-06-21t130526-agentic-engineering
   - 2026-06/2026-06-21t192306-how-we-built-digitalocean-inference-router
   - >-
     2026-06/2026-06-21t192506-arch-router-aligning-llm-routing-with-human-preferences
