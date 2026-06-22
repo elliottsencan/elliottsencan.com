@@ -25,6 +25,8 @@ sources:
   - 2026-06/2026-06-11t024225-testing-a-security-tool-like-it-can-hurt-people
   - 2026-06/2026-06-15t021106-formal-methods-and-the-future-of-programming
   - 2026-06/2026-06-21t231758-nasa-technical-report-20070005136
+  - >-
+    2026-06/2026-06-22t165934-the-token-compression-illusion-why-im-skeptical-of-rtk
 compiled_at: '2026-06-22T07:20:54.964Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -42,6 +44,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.028299
+last_source_added: '2026-06-22T23:59:34.830Z'
 ---
 Reliability is not primarily a property of code correctness in isolation; it emerges from the structural choices made around code: how state is persisted, how inputs are validated, how tests are written, and how deployment pipelines are guarded.
 

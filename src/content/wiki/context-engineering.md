@@ -38,6 +38,8 @@ sources:
   - 2026-06/2026-06-14t091145-001tmfharness-forge
   - 2026-06/2026-06-20t145835-chopratejasheadroom
   - 2026-06/2026-06-21t112220-agentic-engineering
+  - >-
+    2026-06/2026-06-22t165934-the-token-compression-illusion-why-im-skeptical-of-rtk
 compiled_at: '2026-06-22T07:23:58.478Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -55,6 +57,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.04401
+last_source_added: '2026-06-22T23:59:34.830Z'
 ---
 Context engineering treats the context window not as a passive container but as the primary lever of agent behavior. What an LLM knows at inference time — and how that knowledge is structured — determines output quality more than model size or prompt cleverness alone. The sources here approach this from several angles: retrieval architecture, session persistence, state unification, memory design, and token compression.
 

@@ -31,6 +31,8 @@ sources:
   - 2026-06/2026-06-21t192306-how-we-built-digitalocean-inference-router
   - >-
     2026-06/2026-06-21t192506-arch-router-aligning-llm-routing-with-human-preferences
+  - >-
+    2026-06/2026-06-22t165934-the-token-compression-illusion-why-im-skeptical-of-rtk
 compiled_at: '2026-06-22T07:17:42.216Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -48,6 +50,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.033915
+last_source_added: '2026-06-22T23:59:34.830Z'
 ---
 Inference is the compute phase where a trained language model generates output given a prompt. Unlike training, it happens continuously in production and is where cost, latency, and throughput pressure accumulate fastest. [What Is Inference Engineering](/reading/2026-06/2026-06-21t130559-what-is-inference-engineering) provides the clearest taxonomy of what practitioners actually optimize: quantization (reducing weight precision to shrink memory footprint), speculative decoding (using a smaller draft model to propose tokens the larger model verifies in parallel), caching, parallelism strategies, and prefill/decode disaggregation.
 

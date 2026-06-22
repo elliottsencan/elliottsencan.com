@@ -40,6 +40,8 @@ sources:
     2026-06/2026-06-20t053342-if-llms-have-human-like-attributes-then-so-does-age-of
   - >-
     2026-06/2026-06-21t192506-arch-router-aligning-llm-routing-with-human-preferences
+  - >-
+    2026-06/2026-06-22t165934-the-token-compression-illusion-why-im-skeptical-of-rtk
 compiled_at: '2026-06-22T07:18:44.919Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -57,6 +59,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.033402
+last_source_added: '2026-06-22T23:59:34.830Z'
 ---
 A benchmark is only as useful as the gap it exposes. Across the sources collected here, the most consistent finding is that benchmark scores routinely flatter: models look capable on standard tests while failing on the specific properties the tests were supposed to proxy.
 
