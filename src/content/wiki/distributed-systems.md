@@ -27,6 +27,7 @@ sources:
   - 2026-05/2026-05-31t164554-jj-vcsjj
   - >-
     2026-06/2026-06-10t223404-how-to-read-distributed-traces-when-you-didnt-write-the-code
+  - 2026-06/2026-06-21t231758-nasa-technical-report-20070005136
 compiled_at: '2026-06-18T21:45:09.664Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -44,6 +45,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.026076
+last_source_added: '2026-06-22T06:17:58.247Z'
 ---
 The core problems of distributed systems, managing state across nodes, handling partial failure gracefully, and coordinating concurrent actors, keep resurfacing in domains that don't always acknowledge the lineage. Two clusters of sources make this pattern visible.
 

@@ -19,6 +19,7 @@ sources:
   - 2026-06/2026-06-11t083730-7-more-common-mistakes-in-architecture-diagrams
   - 2026-06/2026-06-11t111011-hows-linear-so-fast-a-technical-breakdown
   - 2026-06/2026-06-13t081411-signals-the-push-pull-based-algorithm
+  - 2026-06/2026-06-21t231758-nasa-technical-report-20070005136
 compiled_at: '2026-06-18T21:56:45.234Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -36,6 +37,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.028185
+last_source_added: '2026-06-22T06:17:58.247Z'
 ---
 Systems design is the discipline of deciding how components divide responsibility, communicate, and recover from failure. The concerns are consistent across very different scales and problem domains.
 

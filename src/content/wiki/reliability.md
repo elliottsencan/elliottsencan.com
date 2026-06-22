@@ -15,6 +15,7 @@ sources:
   - 2026-05/2026-05-15t120337-playwright-testing-in-staging-vs-production
   - 2026-06/2026-06-10t073045-the-unwritten-laws-of-software-engineering
   - 2026-06/2026-06-11t024225-testing-a-security-tool-like-it-can-hurt-people
+  - 2026-06/2026-06-21t231758-nasa-technical-report-20070005136
 compiled_at: '2026-06-18T21:53:42.486Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -32,6 +33,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.021117
+last_source_added: '2026-06-22T06:17:58.247Z'
 ---
 Reliability is not a single property but a cluster of concerns that each source here addresses from a different layer of the stack.
 
