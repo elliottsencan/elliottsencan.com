@@ -1,18 +1,23 @@
 ---
 title: Engineering craft
 summary: >-
-  The practice of software engineering as skilled, judgment-intensive work —
-  spanning low-level optimization, tool fluency, design principles, and the
-  tacit expertise that separates experienced engineers from code producers.
+  The habits, judgment, and tacit knowledge that separate adequate code from
+  enduring software — spanning module design, incremental delivery,
+  communication, and the discipline to resist both unnecessary complexity and
+  reckless shortcuts.
 sources:
+  - 2026-04/2026-04-24t085352-building-a-ui-without-breakpoints
+  - 2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp
+  - >-
+    2026-04/2026-04-30t155134-learn-algorithms-for-interviews-forget-them-for-work
   - 2026-04/2026-04-30t231027-munificentcraftinginterpreters
   - >-
     2026-04/2026-04-30t231815-shell-tricks-that-actually-make-life-easier-and-save-your
   - >-
     2026-04/2026-04-30t232001-a-better-way-to-build-angular-components-from-inputs-to
-  - >-
-    2026-05/2026-05-03t150555-what-happens-if-a-merge-queue-builds-on-the-wrong-commit
-  - 2026-05/2026-05-06t163329-multi-stroke-text-effect-in-css
+  - 2026-05/2026-05-02t094735-approaching-zero-bugs
+  - 2026-05/2026-05-04t231343-ai-likes-deep-modules
+  - 2026-05/2026-05-05t091632-building-websites-with-llms
   - >-
     2026-05/2026-05-08t112608-your-onboarding-is-a-hazing-ritual-and-you-call-it-agile
   - >-
@@ -24,12 +29,14 @@ sources:
   - >-
     2026-05/2026-05-19t110710-the-tacit-dimension-why-your-best-engineers-cant-tell-you
   - 2026-05/2026-05-22t091746-when-code-is-cheap-does-quality-still-matter
+  - 2026-05/2026-05-30t210309-90percent-of-the-t-distribution
   - 2026-05/2026-05-31t164252-reviewing-large-changes-with-jujutsu
   - 2026-06/2026-06-04t073318-single-responsibility-the-distorted-principle
   - 2026-06/2026-06-10t073045-the-unwritten-laws-of-software-engineering
   - >-
     2026-06/2026-06-10t220929-navigating-the-age-old-problem-of-checkmarks-in-ui-with
   - 2026-06/2026-06-11t083730-7-more-common-mistakes-in-architecture-diagrams
+  - 2026-06/2026-06-13t081411-signals-the-push-pull-based-algorithm
   - 2026-06/2026-06-15t021106-formal-methods-and-the-future-of-programming
   - 2026-06/2026-06-18t024208-the-git-commands-i-run-before-reading-any-code
   - >-
@@ -37,12 +44,12 @@ sources:
   - 2026-06/2026-06-21t231758-nasa-technical-report-20070005136
   - 2026-06/2026-06-22t000701-the-idiot-index-for-code
   - 2026-06/2026-06-22t001042-how-to-leave
-compiled_at: '2026-06-18T21:45:40.563Z'
+compiled_at: '2026-06-22T07:19:42.344Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 5653
-    output_tokens: 1343
+    input_tokens: 6957
+    output_tokens: 1216
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -53,19 +60,18 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.037104
-last_source_added: '2026-06-22T07:10:42.318Z'
+  cost_usd: 0.039111
 ---
-Engineering craft names the cluster of skills, habits, and judgment that distinguish engineers who understand their work from those who merely produce output. The sources here span a wide range of sub-domains, but a shared concern runs through them: that technical quality requires active attention, and that shortcuts — whether cultural, tooling-related, or cognitive — compound into serious failures.
+Engineering craft is not a single technique but a cluster of dispositions that show up consistently across different layers of the stack. It includes knowing when to reach for a tool and when the tool is the problem, how to structure code so future readers can reason about it, and how to communicate what you built and why.
 
-At the micro level, craft shows up in knowing your tools precisely. Shell tricks like Readline bindings, brace expansion, and script safety flags are the kind of fluency that speeds daily work without requiring new infrastructure. Similarly, [git log commands](/reading/2026-06/2026-06-18t024208-the-git-commands-i-run-before-reading-any-code) that expose churn hotspots and bus factor let engineers read a codebase's history as diagnostic signal before opening a single file. A [Jujutsu-based review workflow](/reading/2026-05/2026-05-31t164252-reviewing-large-changes-with-jujutsu) applies the same care to the review process itself, using incremental squash commits to track progress through large diffs.
+Module and component design is a recurring site of craft decisions. The principle of deep modules, as described in [AI Likes Deep Modules](/reading/2026-05/2026-05-04t231343-ai-likes-deep-modules), is that a small, stable interface hiding a large implementation reduces cognitive load for both humans and LLMs working with the code later. The same logic appears in [A Better Way to Build Angular Components](/reading/2026-04/2026-04-30t232001-a-better-way-to-build-angular-components-from-inputs-to), which argues that components bloated with dozens of inputs should be decomposed through the Composite Components pattern so each concern stays encapsulated. [Single Responsibility, the Distorted Principle](/reading/2026-06/2026-06-04t073318-single-responsibility-the-distorted-principle) adds a corrective: SRP does not mean atomizing everything into micro-units, it means grouping behaviors under a single accountable concern. Over-granularizing violates the cognitive simplicity the principle was designed to provide.
 
-At the design level, craft means resisting accretion. [Angular components](/reading/2026-04/2026-04-30t232001-a-better-way-to-build-angular-components-from-inputs-to) bloated with dozens of inputs are a failure of encapsulation that the Composite Components pattern corrects by distributing concerns into directives. The [Single Responsibility Principle](/reading/2026-06/2026-06-04t073318-single-responsibility-the-distorted-principle) suffers a similar distortion in practice: misread as "do one thing," it produces over-granular splits that fragment cohesive behavior instead of protecting it. [Architecture diagrams](/reading/2026-06/2026-06-11t083730-7-more-common-mistakes-in-architecture-diagrams) fail in analogous ways when they try to show everything at once rather than communicate one clear model.
+Craft also shows up in how engineers approach known-hard problems rather than inventing complexity. [Building a UI Without Breakpoints](/reading/2026-04/2026-04-24t085352-building-a-ui-without-breakpoints) argues that intrinsic layouts, container queries, and `clamp()` values are usually a better fit for component-first UIs than viewport breakpoints, because they encode intent more precisely. [Modern Fluid Typography Using CSS Clamp](/reading/2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp) shows the same discipline applied to type: derive scale mathematically, handle accessibility edge cases with `rem` units, and reach for fluid solutions when the design genuinely warrants them.
 
-Systems-level craft means anticipating failure modes. [Merge queue bugs](/reading/2026-05/2026-05-03t150555-what-happens-if-a-merge-queue-builds-on-the-wrong-commit) that silently rewrite branches from stale divergence points illustrate how subtle assumptions in CI architecture can cause catastrophic, invisible damage. [YAML's Norway bug](/reading/2026-05/2026-05-18t113714-yaml-thats-norway-problem) — where NO parses as false due to implicit boolean typing — is a canonical example of a specification trap that persists in production libraries years after the spec fixed it. The [unwritten laws of production engineering](/reading/2026-06/2026-06-10t073045-the-unwritten-laws-of-software-engineering) encode the same lesson: roll back before debugging, treat every external dependency as a future outage.
+On the backend, [Shell Tricks That Actually Make Life Easier](/reading/2026-04/2026-04-30t155134-learn-algorithms-for-interviews-forget-them-for-work) is actually about the divide between interview performance and real work. [Learn Algorithms for Interviews, Forget Them for Work](/reading/2026-04/2026-04-30t155134-learn-algorithms-for-interviews-forget-them-for-work) makes the case directly: algorithm tests measure a narrow, trainable skill that correlates weakly with production performance. Real engineering requires reading tradeoffs and shipping systems that handle messy, unbounded real-world inputs.
 
-Craft also applies to communication and knowledge transfer. Senior engineers who can't articulate their instincts in business terms lose influence even when their judgment is sound — [Tuhin Nair argues](/reading/2026-05/2026-05-13t060018-why-senior-developers-fail-to-communicate-their-expertise) the fix is reframing complexity management as uncertainty reduction. [Christian Ekrem draws on Polanyi](/reading/2026-05/2026-05-19t110710-the-tacit-dimension-why-your-best-engineers-cant-tell-you) to argue that the most valuable engineering knowledge is structurally tacit — pattern recognition and system intuition that can only transfer through apprenticeship, not documentation.
+Craft in the age of AI-generated code raises new stakes. [When Code Is Cheap, Does Quality Still Matter?](/reading/2026-05/2026-05-22t091746-when-code-is-cheap-does-quality-still-matter) notes that LLMs lower the cost of producing code but not of owning it — taste and judgment remain necessary because AI can generate polished technical debt faster than any individual engineer. [The Perils of AI to the Software Engineering Profession](/reading/2026-05/2026-05-14t223612-the-perils-of-ai-to-the-software-engineering-profession) goes further, arguing that shipping AI-generated code without review causes skill atrophy and is incompatible with safety-critical systems.
 
-The AI coding era sharpens these concerns rather than dissolving them. [Vibe coding risks](/reading/2026-05/2026-05-14t223612-the-perils-of-ai-to-the-software-engineering-profession) from atrophied skills and unreviewed LLM output. [Yusuf Aytas notes](/reading/2026-05/2026-05-22t091746-when-code-is-cheap-does-quality-still-matter) that LLMs lowered the cost of producing code but not the cost of owning it — engineering judgment remains the scarce asset. Conversely, [Jane Street finds](/reading/2026-06/2026-06-15t021106-formal-methods-and-the-future-of-programming) that agentic coding has made formal verification more practical, creating new demand for machine-checkable proofs of AI-generated code. And [Arthur Pastel's 5.9x blur optimization](/reading/2026-05/2026-05-14t151252-5-faster-fastblur-in-image-rs) — replacing float accumulators with integer arithmetic and precomputed reciprocal multiplication — is a reminder that deep craft at the algorithmic level still produces gains no LLM would think to find.
+Much craft knowledge is tacit rather than explicit. [The Tacit Dimension](/reading/2026-05/2026-05-19t110710-the-tacit-dimension-why-your-best-engineers-cant-tell-you) draws on Michael Polanyi to argue that pattern recognition, design intuition, and unwritten conventions cannot be fully articulated and can only be transmitted through apprenticeship. [Why Senior Developers Fail to Communicate Their Expertise](/reading/2026-05/2026-05-13t060018-why-senior-developers-fail-to-communicate-their-expertise) connects this to organizational friction: senior engineers think in terms of complexity management while the business thinks in uncertainty reduction, and the gap between those framings makes expertise invisible.
 
-Crafting Interpreters stands as a reference artifact for what serious craft looks like at full scale: a book and two working interpreters woven together from a single source, with no gap between the explanation and the working code.
+Finally, craft involves operational judgment accumulated from failure. [The Unwritten Laws of Software Engineering](/reading/2026-06/2026-06-10t073045-the-unwritten-laws-of-software-engineering) distills rules like rolling back before debugging and treating every external dependency as a future outage, lessons that only register after real incidents. The [Idiot Index for Code](/reading/2026-06/2026-06-22t000701-the-idiot-index-for-code) offers a complementary heuristic: bloated, over-engineered code signals low-value work, just as inflated manufacturing costs signal poor process design. Good craft keeps the ratio honest.

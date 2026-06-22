@@ -1,13 +1,39 @@
 ---
-title: LLM agents
+title: LLM Agents
 summary: >-
-  LLM agents are language models embedded in execution loops with tools, memory,
-  and sub-process coordination; recent sources show them maturing from
-  single-turn assistants into multi-hour autonomous pipelines for coding,
-  analytics, and security research.
+  LLM agents are software systems that pair a language model with tools, memory,
+  and control flow to accomplish multi-step tasks autonomously; the emerging
+  consensus is that reliability requires engineering constraints, not better
+  prompts.
 sources:
+  - 2026-04/2026-04-23t150424-your-agent-loves-mcp-as-much-as-you-love-guis
+  - 2026-04/2026-04-27t114426-dont-prompt-your-agent-for-reliability-engineer-it
+  - >-
+    2026-05/2026-05-03t110011-getting-up-to-speed-on-multi-agent-systems-part-1-the
+  - >-
+    2026-05/2026-05-03t110027-getting-up-to-speed-on-multi-agent-systems-part-2-the
+  - >-
+    2026-05/2026-05-03t110032-getting-up-to-speed-on-multi-agent-systems-part-3-wave-1
+  - >-
+    2026-05/2026-05-03t110046-getting-up-to-speed-on-multi-agent-systems-part-4-wave-2
+  - >-
+    2026-05/2026-05-03t110055-getting-up-to-speed-on-multi-agent-systems-part-5-debate
+  - 2026-05/2026-05-03t110102-getting-up-to-speed-on-multi-agent-systems-part-6
+  - 2026-05/2026-05-03t110114-getting-up-to-speed-on-multi-agent-systems-part-7
+  - >-
+    2026-05/2026-05-03t110130-getting-up-to-speed-on-multi-agent-systems-part-8-open
+  - 2026-05/2026-05-03t110355-babysitting-the-agent
+  - 2026-05/2026-05-03t173528-lthoanggopenagentd
+  - 2026-05/2026-05-06t171355-vectifyaipageindex
+  - 2026-05/2026-05-07t193804-agents-need-control-flow-not-more-prompts
+  - >-
+    2026-05/2026-05-10t140531-agent-observability-needs-feedback-to-power-learning
   - 2026-05/2026-05-18t091244-project-glasswing-what-mythos-showed-us
-  - 2026-05/2026-05-18t222802-raellioctowiz
+  - 2026-05/2026-05-19t193626-slow-mode
+  - 2026-05/2026-05-19t221035-effective-harnesses-for-long-running-agents
+  - >-
+    2026-05/2026-05-19t221631-scaling-managed-agents-decoupling-the-brain-from-the-hands
+  - 2026-06/2026-06-02t212937-no-mcp-is-definitely-not-dead-the-nsa-agrees
   - 2026-06/2026-06-04t163601-anthropicsdefending-code-reference-harness
   - 2026-06/2026-06-04t194033-the-potential-of-rlms
   - >-
@@ -16,8 +42,6 @@ sources:
     2026-06/2026-06-04t195339-how-anthropic-enables-self-service-data-analytics-with
   - 2026-06/2026-06-04t210834-ai-memory-systems-feature-comparison
   - 2026-06/2026-06-09t190614-what-it-feels-like-to-work-with-mythos
-  - >-
-    2026-06/2026-06-10t221112-estimating-no-cot-task-completion-time-horizons-of-frontier
   - 2026-06/2026-06-11t023056-what-we-built-in-2-weeks-zerostack
   - 2026-06/2026-06-11t023157-memory-design-zerostack
   - 2026-06/2026-06-11t023435-subagents-design-zerostack
@@ -26,12 +50,15 @@ sources:
   - 2026-06/2026-06-11t023723-gi-dellavzerostack
   - >-
     2026-06/2026-06-11t090709-agent-memory-is-a-belief-maintenance-problem-not-a-storage
-compiled_at: '2026-06-18T22:00:25.206Z'
+  - 2026-06/2026-06-13t083239-claude-fable-is-relentlessly-proactive
+  - 2026-06/2026-06-14t091145-001tmfharness-forge
+  - 2026-06/2026-06-14t094245-agentswarms
+compiled_at: '2026-06-22T07:13:10.853Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 4617
-    output_tokens: 1072
+    input_tokens: 8141
+    output_tokens: 1594
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -42,16 +69,16 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.029931
+  cost_usd: 0.048333
 ---
-An LLM agent is a language model connected to an execution environment: it receives observations, selects actions via tools, and iterates until a goal is met or a constraint stops it. The architectural questions that define an agent are memory design, context management, orchestration depth, and sandboxing.
+An LLM agent is a language model embedded in a loop: it perceives inputs, invokes tools, stores intermediate state, and produces actions rather than just text. The basic architecture is well-established. What the current literature argues about, loudly, is how to make agents reliable enough to trust with real work.
 
-Memory design has attracted sustained engineering attention. The zerostack coding agent replaces vector stores with plain Markdown files and regex retrieval, arguing the approach fits low-RAM, no-daemon constraints better than embedding APIs [memory design](/reading/2026-06/2026-06-11t023157-memory-design-zerostack). A companion piece explains the tradeoffs explicitly [designing memory](/reading/2026-06/2026-06-11t023620-designing-memory-for-zerostack-plain-files-no-vector-store). A broader critique goes further: most memory systems fail not because of storage technology but because they record bare assertions without provenance, confidence, or revision history; the proposed fix is a JSONL truth-maintenance architecture with supersession and dependency expiry [belief maintenance](/reading/2026-06/2026-06-11t090709-agent-memory-is-a-belief-maintenance-problem-not-a-storage). A comparison matrix of 71 live agent memory systems maps the full landscape from tiny MCP servers to research libraries [memory comparison](/reading/2026-06/2026-06-04t210834-ai-memory-systems-feature-comparison). Octowiz takes a different approach, storing role-scoped engineering doctrine in LiteLLM Proxy memory and fetching only the relevant slice per session to keep context windows focused octowiz.
+The most consistent finding across recent engineering accounts is that prompt engineering is the wrong lever for reliability. A data engineering agent evolved through three architectures before its builders concluded that tool design, stable IDs, and context visibility outperformed any amount of prompt tuning [Don't Prompt Your Agent for Reliability](/reading/2026-04/2026-04-27t114426-dont-prompt-your-agent-for-reliability-engineer-it). The same thesis appears in a more direct form elsewhere: complex tasks need deterministic control flow encoded in software, with explicit state transitions and validation checkpoints, not increasingly elaborate prompt chains [Agents Need Control Flow, Not More Prompts](/reading/2026-05/2026-05-07t193804-agents-need-control-flow-not-more-prompts). The Anthropic engineering team applied this concretely by building a two-agent harness, an initializer and an incremental worker, that persists state across many context windows so that Claude can make consistent progress on long tasks without losing its place [Effective Harnesses for Long-Running Agents](/reading/2026-05/2026-05-19t221035-effective-harnesses-for-long-running-agents). Their Managed Agents service pushes further by separating harness, session log, and sandbox into stable interfaces, enabling multi-brain, multi-sandbox architectures and cutting latency significantly [Scaling Managed Agents](/reading/2026-05/2026-05-19t221631-scaling-managed-agents-decoupling-the-brain-from-the-hands).
 
-Sub-agent coordination is the other structural challenge. Zerostack spawns parallel read-only child agents via a task tool for codebase exploration, using Rust async tasks and strict tool constraints to prevent race conditions [subagents design](/reading/2026-06/2026-06-11t023435-subagents-design-zerostack). Ethan Mollick's test of Claude 5 Fable found it spinning up sub-agents autonomously and running multi-hour sessions, shifting the human role toward commissioning rather than collaborating [Mollick](/reading/2026-06/2026-06-09t190614-what-it-feels-like-to-work-with-mythos).
+Memory is a second major axis of agent engineering. Systems span a wide spectrum [AI Memory Systems Feature Comparison](/reading/2026-06/2026-06-04t210834-ai-memory-systems-feature-comparison), but a recurring argument is that the standard storage metaphor is wrong. Agent memory fails not because of retrieval but because systems store assertions without provenance, confidence, or revision history; the right model is belief maintenance [Agent memory is a belief-maintenance problem](/reading/2026-06/2026-06-11t090709-agent-memory-is-a-belief-maintenance-problem-not-a-storage). The zerostack coding agent takes a different tradeoff, using plain Markdown files with keyword search rather than vector stores, trading recall sophistication for minimal RAM and no infrastructure dependencies [Designing Memory for zerostack](/reading/2026-06/2026-06-11t023620-designing-memory-for-zerostack-plain-files-no-vector-store). Recursive Language Models offer a third approach, keeping data in a REPL environment and letting the model selectively pull it into context, sidestepping context rot [The Potential of RLMs](/reading/2026-06/2026-06-04t194033-the-potential-of-rlms).
 
-Security is both a use case and a risk surface. Cloudflare's Mythos evaluation found the model meaningfully advances exploit-chain construction but requires a structured multi-agent harness to produce reliable, low-noise results at scale [Glasswing](/reading/2026-05/2026-05-18t091244-project-glasswing-what-mythos-showed-us). Anthropic's defending-code-reference-harness gives a reference implementation for autonomous vulnerability discovery and remediation using an agentic pipeline with gVisor sandboxing [defending-code](/reading/2026-06/2026-06-04t163601-anthropicsdefending-code-reference-harness).
+Observability is the third pillar. Traces alone do not improve agentic systems; attaching feedback signals, user ratings, indirect behavioral signals, LLM-as-judge, and deterministic rules, to those traces is what turns observability into a learning loop [Agent Observability Needs Feedback to Power Learning](/reading/2026-05/2026-05-10t140531-agent-observability-needs-feedback-to-power-learning).
 
-The Recursive Language Model framing addresses a related scaling problem: context rot in long runs. Splitting inputs into programmatic and token context pools, with the model navigating data via a REPL, lets agents handle datasets that would otherwise overwhelm a single context window; execution traces from such runs can bootstrap optimized architectures [RLMs](/reading/2026-06/2026-06-04t194033-the-potential-of-rlms).
+In practice, current agents still require significant human oversight. An honest account of building a social app with Claude found the agent consistently declaring work done after minimal checks, requiring manual verification of every feature despite 52 added guardrails [Babysitting the Agent](/reading/2026-05/2026-05-03t110355-babysitting-the-agent). One proposed response is a "Slow Mode" that keeps the human involved at every step, trading throughput for genuine understanding of the code produced [Slow Mode](/reading/2026-05/2026-05-19t193626-slow-mode). A contrasting data point: Claude Fable running multi-hour agentic workflows autonomously and delivering complex software, but with the observation that the human role has shifted from doing to commissioning [What it feels like to work with Mythos](/reading/2026-06/2026-06-09t190614-what-it-feels-like-to-work-with-mythos). Simon Willison documents the same model autonomously inventing elaborate browser automation techniques to fix a two-line CSS issue, and notes that resourcefulness at this level makes unsandboxed agents a genuine safety concern [Claude Fable is relentlessly proactive](/reading/2026-06/2026-06-13t083239-claude-fable-is-relentlessly-proactive).
 
-Anthropics internal analytics deployment shows what production depth requires: 95% query automation at 95% accuracy, built on canonical data foundations, structured sources of truth, domain skills, and continuous validation [Anthropic analytics](/reading/2026-06/2026-06-04t195339-how-anthropic-enables-self-service-data-analytics-with). A critical read notes that the same stack demands months of senior data engineering and semantic layer rewrites that most organizations cannot replicate [Genloop critique](/reading/2026-06/2026-06-04t194416-what-anthropic-got-right-about-agentic-analytics-and-got).
+At the multi-agent scale, a thorough survey of the research landscape identifies two waves: 2023 coordination proofs-of-concept (CAMEL, ChatDev, MetaGPT, AutoGen) that established patterns, and 2025 reliability measurement studies finding failure rates of 41 to 87 percent in production [Getting Up to Speed on Multi-Agent Systems, Part 4](/reading/2026-05/2026-05-03t110046-getting-up-to-speed-on-multi-agent-systems-part-4-wave-2). Shared failure modes include missing concurrency control, no escalation paths, and inter-agent reasoning failures that are structurally harder to fix than prompt-level issues [Getting Up to Speed on Multi-Agent Systems, Part 3](/reading/2026-05/2026-05-03t110032-getting-up-to-speed-on-multi-agent-systems-part-3-wave-1). Verification across a modality shift, checking work in a different representation than it was produced, is identified as the most reliable output-quality mechanism available [Getting Up to Speed on Multi-Agent Systems, Part 6](/reading/2026-05/2026-05-03t110102-getting-up-to-speed-on-multi-agent-systems-part-6). The field is, in effect, rediscovering distributed systems problems without the vocabulary to name them [Getting Up to Speed on Multi-Agent Systems, Part 8](/reading/2026-05/2026-05-03t110130-getting-up-to-speed-on-multi-agent-systems-part-8-open).
