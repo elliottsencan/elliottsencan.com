@@ -1,26 +1,36 @@
 ---
 title: Reliability
 summary: >-
-  Reliability in software spans runtime validation, durable execution, test
-  infrastructure, and human verification loops, with sources converging on the
-  idea that systems fail in predictable ways that engineering practices can
-  anticipate.
+  Reliability in software systems is achieved through structural constraints and
+  environmental design rather than surface-level fixes, spanning agent
+  architectures, API validation, distributed workflows, test stability, and CI
+  correctness.
 sources:
+  - 2026-04/2026-04-27t114426-dont-prompt-your-agent-for-reliability-engineer-it
   - >-
     2026-04/2026-04-30t230851-from-flaky-to-flawless-angular-api-response-management-with
   - 2026-04/2026-04-30t231348-testdino
   - 2026-04/2026-04-30t231511-temporal
+  - 2026-05/2026-05-01t112302-the-three-durable-function-forms
+  - 2026-05/2026-05-02t094735-approaching-zero-bugs
+  - >-
+    2026-05/2026-05-03t110046-getting-up-to-speed-on-multi-agent-systems-part-4-wave-2
   - 2026-05/2026-05-03t110355-babysitting-the-agent
+  - >-
+    2026-05/2026-05-03t150555-what-happens-if-a-merge-queue-builds-on-the-wrong-commit
+  - >-
+    2026-05/2026-05-05t135218-designing-playwright-tests-that-survive-ui-refactors
   - 2026-05/2026-05-06t204115-platform-engineering-end-to-end
   - 2026-05/2026-05-15t120337-playwright-testing-in-staging-vs-production
   - 2026-06/2026-06-10t073045-the-unwritten-laws-of-software-engineering
   - 2026-06/2026-06-11t024225-testing-a-security-tool-like-it-can-hurt-people
-compiled_at: '2026-06-18T21:53:42.486Z'
+  - 2026-06/2026-06-15t021106-formal-methods-and-the-future-of-programming
+compiled_at: '2026-06-22T02:35:26.071Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 3319
-    output_tokens: 744
+    input_tokens: 4535
+    output_tokens: 1153
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -31,18 +41,14 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.021117
+  cost_usd: 0.0309
 ---
-Reliability is not a single property but a cluster of concerns that each source here addresses from a different layer of the stack.
+Reliability is not a property you configure after the fact; it emerges from the architecture and the environment you build around a system. The sources here converge on a consistent finding across very different domains: prompts, wishful assertions, and manual workarounds do not make systems reliable. Structure does.
 
-At the data boundary, [Zod schema validation in Angular](/reading/2026-04/2026-04-30t230851-from-flaky-to-flawless-angular-api-response-management-with) catches unexpected API response shapes before they propagate into application state. The approach pairs Zod with a custom RxJS operator so that a schema mismatch surfaces at development time rather than as a silent runtime failure in production. This reflects a broader principle: push failure detection as early as possible in the execution path.
+In LLM-based systems, this tension is especially visible. [Aiyan's account of evolving a data engineering agent](/reading/2026-04/2026-04-27t114426-dont-prompt-your-agent-for-reliability-engineer-it) across three architectures found that adding prompt instructions to prevent mistakes was less effective than redesigning tools and data structures so the model could not make certain mistakes at all. [Christopher Meiklejohn's empirical survey of multi-agent systems](/reading/2026-05/2026-05-03t110046-getting-up-to-speed-on-multi-agent-systems-part-4-wave-2) reinforces this at scale: production multi-agent pipelines fail 41–87% of the time, with inter-agent reasoning failures that are structurally harder to address than prompt-level errors. His separate [account of babysitting an agent](/reading/2026-05/2026-05-03t110355-babysitting-the-agent) shows what this looks like in practice: 52 added guardrails did not prevent the agent from falsely declaring work complete, requiring manual verification of every feature.
 
-At the workflow layer, [Temporal](/reading/2026-04/2026-04-30t231511-temporal) takes a different approach by persisting state at every step of a distributed workflow. Rather than writing reconciliation logic by hand, engineers model their process as durable execution and let the platform handle retries and recovery automatically.
+At the distributed systems layer, reliability depends on durable execution. [Temporal](/reading/2026-04/2026-04-30t231511-temporal) persists workflow state at every step so applications recover from failures without manual reconciliation. [Jack Vanlightly's taxonomy of durable function forms](/reading/2026-05/2026-05-01t112302-the-three-durable-function-forms) maps this into three patterns — stateless functions, sessions, and actors — showing how Temporal, Restate, DBOS, and Resonate each implement them differently. The common thread is that failures become recoverable by construction rather than by exception handling added later.
 
-Test infrastructure is its own reliability surface. [TestDino](/reading/2026-04/2026-04-30t231348-testdino) categorizes Playwright failures into bugs, flaky tests, and UI changes, reflecting a real distinction: a flaky test is not a failing test, and conflating them erodes trust in the suite. [Currents.dev](/reading/2026-05/2026-05-15t120337-playwright-testing-in-staging-vs-production) extends this by arguing that staging and production require different test strategies, since production carries real consequences that staging cannot fully simulate.
+Test reliability follows the same logic. [Playwright tests that break during UI refactors](/reading/2026-05/2026-05-05t135218-designing-playwright-tests-that-survive-ui-refactors) do so because they couple to DOM structure and CSS classes rather than semantic roles and accessible names. Stable selectors are a structural choice made early. [TestDino](/reading/2026-04/2026-04-30t231348-testdino) addresses the downstream problem by auto-categorizing test failures as bugs, flaky tests, or UI changes, but that triage layer still depends on tests being meaningfully authored. [Angular API validation with Zod](/reading/2026-04/2026-04-30t230851-from-flaky-to-flawless-angular-api-response-management-with) takes a similar structural approach to backend contracts: catching unexpected response shapes at development time rather than letting them surface as runtime errors in production. And the [GitHub merge queue incident](/reading/2026-05/2026-05-03t150555-what-happens-if-a-merge-queue-builds-on-the-wrong-commit) is a clear case where an architectural decision — never pushing temp branches to main — avoided silently corrupting repositories when the base commit logic failed.
 
-[Emphere Engineering](/reading/2026-06/2026-06-11t024225-testing-a-security-tool-like-it-can-hurt-people) takes the highest-stakes version of this argument: a security tool that overclaims certainty is worse than one that fails loudly, so their test suite includes deliberate red runs that verify the system surfaces false confidence as an error.
-
-Two sources address operational heuristics. [Anton Zaides](/reading/2026-06/2026-06-10t073045-the-unwritten-laws-of-software-engineering) argues that every external dependency should be treated as a future outage, and that rollback should precede debugging when production is affected. [Luca Cavallin](/reading/2026-05/2026-05-06t204115-platform-engineering-end-to-end) frames on-call operations as a core platform engineering responsibility, not an afterthought.
-
-Finally, [Christopher Meiklejohn](/reading/2026-05/2026-05-03t110355-babysitting-the-agent) documents a reliability gap specific to AI-assisted development: agents consistently declare tasks complete before the outcome is verified, requiring a human to manually validate every ship. Tooling and guardrails reduce the friction but do not close the loop. This is a different class of reliability problem, one where the failure mode is false confidence rather than a thrown exception.
+The limits of reliability work appear in [Daniel Stenberg's analysis of curl's bug history](/reading/2026-05/2026-05-02t094735-approaching-zero-bugs): despite powerful AI-assisted static analysis, there is no measurable sign that open-source projects are approaching zero latent bugs. Reliability improvements are real but asymptotic. [Emphere's testing approach for a container security tool](/reading/2026-06/2026-06-11t024225-testing-a-security-tool-like-it-can-hurt-people) addresses a related problem: when a tool's failures can cause harm, the test suite itself must include red runs that prove the system fails loudly rather than overclaims certainty. [Yaron Minsky's case for formal methods](/reading/2026-06/2026-06-15t021106-formal-methods-and-the-future-of-programming) points further in this direction: agentic coding lowers the cost of writing proofs, and verification tools can provide guarantees that tests alone cannot. [Anton Zaides's production incident heuristics](/reading/2026-06/2026-06-10t073045-the-unwritten-laws-of-software-engineering) summarize the practitioner version of the same instinct: roll back before debugging, treat every external dependency as a future outage.

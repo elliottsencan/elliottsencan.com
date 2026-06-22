@@ -1,30 +1,29 @@
 ---
 title: Systems design
 summary: >-
-  Systems design spans decisions about modularity, interface boundaries, data
-  flow, and failure handling; sources here illustrate those principles across
-  distributed services, language runtimes, container primitives, UI
-  architectures, and documentation.
+  Systems design spans architectural decisions about how components fit
+  together, handle failure, and scale — covering everything from module
+  boundaries and data flow to distributed state, container internals, and
+  performance tradeoffs.
 sources:
   - >-
-    2026-04/2026-04-27t114138-scaling-managed-agents-decoupling-the-brain-from-the-hands
+    2026-04/2026-04-30t155134-learn-algorithms-for-interviews-forget-them-for-work
   - 2026-04/2026-04-30t231027-munificentcraftinginterpreters
   - 2026-04/2026-04-30t231511-temporal
-  - 2026-05/2026-05-04t231343-ai-likes-deep-modules
+  - 2026-05/2026-05-01t112302-the-three-durable-function-forms
   - >-
     2026-05/2026-05-04t231858-how-container-filesystem-works-building-a-docker-like
   - 2026-05/2026-05-14t151252-5-faster-fastblur-in-image-rs
-  - 2026-05/2026-05-18t113714-yaml-thats-norway-problem
   - 2026-06/2026-06-04t073318-single-responsibility-the-distorted-principle
   - 2026-06/2026-06-11t083730-7-more-common-mistakes-in-architecture-diagrams
   - 2026-06/2026-06-11t111011-hows-linear-so-fast-a-technical-breakdown
   - 2026-06/2026-06-13t081411-signals-the-push-pull-based-algorithm
-compiled_at: '2026-06-18T21:56:45.234Z'
+compiled_at: '2026-06-22T02:37:33.204Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 4035
-    output_tokens: 1072
+    input_tokens: 3843
+    output_tokens: 845
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -35,20 +34,20 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.028185
+  cost_usd: 0.024204
 ---
-Systems design is the discipline of deciding how components divide responsibility, communicate, and recover from failure. The concerns are consistent across very different scales and problem domains.
+Systems design is the discipline of deciding how software components are organized, communicate, and degrade. The sources here approach it from several angles: distributed state management, module decomposition, container internals, performance optimization, and communication of designs through diagrams.
 
-Interface depth is one recurring theme. [AI Likes Deep Modules](/reading/2026-05/2026-05-04t231343-ai-likes-deep-modules) argues that hiding complexity behind narrow interfaces is not just an aesthetic preference but a functional requirement: shallow, leaky abstractions force any reasoner, human or LLM, to track too many layers simultaneously. This maps directly to the module cohesion reading of the Single Responsibility Principle. [Single Responsibility, the Distorted Principle](/reading/2026-06/2026-06-04t073318-single-responsibility-the-distorted-principle) argues that SRP is about grouping behaviors under one clearly named responsibility, not splitting code into the smallest possible units; over-granularity destroys the cognitive simplicity the principle was meant to provide.
+At the distributed end, [Temporal](/reading/2026-04/2026-04-30t231511-temporal) addresses one of the hardest systems problems: ensuring that long-running workflows survive failures without manual reconciliation. Jack Vanlightly's taxonomy in [The Three Durable Function Forms](/reading/2026-05/2026-05-01t112302-the-three-durable-function-forms) maps durable execution onto a behavior-state continuum — stateless functions, sessions, and actors — and shows how Temporal, Restate, DBOS, and Resonate each implement these patterns differently. The distinction matters because choosing the wrong form couples state to the wrong boundary.
 
-Distributed systems add failure as a first-class design constraint. [Temporal](/reading/2026-04/2026-04-30t231511-temporal) addresses this by persisting workflow state at every step so applications recover automatically without manual reconciliation. Anthropic's [Scaling Managed Agents](/reading/2026-04/2026-04-27t114138-scaling-managed-agents-decoupling-the-brain-from-the-hands) applies a related idea at the agent layer: separating the agent harness, session log, and sandbox into independent interfaces so each can evolve or fail without cascading, cutting p95 time-to-first-token by over 90%.
+At the module level, [Single Responsibility, the Distorted Principle](/reading/2026-06/2026-06-04t073318-single-responsibility-the-distorted-principle) argues that SRP is not about doing one thing but about cohesive grouping under a single accountable responsibility. Over-granularizing classes fragments cohesion rather than protecting it, which is a structural analog to the distributed problem of drawing boundaries in the wrong place.
 
-Performance is often a design decision made early or paid for later. [How's Linear so fast?](/reading/2026-06/2026-06-11t111011-hows-linear-so-fast-a-technical-breakdown) traces Linear's speed to architectural choices, including local-first IndexedDB sync, optimistic updates, and aggressive code splitting, not to micro-optimizations applied after the fact. By contrast, [5× faster fast_blur](/reading/2026-05/2026-05-14t151252-5-faster-fastblur-in-image-rs) shows a case where algorithmic substitution at a low level, replacing float accumulators with integer arithmetic and division with precomputed reciprocals, yields a 5.9× speedup within an existing design.
+[How's Linear so fast?](/reading/2026-06/2026-06-11t111011-hows-linear-so-fast-a-technical-breakdown) demonstrates how local-first architecture — syncing state into IndexedDB, using service worker precaching, and applying optimistic updates — can produce near-instant perceived performance. The architectural decisions there are systems decisions: where state lives, how it is synchronized, and how failures surface to users.
 
-Data representation choices propagate unpredictably. [YAML? That's Norway problem](/reading/2026-05/2026-05-18t113714-yaml-thats-norway-problem) shows how implicit boolean coercion baked into YAML's original spec still breaks configurations in 2026 because popular libraries never adopted the corrective 1.2 spec. Format decisions are interface decisions, and interfaces outlive their authors.
+Container internals are covered at the Linux level in [How Container Filesystem Works](/reading/2026-05/2026-05-04t231858-how-container-filesystem-works-building-a-docker-like), which walks through mount namespaces and pivot_root to show how filesystem isolation actually works. Understanding this layer matters when designing systems that depend on container behavior under unusual conditions.
 
-Container primitives illustrate how layered abstractions build upward from narrow Linux interfaces. [How Container Filesystem Works](/reading/2026-05/2026-05-04t231858-how-container-filesystem-works-building-a-docker-like) reconstructs Docker-style isolation using only mount namespaces, pivot_root, and pseudo-filesystems, making visible the design seams that higher-level tooling papers over.
+On performance, [5x faster fast_blur in image-rs](/reading/2026-05/2026-05-14t151252-5-faster-fastblur-in-image-rs) shows how replacing float arithmetic with integer accumulators and integer division with reciprocal multiplication yields a 5.9x speedup — a reminder that algorithmic and data-representation choices compound at scale.
 
-Documentation is part of system design too. [7 More Common Mistakes in Architecture Diagrams](/reading/2026-06/2026-06-11t083730-7-more-common-mistakes-in-architecture-diagrams) catalogs failures in communicating architecture, including overloaded master diagrams and unlabeled nodes, that cause the same confusion as poorly named interfaces in code. [Crafting Interpreters](/reading/2026-04/2026-04-30t231027-munificentcraftinginterpreters) demonstrates the opposite: a build system that weaves code and prose together so the implementation and its explanation remain structurally aligned.
+Finally, [7 More Common Mistakes in Architecture Diagrams](/reading/2026-06/2026-06-11t083730-7-more-common-mistakes-in-architecture-diagrams) addresses how poorly labeled or overloaded diagrams obscure the very systems they are meant to communicate. Unlabeled resources, disconnected nodes, and over-reliance on a single master diagram are structural failures in documentation that mirror structural failures in design.
 
-Reactive state management adds another dimension. [Signals, the push-pull based algorithm](/reading/2026-06/2026-06-13t081411-signals-the-push-pull-based-algorithm) shows how combining push-based cache invalidation with pull-based lazy re-evaluation avoids redundant computation while keeping dependent state consistent, a microcosm of the broader systems design tension between eagerness and laziness.
+[Learn Algorithms for Interviews, Forget Them for Work](/reading/2026-04/2026-04-30t155134-learn-algorithms-for-interviews-forget-them-for-work) makes the broader point that real engineering requires reading tradeoffs and shipping incrementally, not optimizing for toy problem metrics — which is the disposition systems design actually demands.

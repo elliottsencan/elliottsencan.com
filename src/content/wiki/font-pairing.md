@@ -1,20 +1,21 @@
 ---
 title: Font pairing
 summary: >-
-  Font pairing is the practice of combining typefaces to create hierarchy,
-  contrast, and cohesion in a composition, drawing on principles of style
-  category, scale relationships, and visual texture.
+  Choosing typefaces that work together, covering style-based pairing
+  strategies, modular type scales, and how typographic choices interact with
+  layout and design context.
 sources:
   - 2026-04/2026-04-30t231931-50-best-font-combinations-for-graphic-design
   - 2026-05/2026-05-02t145719-micrographics-templates-design-layouts
   - 2026-05/2026-05-05t183935-type-scale-graphs
-  - 2026-05/2026-05-06t163329-multi-stroke-text-effect-in-css
-compiled_at: '2026-06-18T21:47:05.953Z'
+aliases:
+  - graphic-design
+compiled_at: '2026-06-22T02:41:02.581Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 2723
-    output_tokens: 429
+    input_tokens: 2529
+    output_tokens: 414
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -25,10 +26,10 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.014604
+  cost_usd: 0.013797
 ---
-Selecting typefaces that work together depends on understanding contrast and harmony simultaneously. A combination that shares similar proportions but differs in stroke character, such as a serif headline with a sans-serif body, reads as intentional rather than accidental. [Design Your Way's curated set](/reading/2026-04/2026-04-30t231931-50-best-font-combinations-for-graphic-design) organizes 50 Google Fonts pairings by style category, serif-plus-sans, display, editorial, and monospace, with usage guidance for specific design contexts.
+Font pairing is the practice of selecting two or more typefaces that complement each other within a composition. The most common axis is contrast: pairing a serif with a sans-serif creates hierarchy without friction, while combining display faces requires more care to avoid visual competition. [50 Best Font Combinations](/reading/2026-04/2026-04-30t231931-50-best-font-combinations-for-graphic-design) organizes 50 Google Fonts pairings by category, serif+sans, display, editorial, and monospace, with recommendations tied to specific design contexts, making it a practical reference for decisions that might otherwise rely on intuition.
 
-Typographic scale matters as much as typeface selection. How a pairing behaves across viewport sizes is a distinct concern from which faces are chosen. [Utopia's graph-based type scale visualization](/reading/2026-05/2026-05-05t183935-type-scale-graphs) makes fluid scale relationships visible, showing where modular steps diverge or compress at different viewport widths.
+Pairing does not end at typeface selection. How sizes relate across a composition is equally consequential. [Type Scale Graphs](/reading/2026-05/2026-05-05t183935-type-scale-graphs) extends Utopia's fluid scale tool with a graph view that plots font sizes across viewport breakpoints, making the proportional relationships between type levels visible and easier to reason about. A pairing that reads well at one scale can fall apart if the size relationships shift unpredictably across screen sizes.
 
-Font choices are also shaped by the broader compositional context. In technical or data-heavy layouts, as seen in [Zachary Winterton's micrographic template library](/reading/2026-05/2026-05-02t145719-micrographics-templates-design-layouts), the industrial register of the surrounding visual language constrains which typefaces feel appropriate. Decorative treatments like [multi-stroke CSS text effects](/reading/2026-05/2026-05-06t163329-multi-stroke-text-effect-in-css) place additional demands on typeface selection, since high-contrast or display faces hold up better under layered stroke widths than neutral text faces do.
+Typographic choices also interact with surrounding layout systems. The [Micrographics Templates](/reading/2026-05/2026-05-02t145719-micrographics-templates-design-layouts) library, while focused on schematic and data-heavy layouts, signals how typeface selection in technical or industrial-style compositions calls for faces that hold legibility alongside dense vector symbols and modular structures. Context shapes which pairings are viable.

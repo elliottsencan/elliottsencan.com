@@ -1,21 +1,20 @@
 ---
 title: Startup ecosystem
 summary: >-
-  The startup ecosystem is shaped as much by failure as by success: dead
-  companies leave behind viable ideas and cautionary patterns, while systemic
-  forces like AI infrastructure costs can erode the conditions that let new
-  ventures survive.
+  The startup ecosystem faces structural pressures from AI cost volatility,
+  accumulated institutional knowledge loss, and the persistent reusability of
+  failed ideas across company generations.
 sources:
   - 2026-04/2026-04-30t231537-startupsrip
   - 2026-05/2026-05-03t103944-the-lobster-in-the-hot-pot
-aliases:
-  - founder-resources
-compiled_at: '2026-05-06T16:17:56.456Z'
+  - >-
+    2026-05/2026-05-31t072101-the-ai-model-pricing-war-is-here-and-your-margins-depend-on
+compiled_at: '2026-06-22T02:41:47.990Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 2339
-    output_tokens: 308
+    input_tokens: 2514
+    output_tokens: 470
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -26,10 +25,12 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.011637
+  cost_usd: 0.014592
 ---
-Most startup post-mortems vanish. [Startups.RIP](https://startups.rip/) catalogs over 1,700 dead YC companies alongside retrospectives and rebuild playbooks, making the case that the ideas outlive the companies that first pursued them. The implication is that the ecosystem recycles; failure is data, not just loss.
+Two forces are reshaping the startup landscape in the AI era: the collapse of inference costs and the quiet erosion of organizational competence.
 
-That optimism has structural limits. [The Lobster in the Hot Pot](/reading/2026-05/2026-05-03t103944-the-lobster-in-the-hot-pot) argues that AI adoption is creating a hidden fragility: companies grow dependent on LLM-based workflows while institutional knowledge quietly atrophies, and the investment cycle inflating NVIDIA valuations is setting up a token-price shock that could cripple the businesses built on cheap inference. Startups that orient around current AI cost curves may be building on ground that shifts beneath them.
+On the cost side, the pricing gap between frontier models has widened to 75x, with some models dropping to $0.20 per million tokens [AI Model Pricing War](/reading/2026-05/2026-05-31t072101-the-ai-model-pricing-war-is-here-and-your-margins-depend-on). That collapse opens business models, particularly freemium and consumer-facing products, that were structurally unprofitable at 2025 rates. The practical implication for new companies is to build provider-agnostic from the start, since locking into any single model at today's price is a margin bet against a moving floor.
 
-Taken together, the two sources describe an ecosystem that surfaces lessons from past failure while potentially generating a new class of structural failure through infrastructure dependency.
+On the knowledge side, heavy LLM adoption in workflows risks a slow institutional bleed. As [The Lobster in the Hot Pot](/reading/2026-05/2026-05-03t103944-the-lobster-in-the-hot-pot) argues, teams that offload reasoning to AI tools gradually lose the internal capability to do that reasoning themselves. If token prices surge due to a correction in the NVIDIA-driven investment cycle, companies that built deep LLM dependencies without maintaining underlying expertise face a compounding cost and competence shock simultaneously.
+
+Against that backdrop, the broader question of startup failure looks different when viewed through [Startups.RIP](/reading/2026-04/2026-04-30t231537-startupsrip), a catalog of 1,700-plus dead YC companies. The thesis there is that failed ideas outlive the companies that tried them first. Timing, capital, or execution kill the attempt, not the underlying market need. For new founders, the ecosystem's graveyard is less a warning than a research corpus.

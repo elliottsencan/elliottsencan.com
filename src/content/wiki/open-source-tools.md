@@ -1,19 +1,20 @@
 ---
 title: Open-source tools
 summary: >-
-  Open-source tools span build systems, CLI utilities, and design asset
-  libraries, each sharing code and documentation publicly to invite reuse,
-  extension, and community contribution.
+  Open-source tools span version-controlled books, CLI utilities, design asset
+  libraries, and developer workflows, each made more durable by being openly
+  inspectable, forkable, and composable.
 sources:
   - 2026-04/2026-04-30t231027-munificentcraftinginterpreters
   - 2026-04/2026-04-30t232126-lostwarriorknowledge-base
   - 2026-05/2026-05-02t145719-micrographics-templates-design-layouts
-compiled_at: '2026-05-20T15:00:57.307Z'
+  - 2026-05/2026-05-31t164252-reviewing-large-changes-with-jujutsu
+compiled_at: '2026-06-22T02:41:37.033Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 2615
-    output_tokens: 345
+    input_tokens: 2723
+    output_tokens: 511
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -24,6 +25,14 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.01302
+  cost_usd: 0.015834
 ---
-The common thread across these sources is code published openly for others to adapt. The [Crafting Interpreters repository](/reading/2026-04/2026-04-30t231027-munificentcraftinginterpreters) is a complete book plus two working language implementations, with a bespoke build system that weaves prose and code into a deployable site. Publishing the full source means readers can trace every implementation decision and submit corrections. The [LostWarrior knowledge-base CLI](/reading/2026-04/2026-04-30t232126-lostwarriorknowledge-base) takes a different angle: a zero-dependency bash tool that organizes project context into tiered markdown and a machine-readable manifest, distributed via Homebrew and released on GitHub. Open distribution here lowers the friction for AI-adjacent workflows that need structured context without token overhead. The [Micrographics Templates Figma library](/reading/2026-05/2026-05-02t145719-micrographics-templates-design-layouts) extends the pattern into design: 50 layouts and 40+ vector symbols published on the Figma Community so designers can fork and customize without starting from scratch. Across all three, open publication is the mechanism that makes the work useful beyond its original author.
+Open-source tools surface across disciplines in ways that reward treating the source as part of the product. The [Crafting Interpreters repository](/reading/2026-04/2026-04-30t231027-munificentcraftinginterpreters) makes this literal: the book text, two complete interpreter implementations, and the build system that weaves them into the published site all live in one public repo, so readers can follow prose and working code side by side. The tool is the artifact.
+
+At the CLI end, [LostWarrior/knowledge-base](/reading/2026-04/2026-04-30t232126-lostwarriorknowledge-base) ships a zero-dependency bash script that organizes project context into tiered markdown files and a machine-readable manifest. Zero dependencies is itself a design choice: the tool stays portable and auditable precisely because there is nothing hidden inside a package graph.
+
+Design tooling enters the picture with [Micrographics Templates](/reading/2026-05/2026-05-02t145719-micrographics-templates-design-layouts), a Figma community library of 50 modular layouts and 40+ vector symbols released for public remix. The open distribution model lets the asset library function more like a toolkit than a deliverable.
+
+Finally, [Ben Gesoff's Jujutsu review workflow](/reading/2026-05/2026-05-31t164252-reviewing-large-changes-with-jujutsu) shows open-source version control (jj) enabling a pattern Git does not easily support: inserting an empty parent commit to stage reviewed files incrementally, persisting review progress in the history itself. The workflow is only possible because the tool exposes its internals openly enough to be repurposed.
+
+Across these cases, openness does more than enable reuse. It lets the tool's internals be understood, combined, and extended in ways the original author did not plan for.
