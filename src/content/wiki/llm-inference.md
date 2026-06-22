@@ -30,6 +30,8 @@ sources:
   - 2026-06/2026-06-20t145835-chopratejasheadroom
   - 2026-06/2026-06-21t130559-what-is-inference-engineering
   - 2026-06/2026-06-21t192306-how-we-built-digitalocean-inference-router
+  - >-
+    2026-06/2026-06-21t192506-arch-router-aligning-llm-routing-with-human-preferences
 aliases:
   - inference-optimization
 compiled_at: '2026-06-18T21:49:45.470Z'
@@ -49,7 +51,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.030837
-last_source_added: '2026-06-22T02:23:06.597Z'
+last_source_added: '2026-06-22T02:25:06.549Z'
 ---
 LLM inference is the process of running a trained model to generate token output, and the decisions around it, which runtime, which hardware, which caching strategy, which pricing tier, shape the economics and performance of any AI-integrated product.
 

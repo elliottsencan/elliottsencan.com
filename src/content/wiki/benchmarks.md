@@ -23,6 +23,8 @@ sources:
     2026-06/2026-06-10t221112-estimating-no-cot-task-completion-time-horizons-of-frontier
   - >-
     2026-06/2026-06-20t053342-if-llms-have-human-like-attributes-then-so-does-age-of
+  - >-
+    2026-06/2026-06-21t192506-arch-router-aligning-llm-routing-with-human-preferences
 aliases:
   - benchmarking
 compiled_at: '2026-06-18T21:42:07.296Z'
@@ -42,7 +44,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.026388
-last_source_added: '2026-06-20T12:33:42.447Z'
+last_source_added: '2026-06-22T02:25:06.549Z'
 ---
 A benchmark produces a number. What that number means depends on what the test actually exercises, and several recent sources show the gap between metric and reality closing more slowly than headline results suggest.
 

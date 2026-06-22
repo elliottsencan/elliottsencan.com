@@ -21,6 +21,8 @@ sources:
   - 2026-06/2026-06-21t112220-agentic-engineering
   - 2026-06/2026-06-21t130526-agentic-engineering
   - 2026-06/2026-06-21t192306-how-we-built-digitalocean-inference-router
+  - >-
+    2026-06/2026-06-21t192506-arch-router-aligning-llm-routing-with-human-preferences
 compiled_at: '2026-06-18T21:50:37.223Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -38,7 +40,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.025752
-last_source_added: '2026-06-22T02:23:06.597Z'
+last_source_added: '2026-06-22T02:25:06.549Z'
 ---
 Orchestrating LLMs means more than chaining prompts. The sources here converge on a common problem: a single model in a single context window is too fragile and too limited for long-running, high-stakes tasks. The solutions span architectures, governance, and tooling.
 

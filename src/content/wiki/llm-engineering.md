@@ -50,6 +50,8 @@ sources:
     2026-06/2026-06-20t053342-if-llms-have-human-like-attributes-then-so-does-age-of
   - 2026-06/2026-06-21t130559-what-is-inference-engineering
   - 2026-06/2026-06-21t192306-how-we-built-digitalocean-inference-router
+  - >-
+    2026-06/2026-06-21t192506-arch-router-aligning-llm-routing-with-human-preferences
 compiled_at: '2026-06-18T21:49:07.628Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -67,7 +69,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.051978
-last_source_added: '2026-06-22T02:23:06.597Z'
+last_source_added: '2026-06-22T02:25:06.549Z'
 ---
 LLM engineering is the practice of building production systems on top of large language models, from low-level inference mechanics to high-level agent architectures. The sources gathered here map a wide territory, and a few tensions recur across them.
 
