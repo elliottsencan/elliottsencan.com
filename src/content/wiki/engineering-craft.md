@@ -44,6 +44,7 @@ sources:
   - 2026-06/2026-06-21t231758-nasa-technical-report-20070005136
   - 2026-06/2026-06-22t000701-the-idiot-index-for-code
   - 2026-06/2026-06-22t001042-how-to-leave
+  - 2026-06/2026-06-22t170134-if-your-product-is-great-it-doesnt-need-to-be-good
 compiled_at: '2026-06-22T07:19:42.344Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -61,6 +62,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.039111
+last_source_added: '2026-06-23T00:01:34.480Z'
 ---
 Engineering craft is not a single technique but a cluster of dispositions that show up consistently across different layers of the stack. It includes knowing when to reach for a tool and when the tool is the problem, how to structure code so future readers can reason about it, and how to communicate what you built and why.
 
