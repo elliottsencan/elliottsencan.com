@@ -4,12 +4,54 @@ import {
   fileTimestamp,
   jsonResponse,
   monthKey,
+  normalizeUrl,
   readingSlugFromPath,
   requireBearer,
   slugify,
   textResponse,
   timingSafeEqual,
 } from "./util.ts";
+
+describe("normalizeUrl", () => {
+  it("strips a trailing slash on non-root paths", () => {
+    expect(normalizeUrl("https://example.com/a/b/")).toBe("https://example.com/a/b");
+  });
+
+  it("keeps the root path slash", () => {
+    expect(normalizeUrl("https://example.com/")).toBe("https://example.com/");
+  });
+
+  it("lowercases the host and strips a leading www.", () => {
+    expect(normalizeUrl("https://WWW.Example.com/Path")).toBe("https://example.com/Path");
+  });
+
+  it("drops the fragment", () => {
+    expect(normalizeUrl("https://example.com/a#section")).toBe("https://example.com/a");
+  });
+
+  it("drops utm_* and other tracking params", () => {
+    expect(normalizeUrl("https://example.com/a?utm_source=x&utm_medium=y&fbclid=z")).toBe(
+      "https://example.com/a",
+    );
+  });
+
+  it("keeps non-tracking params but sorts them for order-independence", () => {
+    expect(normalizeUrl("https://example.com/a?b=2&a=1")).toBe(
+      normalizeUrl("https://example.com/a?a=1&b=2"),
+    );
+    expect(normalizeUrl("https://example.com/a?b=2&a=1")).toBe("https://example.com/a?a=1&b=2");
+  });
+
+  it("treats two cosmetically-different shares of the same article as equal", () => {
+    const a = normalizeUrl("https://www.example.com/post/?utm_source=twitter#top");
+    const b = normalizeUrl("https://example.com/post");
+    expect(a).toBe(b);
+  });
+
+  it("falls back to a trimmed lowercased string for unparseable input", () => {
+    expect(normalizeUrl("  NOT A URL  ")).toBe("not a url");
+  });
+});
 
 describe("timingSafeEqual", () => {
   it("returns true for identical strings", () => {

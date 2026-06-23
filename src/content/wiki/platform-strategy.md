@@ -1,10 +1,10 @@
 ---
 title: Platform strategy
 summary: >-
-  Platform strategy covers how products, infrastructure layers, and ecosystems
-  are designed to create durable competitive positions, from internal developer
-  platforms to AI tooling and marketplace dynamics.
+  How companies and products define their platform layer, defend it against
+  commoditization, and decide what to own versus delegate to others.
 sources:
+  - 2026-04/2026-04-24t162154-he-came-he-saw-he-cooked
   - 2026-04/2026-04-27t113354-the-orchestrator-isnt-your-moat
   - 2026-04/2026-04-30t231537-startupsrip
   - 2026-04/2026-04-30t231745-optimal-vs-usertesting
@@ -13,16 +13,17 @@ sources:
   - 2026-05/2026-05-10t205349-github-is-sinking
   - >-
     2026-05/2026-05-31t072101-the-ai-model-pricing-war-is-here-and-your-margins-depend-on
-  - 2026-06/2026-06-02t212937-no-mcp-is-definitely-not-dead-the-nsa-agrees
   - 2026-06/2026-06-17t124905-the-competitive-moat-that-ai-cant-replicate
   - >-
     2026-06/2026-06-17t130655-the-founders-playbook-building-an-ai-native-startup
-compiled_at: '2026-06-18T21:53:08.170Z'
+  - 2026-06/2026-06-21t231454-spacex-and-the-sentient-sun
+  - 2026-06/2026-06-22t170134-if-your-product-is-great-it-doesnt-need-to-be-good
+compiled_at: '2026-06-22T07:25:29.655Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 5643
-    output_tokens: 793
+    input_tokens: 6534
+    output_tokens: 697
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -33,18 +34,19 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.028824
+  cost_usd: 0.030057
+last_source_added: '2026-06-23T00:01:34.480Z'
 ---
-Platform strategy sits at the intersection of product design, infrastructure, and competitive positioning. Several distinct threads run through the sources here, and they are worth examining together rather than in isolation.
+Platform strategy is the set of choices about which layer of a stack to own, what to expose to others, and where to draw the line between commodity infrastructure and defensible differentiation. Several sources illuminate different facets of the same core tension.
 
-The internal platform question is addressed directly by [Luca Cavallin's walkthrough of platform engineering](/reading/2026-05/2026-05-06t204115-platform-engineering-end-to-end), which argues that an internal developer platform is best treated as a product with its own roadmap, on-call operations, and user research, not just a set of shared tools maintained by whoever has time. The platform-as-product mindset changes what gets prioritized and how migrations are handled.
+In infrastructure terms, [Platform Engineering End-to-End](/reading/2026-05/2026-05-06t204115-platform-engineering-end-to-end) describes internal developer platforms as the answer to that question inside large engineering orgs: consolidate shared concerns (provisioning, observability, deployment) so product teams build on stable ground rather than reinventing it. The platform team owns the floor; everyone else builds on it.
 
-On the external, competitive side, [The Orchestrator Isn't Your Moat](/reading/2026-04/2026-04-27t113354-the-orchestrator-isnt-your-moat) makes the argument that custom LLM orchestration layers are not durable strategic assets because they decay with every model upgrade. The durable play is to ship MCP tool servers and agent skills that give frontier models platform-specific context, turning model improvements into a benefit rather than a liability. [No, MCP is definitely not dead](/reading/2026-06/2026-06-02t212937-no-mcp-is-definitely-not-dead-the-nsa-agrees) reinforces that this protocol layer has institutional staying power, citing NSA endorsement against skeptics.
+The same logic applies at the product level. [The Orchestrator Isn't Your Moat](/reading/2026-04/2026-04-27t113354-the-orchestrator-isnt-your-moat) argues that teams building LLM agents should not invest in custom orchestration layers. Anthropic owns the agent loop; your moat is the domain APIs and context you expose via MCP tool servers. Trying to own the orchestration layer is a category error when a frontier provider will maintain it better than you can.
 
-The pricing war in AI infrastructure adds another layer. [Superframeworks on the AI model pricing war](/reading/2026-05/2026-05-31t072101-the-ai-model-pricing-war-is-here-and-your-margins-depend-on) observes that a 75x gap between cheapest and most expensive frontier models has collapsed API costs, making previously unviable products profitable, but warns that model lock-in creates fragility. The strategic response is provider-agnostic infrastructure from day one.
+[The AI Model Pricing War](/reading/2026-05/2026-05-31t072101-the-ai-model-pricing-war-is-here-and-your-margins-depend-on) adds a pricing dimension: a 75x spread between the cheapest and most expensive frontier models means platform decisions now carry direct margin consequences. Building provider-agnostic from day one is the hedge against being trapped on an expensive layer you do not control.
 
-[The Founder's Playbook for AI-native startups](/reading/2026-06/2026-06-17t130655-the-founders-playbook-building-an-ai-native-startup) extends this into startup architecture: how you build during the MVP stage determines what is possible later. Platform decisions made early, including persistent context files and architectural constraints, compound over time in ways that are hard to unwind.
+Platform decay is the other side of this. [GitHub is Sinking](/reading/2026-05/2026-05-10t205349-github-is-sinking) documents what happens when a platform that developers depend on degrades under new ownership. The strategic implication is that betting on any single platform carries lock-in risk, which mirrors the provider-agnostic argument above.
 
-The platform enshittification pattern gets concrete treatment in [GitHub is Sinking](/reading/2026-05/2026-05-10t205349-github-is-sinking), where post-acquisition platform degradation pushes developers toward alternatives. And [Ghost in the Data on competitive moats](/reading/2026-06/2026-06-17t124905-the-competitive-moat-that-ai-cant-replicate) argues that organizations which automate away human connection destroy trust that no AI personalization layer can rebuild, a reminder that platform moats are not purely technical.
+[The Competitive Moat That AI Can't Replicate](/reading/2026-06/2026-06-17t124905-the-competitive-moat-that-ai-cant-replicate) points at something platforms frequently optimize away: human trust built through repeated personal interaction. Organizations that automate every customer touchpoint in pursuit of efficiency destroy a form of loyalty that no platform feature can reconstruct.
 
-Finally, [Optimal Workshop's competitive comparison](/reading/2026-04/2026-04-30t231745-optimal-vs-usertesting) demonstrates one common platform positioning move: breadth of integrated capability against a narrower, more modular competitor.
+At the startup level, [The Founder's Playbook](/reading/2026-06/2026-06-17t130655-the-founders-playbook-building-an-ai-native-startup) frames the MVP stage as a platform-architecture decision disguised as a build question. How you structure the codebase and what context you make legible determines what is possible at scale. Early platform choices compound.

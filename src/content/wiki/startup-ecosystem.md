@@ -1,21 +1,23 @@
 ---
 title: Startup ecosystem
 summary: >-
-  The startup ecosystem is shaped as much by failure as by success: dead
-  companies leave behind viable ideas and cautionary patterns, while systemic
-  forces like AI infrastructure costs can erode the conditions that let new
-  ventures survive.
+  The startup ecosystem cycles through failure, structural cost shifts, and
+  capital concentration, with dead companies leaving reusable ideas and AI
+  pricing changes reshaping which business models are viable.
 sources:
   - 2026-04/2026-04-30t231537-startupsrip
   - 2026-05/2026-05-03t103944-the-lobster-in-the-hot-pot
-aliases:
-  - founder-resources
-compiled_at: '2026-05-06T16:17:56.456Z'
+  - >-
+    2026-05/2026-05-31t072101-the-ai-model-pricing-war-is-here-and-your-margins-depend-on
+  - 2026-06/2026-06-21t231454-spacex-and-the-sentient-sun
+  - 2026-06/2026-06-22t001042-how-to-leave
+  - 2026-06/2026-06-22t170134-if-your-product-is-great-it-doesnt-need-to-be-good
+compiled_at: '2026-06-22T07:27:07.603Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 2339
-    output_tokens: 308
+    input_tokens: 2835
+    output_tokens: 560
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -26,10 +28,13 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.011637
+  cost_usd: 0.016905
+last_source_added: '2026-06-23T00:01:34.480Z'
 ---
-Most startup post-mortems vanish. [Startups.RIP](https://startups.rip/) catalogs over 1,700 dead YC companies alongside retrospectives and rebuild playbooks, making the case that the ideas outlive the companies that first pursued them. The implication is that the ecosystem recycles; failure is data, not just loss.
+The graveyard is instructive. [Startups.RIP](/reading/2026-04/2026-04-30t231537-startupsrip) catalogs over 1,700 dead YC startups and argues that failed ideas outlive the companies that first attempted them. A startup dying does not invalidate the problem it was solving; it often just means timing, execution, or cost structures were wrong. That framing matters when reading the current AI moment.
 
-That optimism has structural limits. [The Lobster in the Hot Pot](/reading/2026-05/2026-05-03t103944-the-lobster-in-the-hot-pot) argues that AI adoption is creating a hidden fragility: companies grow dependent on LLM-based workflows while institutional knowledge quietly atrophies, and the investment cycle inflating NVIDIA valuations is setting up a token-price shock that could cripple the businesses built on cheap inference. Startups that orient around current AI cost curves may be building on ground that shifts beneath them.
+Cost structures are shifting fast. A 75x pricing gap between the cheapest and most expensive frontier models has collapsed the floor for AI-dependent products, opening freemium and consumer tiers that were unprofitable at 2025 rates [Chaturvedi](/reading/2026-05/2026-05-31t072101-the-ai-model-pricing-war-is-here-and-your-margins-depend-on). The practical advice for founders follows: build provider-agnostic from day one, because pricing will keep moving.
 
-Taken together, the two sources describe an ecosystem that surfaces lessons from past failure while potentially generating a new class of structural failure through infrastructure dependency.
+The risk is that cheap tokens encourage deep dependency before the bill comes due. Spörk at OpenTentacle argues that gradual LLM adoption erodes institutional knowledge the way a lobster fails to notice slowly heating water [Spörk](/reading/2026-05/2026-05-03t103944-the-lobster-in-the-hot-pot), and that the current NVIDIA-driven investment cycle sets up a cost shock once token prices surge. If that thesis is right, startups optimizing for today's pricing without hedging face a structural trap.
+
+At the capital-concentration end of the ecosystem, a16z profiles SpaceX as a case study in how infrastructure investment compounds [Andreessen and McGuiness](/reading/2026-06/2026-06-21t231454-spacex-and-the-sentient-sun): Starlink revenue funds Falcon reusability, which funds Starship cost reductions, which opens entirely new markets. The lesson for the broader ecosystem is that vertical integration and infrastructure ownership change what a company can attempt. Most startups operate far from that level of capital, but the structural point holds: durable positions come from stacking capabilities, not from riding a single cost curve down.
