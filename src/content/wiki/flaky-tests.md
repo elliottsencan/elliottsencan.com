@@ -10,6 +10,8 @@ sources:
   - >-
     2026-05/2026-05-05t135218-designing-playwright-tests-that-survive-ui-refactors
   - 2026-05/2026-05-15t120337-playwright-testing-in-staging-vs-production
+  - >-
+    2026-06/2026-06-22t185420-code-smells-when-you-get-ai-to-write-your-frontend-tests
 compiled_at: '2026-06-22T07:26:15.426Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -27,6 +29,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.016029
+last_source_added: '2026-06-23T01:54:20.820Z'
 ---
 A flaky test is one that produces inconsistent results across runs without any change to the code under test. The failure mode wastes engineering time, erodes trust in CI pipelines, and obscures genuine regressions.
 

@@ -73,6 +73,8 @@ sources:
   - 2026-06/2026-06-21t231454-spacex-and-the-sentient-sun
   - 2026-06/2026-06-22t000701-the-idiot-index-for-code
   - 2026-06/2026-06-22t182141-the-systemic-decay-of-tech-hiring
+  - >-
+    2026-06/2026-06-22t185420-code-smells-when-you-get-ai-to-write-your-frontend-tests
 compiled_at: '2026-06-22T07:16:53.642Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -90,7 +92,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.073605
-last_source_added: '2026-06-23T01:21:41.792Z'
+last_source_added: '2026-06-23T01:54:20.820Z'
 ---
 Software engineering resists a single clean definition because it spans so many layers: the design decisions inside a module, the tooling that supports a team, the processes that get code from editor to production, and the organizational knowledge that makes any of it transferable. The sources here collectively push against reductive framings of the discipline — algorithm fluency as a hiring proxy, agentic AI as a productivity shortcut, or any single principle applied without judgment.
 
