@@ -1,10 +1,9 @@
 ---
 title: Developer productivity
 summary: >-
-  Developer productivity spans individual tooling habits, team structures, and
-  AI-assisted workflows, with sources collectively questioning whether speed
-  gains from automation translate into durable output without accompanying
-  judgment, context, and organizational alignment.
+  Developer productivity spans tooling choices, team practices, and individual
+  cognition, and the cited sources collectively argue that friction, not raw
+  output speed, is the real bottleneck to productive engineering work.
 sources:
   - 2026-04/2026-04-27t145041-agentic-coding-is-a-trap
   - >-
@@ -43,12 +42,12 @@ sources:
     2026-06/2026-06-18t090801-how-i-audit-a-legacy-rails-codebase-in-the-first-week
   - 2026-06/2026-06-22t000701-the-idiot-index-for-code
   - 2026-06/2026-06-22t182141-the-systemic-decay-of-tech-hiring
-compiled_at: '2026-06-22T07:19:14.786Z'
+compiled_at: '2026-06-23T01:24:45.223Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 8449
-    output_tokens: 1198
+    input_tokens: 8613
+    output_tokens: 1165
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -59,17 +58,16 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.043317
-last_source_added: '2026-06-23T01:21:41.792Z'
+  cost_usd: 0.043314
 ---
-Productivity in software development is not a single variable. It spans the ergonomics of a shell session, the clarity of a CI pipeline, the coherence of a codebase's architecture, and the degree to which an organization shares enough context for work to compound rather than conflict.
+Productivity in software engineering is rarely a matter of typing faster. The sources collected here converge on a more uncomfortable point: most of the friction that slows developers down is organizational, cognitive, or structural, and adding automation on top of that friction often amplifies it.
 
-At the individual tool level, gains are often low-hanging. [Shell key bindings, history search, brace expansion, and script safety flags](/reading/2026-04/2026-04-30t231815-shell-tricks-that-actually-make-life-easier-and-save-your) address the friction developers accumulate across thousands of small operations. [Seven focused JS/TS libraries](/reading/2026-05/2026-05-12t165232-seven-cool-javascript-libraries-you-should-know-about) covering dead code elimination, URL state sync, pattern matching, and schema validation each trim a specific category of repetitive work. [Jujutsu's first-class conflict handling and auto-committed working copy](/reading/2026-05/2026-05-31t164554-jj-vcsjj) reframe version control as less interruptive, and [a concrete workflow for reviewing large pull requests using jj](/reading/2026-05/2026-05-31t164252-reviewing-large-changes-with-jujutsu) shows how that translates to reduced cognitive overhead in practice.
+The clearest statement of this comes from [The Typical Set](/reading/2026-05/2026-05-06t110728-the-bottleneck-was-never-the-code), which argues that coding agents make individual code-writing cheap while leaving the actual bottleneck untouched: shared context, clear specifications, and organizational alignment. A team that disagrees about what to build will generate that disagreement faster with AI than without it. [The Founder's Playbook](/reading/2026-06/2026-06-17t130655-the-founders-playbook-building-an-ai-native-startup) makes the same point at startup scale, noting that AI removes natural development bottlenecks but does not remove the need for architectural decisions written down somewhere the AI can read. Without persistent context files and specs, each session re-derives foundational choices from scratch and the codebase drifts.
 
-At the systems level, CI at scale is a different problem. [Mendral's account of AI-assisted triage at PostHog](/reading/2026-04/2026-04-30t195531-what-ci-actually-looks-like-at-a-100-person-team) — 575K weekly jobs, 33M test executions — illustrates how human review of flaky tests stops being feasible past a threshold, and automated root-cause analysis with auto-opened fix PRs becomes the only viable path. [TestDino claims 6–8 hours of weekly savings](/reading/2026-04/2026-04-30t231348-testdino) through auto-categorized Playwright failures, pointing in the same direction.
+This drift problem runs through several sources. [Agentic Coding is a Trap](/reading/2026-04/2026-04-27t145041-agentic-coding-is-a-trap) argues that full agentic workflows invert developer priorities toward speed over understanding and accelerate skill atrophy. [Babysitting the Agent](/reading/2026-05/2026-05-03t110355-babysitting-the-agent) documents the practical consequence: an agent declaring work done after minimal verification, forcing the author to manually click through every feature to find breakage. [Slow Mode](/reading/2026-05/2026-05-19t193626-slow-mode) proposes a deliberate alternative, an AI coding mode that keeps the human involved at every step and trades short-term speed for genuine learning and code ownership.
 
-The more contested territory is AI-assisted coding. Several sources converge on a common structural problem: AI tools accelerate code generation without addressing the organizational or cognitive preconditions for that code to be useful. [The Typical Set argues the real bottleneck was always shared context and specification clarity](/reading/2026-05/2026-05-06t110728-the-bottleneck-was-never-the-code), not code-writing speed, meaning agents amplify whatever alignment or misalignment already exists. [Jappie Software identifies five structural barriers](/reading/2026-05/2026-05-17t204925-why-most-developers-cant-use-ai-effectively) — weak type systems, organizational processes calibrated for human-speed development, and absent agent-management training — that explain why promised productivity gains rarely land. [Lars Faye warns that full agentic workflows accelerate skill atrophy](/reading/2026-04/2026-04-27t145041-agentic-coding-is-a-trap) and invert developer priorities toward speed over understanding. [Christopher Meiklejohn's two weeks building with Claude](/reading/2026-05/2026-05-03t110355-babysitting-the-agent) document the overhead of manually verifying what the agent declared complete.
+The human side of productivity also has well-understood failure modes that tooling does not fix. [Poor onboarding](/reading/2026-05/2026-05-08t112608-your-onboarding-is-a-hazing-ritual-and-you-call-it-agile) sets new hires up to fail by packing their calendars and assigning same-sprint workloads before they have enough context to contribute. [On-call burnout](/reading/2026-05/2026-05-19t134831-finite-attention-why-burnout-isnt-your-fault-and-how) follows from systems designed to maximize data output without accounting for finite human attention. [Senior developer communication failures](/reading/2026-05/2026-05-13t060018-why-senior-developers-fail-to-communicate-their-expertise) come from framing expertise in terms of complexity management when the rest of the business thinks in terms of uncertainty reduction.
 
-Two responses to this problem have emerged. Val Town's proposed [Slow Mode agent](/reading/2026-05/2026-05-19t193626-slow-mode) trades short-term output for genuine understanding, keeping the programmer in the loop at every planning and implementation step. The AI-native startup playbook takes a different angle: [persistent context files and written architectural constraints](/reading/2026-06/2026-06-17t130655-the-founders-playbook-building-an-ai-native-startup) prevent session-to-session drift and keep AI a force multiplier rather than a source of entropy.
+On the tooling side, gains tend to be real but modest. [Shell tricks](/reading/2026-04/2026-04-30t231815-shell-tricks-that-actually-make-life-easier-and-save-your) like Readline key bindings and history search compound over time. Focused JS libraries ([Knip, Biome, ts-pattern, and others](/reading/2026-05/2026-05-12t165232-seven-cool-javascript-libraries-you-should-know-about)) trim dead code and enforce conventions without adding ceremony. [Jujutsu](/reading/2026-05/2026-05-31t164554-jj-vcsjj) provides a version control model that handles conflicts as first-class objects, and [workflows built around it](/reading/2026-05/2026-05-31t164252-reviewing-large-changes-with-jujutsu) let reviewers track progress through large diffs in version control rather than in their head. [Git log commands](/reading/2026-06/2026-06-18t024208-the-git-commands-i-run-before-reading-any-code) can diagnose a codebase's risk profile before a single file is opened. These are not transformations; they are reductions in daily friction.
 
-Quality judgment remains a human responsibility regardless of output speed. [Yusuf Aytas notes that AI lowers code production cost but not ownership cost](/reading/2026-05/2026-05-22t091746-when-code-is-cheap-does-quality-still-matter), and LLMs can generate polished technical debt faster than any individual engineer. Organizational drag compounds individual tool choices: [poor onboarding structures](/reading/2026-05/2026-05-08t112608-your-onboarding-is-a-hazing-ritual-and-you-call-it-agile) and [on-call systems that exceed human attention limits](/reading/2026-05/2026-05-19t134831-finite-attention-why-burnout-isnt-your-fault-and-how) erode capacity in ways no individual tool improvement recovers.
+What unites the critical and the optimistic sources here is that productivity is a systems property. [Why Most Developers Can't Use AI Effectively](/reading/2026-05/2026-05-17t204925-why-most-developers-cant-use-ai-effectively) identifies weak type systems, learned distrust, and org processes built for human-speed development as structural barriers that no individual tool overcomes. The implication is that durable productivity gains require changing the system, not just adding a faster tool to it.

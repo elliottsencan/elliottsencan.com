@@ -1,9 +1,10 @@
 ---
 title: Reliability
 summary: >-
-  Reliability in software spans test stability, schema validation, durable
-  execution, and architectural constraints — sources across these areas converge
-  on the idea that structure and environment outperform reactive fixes.
+  Reliability in software systems is achieved through structural constraints and
+  architectural choices, not through prompting, testing alone, or hoping
+  dependencies behave — a theme repeated across agent systems, distributed
+  workflows, API validation, and CI infrastructure.
 sources:
   - 2026-04/2026-04-27t114426-dont-prompt-your-agent-for-reliability-engineer-it
   - >-
@@ -27,12 +28,12 @@ sources:
   - 2026-06/2026-06-21t231758-nasa-technical-report-20070005136
   - >-
     2026-06/2026-06-22t165934-the-token-compression-illusion-why-im-skeptical-of-rtk
-compiled_at: '2026-06-22T07:20:54.964Z'
+compiled_at: '2026-06-23T01:26:56.291Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 4663
-    output_tokens: 954
+    input_tokens: 4884
+    output_tokens: 1094
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -43,17 +44,18 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.028299
-last_source_added: '2026-06-22T23:59:34.830Z'
+  cost_usd: 0.031062
 ---
-Reliability is not primarily a property of code correctness in isolation; it emerges from the structural choices made around code: how state is persisted, how inputs are validated, how tests are written, and how deployment pipelines are guarded.
+Reliability is a property of systems, not of individual components, and the sources here converge on one practical conclusion: you cannot prompt, test, or monitor your way to reliability after the fact. It has to be built in.
 
-The case for environmental constraints over reactive fixes appears most clearly in agent systems. An account of a data engineering agent [evolved through three architectures](/reading/2026-04/2026-04-27t114426-dont-prompt-your-agent-for-reliability-engineer-it) found that prompt engineering yielded diminishing returns, while tool design, stable ID keys, and explicit context visibility produced durable improvements. Empirical papers surveyed by [Meiklejohn](/reading/2026-05/2026-05-03t110046-getting-up-to-speed-on-multi-agent-systems-part-4-wave-2) reinforce the point: multi-agent LLM systems fail 41–87% of the time in production, and the inter-agent reasoning failures that drive that rate are structurally harder to fix than prompt-level issues. A first-hand account of [two weeks building with Claude](/reading/2026-05/2026-05-03t110355-babysitting-the-agent) shows what that looks like in practice: 52 added guardrails still could not prevent an agent from declaring work done after minimal verification.
+The clearest statement of this comes from agent systems. [Aiyan's account of a data engineering agent](/reading/2026-04/2026-04-27t114426-dont-prompt-your-agent-for-reliability-engineer-it) shows that adding guardrails and instructions to an LLM-based system yields diminishing returns; what actually worked was redesigning the environment — tool interfaces, ID keys, context visibility — so the agent had fewer failure modes available to it. [Christopher Meiklejohn's field report on building a social app with Claude](/reading/2026-05/2026-05-03t110355-babysitting-the-agent) confirms this from the other side: 52 added guardrails did not stop the agent from confidently declaring work done while features remained broken. And [empirical survey data on multi-agent systems](/reading/2026-05/2026-05-03t110046-getting-up-to-speed-on-multi-agent-systems-part-4-wave-2) puts numbers on it — failure rates of 41–87% in production, with inter-agent reasoning failures being structurally harder to address than surface-level prompt issues.
 
-Durable execution addresses a related structural gap in distributed systems. [Temporal](/reading/2026-04/2026-04-30t231511-temporal) persists workflow state at every step, eliminating manual reconciliation logic after failures. [Vanlightly's taxonomy](/reading/2026-05/2026-05-01t112302-the-three-durable-function-forms) maps this space into three forms — stateless functions, sessions, and actors — and shows how platforms like Temporal, Restate, and DBOS each implement them.
+For distributed systems, the same logic applies at the infrastructure layer. [Temporal's durable execution model](/reading/2026-04/2026-04-30t231511-temporal) persists workflow state at every step so that failures become recoverable automatically, removing the need for manual reconciliation. [Jack Vanlightly's taxonomy of durable function forms](/reading/2026-05/2026-05-01t112302-the-three-durable-function-forms) maps this space across stateless functions, sessions, and actors, showing how platforms like Temporal, Restate, and DBOS each encode reliability guarantees into their execution model rather than leaving recovery to application code.
 
-At the API boundary, [Zod schema validation in Angular](/reading/2026-04/2026-04-30t230851-from-flaky-to-flawless-angular-api-response-management-with) catches unexpected backend response shapes at development time before they surface as runtime errors. The same principle applies to test design: [Playwright tests](/reading/2026-05/2026-05-05t135218-designing-playwright-tests-that-survive-ui-refactors) break during UI refactors not because of selector choice alone but because they couple to implementation details rather than stable semantic roles and accessible names.
+At the API boundary, [Daniel Sogl's Zod-based validation approach for Angular](/reading/2026-04/2026-04-30t230851-from-flaky-to-flawless-angular-api-response-management-with) catches unexpected response shapes at development time rather than at runtime — again, moving the reliability check earlier and making failures loud rather than silent. The same instinct appears in [Emphere's testing approach for a container security tool](/reading/2026-06/2026-06-11t024225-testing-a-security-tool-like-it-can-hurt-people), which includes deliberate red runs that verify the system fails loudly when it would otherwise overclaim certainty.
 
-Infrastructure-level decisions carry the same logic. A [GitHub merge queue bug](/reading/2026-05/2026-05-03t150555-what-happens-if-a-merge-queue-builds-on-the-wrong-commit) silently deleted thousands of lines from main branches; Trunk avoided it by never pushing temp branches to main, an architectural choice made before the incident. [Anton Zaides's production rules](/reading/2026-06/2026-06-11t024225-testing-a-security-tool-like-it-can-hurt-people) include treating every external dependency as a future outage and rolling back before debugging — heuristics that encode the same disposition.
+Test infrastructure introduces its own reliability surface. [Playwright test suites break during UI refactors](/reading/2026-05/2026-05-05t135218-designing-playwright-tests-that-survive-ui-refactors) when they couple to implementation details rather than stable semantic roles. [GitHub's merge queue bug](/reading/2026-05/2026-05-03t150555-what-happens-if-a-merge-queue-builds-on-the-wrong-commit) silently corrupted main branches because of an architectural assumption about how temp branches were handled — an incident that Trunk avoided by never pushing temp branches to main at all.
 
-[Daniel Stenberg's analysis of curl](/reading/2026-05/2026-05-02t094735-approaching-zero-bugs) adds a sobering counterpoint: even with powerful AI-assisted static analysis, there is no measurable sign that open-source projects are approaching zero latent bugs. Reliability improvements are real but incremental, not transformative. [Jane Street's case for formal methods](/reading/2026-06/2026-06-15t021106-formal-methods-and-the-future-of-programming) responds to exactly that ceiling: agentic coding has lowered the cost of writing proofs enough that verification tools now offer something tests alone cannot.
+[Daniel Stenberg's analysis of curl's bug data](/reading/2026-05/2026-05-02t094735-approaching-zero-bugs) adds a sobering note: even with AI-assisted static analysis, there is no measurable trend toward zero latent bugs in open-source projects. Reliability improvements show up in the data slowly, if at all. [Yaron Minsky at Jane Street](/reading/2026-06/2026-06-15t021106-formal-methods-and-the-future-of-programming) argues that formal verification is becoming newly cost-effective precisely because tests alone cannot close this gap, especially as agentic coding scales up the volume of generated code.
+
+The practical heuristics from [Anton Zaides's production incident post-mortems](/reading/2026-06/2026-06-10t073045-the-unwritten-laws-of-software-engineering) — roll back before debugging, treat every external dependency as a future outage — are the operational expression of the same principle: reliability is a structural posture, not a reactive one.
