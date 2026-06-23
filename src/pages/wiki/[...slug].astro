@@ -399,7 +399,7 @@ const neighborCount = hasLocal ? localData.nodes.length - 1 : 0;
         // Pass 2 — bind bidirectional hover sync across every data-src node.
         document.querySelectorAll("[data-src]").forEach(bindSync);
       }
-      run();
+      document.addEventListener("astro:page-load", run);
     })();
   </script>
 </Layout>

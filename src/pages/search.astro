@@ -119,9 +119,11 @@ const scopes = [
   </Container>
 
   <link rel="stylesheet" href="/pagefind/pagefind-ui.css" />
-  <script is:inline src="/pagefind/pagefind-ui.js"></script>
+  <script is:inline src="/pagefind/pagefind-ui.js" data-astro-rerun></script>
 
-  <script is:inline>
+  {/* data-astro-rerun: /search is reached via soft nav, so the loader + mount
+      must re-execute each visit onto the freshly swapped-in #search host. */}
+  <script is:inline data-astro-rerun>
     (function () {
       // Each scope chip is its own URL (`/search?type=Writing`, etc.) so the
       // active scope is shareable. Read it on mount, mark the active chip,
