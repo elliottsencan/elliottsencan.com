@@ -52,6 +52,7 @@ sources:
   - 2026-06/2026-06-22t000701-the-idiot-index-for-code
   - >-
     2026-06/2026-06-22t185420-code-smells-when-you-get-ai-to-write-your-frontend-tests
+  - 2026-06/2026-06-23t161552-the-coming-loop
 aliases:
   - ai-coding-assistants
 compiled_at: '2026-06-22T07:18:21.617Z'
@@ -71,7 +72,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.052641
-last_source_added: '2026-06-23T01:54:20.820Z'
+last_source_added: '2026-06-23T23:15:52.702Z'
 ---
 AI-assisted coding sits at the intersection of tooling and practice. The tools range from single-model autocomplete to orchestrated multi-agent pipelines that run for hours without human intervention. The practice debate is whether any given point on that spectrum actually delivers durable value.
 

@@ -32,6 +32,7 @@ sources:
   - 2026-06/2026-06-21t192306-how-we-built-digitalocean-inference-router
   - >-
     2026-06/2026-06-21t192506-arch-router-aligning-llm-routing-with-human-preferences
+  - 2026-06/2026-06-23t161552-the-coming-loop
 compiled_at: '2026-06-22T07:20:09.636Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -49,6 +50,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.035103
+last_source_added: '2026-06-23T23:15:52.702Z'
 ---
 LLM orchestration names the set of architectural decisions that sit between a raw model API and a working agentic system: how the model loop is structured, how state persists across context windows, how sub-tasks are delegated to specialized agents or tools, and how requests are routed to the right model in the first place.
 
