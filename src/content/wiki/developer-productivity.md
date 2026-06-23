@@ -42,6 +42,7 @@ sources:
   - >-
     2026-06/2026-06-18t090801-how-i-audit-a-legacy-rails-codebase-in-the-first-week
   - 2026-06/2026-06-22t000701-the-idiot-index-for-code
+  - 2026-06/2026-06-22t182141-the-systemic-decay-of-tech-hiring
 compiled_at: '2026-06-22T07:19:14.786Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -59,6 +60,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.043317
+last_source_added: '2026-06-23T01:21:41.792Z'
 ---
 Productivity in software development is not a single variable. It spans the ergonomics of a shell session, the clarity of a CI pipeline, the coherence of a codebase's architecture, and the degree to which an organization shares enough context for work to compound rather than conflict.
 
