@@ -1,9 +1,9 @@
 ---
 title: Startup ecosystem
 summary: >-
-  The startup ecosystem cycles through failure, structural cost shifts, and
-  capital concentration, with dead companies leaving reusable ideas and AI
-  pricing changes reshaping which business models are viable.
+  The startup ecosystem spans company formation, failure patterns, and the
+  structural forces — AI pricing, infrastructure costs, product philosophy —
+  that determine which bets survive.
 sources:
   - 2026-04/2026-04-30t231537-startupsrip
   - 2026-05/2026-05-03t103944-the-lobster-in-the-hot-pot
@@ -12,12 +12,14 @@ sources:
   - 2026-06/2026-06-21t231454-spacex-and-the-sentient-sun
   - 2026-06/2026-06-22t001042-how-to-leave
   - 2026-06/2026-06-22t170134-if-your-product-is-great-it-doesnt-need-to-be-good
-compiled_at: '2026-06-22T07:27:07.603Z'
+aliases:
+  - founder-resources
+compiled_at: '2026-06-23T00:07:12.206Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 2835
-    output_tokens: 560
+    input_tokens: 3068
+    output_tokens: 584
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -28,13 +30,12 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.016905
-last_source_added: '2026-06-23T00:01:34.480Z'
+  cost_usd: 0.017964
 ---
-The graveyard is instructive. [Startups.RIP](/reading/2026-04/2026-04-30t231537-startupsrip) catalogs over 1,700 dead YC startups and argues that failed ideas outlive the companies that first attempted them. A startup dying does not invalidate the problem it was solving; it often just means timing, execution, or cost structures were wrong. That framing matters when reading the current AI moment.
+Most startup ideas do not die with the companies that first attempt them. [Startups.RIP](/reading/2026-04/2026-04-30t231537-startupsrip) catalogs over 1,700 failed YC companies and frames each one as a rebuild opportunity: the idea outlives the execution, and the graveyard is a research database as much as a memorial.
 
-Cost structures are shifting fast. A 75x pricing gap between the cheapest and most expensive frontier models has collapsed the floor for AI-dependent products, opening freemium and consumer tiers that were unprofitable at 2025 rates [Chaturvedi](/reading/2026-05/2026-05-31t072101-the-ai-model-pricing-war-is-here-and-your-margins-depend-on). The practical advice for founders follows: build provider-agnostic from day one, because pricing will keep moving.
+Product philosophy shapes which attempts succeed. Paul Buchheit's argument in [If your product is Great, it doesn't need to be Good](/reading/2026-06/2026-06-22t170134-if-your-product-is-great-it-doesnt-need-to-be-good) is that startups should ignore feature completeness and optimize two or three core attributes to an exceptional level. Gmail and the iPod succeeded by being genuinely great at a small number of things, not by being adequate across the board.
 
-The risk is that cheap tokens encourage deep dependency before the bill comes due. Spörk at OpenTentacle argues that gradual LLM adoption erodes institutional knowledge the way a lobster fails to notice slowly heating water [Spörk](/reading/2026-05/2026-05-03t103944-the-lobster-in-the-hot-pot), and that the current NVIDIA-driven investment cycle sets up a cost shock once token prices surge. If that thesis is right, startups optimizing for today's pricing without hedging face a structural trap.
+Structural cost dynamics increasingly determine viability. A 75x gap in AI token pricing — from $0.20 to $15 per million tokens — has opened business models that were unprofitable at 2025 rates, making freemium and consumer pricing newly feasible for AI-native startups [according to Superframeworks](/reading/2026-05/2026-05-31t072101-the-ai-model-pricing-war-is-here-and-your-margins-depend-on). The counterargument comes from [OpenTentacle](/reading/2026-05/2026-05-03t103944-the-lobster-in-the-hot-pot), which warns that current low token prices are a NVIDIA-investment-driven bubble; companies building deep LLM dependencies now may face a cost shock when prices normalize, having already eroded the institutional knowledge needed to course-correct.
 
-At the capital-concentration end of the ecosystem, a16z profiles SpaceX as a case study in how infrastructure investment compounds [Andreessen and McGuiness](/reading/2026-06/2026-06-21t231454-spacex-and-the-sentient-sun): Starlink revenue funds Falcon reusability, which funds Starship cost reductions, which opens entirely new markets. The lesson for the broader ecosystem is that vertical integration and infrastructure ownership change what a company can attempt. Most startups operate far from that level of capital, but the structural point holds: durable positions come from stacking capabilities, not from riding a single cost curve down.
+At the infrastructure layer, a16z profiles SpaceX in [SpaceX and the Sentient Sun](/reading/2026-06/2026-06-21t231454-spacex-and-the-sentient-sun) as a template for how reusability and declining marginal costs can stack into platforms that underpin entire new industries, from Starlink-funded Mars programs to orbital data centers. The pattern echoes across the ecosystem: companies that reduce their own infrastructure costs fast enough eventually become infrastructure for others.
