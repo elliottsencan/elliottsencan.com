@@ -59,6 +59,7 @@ sources:
   - 2026-06/2026-06-17t075816-matt-palmer
   - 2026-06/2026-06-18t024208-the-git-commands-i-run-before-reading-any-code
   - 2026-06/2026-06-23t212629-latchkey-credential-layer-for-local-ai-agents
+  - 2026-06/2026-06-23t212845-vet-catch-your-coding-agents-mistakes
 compiled_at: '2026-06-22T07:13:50.984Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -76,7 +77,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.065238
-last_source_added: '2026-06-24T04:26:29.756Z'
+last_source_added: '2026-06-24T04:28:45.870Z'
 ---
 Developer tooling spans everything a practitioner reaches for before, during, and after writing code. The sources here cut across shell ergonomics, version control, runtime validation, test infrastructure, platform engineering, and a rapidly expanding category of AI-native tools that are rewriting what the category even means.
 
