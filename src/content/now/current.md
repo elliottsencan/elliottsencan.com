@@ -1,20 +1,28 @@
 ---
 title: "Now"
 description: "What I'm working on right now."
-updated: 2026-05-03
-standfirst: "Engineer in San Diego. Building Grupblox, advising at ShopTickets.net, the Same Same But Different Festival app, and a Karpathy LLM-wiki pipeline for this site."
+updated: 2026-06-21
+standfirst: "Joining a decision-layer AI startup in July, racing a festival app to an August deadline, and building out this site in the margins"
 ---
 
 ## Building
 
-I've been spending time outside of work trying to combine a Karpathy LLM wiki with the reading list ingestion pipeline I've been working on. The work in progress is at the wiki link above
+Starting at StarLifter in July as hire #4. It's a decision-layer AI company founded by Fred Luddy, and the first 30 days are about closing the gap between what AI can do in production and what it actually does. Ramping up now.
+
+The festival platform is the other urgent thing. It's a backend-first system that powers Same Same But Different, and it has a hard August 24 deadline. Maps, push notifications, and final festival-readiness work are in flight. The mobile app is near ship; the attendee portal is close behind it.
+
+This site is also in progress, specifically the eval layer for the LLM-wiki pipeline. The first tier of citation-faithfulness evals shipped; synthesis-quality evals are next. The open question is whether per-claim sidecar scores actually catch the failure modes that show up by eye when the wiki recompiles.
+
+## Thinking about
+
+High standards exist to make difficult things simple.
 
 ## Reading / Listening
 
-Working through Chip Huyen's *AI Engineering: Building Applications with Foundation Models*. Dense and practical in equal measure. Also mid-way through *Kantovan Vault* by Joel Shepherd, which is the kind of hard sci-fi that makes a long reading session disappear.
+Heavy rotation lately: agent memory architecture, codebase auditing technique, and the mechanics of what makes AI-native systems degrade over time. The Founder's Playbook piece on AI-native startups was good on one underrated failure mode, that agentic technical debt compounds in a way normal technical debt doesn't, because each session re-derives foundational decisions from scratch when there's nothing written down for the model to read.
 
-Nine Inch Nails' new record is an album-of-the-year contender. Heavy rotation.
+Also been reading into formal methods, specifically the argument that agentic coding has made proof tooling newly cost-effective by both lowering the cost of writing proofs and raising the stakes for verification.
 
 ## Making
 
-Lineup drop week at Same Same But Different.
+Same Same But Different is weeks out. Most of the festival energy right now is going into the platform rather than the lineup side.
