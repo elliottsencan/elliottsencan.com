@@ -59,6 +59,7 @@ sources:
   - >-
     2026-06/2026-06-22t165934-the-token-compression-illusion-why-im-skeptical-of-rtk
   - 2026-06/2026-06-23t161552-the-coming-loop
+  - 2026-06/2026-06-23t212629-latchkey-credential-layer-for-local-ai-agents
 compiled_at: '2026-06-22T07:16:11.274Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -76,7 +77,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.061257
-last_source_added: '2026-06-23T23:15:52.702Z'
+last_source_added: '2026-06-24T04:26:29.756Z'
 ---
 An agentic workflow is a system where an LLM drives a sequence of actions, tool calls, and decisions with minimal human intervention per step. The sources collected here span implementation architecture, reliability engineering, memory and state management, organizational effects, and the emerging critique of full autonomy.
 

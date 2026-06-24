@@ -44,6 +44,7 @@ sources:
   - 2026-06/2026-06-13t083239-claude-fable-is-relentlessly-proactive
   - 2026-06/2026-06-13t083401-sgupai-fable5md
   - 2026-06/2026-06-21t112220-agentic-engineering
+  - 2026-06/2026-06-23t212629-latchkey-credential-layer-for-local-ai-agents
 compiled_at: '2026-06-22T07:12:17.395Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -61,6 +62,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.051741
+last_source_added: '2026-06-24T04:26:29.756Z'
 ---
 An AI agent, in the current engineering sense, is a system where a language model drives a loop: it receives a goal, produces tool calls or sub-tasks, observes results, and continues until the goal is satisfied or a stopping condition fires. That loop is straightforward to describe and deceptively hard to make reliable at scale.
 
