@@ -1,8 +1,9 @@
 ---
 title: Platform strategy
 summary: >-
-  How companies and products define their platform layer, defend it against
-  commoditization, and decide what to own versus delegate to others.
+  Platform strategy concerns how companies define their layer of control, what
+  they own versus delegate, and how those choices determine defensibility — from
+  internal developer platforms to AI infrastructure to product positioning.
 sources:
   - 2026-04/2026-04-24t162154-he-came-he-saw-he-cooked
   - 2026-04/2026-04-27t113354-the-orchestrator-isnt-your-moat
@@ -18,12 +19,12 @@ sources:
     2026-06/2026-06-17t130655-the-founders-playbook-building-an-ai-native-startup
   - 2026-06/2026-06-21t231454-spacex-and-the-sentient-sun
   - 2026-06/2026-06-22t170134-if-your-product-is-great-it-doesnt-need-to-be-good
-compiled_at: '2026-06-22T07:25:29.655Z'
+compiled_at: '2026-06-24T04:39:23.492Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 6534
-    output_tokens: 697
+    input_tokens: 6771
+    output_tokens: 774
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -34,19 +35,18 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.030057
-last_source_added: '2026-06-23T00:01:34.480Z'
+  cost_usd: 0.031923
 ---
-Platform strategy is the set of choices about which layer of a stack to own, what to expose to others, and where to draw the line between commodity infrastructure and defensible differentiation. Several sources illuminate different facets of the same core tension.
+A platform is a bet on what layer to own. The sources here approach that bet from several angles: infrastructure, product, and competitive positioning.
 
-In infrastructure terms, [Platform Engineering End-to-End](/reading/2026-05/2026-05-06t204115-platform-engineering-end-to-end) describes internal developer platforms as the answer to that question inside large engineering orgs: consolidate shared concerns (provisioning, observability, deployment) so product teams build on stable ground rather than reinventing it. The platform team owns the floor; everyone else builds on it.
+In software infrastructure, the argument for building an internal developer platform is that engineering teams need a stable, opinionated foundation so they can ship without re-solving the same problems repeatedly. [Platform Engineering End-to-End](/reading/2026-05/2026-05-06t204115-platform-engineering-end-to-end) frames this as reducing cognitive load for product teams while centralizing reliability and compliance concerns. The platform team owns the paved road; everyone else drives on it.
 
-The same logic applies at the product level. [The Orchestrator Isn't Your Moat](/reading/2026-04/2026-04-27t113354-the-orchestrator-isnt-your-moat) argues that teams building LLM agents should not invest in custom orchestration layers. Anthropic owns the agent loop; your moat is the domain APIs and context you expose via MCP tool servers. Trying to own the orchestration layer is a category error when a frontier provider will maintain it better than you can.
+AI has added a new version of this question. [The Orchestrator Isn't Your Moat](/reading/2026-04/2026-04-27t113354-the-orchestrator-isnt-your-moat) argues that teams building on LLMs should not try to own the orchestration layer. That layer belongs to frontier model providers. The real platform play is building the domain-specific APIs and context that extend those agents, because that is where differentiation actually lives.
 
-[The AI Model Pricing War](/reading/2026-05/2026-05-31t072101-the-ai-model-pricing-war-is-here-and-your-margins-depend-on) adds a pricing dimension: a 75x spread between the cheapest and most expensive frontier models means platform decisions now carry direct margin consequences. Building provider-agnostic from day one is the hedge against being trapped on an expensive layer you do not control.
+On the infrastructure side of AI, [He Came, He Saw, He Cooked](/reading/2026-04/2026-04-24t162154-he-came-he-saw-he-cooked) and [SpaceX & the Sentient Sun](/reading/2026-06/2026-06-21t231454-spacex-and-the-sentient-sun) both describe how compute infrastructure — cloud capacity and orbital data centers respectively — represents a foundational platform layer that everything else stacks on top of.
 
-Platform decay is the other side of this. [GitHub is Sinking](/reading/2026-05/2026-05-10t205349-github-is-sinking) documents what happens when a platform that developers depend on degrades under new ownership. The strategic implication is that betting on any single platform carries lock-in risk, which mirrors the provider-agnostic argument above.
+The pricing dimension matters too. [The AI Model Pricing War](/reading/2026-05/2026-05-31t072101-the-ai-model-pricing-war-is-here-and-your-margins-depend-on) shows a 75x spread in token costs across frontier models, which means platform choices about model providers are now margin decisions. Building provider-agnostic from day one is framed as basic platform hygiene.
 
-[The Competitive Moat That AI Can't Replicate](/reading/2026-06/2026-06-17t124905-the-competitive-moat-that-ai-cant-replicate) points at something platforms frequently optimize away: human trust built through repeated personal interaction. Organizations that automate every customer touchpoint in pursuit of efficiency destroy a form of loyalty that no platform feature can reconstruct.
+At the product level, [If Your Product Is Great, It Doesn't Need to Be Good](/reading/2026-06/2026-06-22t170134-if-your-product-is-great-it-doesnt-need-to-be-good) offers a complementary view: platform defensibility often starts with being exceptional at a narrow set of capabilities rather than achieving broad feature parity. Optimal Workshop makes a similar move in its [head-to-head comparison with UserTesting](/reading/2026-04/2026-04-30t231745-optimal-vs-usertesting), positioning itself as the end-to-end UX research platform versus a narrower competitor.
 
-At the startup level, [The Founder's Playbook](/reading/2026-06/2026-06-17t130655-the-founders-playbook-building-an-ai-native-startup) frames the MVP stage as a platform-architecture decision disguised as a build question. How you structure the codebase and what context you make legible determines what is possible at scale. Early platform choices compound.
+Platform dependency carries risk in both directions. [GitHub Is Sinking](/reading/2026-05/2026-05-10t205349-github-is-sinking) is a direct case study in platform decay: developers who built workflows on GitHub face real costs when that platform's reliability erodes under new ownership. Choosing which platforms to depend on, and maintaining the ability to migrate, is itself a strategic decision.
