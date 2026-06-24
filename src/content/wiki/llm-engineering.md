@@ -57,6 +57,7 @@ sources:
   - 2026-06/2026-06-21t192306-how-we-built-digitalocean-inference-router
   - >-
     2026-06/2026-06-21t192506-arch-router-aligning-llm-routing-with-human-preferences
+  - 2026-06/2026-06-23t212958-how-ai-code-review-can-make-correct-code-worse
 compiled_at: '2026-06-22T07:14:31.334Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -74,6 +75,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.058965
+last_source_added: '2026-06-24T04:29:58.950Z'
 ---
 LLM engineering spans several distinct but interlocking concerns: how models are trained or adapted for specific domains, how they are served efficiently, how they are embedded in software systems, and how the failure modes specific to each layer are handled. The sources collected here range across all of those concerns, and taken together they sketch what the discipline actually demands.
 
