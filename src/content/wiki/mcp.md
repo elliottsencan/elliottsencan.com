@@ -1,9 +1,9 @@
 ---
 title: Model Context Protocol (MCP)
 summary: >-
-  MCP is a standard for exposing tools and context to AI agents; sources debate
-  whether it is best understood as a developer convenience, an enterprise
-  governance layer, or a universal integration surface for agentic systems.
+  MCP is an open protocol for connecting AI agents to external tools and data
+  sources, with use cases ranging from developer tooling and enterprise
+  governance to token-efficient context delivery.
 sources:
   - 2026-04/2026-04-23t150424-your-agent-loves-mcp-as-much-as-you-love-guis
   - 2026-04/2026-04-27t113354-the-orchestrator-isnt-your-moat
@@ -23,12 +23,12 @@ sources:
   - 2026-06/2026-06-23t232444-repowise-devrepowise
 aliases:
   - model-context-protocol
-compiled_at: '2026-06-22T07:24:19.619Z'
+compiled_at: '2026-06-24T06:34:25.340Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 4064
-    output_tokens: 1050
+    input_tokens: 4182
+    output_tokens: 1063
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -39,17 +39,12 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.027942
-last_source_added: '2026-06-24T06:24:44.848Z'
+  cost_usd: 0.028491
 ---
-MCP (Model Context Protocol) is a protocol for connecting AI agents to external tools, data sources, and services through a standardized interface. Anthropic introduced it, and it has seen rapid adoption across coding assistants, documentation platforms, infrastructure UIs, and enterprise control planes.
+MCP began as a standardized wire protocol for giving AI agents access to external tools and context. Anthropic provides the canonical packaging format: a `.mcpb` bundle that wraps a local server as a single-click install for Claude Desktop, covering manifest, Node.js runtime, and distribution to a Connectors Directory [build-a-desktop-extension-with-mcpb](/reading/2026-05/2026-05-27t181732-build-a-desktop-extension-with-mcpb). That runtime compatibility is already shaping language choices for developers building plugins, with TypeScript preferred specifically because it targets MCP's runtime environment [ruby-vs-java-vs-typescript](/reading/2026-05/2026-05-27t181744-ruby-vs-java-vs-typescript-my-experience-on-building-a).
 
-The most pointed debate in the sources is about who MCP is actually for. [Ajeesh Mohan](/reading/2026-04/2026-04-23t150424-your-agent-loves-mcp-as-much-as-you-love-guis) argues that MCP functions like a GUI for AI agents: useful when the agent cannot write code, but wasteful for capable agents that could call APIs directly, because MCP adds token overhead and limits composability. Against that, [Stephane Derosiaux](/reading/2026-06/2026-06-02t212937-no-mcp-is-definitely-not-dead-the-nsa-agrees) argues MCP was never aimed at developers with terminals. Its value is enterprise governance: a policy-aware, auditable proxy between agents and the resources they are allowed to touch, something a CLI cannot provide at scale.
+On the tool side, MCP servers have proliferated across many domains. Databricks ships an MCP server as part of a composable AI dev kit that also includes markdown skills and a Python core library, supporting Claude Code, Cursor, and Gemini CLI [databricks-solutions-ai-dev-kit](/reading/2026-04/2026-04-27t113526-databricks-solutionsai-dev-kit). Storybloq uses an MCP server to persist coding session context across stateless AI assistant sessions [storybloq](/reading/2026-05/2026-05-11t155625-storybloqstorybloq). WaveScope applies wavelet transforms to source code via MCP to deliver token-efficient structural context to LLMs [wavescope](/reading/2026-06/2026-06-03t105229-putting-code-under-a-microscope-wavelet-based-context-for). Repowise surfaces codebase intelligence, code health scores, and architectural tracking through MCP [repowise](/reading/2026-06/2026-06-23t232444-repowise-devrepowise). Radar, an open-source Kubernetes UI, exposes cluster state to AI agents via MCP [radar-kubernetes-ui](/reading/2026-05/2026-05-03t105219-radar-open-source-kubernetes-ui). Mintlify serves documentation context to both humans and LLMs with MCP support [mintlify](/reading/2026-04/2026-04-30t231435-mintlify).
 
-Those two framings are not mutually exclusive. [Aiyan](/reading/2026-04/2026-04-27t113354-the-orchestrator-isnt-your-moat) treats MCP tool servers as the right unit of investment for teams building on frontier agents: ship the server and the domain context, let Anthropic maintain the loop. [Databricks](/reading/2026-04/2026-04-27t113526-databricks-solutionsai-dev-kit) packages this pattern concretely, bundling an MCP server with markdown skills and a Python core library for use across Claude Code, Cursor, and Gemini CLI.
+Two camps have formed around who MCP is actually for. One argument treats MCP as roughly analogous to a GUI: useful for non-developers who need a structured interface to agent capabilities, but wasteful when agents could call APIs or write code directly, given the token overhead and composability friction [mcp-as-gui-for-ai-agents](/reading/2026-04/2026-04-23t150424-your-agent-loves-mcp-as-much-as-you-love-guis). The counter-argument is that MCP's real value is never the developer terminal workflow at all. It belongs in enterprise governance: a policy-aware, auditable proxy sitting between agents and the resources they can reach, providing controls that raw CLI access cannot [mcp-not-dead](/reading/2026-06/2026-06-02t212937-no-mcp-is-definitely-not-dead-the-nsa-agrees). The AI control plane architecture literature treats MCP as one integration layer within a broader governance stack covering identity, policy enforcement, and observability [ai-control-plane](/reading/2026-05/2026-05-09t110721-ai-control-plane-architecture-and-vendors).
 
-On the distribution side, Anthropic's own [MCPB format](/reading/2026-05/2026-05-27t181732-build-a-desktop-extension-with-mcpb) packages a local MCP server as a single-click bundle for Claude Desktop, lowering the barrier for end-user installation. A developer comparing languages for a similar plugin [ultimately chose TypeScript](/reading/2026-05/2026-05-27t181744-ruby-vs-java-vs-typescript-my-experience-on-building-a) specifically for MCP runtime compatibility, showing the protocol already shapes implementation decisions.
-
-MCP also appears as a first-class feature in infrastructure tooling. [Radar](/reading/2026-05/2026-05-03t105219-radar-open-source-kubernetes-ui), an open-source Kubernetes UI, exposes cluster state via MCP so agents can query live topology. [Mintlify](/reading/2026-04/2026-04-30t231435-mintlify) serves documentation through MCP alongside llms.txt for context-aware agents. [Storybloq](/reading/2026-05/2026-05-11t155625-storybloqstorybloq) uses an MCP server to persist coding session context across sessions. [WaveScope](/reading/2026-06/2026-06-03t105229-putting-code-under-a-microscope-wavelet-based-context-for) is an MCP server that delivers multi-resolution code structure to LLMs using wavelet transforms. [Headroom](/reading/2026-06/2026-06-20t145835-chopratejasheadroom) sits as an MCP proxy that compresses tool outputs before they reach the model, cutting token usage by 60-95%.
-
-The [Speakeasy AI control plane survey](/reading/2026-05/2026-05-09t110721-ai-control-plane-architecture-and-vendors) situates MCP within a broader governance architecture: identity, policy enforcement, tool routing, and observability all need to be unified across every agent and every MCP server an enterprise runs. That framing aligns with Derosiaux's enterprise argument and suggests the protocol's long-term significance is less about individual tool integrations and more about becoming the layer where access control and auditability live.
+From a build-vs-buy angle, one strategic argument holds that teams should ship MCP tool servers rather than building custom orchestration frameworks, letting frontier agents like Claude Code own the loop while the team invests in platform-specific APIs and domain context [orchestrator-isnt-your-moat](/reading/2026-04/2026-04-27t113354-the-orchestrator-isnt-your-moat). Token efficiency is a live concern regardless of architecture: a proxy-and-compression layer that reduces MCP tool output size by 60-95% has already been built to address it [headroom](/reading/2026-06/2026-06-20t145835-chopratejasheadroom).

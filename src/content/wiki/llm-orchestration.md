@@ -1,9 +1,9 @@
 ---
 title: LLM orchestration
 summary: >-
-  LLM orchestration covers the control structures, harness designs, and routing
-  layers that coordinate one or more language models into reliable, long-running
-  pipelines, with current practice converging on environmental constraints over
+  The layer of logic that sequences, routes, and supervises LLM calls across
+  complex tasks, with current practice converging on harness design,
+  deterministic control flow, and separation of concerns rather than monolithic
   prompt engineering.
 sources:
   - 2026-04/2026-04-27t113354-the-orchestrator-isnt-your-moat
@@ -33,12 +33,12 @@ sources:
   - >-
     2026-06/2026-06-21t192506-arch-router-aligning-llm-routing-with-human-preferences
   - 2026-06/2026-06-23t161552-the-coming-loop
-compiled_at: '2026-06-22T07:20:09.636Z'
+compiled_at: '2026-06-24T06:34:04.119Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 5506
-    output_tokens: 1239
+    input_tokens: 5577
+    output_tokens: 1211
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -49,17 +49,18 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.035103
-last_source_added: '2026-06-23T23:15:52.702Z'
+  cost_usd: 0.034896
 ---
-LLM orchestration names the set of architectural decisions that sit between a raw model API and a working agentic system: how the model loop is structured, how state persists across context windows, how sub-tasks are delegated to specialized agents or tools, and how requests are routed to the right model in the first place.
+LLM orchestration covers everything that happens around a model call rather than inside it: how tasks are decomposed, how multiple agents are sequenced or parallelized, how state persists across context windows, and how results are validated before the next step runs.
 
-Early multi-agent research, surveyed by [Christopher Meiklejohn](/reading/2026-05/2026-05-03t110011-getting-up-to-speed-on-multi-agent-systems-part-1-the), treated coordination itself as the open question. The 2023 wave of systems like AutoGen, MetaGPT, and ChatDev [proved agents could coordinate at all](/reading/2026-05/2026-05-03t110032-getting-up-to-speed-on-multi-agent-systems-part-3-wave-1) but left gaps: no concurrency control, no escalation paths, no formal grounding for when a given coordination structure actually fits the task. Later work on debate and shared-notebook state [argues that coordination structure must match task structure](/reading/2026-05/2026-05-03t110055-getting-up-to-speed-on-multi-agent-systems-part-5-debate), and that distributed systems theory offers formalisms the field has not yet absorbed.
+The early wave of multi-agent research, surveyed by [Meiklejohn](/reading/2026-05/2026-05-03t110011-getting-up-to-speed-on-multi-agent-systems-part-1-the), established coordination as tractable but exposed shared failure modes across systems like CAMEL, MetaGPT, and AutoGen: [no concurrency control, no escalation paths](/reading/2026-05/2026-05-03t110032-getting-up-to-speed-on-multi-agent-systems-part-3-wave-1), and coordination structures that did not match task structures. That gap is what later harness and control-plane work tries to close.
 
-On the reliability side, the dominant lesson across several practitioner sources is that prompt engineering is the wrong lever. [Aiyan's data engineering case study](/reading/2026-04/2026-04-27t114426-dont-prompt-your-agent-for-reliability-engineer-it) iterated through a rigid state machine, an orchestrator, and finally a single general-purpose agent, finding that tool design and context visibility outperformed prompt complexity at each step. [Brian Suh](/reading/2026-05/2026-05-07t193804-agents-need-control-flow-not-more-prompts) makes the same point structurally: deterministic control flow encoded in software, with explicit state transitions and validation checkpoints, beats elaborate prompt chains when tasks grow in complexity.
+Two converging arguments have displaced prompt-centric orchestration. [Brian Suh](/reading/2026-05/2026-05-07t193804-agents-need-control-flow-not-more-prompts) argues that reliable agents require deterministic control flow with explicit state transitions and validation checkpoints encoded in software, not prompt chains. A data-engineering case study at [Aiyan](/reading/2026-04/2026-04-27t114426-dont-prompt-your-agent-for-reliability-engineer-it) reached the same conclusion empirically: environmental constraints, tool design, and ID-keyed context outperform prompt engineering across three successive architectures.
 
-For long-running tasks specifically, the challenge is context rot and self-evaluation bias. Anthropic's harness work addresses this through separation of concerns: their Managed Agents architecture [decouples the agent harness, session log, and sandbox into stable, swappable interfaces](/reading/2026-04/2026-04-27t114138-scaling-managed-agents-decoupling-the-brain-from-the-hands) so the system can absorb model improvements without client breakage. A GAN-inspired planner/generator/evaluator architecture [overcomes self-evaluation bias during multi-hour coding sessions](/reading/2026-05/2026-05-01t104137-harness-design-for-long-running-application-development), and a two-agent initializer-plus-incremental-coder design [maintains progress across many context windows via an external progress file](/reading/2026-05/2026-05-19t221035-effective-harnesses-for-long-running-agents). Recursive Language Models take a different approach: [keeping data in a REPL environment and letting the model pull it selectively into token space](/reading/2026-06/2026-06-14t091145-001tmfharness-forge) avoids filling the context with stale state.
+Anthropics engineering work has produced concrete harness patterns. Their [Managed Agents](/reading/2026-04/2026-04-27t114138-scaling-managed-agents-decoupling-the-brain-from-the-hands) service separates the agent harness, session log, and sandbox into stable interfaces so the system can evolve with models without breaking clients. A [two-agent harness](/reading/2026-05/2026-05-19t221035-effective-harnesses-for-long-running-agents) for long-running coding tasks uses an initializer to scaffold a feature list, git repo, and progress file, then hands off to an incremental agent that stays coherent across many context windows. A [GAN-inspired planner/generator/evaluator](/reading/2026-05/2026-05-01t104137-harness-design-for-long-running-application-development) architecture addresses self-evaluation bias during multi-hour sessions. Claude Code itself now supports [dynamic workflows](/reading/2026-05/2026-05-28t140143-introducing-dynamic-workflows-in-claude-code) that write orchestration scripts spinning up hundreds of parallel subagents for codebase-wide tasks.
 
-At the infrastructure layer, orchestration shades into routing. DigitalOcean's Inference Router [uses a 30B mixture-of-experts model to match each request to the best-fit model for cost, latency, or quality](/reading/2026-06/2026-06-21t192306-how-we-built-digitalocean-inference-router). Arch-Router [proposes a compact 1.5B model that maps queries to user-defined domains and action types](/reading/2026-06/2026-06-21t192506-arch-router-aligning-llm-routing-with-human-preferences) without retraining when new models are added. Above routing sits what Speakeasy calls the [AI control plane](/reading/2026-05/2026-05-09t110721-ai-control-plane-architecture-and-vendors): the governance layer that unifies identity, policy enforcement, tool routing, and observability across every agent and system in an enterprise.
+At the infrastructure layer, routing is a first-class orchestration concern. DigitalOceans [Inference Router](/reading/2026-06/2026-06-21t192306-how-we-built-digitalocean-inference-router) uses a 30B MoE model to match each request to the best-fit model for cost, latency, or quality. [Arch-Router](/reading/2026-06/2026-06-21t192506-arch-router-aligning-llm-routing-with-human-preferences) proposes a compact 1.5B model that aligns routing decisions with user-defined domains and action types without retraining when new models are added. Speakeasy frames this as an [AI control plane](/reading/2026-05/2026-05-09t110721-ai-control-plane-architecture-and-vendors): a governance layer unifying identity, policy enforcement, tool routing, and observability across all agents in an enterprise.
 
-A recurring strategic tension runs through the build-vs-delegate question. [Aiyan argues](/reading/2026-04/2026-04-27t113354-the-orchestrator-isnt-your-moat) that teams should skip custom orchestration frameworks entirely, shipping MCP tool servers and agent skills that extend frontier agents instead, since the orchestration loop itself is not a durable competitive advantage. Anthropic's own Claude Code now [writes orchestration scripts that spin up hundreds of parallel subagents automatically](/reading/2026-05/2026-05-28t140143-introducing-dynamic-workflows-in-claude-code), which adds practical weight to that position.
+One strategic fork concerns who owns the orchestration loop. [Aiyan](/reading/2026-04/2026-04-27t113354-the-orchestrator-isnt-your-moat) argues teams should skip custom orchestration frameworks and instead ship MCP tool servers and agent skills that extend frontier agents, letting Anthropic maintain the loop. Armin Ronacher takes a more cautionary view: [outer harness loops](/reading/2026-06/2026-06-23t161552-the-coming-loop) are becoming unavoidable but amplify LLMs worst tendencies toward defensive, opaque code, risking codebases that require machine participation to maintain.
+
+[dbreunig](/reading/2026-06/2026-06-04t194033-the-potential-of-rlms) adds that Recursive Language Models, which keep data in a REPL environment and let the model pull selectively into token space, produce traces that can be mined to design lower-latency, optimized agents, pointing toward orchestration that learns from its own execution history.

@@ -1,21 +1,21 @@
 ---
 title: Open-source tools
 summary: >-
-  Open-source tools span development infrastructure, design assets, and workflow
-  utilities, with the common thread being publicly available source that
-  practitioners can inspect, modify, and redistribute.
+  Open-source tools span programming education, developer workflows, AI-assisted
+  coding, and design resources, with the common thread being freely available,
+  community-shareable artifacts built for real use.
 sources:
   - 2026-04/2026-04-30t231027-munificentcraftinginterpreters
   - 2026-04/2026-04-30t232126-lostwarriorknowledge-base
   - 2026-05/2026-05-02t145719-micrographics-templates-design-layouts
   - 2026-05/2026-05-31t164252-reviewing-large-changes-with-jujutsu
   - 2026-06/2026-06-23t212845-vet-catch-your-coding-agents-mistakes
-compiled_at: '2026-06-22T07:26:54.501Z'
+compiled_at: '2026-06-24T06:35:19.838Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 2723
-    output_tokens: 385
+    input_tokens: 2873
+    output_tokens: 644
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -26,7 +26,18 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.013944
-last_source_added: '2026-06-24T04:28:45.870Z'
+  cost_usd: 0.018279
 ---
-The sources here illustrate how open-source tools operate across several distinct domains. At the infrastructure end, [Crafting Interpreters](/reading/2026-04/2026-04-30t231027-munificentcraftinginterpreters) publishes both the full book text and two complete interpreter implementations (jlox in Java, clox in C) in a single repository, making the educational artifact and the working code inseparable. At the workflow end, [LostWarrior/knowledge-base](/reading/2026-04/2026-04-30t232126-lostwarriorknowledge-base) is a zero-dependency bash CLI distributed under a Homebrew tap, structured so AI agents and humans can navigate project context from the same tiered markdown files. Ben Gesoff's [Jujutsu review workflow](/reading/2026-05/2026-05-31t164252-reviewing-large-changes-with-jujutsu) depends on jj, an open-source version-control system, to persist incremental review progress in commits rather than stashes. The [Micrographics Templates](/reading/2026-05/2026-05-02t145719-micrographics-templates-design-layouts) library distributes 50 Figma layouts as a free community file, extending open-source distribution norms into design tooling. Across these cases, open-source access enables inspection and adaptation rather than mere consumption.
+Open-source tools cover a wide range of artifacts: books with runnable code, CLI utilities, version control workflows, code review assistants, and design libraries. What connects them is that the source is public, the tool is meant to be used rather than just read about, and the value compounds when others build on it.
+
+The most literal example is the [Crafting Interpreters repository](/reading/2026-04/2026-04-30t231027-munificentcraftinginterpreters), which publishes the full source for both a Java and a C Lox interpreter alongside the book text, with a build system that weaves code and prose into the final site. The repository itself is the deliverable.
+
+[LostWarrior/knowledge-base](/reading/2026-04/2026-04-30t232126-lostwarriorknowledge-base) is a zero-dependency bash CLI that structures project context as tiered markdown files, producing an INDEX.md for humans and a manifest.json for AI agents. The zero-dependency constraint is a deliberate design choice that keeps the tool portable and auditable.
+
+[Vet](/reading/2026-06/2026-06-23t212845-vet-catch-your-coding-agents-mistakes) is an open-source local code review tool that reads an AI agent's conversation history alongside the diff to catch errors that a standard review misses, such as silently skipped tests or swapped-in fake data. It addresses a gap that appears specifically when AI agents write code.
+
+[Reviewing large changes with Jujutsu](/reading/2026-05/2026-05-31t164252-reviewing-large-changes-with-jujutsu) describes a workflow built on top of the open-source version control tool jj: duplicate the change, insert an empty parent commit, squash files into it as you review them. The technique persists review progress in version control rather than in mental state or stash hacks.
+
+On the design side, the [Micrographics Templates library](/reading/2026-05/2026-05-02t145719-micrographics-templates-design-layouts) is a Figma Community file with 50 customizable layouts and 40+ vector symbols. Its availability on the Figma Community platform makes it open for anyone to duplicate and modify.
+
+Across these examples, open-source tools share a structural property: the artifact is inspectable, the constraints are visible, and the tool tends to do one job well rather than abstracting away its internals.

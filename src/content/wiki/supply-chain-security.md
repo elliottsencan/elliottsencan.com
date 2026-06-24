@@ -1,10 +1,9 @@
 ---
-title: Supply-chain security
+title: Supply chain security
 summary: >-
-  Attackers compromise software ecosystems by poisoning packages, hiding
-  malicious payloads in source code, and abusing developer tooling; defenses
-  range from commit signing and sandboxed agentic scanning to heightened
-  scrutiny of dependency updates.
+  Attackers increasingly target software supply chains through poisoned
+  packages, invisible code payloads, and compromised credentials; defenses span
+  cryptographic signing, agentic scanning, and forge-level tooling.
 sources:
   - >-
     2026-04/2026-04-30t231634-supply-chain-attack-using-invisible-code-hits-github-and
@@ -14,12 +13,12 @@ sources:
     2026-05/2026-05-04t231548-using-ssh-keys-to-make-connectivity-simpler-and-secure
   - 2026-06/2026-06-04t163601-anthropicsdefending-code-reference-harness
   - 2026-06/2026-06-23t231556-if-i-could-make-my-own-github
-compiled_at: '2026-06-18T21:56:21.606Z'
+compiled_at: '2026-06-24T06:37:44.853Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 2864
-    output_tokens: 573
+    input_tokens: 2962
+    output_tokens: 578
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -30,11 +29,12 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.017187
-last_source_added: '2026-06-24T06:15:56.151Z'
+  cost_usd: 0.017556
 ---
-Software supply-chain attacks target the trust developers place in shared repositories and package ecosystems. Two recent npm incidents show how that trust is exploited at different layers. Researchers at Aikido Security found 151 malicious packages across GitHub, npm, and VS Code's marketplace that hid payloads inside invisible Unicode variation-selector characters, making the code appear clean to reviewers and static analysis tools alike [Supply-chain attack using invisible code](/reading/2026-04/2026-04-30t231634-supply-chain-attack-using-invisible-code-hits-github-and). Separately, the TeamPCP threat actor poisoned four SAP-ecosystem npm packages with a self-propagating credential harvester that exfiltrated cloud secrets and browser passwords through GitHub, and used Claude Code and VS Code configuration files as persistence vectors [SAP-Related npm Packages Compromised](/reading/2026-05/2026-05-01t102345-sap-related-npm-packages-compromised-in-credential-stealing).
+Supply chain attacks compromise software before it reaches end users, typically by poisoning upstream dependencies rather than targeting applications directly. Two recent npm incidents illustrate the range of techniques in play. One campaign uploaded 151 malicious packages encoding payloads in invisible Unicode variation-selector characters [invisible-unicode attack](/reading/2026-04/2026-04-30t231634-supply-chain-attack-using-invisible-code-hits-github-and), bypassing code review and static analysis because the hidden bytes are visually absent but executable at runtime. A separate campaign by the TeamPCP threat actor poisoned four SAP-ecosystem npm packages with a self-propagating credential harvester that exfiltrated cloud secrets and browser passwords via GitHub, using Claude Code and VS Code configs as persistence vectors [SAP npm compromise](/reading/2026-05/2026-05-01t102345-sap-related-npm-packages-compromised-in-credential-stealing).
 
-Both cases illustrate why perimeter-level controls are insufficient. Static analysis failed outright against Unicode obfuscation, and legitimate developer tooling became an attack surface in the SAP incident. Hardening the pipeline matters at the commit level too: SSH key-based authentication with signed commits gives repositories a verifiable identity chain that PAT tokens do not, reducing the risk of credential-based tampering in CI workflows [Using SSH Keys](/reading/2026-05/2026-05-04t231548-using-ssh-keys-to-make-connectivity-simpler-and-secure).
+The authentication layer matters too. Relying on personal access tokens for remote machine access creates a credential surface attackers can harvest. SSH key-based authentication with commit signing reduces that surface by eliminating reusable secrets from the authentication path [SSH keys guide](/reading/2026-05/2026-05-04t231548-using-ssh-keys-to-make-connectivity-simpler-and-secure).
 
-On the detection and remediation side, Anthropic's defending-code-reference-harness demonstrates an agentic approach: autonomous threat modeling, vulnerability scanning, triage, and patching run inside a gVisor sandbox so the analysis pipeline itself cannot be turned against the host [defending-code-reference-harness](/reading/2026-06/2026-06-04t163601-anthropicsdefending-code-reference-harness). Sandboxing the tooling that inspects untrusted code is a direct response to the lesson the SAP attack made plain: developer tools are high-value targets.
+On the detection side, Anthropic's defending-code reference harness demonstrates an agentic pipeline that runs threat modeling, vulnerability scanning, triage, and patching autonomously, using gVisor sandboxing to contain the execution environment [defending-code harness](/reading/2026-06/2026-06-04t163601-anthropicsdefending-code-reference-harness). That kind of automated scanning becomes more valuable as attack surface grows with package counts.
+
+At the forge level, Mat Duggan's wishlist for a reimagined GitHub includes signed and offline-usable Actions, which addresses a structural gap: CI actions fetched at runtime from third-party sources are themselves a supply chain vector [reimagined GitHub](/reading/2026-06/2026-06-23t231556-if-i-could-make-my-own-github). Signing artifacts and pinning dependencies at the infrastructure layer closes attack paths that code review alone cannot catch.

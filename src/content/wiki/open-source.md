@@ -1,9 +1,9 @@
 ---
 title: Open source
 summary: >-
-  Open source spans infrastructure, tooling, and LLM ecosystems, with sources
-  spanning Kubernetes UIs, local inference runtimes, version control, and
-  security vulnerabilities that arise from the ecosystem's openness.
+  Open source spans from collaborative infrastructure and local tooling to
+  software forges and security vulnerabilities, with the sources collectively
+  mapping both its productivity gains and its structural risks.
 sources:
   - 2026-04/2026-04-24t093356-unsloth
   - >-
@@ -34,12 +34,12 @@ sources:
   - 2026-06/2026-06-17t075738-gunnargray-devunicode-animations
   - 2026-06/2026-06-17t075816-matt-palmer
   - 2026-06/2026-06-23t231556-if-i-could-make-my-own-github
-compiled_at: '2026-06-22T07:17:18.261Z'
+compiled_at: '2026-06-24T06:35:06.745Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 9703
-    output_tokens: 1010
+    input_tokens: 9868
+    output_tokens: 1030
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -50,17 +50,18 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.044259
-last_source_added: '2026-06-24T06:15:56.151Z'
+  cost_usd: 0.045054
 ---
-Open source is both a licensing model and a social contract: code is public, forkable, and improvable by anyone. The sources collected here span enough of the stack to show what that contract looks like in practice, including its benefits and its failure modes.
+Open source is a broad surface. The sources here touch it from several angles: tools built in the open for local-first computing, the infrastructure that hosts them, the security threats that exploit shared code, and the long-run question of whether open-source maintenance can approach zero defects.
 
-On the tooling side, [Radar](/reading/2026-05/2026-05-03t105219-radar-open-source-kubernetes-ui) is a single-binary, Apache 2.0 Kubernetes UI that consolidates topology, Helm, GitOps, and security audits into one interface, replacing the five-tool patchwork most platform teams assemble. The project is explicit that no cloud account is required, positioning openness as a guarantee against vendor lock-in. [Jujutsu](/reading/2026-05/2026-05-31t164554-jj-vcsjj) is a Git-compatible VCS that auto-commits the working copy and treats conflicts as first-class objects; it extends the open ecosystem around version control rather than replacing it. [oobabooga/textgen](/reading/2026-05/2026-05-05t071908-oobaboogatextgen) provides a fully offline desktop interface for running LLMs with an OpenAI-compatible API, and [Unsloth](/reading/2026-04/2026-04-24t093356-unsloth) offers custom training kernels delivering up to 30x faster fine-tuning than FlashAttention 2. Both depend on open model weights to function.
+On the tooling side, the local LLM ecosystem is almost entirely open-source driven. [Unsloth](/reading/2026-04/2026-04-24t093356-unsloth) delivers fine-tuning with custom kernels at a fraction of the memory cost of FlashAttention 2. [oobabooga/textgen](/reading/2026-05/2026-05-05t071908-oobaboogatextgen) provides a fully offline web UI and OpenAI-compatible API for local inference. [CanItRun](/reading/2026-04/2026-04-29t173553-canitrun-can-my-gpu-run-this-llm) helps users assess which open-weight models fit their hardware. The educational layer is open too: [raiyanyahya/how-to-train-your-gpt](/reading/2026-05/2026-05-06t173338-raiyanyahyahow-to-train-your-gpt) is an annotated textbook for building a decoder LLM from scratch. Agent memory is following the same pattern, with [hindsight](/reading/2026-05/2026-05-03t173422-vectorize-iohindsight) releasing a biomimetic memory system under open terms.
 
-The LLM local-inference space shows how open source can fragment. [Ollama](/reading/2026-05/2026-05-05t071447-friends-dont-let-friends-use-ollama) is criticized for obscuring its llama.cpp dependency, shipping inferior inference performance, introducing misleading model naming, and launching a closed-source GUI while pivoting toward a VC-funded cloud model. The piece frames this as a betrayal of open-source values by a project that built its reputation on them. Ollama's trajectory sits in contrast to tools like [Unsloth](/reading/2026-04/2026-04-24t093356-unsloth) and [oobabooga/textgen](/reading/2026-05/2026-05-05t071908-oobaboogatextgen) that remain local-first and transparent about their dependencies.
+Beyond LLMs, the open-source default extends to infrastructure tooling. [Radar](/reading/2026-05/2026-05-03t105238-radar-or-the-missing-open-source-kubernetes-ui) ships as an Apache 2.0 single binary that replaces a patchwork of Kubernetes management tools, and [jj-vcs/jj](/reading/2026-05/2026-05-31t164554-jj-vcsjj) is a Git-compatible VCS with a fully open development model. Small utility libraries follow the same ethos: [unicode-animations](/reading/2026-06/2026-06-17t075738-gunnargray-devunicode-animations) is a zero-dependency MIT-licensed spinner package, and the JavaScript libraries surveyed in [Seven Cool JS Libraries](/reading/2026-05/2026-05-12t165232-seven-cool-javascript-libraries-you-should-know-about) are all open.
 
-Openness also creates attack surface. Attackers uploaded 151 malicious npm and GitHub packages encoding payloads in invisible Unicode variation-selector characters, making them undetectable by code reviewers and static analysis tools while remaining executable at runtime [supply-chain attack](/reading/2026-04/2026-04-30t231634-supply-chain-attack-using-invisible-code-hits-github-and). The open registry model that makes npm useful is the same model that lets bad actors publish freely.
+The hosting layer raises harder questions. [GitHub Is Sinking](/reading/2026-05/2026-05-10t205349-github-is-sinking) argues that GitHub's reliability and quality have declined under Microsoft and recommends migrating to Codeberg, Forgejo, or self-hosted forges. [If I Could Make My Own GitHub](/reading/2026-06/2026-06-23t231556-if-i-could-make-my-own-github) catalogs structural gaps in existing forges, from pre-commit CI to stacked PRs, that still lack good open-source implementations.
 
-Daniel Stenberg's analysis of curl's bug history argues that even with AI-assisted static analysis, open-source projects show no measurable trend toward zero latent bugs [Approaching zero bugs](/reading/2026-05/2026-05-02t094735-approaching-zero-bugs). The implication is that openness enables inspection and contribution but does not automatically produce correctness.
+Security is the most direct structural risk. [Supply-chain attack using invisible Unicode](/reading/2026-04/2026-04-30t231634-supply-chain-attack-using-invisible-code-hits-github-and) documents 151 malicious npm and GitHub packages encoding payloads in invisible Unicode variation-selector characters, bypassing code review and static analysis entirely. The open publish model that makes the ecosystem productive is the same surface attackers exploit.
 
-Smaller open-source artifacts round out the picture: a zero-dependency npm package of Unicode spinner animations [unicode-animations](/reading/2026-06/2026-06-17t075738-gunnargray-devunicode-animations), a step-by-step optimization of Rust's image-rs blur function [image-rs](/reading/2026-05/2026-05-14t151252-5-faster-fastblur-in-image-rs), and an open-source agent memory system benchmarked against LongMemEval [hindsight](/reading/2026-05/2026-05-03t173422-vectorize-iohindsight). Each reflects the norm of publishing code publicly, accepting contributions, and building on prior work, which remains the connective tissue of most modern software development.
+On long-run quality, Daniel Stenberg's analysis of [curl's bug history](/reading/2026-05/2026-05-02t094735-approaching-zero-bugs) finds no measurable trend toward zero latent bugs despite AI-assisted static analysis, a grounding note on the limits of tooling improvements in mature open-source projects.
+
+The tension that runs through all of this: open source lowers the floor for building and distributing software dramatically, while simultaneously expanding the attack surface and concentrating critical infrastructure on platforms whose governance is outside contributors' control.
