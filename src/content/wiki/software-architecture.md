@@ -50,6 +50,7 @@ sources:
   - >-
     2026-06/2026-06-18t090801-how-i-audit-a-legacy-rails-codebase-in-the-first-week
   - 2026-06/2026-06-21t192306-how-we-built-digitalocean-inference-router
+  - 2026-06/2026-06-23t232444-repowise-devrepowise
 compiled_at: '2026-06-22T07:15:32.947Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -67,6 +68,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.058002
+last_source_added: '2026-06-24T06:24:44.848Z'
 ---
 Architecture is the set of decisions that determine how a system's parts fit together and why. Those decisions show up at every scale: the shape of a single module, the boundary between two services, the way state moves through a distributed workflow, and the conventions that prevent a codebase from fragmenting session by session.
 

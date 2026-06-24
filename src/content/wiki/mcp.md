@@ -20,6 +20,7 @@ sources:
     2026-06/2026-06-03t105229-putting-code-under-a-microscope-wavelet-based-context-for
   - 2026-06/2026-06-11t023723-gi-dellavzerostack
   - 2026-06/2026-06-20t145835-chopratejasheadroom
+  - 2026-06/2026-06-23t232444-repowise-devrepowise
 aliases:
   - model-context-protocol
 compiled_at: '2026-06-22T07:24:19.619Z'
@@ -39,6 +40,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.027942
+last_source_added: '2026-06-24T06:24:44.848Z'
 ---
 MCP (Model Context Protocol) is a protocol for connecting AI agents to external tools, data sources, and services through a standardized interface. Anthropic introduced it, and it has seen rapid adoption across coding assistants, documentation platforms, infrastructure UIs, and enterprise control planes.
 

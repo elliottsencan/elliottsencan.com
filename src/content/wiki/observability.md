@@ -18,6 +18,7 @@ sources:
   - >-
     2026-06/2026-06-10t223404-how-to-read-distributed-traces-when-you-didnt-write-the-code
   - 2026-06/2026-06-11t024225-testing-a-security-tool-like-it-can-hurt-people
+  - 2026-06/2026-06-23t232444-repowise-devrepowise
 compiled_at: '2026-06-22T07:25:12.052Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -35,6 +36,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.02244
+last_source_added: '2026-06-24T06:24:44.848Z'
 ---
 Observability means being able to infer what a system is doing from the outputs it exposes. In distributed infrastructure, that usually means traces, logs, and metrics. In AI systems, it increasingly means attaching feedback signals to those traces so that what you observe can actually change behavior.
 
