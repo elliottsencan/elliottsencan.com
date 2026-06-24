@@ -1,5 +1,6 @@
 ---
 import "../styles/global.css";
+import { ClientRouter } from "astro:transitions";
 import { PERSON, SCHEMA_IDS, SITE } from "@consts";
 
 interface Props {
@@ -172,15 +173,18 @@ const breadcrumbSchema = breadcrumbs?.length
 <link rel="canonical" href={canonicalURL} />
 
 <!-- Intro animations (signature draw, contributions rail reveal): play
-     once per browser session. First page in a tab plays them; subsequent
-     navigations within the same tab skip via the sessionStorage flag. New
-     tab / reload / fresh window starts a new session and replays. -->
+     once per fresh page load. Hard load / reload / new tab gets a fresh
+     window, so the animations play. ClientRouter soft navigation would
+     otherwise re-trigger them (html attrs are swapped), so we mark the
+     incoming <html> before each swap. -->
 <script is:inline>
-  if (sessionStorage.getItem("introPlayed")) {
+  if (window.__introPlayed) {
     document.documentElement.classList.add("intro-played");
-  } else {
-    sessionStorage.setItem("introPlayed", "1");
   }
+  window.__introPlayed = true;
+  document.addEventListener("astro:before-swap", (e) => {
+    e.newDocument.documentElement.classList.add("intro-played");
+  });
 </script>
 
 <!-- Primary Meta Tags.
@@ -228,20 +232,40 @@ const breadcrumbSchema = breadcrumbs?.length
 {articleSchema && <script is:inline type="application/ld+json" set:html={JSON.stringify(articleSchema)} />}
 {breadcrumbSchema && <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)} />}
 
+<ClientRouter />
+
 <script is:inline>
+  // Runs on initial load and after every ClientRouter soft swap. The swap
+  // resets <html>'s attributes from the incoming SSR document, dropping the
+  // JS-applied theme/scroll classes, so we re-apply them here before paint.
+  // Bindings are idempotent — the persisted header's button must not stack
+  // listeners across swaps — so globals bind once and element handlers guard.
+  let globalListenersBound = false;
+  let navMenuDocBound = false;
+
   function init() {
-    preloadTheme();
+    applyStoredTheme();
     onScroll();
     updateThemeIcon();
+    bindGlobalListeners();
+    bindButtons();
+    initNavMenu();
+  }
 
-    const backToTop = document.getElementById("back-to-top");
-    backToTop?.addEventListener("click", (event) => scrollToTop(event));
+  function bindClickOnce(el, handler) {
+    if (!el || el.dataset.clickBound) return;
+    el.dataset.clickBound = "1";
+    el.addEventListener("click", handler);
+  }
 
-    const backToPrev = document.getElementById("back-to-prev");
-    backToPrev?.addEventListener("click", () => window.history.back());
-
-    const themeCycleButton = document.getElementById("theme-cycle");
-    themeCycleButton?.addEventListener("click", () => {
+  function bindButtons() {
+    bindClickOnce(document.getElementById("back-to-top"), (event) =>
+      scrollToTop(event),
+    );
+    bindClickOnce(document.getElementById("back-to-prev"), () =>
+      window.history.back(),
+    );
+    bindClickOnce(document.getElementById("theme-cycle"), () => {
       const current = localStorage.getItem("theme") || "system";
       const next =
         current === "system" ? "light" : current === "light" ? "dark" : "system";
@@ -253,6 +277,14 @@ const breadcrumbSchema = breadcrumbs?.length
       toggleTheme(dark);
       updateThemeIcon();
     });
+  }
+
+  // Bind once — these outlive any swap, so re-binding would leak handlers.
+  function bindGlobalListeners() {
+    if (globalListenersBound) return;
+    globalListenersBound = true;
+
+    document.addEventListener("scroll", onScroll);
 
     window
       .matchMedia("(prefers-color-scheme: dark)")
@@ -261,10 +293,6 @@ const breadcrumbSchema = breadcrumbs?.length
           toggleTheme(event.matches);
         }
       });
-
-    document.addEventListener("scroll", onScroll);
-
-    initNavMenu();
   }
 
   // Mobile section menu (a native <details> in the header). Native handles
@@ -274,9 +302,15 @@ const breadcrumbSchema = breadcrumbs?.length
     const navMenu = document.getElementById("nav-menu");
     if (!navMenu) return;
 
-    for (const link of navMenu.querySelectorAll(".nav-panel a")) {
-      link.addEventListener("click", () => navMenu.removeAttribute("open"));
+    if (!navMenu.dataset.navBound) {
+      navMenu.dataset.navBound = "1";
+      for (const link of navMenu.querySelectorAll(".nav-panel a")) {
+        link.addEventListener("click", () => navMenu.removeAttribute("open"));
+      }
     }
+
+    if (navMenuDocBound) return;
+    navMenuDocBound = true;
 
     document.addEventListener("keydown", (event) => {
       if (event.key === "Escape") navMenu.removeAttribute("open");
@@ -373,9 +407,20 @@ const breadcrumbSchema = breadcrumbs?.length
     }
   }
 
-  // Pre-paint: apply the theme instantly to avoid a flash from the SSR
-  // default. Inject a transient rule that kills all transitions, flip the
-  // class, force a reflow, then remove the rule.
+  // Resolve the stored/system preference to a dark boolean and apply it.
+  function applyStoredTheme() {
+    const userTheme = localStorage.theme;
+    if (userTheme === "light" || userTheme === "dark") {
+      applyTheme(userTheme === "dark");
+    } else {
+      applyTheme(window.matchMedia("(prefers-color-scheme: dark)").matches);
+    }
+  }
+
+  // Initial hard load only: flip the class behind a transient transition-kill
+  // rule so the SSR default doesn't visibly animate to the stored theme. Not
+  // used after a soft swap — forcing a reflow inside the view-transition
+  // callback would abort the crossfade.
   function preloadTheme() {
     const css = document.createElement("style");
     css.appendChild(
@@ -385,18 +430,14 @@ const breadcrumbSchema = breadcrumbs?.length
     );
     document.head.appendChild(css);
 
-    const userTheme = localStorage.theme;
-    if (userTheme === "light" || userTheme === "dark") {
-      applyTheme(userTheme === "dark");
-    } else {
-      applyTheme(window.matchMedia("(prefers-color-scheme: dark)").matches);
-    }
+    applyStoredTheme();
 
     window.getComputedStyle(css).opacity;
     document.head.removeChild(css);
   }
 
   document.addEventListener("DOMContentLoaded", () => init());
+  document.addEventListener("astro:after-swap", () => init());
   preloadTheme();
 </script>
 

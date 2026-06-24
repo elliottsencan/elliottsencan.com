@@ -549,8 +549,8 @@ const nodeById = new Map(nodes.map((n) => [n.id, n]));
 <script>
   // Hover/focus protocol — toggles data attributes the CSS above keys off.
   // Intentionally tiny: no framework, no signal library; the SVG is the
-  // state container.
-  (() => {
+  // state container. Bound on astro:page-load so it re-binds after soft nav.
+  function initConstellation() {
     const svg = document.getElementById("constellation-strip");
     if (!svg) return;
 
@@ -621,5 +621,6 @@ const nodeById = new Map(nodes.map((n) => [n.id, n]));
     // up that node on first paint without requiring a hover.
     const initialActive = svg.getAttribute("data-active-slug");
     if (initialActive) setFocus(initialActive);
-  })();
+  }
+  document.addEventListener("astro:page-load", initConstellation);
 </script>

@@ -110,7 +110,15 @@ function buildToc(headings: Heading[]) {
   // The selector spans every `.toc` on the page, so a post that renders both
   // a mobile collapse and a desktop rail variant gets both kept in sync from
   // the same observer.
+  // Re-runs on ClientRouter soft-nav via astro:page-load; the previous
+  // observer is disconnected first so navigations don't stack observers.
+  let observer: IntersectionObserver | undefined;
   function initToc() {
+    if (observer) {
+      observer.disconnect();
+      observer = undefined;
+    }
+
     const links = Array.from(
       document.querySelectorAll<HTMLAnchorElement>('.toc a[href^="#"]'),
     );
@@ -132,7 +140,7 @@ function buildToc(headings: Heading[]) {
     // Track which headings are currently within the "reading zone" — the
     // top third of the viewport. The topmost intersecting heading wins.
     const visible = new Set<string>();
-    const observer = new IntersectionObserver(
+    observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
           const id = entry.target.id;
@@ -182,5 +190,5 @@ function buildToc(headings: Heading[]) {
     for (const target of targets) observer.observe(target);
   }
 
-  initToc();
+  document.addEventListener("astro:page-load", initToc);
 </script>

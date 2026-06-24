@@ -2,19 +2,6 @@
 
 ---
 
-<script>
-  if (typeof window !== 'undefined') {
-    window.addEventListener('DOMContentLoaded', () => {
-      const btn = document.getElementById('back-to-top');
-      if (btn) {
-        btn.addEventListener('click', () => {
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
-      }
-    });
-  }
-</script>
-
 <button
   id="back-to-top"
   class="bg-[#f6f4ef]/95 dark:bg-[#18161a]/95 group relative flex w-fit flex-nowrap rounded-sm border border-black/15 py-1.5 pl-8 pr-3 transition-colors duration-300 ease-in-out hover:border-[color:var(--accent-line)] hover:text-[color:var(--accent)] focus-visible:border-[color:var(--accent-line)] focus-visible:text-[color:var(--accent)] dark:border-white/20"
