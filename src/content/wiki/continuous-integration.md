@@ -18,6 +18,7 @@ sources:
   - 2026-05/2026-05-15t120337-playwright-testing-in-staging-vs-production
   - 2026-05/2026-05-19t110000-building-ci-with-lambda-durable-functions
   - 2026-06/2026-06-23t212845-vet-catch-your-coding-agents-mistakes
+  - 2026-06/2026-06-23t231556-if-i-could-make-my-own-github
 compiled_at: '2026-06-22T07:26:04.271Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -35,7 +36,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.023754
-last_source_added: '2026-06-24T04:28:45.870Z'
+last_source_added: '2026-06-24T06:15:56.151Z'
 ---
 Continuous integration sits at the intersection of infrastructure decisions, test reliability, and security posture. The sources here collectively show that CI at scale is not a solved problem; it generates its own operational surface area that teams must actively manage.
 

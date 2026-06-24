@@ -13,6 +13,7 @@ sources:
   - >-
     2026-05/2026-05-04t231548-using-ssh-keys-to-make-connectivity-simpler-and-secure
   - 2026-06/2026-06-04t163601-anthropicsdefending-code-reference-harness
+  - 2026-06/2026-06-23t231556-if-i-could-make-my-own-github
 compiled_at: '2026-06-18T21:56:21.606Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -30,6 +31,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.017187
+last_source_added: '2026-06-24T06:15:56.151Z'
 ---
 Software supply-chain attacks target the trust developers place in shared repositories and package ecosystems. Two recent npm incidents show how that trust is exploited at different layers. Researchers at Aikido Security found 151 malicious packages across GitHub, npm, and VS Code's marketplace that hid payloads inside invisible Unicode variation-selector characters, making the code appear clean to reviewers and static analysis tools alike [Supply-chain attack using invisible code](/reading/2026-04/2026-04-30t231634-supply-chain-attack-using-invisible-code-hits-github-and). Separately, the TeamPCP threat actor poisoned four SAP-ecosystem npm packages with a self-propagating credential harvester that exfiltrated cloud secrets and browser passwords through GitHub, and used Claude Code and VS Code configuration files as persistence vectors [SAP-Related npm Packages Compromised](/reading/2026-05/2026-05-01t102345-sap-related-npm-packages-compromised-in-credential-stealing).
 
