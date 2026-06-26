@@ -1,9 +1,9 @@
 ---
 title: Continuous integration
 summary: >-
-  CI pipelines have grown complex enough to require dedicated orchestration,
-  AI-assisted triage, and architectural safeguards against flaky tests, bad
-  merges, and supply-chain compromise.
+  CI infrastructure spans orchestration, test quality, merge safety, and
+  supply-chain security — a set of sources that collectively show how teams at
+  scale diagnose what breaks and why.
 sources:
   - 2026-04/2026-04-30t195531-what-ci-actually-looks-like-at-a-100-person-team
   - 2026-04/2026-04-30t231319-markdownlm
@@ -19,12 +19,12 @@ sources:
   - 2026-05/2026-05-19t110000-building-ci-with-lambda-durable-functions
   - 2026-06/2026-06-23t212845-vet-catch-your-coding-agents-mistakes
   - 2026-06/2026-06-23t231556-if-i-could-make-my-own-github
-compiled_at: '2026-06-22T07:26:04.271Z'
+compiled_at: '2026-06-26T02:54:59.980Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 3578
-    output_tokens: 868
+    input_tokens: 3897
+    output_tokens: 947
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -35,15 +35,14 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.023754
-last_source_added: '2026-06-24T06:15:56.151Z'
+  cost_usd: 0.025896
 ---
-Continuous integration sits at the intersection of infrastructure decisions, test reliability, and security posture. The sources here collectively show that CI at scale is not a solved problem; it generates its own operational surface area that teams must actively manage.
+Continuous integration is the practice of merging and validating code changes frequently, with automated pipelines that catch regressions before they reach production. At sufficient scale the mechanics become their own engineering problem.
 
-At high volumes the sheer quantity of test output makes manual triage impractical. PostHog runs 575,000 weekly CI jobs and 33 million test executions, a scale at which Mendral's AI agent ingests log lines, traces flaky tests to root causes, and opens fix PRs automatically [What CI Actually Looks Like at a 100-Person Team](/reading/2026-04/2026-04-30t195531-what-ci-actually-looks-like-at-a-100-person-team). TestDino approaches the same problem from the reporting layer, auto-categorizing Playwright failures as bugs, flaky tests, or UI changes [TestDino](/reading/2026-04/2026-04-30t231348-testdino).
+PostHog's pipeline processes 575K weekly jobs and 33M test executions. Mendral's AI agent handles triage at that volume by ingesting billions of log lines, tracing flaky tests to root causes, and opening fix PRs automatically [What CI Actually Looks Like at a 100-Person Team](/reading/2026-04/2026-04-30t195531-what-ci-actually-looks-like-at-a-100-person-team). The infrastructure layer matters too: Depot's orchestrator runs a stateful, checkpointed workflow scheduler on AWS Lambda durable functions, avoiding a long-lived process entirely through a two-layer Run/Workflow Lambda hierarchy [Building CI with Lambda durable functions](/reading/2026-05/2026-05-19t110000-building-ci-with-lambda-durable-functions).
 
-Flakiness is partly a test-authoring problem. Tests that couple to CSS classes, DOM structure, or element position break on UI refactors regardless of CI configuration; using semantic roles and accessible names produces suites that stay stable across those changes [Designing Playwright Tests That Survive UI Refactors](/reading/2026-05/2026-05-05t135218-designing-playwright-tests-that-survive-ui-refactors). Where tests run also matters: staging and production serve different verification needs, and treating them interchangeably creates false confidence [Playwright Testing in Staging vs Production](/reading/2026-05/2026-05-15t120337-playwright-testing-in-staging-vs-production).
+Test quality shapes how much CI can be trusted. Playwright suites degrade during UI refactors not because of poor selector choices alone, but because tests couple to implementation details like CSS classes and DOM position rather than semantic roles and accessible names [Designing Playwright Tests That Survive UI Refactors](/reading/2026-05/2026-05-05t135218-designing-playwright-tests-that-survive-ui-refactors). Where to run tests also matters: staging and production serve different purposes, and splitting Playwright runs across environments requires deliberate decisions about which flows belong where and what the operational costs are [Playwright Testing in Staging vs Production](/reading/2026-05/2026-05-15t120337-playwright-testing-in-staging-vs-production). AI-generated code introduces another failure mode: agents can silently skip tests or swap in fake data, and tools like Vet read the agent's conversation history alongside the diff to catch what standard review misses Vet: Catch your coding agent's mistakes.
 
-On the infrastructure side, merge queues introduce their own failure modes. A GitHub bug built temp branches off the wrong base commit and silently deleted thousands of lines from main; Trunk's architecture, which avoids pushing temp branches to main at all, was unaffected [What Happens If a Merge Queue Builds on the Wrong Commit](/reading/2026-05/2026-05-03t150555-what-happens-if-a-merge-queue-builds-on-the-wrong-commit). Depot CI takes a different architectural angle, using AWS Lambda durable functions for a stateful, checkpointed workflow scheduler that requires no long-lived orchestrator process [Building CI with Lambda durable functions](/reading/2026-05/2026-05-19t110000-building-ci-with-lambda-durable-functions).
+Merge queues are a point of structural risk. A GitHub bug caused temp branches built off the wrong base commit to silently delete thousands of lines from main; Trunk's architecture avoided the incident by never pushing temp branches to main at all [What Happens If a Merge Queue Builds on the Wrong Commit](/reading/2026-05/2026-05-03t150555-what-happens-if-a-merge-queue-builds-on-the-wrong-commit). That incident sits alongside broader concerns about GitHub's reliability [GitHub is Sinking](/reading/2026-05/2026-05-10t205349-github-is-sinking), and wishlist-level thinking about what better forges would offer: pre-commit remote CI, stacked PRs as first-class citizens, and signed offline-usable Actions [If I Could Make My Own GitHub](/reading/2026-06/2026-06-23t231556-if-i-could-make-my-own-github).
 
-Security is a growing concern at the pipeline layer. Compromised npm packages in the SAP ecosystem carried credential-stealing payloads that harvested cloud secrets and used CI-adjacent tooling as persistence vectors [SAP-Related npm Packages Compromised in Credential-Stealing Supply Chain Attack](/reading/2026-05/2026-05-01t102345-sap-related-npm-packages-compromised-in-credential-stealing). MarkdownLM addresses the policy-enforcement side by blocking non-compliant code at the Git layer before it merges [MarkdownLM](/reading/2026-04/2026-04-30t231319-markdownlm), though that targets standards conformance more than active compromise. Platform reliability is also a variable: declining GitHub stability [GitHub is Sinking](/reading/2026-05/2026-05-10t205349-github-is-sinking) means CI pipelines built entirely on hosted platforms inherit that platform's risk profile.
+Security intersects CI at the dependency layer. Poisoned npm packages in the SAP ecosystem harvested cloud secrets and browser passwords by abusing VS Code configs as persistence vectors [SAP-Related npm Packages Compromised in Credential-Stealing Supply Chain Attack](/reading/2026-05/2026-05-01t102345-sap-related-npm-packages-compromised-in-credential-stealing). Policy enforcement before merge is one mitigation: MarkdownLM's Lun tool blocks non-compliant code at the Git layer by querying a living knowledge base of architectural and security standards [MarkdownLM](/reading/2026-04/2026-04-30t231319-markdownlm).

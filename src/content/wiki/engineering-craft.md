@@ -1,10 +1,10 @@
 ---
 title: Engineering craft
 summary: >-
-  The habits, judgment, and tacit knowledge that separate adequate code from
-  enduring software — spanning module design, incremental delivery,
-  communication, and the discipline to resist both unnecessary complexity and
-  reckless shortcuts.
+  Engineering craft is the accumulated judgment, discipline, and taste that
+  separates functional code from maintainable systems — visible across decisions
+  about module design, communication, tooling, and the cost of owning what you
+  build.
 sources:
   - 2026-04/2026-04-24t085352-building-a-ui-without-breakpoints
   - 2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp
@@ -48,12 +48,12 @@ sources:
   - 2026-06/2026-06-22t182141-the-systemic-decay-of-tech-hiring
   - >-
     2026-06/2026-06-22t185420-code-smells-when-you-get-ai-to-write-your-frontend-tests
-compiled_at: '2026-06-22T07:19:42.344Z'
+compiled_at: '2026-06-26T02:56:37.961Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 6957
-    output_tokens: 1216
+    input_tokens: 7533
+    output_tokens: 1242
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -64,19 +64,20 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.039111
-last_source_added: '2026-06-23T01:54:20.820Z'
+  cost_usd: 0.041229
 ---
-Engineering craft is not a single technique but a cluster of dispositions that show up consistently across different layers of the stack. It includes knowing when to reach for a tool and when the tool is the problem, how to structure code so future readers can reason about it, and how to communicate what you built and why.
+Engineering craft is not a single technique but a posture: the difference between code that works and code that can be understood, extended, and trusted. The sources collected here approach that gap from many angles, and together they sketch the texture of what craft actually demands in practice.
 
-Module and component design is a recurring site of craft decisions. The principle of deep modules, as described in [AI Likes Deep Modules](/reading/2026-05/2026-05-04t231343-ai-likes-deep-modules), is that a small, stable interface hiding a large implementation reduces cognitive load for both humans and LLMs working with the code later. The same logic appears in [A Better Way to Build Angular Components](/reading/2026-04/2026-04-30t232001-a-better-way-to-build-angular-components-from-inputs-to), which argues that components bloated with dozens of inputs should be decomposed through the Composite Components pattern so each concern stays encapsulated. [Single Responsibility, the Distorted Principle](/reading/2026-06/2026-06-04t073318-single-responsibility-the-distorted-principle) adds a corrective: SRP does not mean atomizing everything into micro-units, it means grouping behaviors under a single accountable concern. Over-granularizing violates the cognitive simplicity the principle was designed to provide.
+At the module level, craft means hiding complexity behind well-chosen boundaries. [AI Likes Deep Modules](/reading/2026-05/2026-05-04t231343-ai-likes-deep-modules) argues that small interfaces concealing large implementations reduce cognitive load for both humans and LLMs. The same principle appears in component design: [A Better Way to Build Angular Components](/reading/2026-04/2026-04-30t232001-a-better-way-to-build-angular-components-from-inputs-to) shows how components bloated with dozens of inputs should be decomposed using the Composite Components pattern so each concern stays encapsulated. And [Single Responsibility, the Distorted Principle](/reading/2026-06/2026-06-04t073318-single-responsibility-the-distorted-principle) corrects the common misreading of SRP: it means cohesive grouping under one accountable responsibility, not fragmentation into ever-smaller units.
 
-Craft also shows up in how engineers approach known-hard problems rather than inventing complexity. [Building a UI Without Breakpoints](/reading/2026-04/2026-04-24t085352-building-a-ui-without-breakpoints) argues that intrinsic layouts, container queries, and `clamp()` values are usually a better fit for component-first UIs than viewport breakpoints, because they encode intent more precisely. [Modern Fluid Typography Using CSS Clamp](/reading/2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp) shows the same discipline applied to type: derive scale mathematically, handle accessibility edge cases with `rem` units, and reach for fluid solutions when the design genuinely warrants them.
+Craft also lives in how you read systems before changing them. [The Git Commands I Run Before Reading Any Code](/reading/2026-06/2026-06-18t024208-the-git-commands-i-run-before-reading-any-code) describes using churn hotspots and bus-factor analysis to diagnose risk before opening a file. [How I Audit a Legacy Rails Codebase in the First Week](/reading/2026-06/2026-06-18t090801-how-i-audit-a-legacy-rails-codebase-in-the-first-week) extends this to stakeholder interviews and schema reads before running any tooling. Both treat comprehension as a precondition for safe change.
 
-On the backend, [Shell Tricks That Actually Make Life Easier](/reading/2026-04/2026-04-30t155134-learn-algorithms-for-interviews-forget-them-for-work) is actually about the divide between interview performance and real work. [Learn Algorithms for Interviews, Forget Them for Work](/reading/2026-04/2026-04-30t155134-learn-algorithms-for-interviews-forget-them-for-work) makes the case directly: algorithm tests measure a narrow, trainable skill that correlates weakly with production performance. Real engineering requires reading tradeoffs and shipping systems that handle messy, unbounded real-world inputs.
+On the production side, craft is inseparable from caution. [The Unwritten Laws of Software Engineering](/reading/2026-06/2026-06-10t073045-the-unwritten-laws-of-software-engineering) distills hard-won rules like rolling back before debugging and treating every external dependency as a future outage. [Approaching Zero Bugs](/reading/2026-05/2026-05-02t094735-approaching-zero-bugs) uses curl's vulnerability data to show that even with powerful AI-assisted static analysis, there is no measurable sign yet that latent bug counts are falling — a useful corrective to optimism about tooling.
 
-Craft in the age of AI-generated code raises new stakes. [When Code Is Cheap, Does Quality Still Matter?](/reading/2026-05/2026-05-22t091746-when-code-is-cheap-does-quality-still-matter) notes that LLMs lower the cost of producing code but not of owning it — taste and judgment remain necessary because AI can generate polished technical debt faster than any individual engineer. [The Perils of AI to the Software Engineering Profession](/reading/2026-05/2026-05-14t223612-the-perils-of-ai-to-the-software-engineering-profession) goes further, arguing that shipping AI-generated code without review causes skill atrophy and is incompatible with safety-critical systems.
+AI lowers the cost of writing code but not the cost of owning it. [When Code Is Cheap, Does Quality Still Matter?](/reading/2026-05/2026-05-22t091746-when-code-is-cheap-does-quality-still-matter) argues that LLMs can produce polished technical debt faster than any individual engineer, so taste and judgment remain the scarce resource. [The Perils of AI to the Software Engineering Profession](/reading/2026-05/2026-05-14t223612-the-perils-of-ai-to-the-software-engineering-profession) sharpens this: vibe coding without review or testing causes skill atrophy and is categorically incompatible with safety-critical systems.
 
-Much craft knowledge is tacit rather than explicit. [The Tacit Dimension](/reading/2026-05/2026-05-19t110710-the-tacit-dimension-why-your-best-engineers-cant-tell-you) draws on Michael Polanyi to argue that pattern recognition, design intuition, and unwritten conventions cannot be fully articulated and can only be transmitted through apprenticeship. [Why Senior Developers Fail to Communicate Their Expertise](/reading/2026-05/2026-05-13t060018-why-senior-developers-fail-to-communicate-their-expertise) connects this to organizational friction: senior engineers think in terms of complexity management while the business thinks in uncertainty reduction, and the gap between those framings makes expertise invisible.
+Craft also includes knowing what is worth optimizing at all. [5x Faster fast_blur in image-rs](/reading/2026-05/2026-05-14t151252-5-faster-fastblur-in-image-rs) demonstrates disciplined low-level optimization — replacing float arithmetic with integer accumulators and costly division with reciprocal multiplication to achieve a 5.9x speedup. [The Idiot Index for Code](/reading/2026-06/2026-06-22t000701-the-idiot-index-for-code) offers the inverse lens: bloated, over-engineered code signals low-value work, the same way inflated manufacturing costs do.
 
-Finally, craft involves operational judgment accumulated from failure. [The Unwritten Laws of Software Engineering](/reading/2026-06/2026-06-10t073045-the-unwritten-laws-of-software-engineering) distills rules like rolling back before debugging and treating every external dependency as a future outage, lessons that only register after real incidents. The [Idiot Index for Code](/reading/2026-06/2026-06-22t000701-the-idiot-index-for-code) offers a complementary heuristic: bloated, over-engineered code signals low-value work, just as inflated manufacturing costs signal poor process design. Good craft keeps the ratio honest.
+Finally, craft has a communication dimension that is easy to undervalue. [Why Senior Developers Fail to Communicate Their Expertise](/reading/2026-05/2026-05-13t060018-why-senior-developers-fail-to-communicate-their-expertise) observes that senior engineers talk in terms of complexity management while the rest of the business thinks in terms of uncertainty reduction — and that bridging this gap is the real challenge of software expertise. [The Tacit Dimension](/reading/2026-05/2026-05-19t110710-the-tacit-dimension-why-your-best-engineers-cant-tell-you) goes further, drawing on Polanyi to argue that the most valuable engineering knowledge — pattern recognition, design intuition, unwritten conventions — is structurally inaccessible to AI and can only pass through apprenticeship.
+
+Across all of these, the throughline is the same: craft is the discipline of making choices whose costs are visible, whose interfaces are honest, and whose systems remain navigable by the next person who has to work in them.

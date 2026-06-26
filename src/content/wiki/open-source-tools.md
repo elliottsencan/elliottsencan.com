@@ -1,9 +1,10 @@
 ---
 title: Open-source tools
 summary: >-
-  Open-source tools span development infrastructure, design assets, and workflow
-  utilities, with the common thread being publicly available source that
-  practitioners can inspect, modify, and redistribute.
+  Open-source tools span compilers, CLIs, design assets, version-control
+  workflows, and AI agent SDKs; what connects them is public availability of
+  both artifact and process, letting practitioners inspect, adapt, and build on
+  each other's work.
 sources:
   - 2026-04/2026-04-30t231027-munificentcraftinginterpreters
   - 2026-04/2026-04-30t232126-lostwarriorknowledge-base
@@ -11,12 +12,12 @@ sources:
   - 2026-05/2026-05-31t164252-reviewing-large-changes-with-jujutsu
   - 2026-06/2026-06-23t212845-vet-catch-your-coding-agents-mistakes
   - 2026-06/2026-06-25t195020-strands-agents
-compiled_at: '2026-06-22T07:26:54.501Z'
+compiled_at: '2026-06-26T03:00:56.794Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 2723
-    output_tokens: 385
+    input_tokens: 3023
+    output_tokens: 629
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -27,7 +28,18 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.013944
-last_source_added: '2026-06-26T02:50:20.282Z'
+  cost_usd: 0.018504
 ---
-The sources here illustrate how open-source tools operate across several distinct domains. At the infrastructure end, [Crafting Interpreters](/reading/2026-04/2026-04-30t231027-munificentcraftinginterpreters) publishes both the full book text and two complete interpreter implementations (jlox in Java, clox in C) in a single repository, making the educational artifact and the working code inseparable. At the workflow end, [LostWarrior/knowledge-base](/reading/2026-04/2026-04-30t232126-lostwarriorknowledge-base) is a zero-dependency bash CLI distributed under a Homebrew tap, structured so AI agents and humans can navigate project context from the same tiered markdown files. Ben Gesoff's [Jujutsu review workflow](/reading/2026-05/2026-05-31t164252-reviewing-large-changes-with-jujutsu) depends on jj, an open-source version-control system, to persist incremental review progress in commits rather than stashes. The [Micrographics Templates](/reading/2026-05/2026-05-02t145719-micrographics-templates-design-layouts) library distributes 50 Figma layouts as a free community file, extending open-source distribution norms into design tooling. Across these cases, open-source access enables inspection and adaptation rather than mere consumption.
+The sources here cover a wide range of tool categories, but each is open-source in a meaningful way: the artifact is public and the decisions behind it are visible.
+
+[Crafting Interpreters](/reading/2026-04/2026-04-30t231027-munificentcraftinginterpreters) is a GitHub repository containing the full book text alongside two complete interpreter implementations in Java and C. The repo itself is the product; the build system that weaves prose and code into the published site is part of what is released. That transparency is what makes it a teaching resource rather than just a reference.
+
+[LostWarrior/knowledge-base](/reading/2026-04/2026-04-30t232126-lostwarriorknowledge-base) is a zero-dependency bash CLI that organizes project context as tiered markdown files. No runtime dependencies means the tool is auditable by inspection and portable anywhere bash runs.
+
+[Vet](/reading/2026-06/2026-06-23t212845-vet-catch-your-coding-agents-mistakes) is a local code review tool that reads an AI agent's conversation history alongside the diff to surface mistakes standard review misses. Being open-source and local matters here: users can verify what the tool does with their code before trusting its output.
+
+[Strands Agents](/reading/2026-06/2026-06-25t195020-strands-agents) is an SDK for building AI agents, released from Amazon's production systems. Open-sourcing production infrastructure lets external teams evaluate whether the abstractions match their own production constraints.
+
+Not every entry here is software. The [Micrographics Templates](/reading/2026-05/2026-05-02t145719-micrographics-templates-design-layouts) Figma library is a community-published design asset with 50 customizable layouts and 40+ vector symbols. The Figma Community distribution model functions analogously: the file is free, forkable, and inspectable.
+
+[Reviewing Large Changes with Jujutsu](/reading/2026-05/2026-05-31t164252-reviewing-large-changes-with-jujutsu) documents a workflow built on top of jj, itself an open-source version control system, using its primitives in a way Git's model does not easily permit. The workflow depends on the tool being open enough to compose.
