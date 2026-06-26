@@ -1,9 +1,9 @@
 ---
 title: Open source
 summary: >-
-  Open source spans infrastructure, tooling, and LLM ecosystems, with sources
-  spanning Kubernetes UIs, local inference runtimes, version control, and
-  security vulnerabilities that arise from the ecosystem's openness.
+  Open-source software spans infrastructure tools, LLM runtimes, security
+  vulnerabilities, and hosting debates — collectively showing both the power and
+  the fragility of code developed in the open.
 sources:
   - 2026-04/2026-04-24t093356-unsloth
   - >-
@@ -34,12 +34,12 @@ sources:
   - 2026-06/2026-06-17t075738-gunnargray-devunicode-animations
   - 2026-06/2026-06-17t075816-matt-palmer
   - 2026-06/2026-06-23t231556-if-i-could-make-my-own-github
-compiled_at: '2026-06-22T07:17:18.261Z'
+compiled_at: '2026-06-26T03:00:41.624Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 9703
-    output_tokens: 1010
+    input_tokens: 9868
+    output_tokens: 1059
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -50,17 +50,16 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.044259
-last_source_added: '2026-06-24T06:15:56.151Z'
+  cost_usd: 0.045489
 ---
-Open source is both a licensing model and a social contract: code is public, forkable, and improvable by anyone. The sources collected here span enough of the stack to show what that contract looks like in practice, including its benefits and its failure modes.
+Open-source software is not a single phenomenon but a set of ongoing tensions: between transparency and trust, between community governance and commercial incentives, and between the promise of shared infrastructure and the reality of shared risk.
 
-On the tooling side, [Radar](/reading/2026-05/2026-05-03t105219-radar-open-source-kubernetes-ui) is a single-binary, Apache 2.0 Kubernetes UI that consolidates topology, Helm, GitOps, and security audits into one interface, replacing the five-tool patchwork most platform teams assemble. The project is explicit that no cloud account is required, positioning openness as a guarantee against vendor lock-in. [Jujutsu](/reading/2026-05/2026-05-31t164554-jj-vcsjj) is a Git-compatible VCS that auto-commits the working copy and treats conflicts as first-class objects; it extends the open ecosystem around version control rather than replacing it. [oobabooga/textgen](/reading/2026-05/2026-05-05t071908-oobaboogatextgen) provides a fully offline desktop interface for running LLMs with an OpenAI-compatible API, and [Unsloth](/reading/2026-04/2026-04-24t093356-unsloth) offers custom training kernels delivering up to 30x faster fine-tuning than FlashAttention 2. Both depend on open model weights to function.
+On the infrastructure side, tools like [Radar](/reading/2026-05/2026-05-03t105219-radar-open-source-kubernetes-ui) — distributed under Apache 2.0 as a single binary — represent the model at its most legible: auditable license, no cloud account required, self-contained enough to run anywhere. [Jujutsu](/reading/2026-05/2026-05-31t164554-jj-vcsjj) and [image-rs](/reading/2026-05/2026-05-14t151252-5-faster-fastblur-in-image-rs) occupy similar territory: Rust-ecosystem projects where the source being open invites the kind of deep optimization work — replacing float arithmetic with integer accumulators for a 5.9x speedup — that closed code rarely receives.
 
-The LLM local-inference space shows how open source can fragment. [Ollama](/reading/2026-05/2026-05-05t071447-friends-dont-let-friends-use-ollama) is criticized for obscuring its llama.cpp dependency, shipping inferior inference performance, introducing misleading model naming, and launching a closed-source GUI while pivoting toward a VC-funded cloud model. The piece frames this as a betrayal of open-source values by a project that built its reputation on them. Ollama's trajectory sits in contrast to tools like [Unsloth](/reading/2026-04/2026-04-24t093356-unsloth) and [oobabooga/textgen](/reading/2026-05/2026-05-05t071908-oobaboogatextgen) that remain local-first and transparent about their dependencies.
+The LLM tooling ecosystem is where open-source dynamics get more complicated. [Unsloth](/reading/2026-04/2026-04-24t093356-unsloth) and [oobabooga/textgen](/reading/2026-05/2026-05-05t071908-oobaboogatextgen) offer local, offline-capable inference and fine-tuning, giving practitioners genuine control over their models. [Hindsight](/reading/2026-05/2026-05-03t173422-vectorize-iohindsight) publishes an open-source agent memory system with benchmark results against proprietary alternatives. But [the Ollama critique](/reading/2026-05/2026-05-05t071447-friends-dont-let-friends-use-ollama) illustrates how a project can start open-source, obscure its upstream dependency on llama.cpp, ship a closed-source GUI, and pivot toward a VC-funded cloud model — each step technically compatible with the license while hollowing out the original ethos.
 
-Openness also creates attack surface. Attackers uploaded 151 malicious npm and GitHub packages encoding payloads in invisible Unicode variation-selector characters, making them undetectable by code reviewers and static analysis tools while remaining executable at runtime [supply-chain attack](/reading/2026-04/2026-04-30t231634-supply-chain-attack-using-invisible-code-hits-github-and). The open registry model that makes npm useful is the same model that lets bad actors publish freely.
+Hosting and forges are under similar pressure. [GitHub is Sinking](/reading/2026-05/2026-05-10t205349-github-is-sinking) argues that Microsoft's stewardship has degraded the platform's reliability and quality, pointing to alternatives like Codeberg, Forgejo, or self-hosted Git forges. [If I Could Make My Own GitHub](/reading/2026-06/2026-06-23t231556-if-i-could-make-my-own-github) extends that frustration into a concrete wishlist — stacked PRs, signed offline Actions, pre-commit remote CI — describing features that remain unbuilt not because they are technically hard but because they do not fit GitHub's current incentive structure.
 
-Daniel Stenberg's analysis of curl's bug history argues that even with AI-assisted static analysis, open-source projects show no measurable trend toward zero latent bugs [Approaching zero bugs](/reading/2026-05/2026-05-02t094735-approaching-zero-bugs). The implication is that openness enables inspection and contribution but does not automatically produce correctness.
+Security is the sharpest edge. Open repositories are not inherently safer; the supply-chain attack documented by [Ars Technica](/reading/2026-04/2026-04-30t231634-supply-chain-attack-using-invisible-code-hits-github-and) placed 151 malicious npm and GitHub packages into the ecosystem using invisible Unicode variation-selector characters, undetectable by reviewers or static analysis. And [Daniel Stenberg's analysis of curl](/reading/2026-05/2026-05-02t094735-approaching-zero-bugs) offers a sobering counterpoint to optimism about AI-assisted tooling: despite new static analysis capabilities, there is no measurable trend toward fewer latent bugs in long-running open-source projects.
 
-Smaller open-source artifacts round out the picture: a zero-dependency npm package of Unicode spinner animations [unicode-animations](/reading/2026-06/2026-06-17t075738-gunnargray-devunicode-animations), a step-by-step optimization of Rust's image-rs blur function [image-rs](/reading/2026-05/2026-05-14t151252-5-faster-fastblur-in-image-rs), and an open-source agent memory system benchmarked against LongMemEval [hindsight](/reading/2026-05/2026-05-03t173422-vectorize-iohindsight). Each reflects the norm of publishing code publicly, accepting contributions, and building on prior work, which remains the connective tissue of most modern software development.
+Smaller releases — a [zero-dependency spinner library](/reading/2026-06/2026-06-17t075738-gunnargray-devunicode-animations), [seven focused JS utilities](/reading/2026-05/2026-05-12t165232-seven-cool-javascript-libraries-you-should-know-about), an [interactive LLM textbook](/reading/2026-05/2026-05-06t173338-raiyanyahyahow-to-train-your-gpt) — round out the picture: open source remains the default distribution model for developer tooling at every scale, from single-purpose npm packages to full Kubernetes UIs.
