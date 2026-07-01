@@ -11,6 +11,8 @@ sources:
   - 2026-05/2026-05-02t145719-micrographics-templates-design-layouts
   - 2026-05/2026-05-05t183935-type-scale-graphs
   - 2026-05/2026-05-06t163329-multi-stroke-text-effect-in-css
+  - >-
+    2026-06/2026-06-30t213959-why-css-style-queries-are-a-bigger-deal-than-you-think
 compiled_at: '2026-06-18T21:46:56.056Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -28,6 +30,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.017256
+last_source_added: '2026-07-01T04:39:59.931Z'
 ---
 Fluid typography treats type size as a function of available space rather than a fixed value at specific breakpoints. The core mechanism is CSS `clamp()`, which accepts a minimum size, a preferred value expressed as a viewport-relative calculation, and a maximum size. [Adrian Bece's breakdown](/reading/2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp) covers the math in detail, including why the preferred value should use `rem`-based arithmetic rather than pure `vw` to preserve user font-size preferences and maintain accessibility.
 

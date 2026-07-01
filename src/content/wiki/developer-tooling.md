@@ -63,6 +63,8 @@ sources:
   - 2026-06/2026-06-23t231556-if-i-could-make-my-own-github
   - 2026-06/2026-06-23t232444-repowise-devrepowise
   - 2026-06/2026-06-25t195020-strands-agents
+  - >-
+    2026-06/2026-06-30t213959-why-css-style-queries-are-a-bigger-deal-than-you-think
 compiled_at: '2026-06-22T07:13:50.984Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -80,7 +82,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.065238
-last_source_added: '2026-06-26T02:50:20.282Z'
+last_source_added: '2026-07-01T04:39:59.931Z'
 ---
 Developer tooling spans everything a practitioner reaches for before, during, and after writing code. The sources here cut across shell ergonomics, version control, runtime validation, test infrastructure, platform engineering, and a rapidly expanding category of AI-native tools that are rewriting what the category even means.
 

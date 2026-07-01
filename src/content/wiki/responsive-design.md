@@ -15,6 +15,8 @@ sources:
   - 2026-05/2026-05-06t163329-multi-stroke-text-effect-in-css
   - >-
     2026-06/2026-06-10t220929-navigating-the-age-old-problem-of-checkmarks-in-ui-with
+  - >-
+    2026-06/2026-06-30t213959-why-css-style-queries-are-a-bigger-deal-than-you-think
 compiled_at: '2026-06-18T21:53:59.568Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -32,6 +34,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.020691
+last_source_added: '2026-07-01T04:39:59.931Z'
 ---
 The dominant pattern in responsive design for over a decade has been viewport breakpoints: pick a handful of pixel thresholds, write media queries for each, and override layout and type sizes at those points. A cluster of recent CSS writing argues this model should become the exception rather than the rule.
 
