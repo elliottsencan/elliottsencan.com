@@ -37,6 +37,7 @@ sources:
   - >-
     2026-06/2026-06-18t090801-how-i-audit-a-legacy-rails-codebase-in-the-first-week
   - 2026-06/2026-06-21t130559-what-is-inference-engineering
+  - 2026-06/2026-06-30t185207-when-impressive-performance-gains-do-not-matter
 compiled_at: '2026-06-22T07:20:33.651Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -54,6 +55,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.034329
+last_source_added: '2026-07-01T01:52:07.468Z'
 ---
 Production systems are where abstractions meet consequences. Several sources here address a common core problem: how do you build software that survives failure, scales under load, and remains debuggable after the fact?
 

@@ -23,6 +23,7 @@ sources:
   - >-
     2026-06/2026-06-10t223404-how-to-read-distributed-traces-when-you-didnt-write-the-code
   - 2026-06/2026-06-21t231758-nasa-technical-report-20070005136
+  - 2026-06/2026-06-30t185207-when-impressive-performance-gains-do-not-matter
 compiled_at: '2026-06-22T07:21:26.058Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -40,6 +41,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.02466
+last_source_added: '2026-07-01T01:52:07.468Z'
 ---
 Distributed systems thinking shows up across several layers of the modern software stack. At the infrastructure level, Kubernetes clusters coordinate workloads across nodes, and tools like [Radar](/reading/2026-05/2026-05-03t105238-radar-or-the-missing-open-source-kubernetes-ui) address the observability gap that emerges when operators need to reason about topology, events, and deployments across multiple clusters simultaneously. Below Kubernetes, container isolation itself relies on Linux primitives, and [Ivan Velichko's walkthrough](/reading/2026-05/2026-05-04t231858-how-container-filesystem-works-building-a-docker-like) of assembling a container from scratch with mount namespaces and pivot_root shows how much distributed-systems-style isolation is baked into the kernel.
 
