@@ -1,10 +1,9 @@
 ---
-title: Supply-chain security
+title: Supply chain security
 summary: >-
-  Attackers compromise software ecosystems by poisoning packages, hiding
-  malicious payloads in source code, and abusing developer tooling; defenses
-  range from commit signing and sandboxed agentic scanning to heightened
-  scrutiny of dependency updates.
+  Software supply chains are under active attack via package poisoning,
+  invisible-code steganography, and credential theft; defenses range from
+  cryptographic signing and sandboxed scanning to forge-level policy controls.
 sources:
   - >-
     2026-04/2026-04-30t231634-supply-chain-attack-using-invisible-code-hits-github-and
@@ -14,12 +13,12 @@ sources:
     2026-05/2026-05-04t231548-using-ssh-keys-to-make-connectivity-simpler-and-secure
   - 2026-06/2026-06-04t163601-anthropicsdefending-code-reference-harness
   - 2026-06/2026-06-23t231556-if-i-could-make-my-own-github
-compiled_at: '2026-06-18T21:56:21.606Z'
+compiled_at: '2026-07-01T00:44:24.044Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 2864
-    output_tokens: 573
+    input_tokens: 2962
+    output_tokens: 647
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -30,11 +29,12 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.017187
-last_source_added: '2026-06-24T06:15:56.151Z'
+  cost_usd: 0.018591
 ---
-Software supply-chain attacks target the trust developers place in shared repositories and package ecosystems. Two recent npm incidents show how that trust is exploited at different layers. Researchers at Aikido Security found 151 malicious packages across GitHub, npm, and VS Code's marketplace that hid payloads inside invisible Unicode variation-selector characters, making the code appear clean to reviewers and static analysis tools alike [Supply-chain attack using invisible code](/reading/2026-04/2026-04-30t231634-supply-chain-attack-using-invisible-code-hits-github-and). Separately, the TeamPCP threat actor poisoned four SAP-ecosystem npm packages with a self-propagating credential harvester that exfiltrated cloud secrets and browser passwords through GitHub, and used Claude Code and VS Code configuration files as persistence vectors [SAP-Related npm Packages Compromised](/reading/2026-05/2026-05-01t102345-sap-related-npm-packages-compromised-in-credential-stealing).
+Supply chain attacks target the distribution layer between a project's upstream dependencies and the developer who installs them, making the dependency ecosystem itself the attack surface rather than any one application.
 
-Both cases illustrate why perimeter-level controls are insufficient. Static analysis failed outright against Unicode obfuscation, and legitimate developer tooling became an attack surface in the SAP incident. Hardening the pipeline matters at the commit level too: SSH key-based authentication with signed commits gives repositories a verifiable identity chain that PAT tokens do not, reducing the risk of credential-based tampering in CI workflows [Using SSH Keys](/reading/2026-05/2026-05-04t231548-using-ssh-keys-to-make-connectivity-simpler-and-secure).
+Two recent npm incidents illustrate how varied the techniques have become. Attackers published 151 malicious packages to npm and GitHub that encoded their payloads using invisible Unicode variation-selector characters, characters that are syntactically inert to human reviewers and most static analysis tools but are parsed and executed at runtime [Supply-chain attack using invisible Unicode](/reading/2026-04/2026-04-30t231634-supply-chain-attack-using-invisible-code-hits-github-and). Separately, the TeamPCP threat actor poisoned four SAP-ecosystem npm packages with a self-propagating payload that harvests cloud credentials and browser passwords, exfiltrates them via GitHub, and abuses Claude Code and VS Code configuration files as persistence vectors [SAP-related npm compromise](/reading/2026-05/2026-05-01t102345-sap-related-npm-packages-compromised-in-credential-stealing). Together these cases show that attackers are exploiting both perceptual blind spots in code review and trust in widely-used tooling configurations.
 
-On the detection and remediation side, Anthropic's defending-code-reference-harness demonstrates an agentic approach: autonomous threat modeling, vulnerability scanning, triage, and patching run inside a gVisor sandbox so the analysis pipeline itself cannot be turned against the host [defending-code-reference-harness](/reading/2026-06/2026-06-04t163601-anthropicsdefending-code-reference-harness). Sandboxing the tooling that inspects untrusted code is a direct response to the lesson the SAP attack made plain: developer tools are high-value targets.
+Credential hygiene at the developer level is a related control. Replacing personal access tokens with SSH keys for remote authentication and commit signing removes one class of credential that supply chain attackers routinely harvest [SSH key authentication](/reading/2026-05/2026-05-04t231548-using-ssh-keys-to-make-connectivity-simpler-and-secure).
+
+At the detection and remediation end, Anthropic's reference harness for autonomous vulnerability discovery runs Claude through threat modeling, scanning, triage, and patching inside a gVisor sandbox, showing how agentic pipelines can close the gap between finding a vulnerable dependency and shipping a fix [defending-code-reference-harness](/reading/2026-06/2026-06-04t163601-anthropicsdefending-code-reference-harness). Complementing this, a developer wishlist for a reimagined code forge calls for signed, offline-usable CI actions and stricter PR approval controls as structural protections that would make it harder to introduce malicious code through the review process itself [If I could make my own GitHub](/reading/2026-06/2026-06-23t231556-if-i-could-make-my-own-github). The through-line across these sources is that effective supply chain defense requires controls at every layer: the package registry, the developer workstation, the CI pipeline, and the forge itself.

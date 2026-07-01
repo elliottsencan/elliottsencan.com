@@ -1,8 +1,10 @@
 ---
 title: Platform strategy
 summary: >-
-  How companies and products define their platform layer, defend it against
-  commoditization, and decide what to own versus delegate to others.
+  How companies structure themselves as foundational layers that others depend
+  on, illustrated through internal developer platforms, AI infrastructure,
+  SpaceX's stacked infrastructure plays, and the moat questions that arise when
+  platforms commoditize.
 sources:
   - 2026-04/2026-04-24t162154-he-came-he-saw-he-cooked
   - 2026-04/2026-04-27t113354-the-orchestrator-isnt-your-moat
@@ -18,12 +20,12 @@ sources:
     2026-06/2026-06-17t130655-the-founders-playbook-building-an-ai-native-startup
   - 2026-06/2026-06-21t231454-spacex-and-the-sentient-sun
   - 2026-06/2026-06-22t170134-if-your-product-is-great-it-doesnt-need-to-be-good
-compiled_at: '2026-06-22T07:25:29.655Z'
+compiled_at: '2026-07-01T00:42:07.390Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 6534
-    output_tokens: 697
+    input_tokens: 6771
+    output_tokens: 768
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -34,19 +36,16 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.030057
-last_source_added: '2026-06-23T00:01:34.480Z'
+  cost_usd: 0.031833
 ---
-Platform strategy is the set of choices about which layer of a stack to own, what to expose to others, and where to draw the line between commodity infrastructure and defensible differentiation. Several sources illuminate different facets of the same core tension.
+Platform strategy is the practice of building a product or service as a foundational layer that other parties depend on, rather than as a standalone offering. The sources here approach it from several angles: infrastructure plays at planetary scale, internal developer platforms inside engineering orgs, and the competitive dynamics that arise when AI commoditizes the orchestration layer.
 
-In infrastructure terms, [Platform Engineering End-to-End](/reading/2026-05/2026-05-06t204115-platform-engineering-end-to-end) describes internal developer platforms as the answer to that question inside large engineering orgs: consolidate shared concerns (provisioning, observability, deployment) so product teams build on stable ground rather than reinventing it. The platform team owns the floor; everyone else builds on it.
+[SpaceX and the Sentient Sun](/reading/2026-06/2026-06-21t231454-spacex-and-the-sentient-sun) is the most explicit case study. Starlink revenue funds Falcon 9 reusability, reusability funds Starship development, and Starship's cost reductions eventually make Mars infrastructure economical. Each layer funds the next, and the whole stack is designed so that no single competitor can replicate it without building all of it. That is textbook platform leverage.
 
-The same logic applies at the product level. [The Orchestrator Isn't Your Moat](/reading/2026-04/2026-04-27t113354-the-orchestrator-isnt-your-moat) argues that teams building LLM agents should not invest in custom orchestration layers. Anthropic owns the agent loop; your moat is the domain APIs and context you expose via MCP tool servers. Trying to own the orchestration layer is a category error when a frontier provider will maintain it better than you can.
+At the organizational level, [Platform Engineering End-to-End](/reading/2026-05/2026-05-06t204115-platform-engineering-end-to-end) describes internal developer platforms as the same pattern applied inside a company: a small team builds the paved road so that product engineers do not each solve infrastructure problems independently. The platform is the product; application teams are the customers.
 
-[The AI Model Pricing War](/reading/2026-05/2026-05-31t072101-the-ai-model-pricing-war-is-here-and-your-margins-depend-on) adds a pricing dimension: a 75x spread between the cheapest and most expensive frontier models means platform decisions now carry direct margin consequences. Building provider-agnostic from day one is the hedge against being trapped on an expensive layer you do not control.
+The competitive question becomes sharper when the platform layer itself is contested. [The Orchestrator Isn't Your Moat](/reading/2026-04/2026-04-27t113354-the-orchestrator-isnt-your-moat) argues that custom LLM orchestration frameworks are not a sustainable differentiator, because frontier agents like Claude Code will absorb that layer. The durable moat sits in proprietary APIs, domain data, and the context that only your platform can supply. [The AI Model Pricing War Is Here](/reading/2026-05/2026-05-31t072101-the-ai-model-pricing-war-is-here-and-your-margins-depend-on) reinforces this: a 75x spread between the cheapest and most expensive frontier models means the infrastructure floor is collapsing, and margin survival depends on provider-agnostic architecture rather than any single-vendor platform lock-in.
 
-Platform decay is the other side of this. [GitHub is Sinking](/reading/2026-05/2026-05-10t205349-github-is-sinking) documents what happens when a platform that developers depend on degrades under new ownership. The strategic implication is that betting on any single platform carries lock-in risk, which mirrors the provider-agnostic argument above.
+Paul Buchheit's observation in [If your product is Great, it doesn't need to be Good](/reading/2026-06/2026-06-22t170134-if-your-product-is-great-it-doesnt-need-to-be-good) is a useful corrective to platform maximalism: platforms that try to cover everything often fail to be exceptional at the core attributes users actually rely on. Gmail and the iPod succeeded by doing two or three things unusually well and ignoring the rest. Broad surface area is not the same as strategic platform depth.
 
-[The Competitive Moat That AI Can't Replicate](/reading/2026-06/2026-06-17t124905-the-competitive-moat-that-ai-cant-replicate) points at something platforms frequently optimize away: human trust built through repeated personal interaction. Organizations that automate every customer touchpoint in pursuit of efficiency destroy a form of loyalty that no platform feature can reconstruct.
-
-At the startup level, [The Founder's Playbook](/reading/2026-06/2026-06-17t130655-the-founders-playbook-building-an-ai-native-startup) frames the MVP stage as a platform-architecture decision disguised as a build question. How you structure the codebase and what context you make legible determines what is possible at scale. Early platform choices compound.
+[GitHub is Sinking](/reading/2026-05/2026-05-10t205349-github-is-sinking) illustrates what happens when a platform stops earning that trust: reliability declines, quality erodes, and developers who built workflows on top of it start looking for exits. Platform dependency is a two-way contract, and neglecting the host layer breaks it.
