@@ -55,6 +55,7 @@ sources:
   - 2026-06/2026-06-14t094245-agentswarms
   - 2026-06/2026-06-23t161552-the-coming-loop
   - 2026-06/2026-06-23t212629-latchkey-credential-layer-for-local-ai-agents
+  - 2026-07/2026-07-02t052125-jangles-bytepythia
 compiled_at: '2026-06-22T07:13:10.853Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -72,7 +73,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.048333
-last_source_added: '2026-06-24T04:26:29.756Z'
+last_source_added: '2026-07-02T12:21:25.108Z'
 ---
 An LLM agent is a language model embedded in a loop: it perceives inputs, invokes tools, stores intermediate state, and produces actions rather than just text. The basic architecture is well-established. What the current literature argues about, loudly, is how to make agents reliable enough to trust with real work.
 

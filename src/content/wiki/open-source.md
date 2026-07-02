@@ -34,6 +34,7 @@ sources:
   - 2026-06/2026-06-17t075738-gunnargray-devunicode-animations
   - 2026-06/2026-06-17t075816-matt-palmer
   - 2026-06/2026-06-23t231556-if-i-could-make-my-own-github
+  - 2026-07/2026-07-02t052125-jangles-bytepythia
 compiled_at: '2026-06-22T07:17:18.261Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -51,7 +52,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.044259
-last_source_added: '2026-06-24T06:15:56.151Z'
+last_source_added: '2026-07-02T12:21:25.108Z'
 ---
 Open source is both a licensing model and a social contract: code is public, forkable, and improvable by anyone. The sources collected here span enough of the stack to show what that contract looks like in practice, including its benefits and its failure modes.
 

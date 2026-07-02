@@ -33,6 +33,7 @@ sources:
   - 2026-06/2026-06-11t023435-subagents-design-zerostack
   - 2026-06/2026-06-14t094245-agentswarms
   - 2026-06/2026-06-21t112220-agentic-engineering
+  - 2026-07/2026-07-02t052125-jangles-bytepythia
 compiled_at: '2026-06-22T07:22:46.130Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -50,6 +51,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.034866
+last_source_added: '2026-07-02T12:21:25.108Z'
 ---
 Multi-agent systems (MAS) coordinate two or more LLM-backed agents to accomplish tasks that exceed what a single model context or call can handle. Christopher Meiklejohn's eight-part survey provides the most thorough public map of the field, organizing its history into two waves [The Landscape](/reading/2026-05/2026-05-03t110011-getting-up-to-speed-on-multi-agent-systems-part-1-the). Wave 1, roughly 2023, produced coordination proofs-of-concept: CAMEL, Generative Agents, ChatDev, MetaGPT, and AutoGen each demonstrated that agents could divide labor, but all shared failure modes including missing concurrency control and no escalation paths when sub-tasks failed [Wave 1](/reading/2026-05/2026-05-03t110032-getting-up-to-speed-on-multi-agent-systems-part-3-wave-1). Wave 2, 2025-2026, shifted to measuring reliability. The MAST, MAS-FIRE, and Silo-Bench papers found failure rates between 41% and 87% in production conditions, with inter-agent reasoning failures proving structurally harder to address than prompt-level issues [Wave 2](/reading/2026-05/2026-05-03t110046-getting-up-to-speed-on-multi-agent-systems-part-4-wave-2).
 
