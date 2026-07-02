@@ -1,10 +1,10 @@
 ---
 title: Multi-agent systems
 summary: >-
-  Multi-agent systems compose multiple LLM-backed agents into coordinated
-  pipelines; research has moved from 2023 coordination proofs-of-concept to 2025
-  reliability measurement, with production failure rates of 41–87% exposing deep
-  structural problems.
+  Multi-agent systems coordinate multiple LLM-backed agents to divide labor,
+  debate outputs, and parallelize work — a field that has moved from 2023
+  coordination proofs to 2025 reliability measurement, with failure rates still
+  between 41% and 87% in production.
 sources:
   - >-
     2026-04/2026-04-27t114138-scaling-managed-agents-decoupling-the-brain-from-the-hands
@@ -34,12 +34,12 @@ sources:
   - 2026-06/2026-06-14t094245-agentswarms
   - 2026-06/2026-06-21t112220-agentic-engineering
   - 2026-07/2026-07-02t052125-jangles-bytepythia
-compiled_at: '2026-06-22T07:22:46.130Z'
+compiled_at: '2026-07-02T12:32:02.586Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 5442
-    output_tokens: 1236
+    input_tokens: 5431
+    output_tokens: 1202
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -50,15 +50,16 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.034866
-last_source_added: '2026-07-02T12:21:25.108Z'
+  cost_usd: 0.034323
 ---
-Multi-agent systems (MAS) coordinate two or more LLM-backed agents to accomplish tasks that exceed what a single model context or call can handle. Christopher Meiklejohn's eight-part survey provides the most thorough public map of the field, organizing its history into two waves [The Landscape](/reading/2026-05/2026-05-03t110011-getting-up-to-speed-on-multi-agent-systems-part-1-the). Wave 1, roughly 2023, produced coordination proofs-of-concept: CAMEL, Generative Agents, ChatDev, MetaGPT, and AutoGen each demonstrated that agents could divide labor, but all shared failure modes including missing concurrency control and no escalation paths when sub-tasks failed [Wave 1](/reading/2026-05/2026-05-03t110032-getting-up-to-speed-on-multi-agent-systems-part-3-wave-1). Wave 2, 2025-2026, shifted to measuring reliability. The MAST, MAS-FIRE, and Silo-Bench papers found failure rates between 41% and 87% in production conditions, with inter-agent reasoning failures proving structurally harder to address than prompt-level issues [Wave 2](/reading/2026-05/2026-05-03t110046-getting-up-to-speed-on-multi-agent-systems-part-4-wave-2).
+Multi-agent systems (MAS) place multiple LLM-backed agents in structured collaboration, each handling a slice of a task that would overwhelm a single context window or benefit from adversarial checking. The field's trajectory is well mapped by Christopher Meiklejohn's eight-part series: a first wave in 2023 proved coordination was possible, and a second wave from 2025 onward measured how often it breaks ["The Landscape"](/reading/2026-05/2026-05-03t110011-getting-up-to-speed-on-multi-agent-systems-part-1-the).
 
-The taxonomy underlying this research matters. Tran et al.'s four-axis typology, Zhou et al.'s five-component agent model, and Chen et al.'s challenge levels give researchers a shared vocabulary, though Meiklejohn notes that the terms also expose gaps: unevolved agents and missing benchmarks remain underaddressed [Vocabulary](/reading/2026-05/2026-05-03t110027-getting-up-to-speed-on-multi-agent-systems-part-2-the). Benchmark numbers compound the problem because HumanEval and SWE-bench were designed for single agents and cannot measure coordination quality, communication overhead, or failure recovery [Benchmarks](/reading/2026-05/2026-05-03t110114-getting-up-to-speed-on-multi-agent-systems-part-7).
+The canonical 2023 systems — CAMEL, Generative Agents, ChatDev, MetaGPT, and AutoGen — each demonstrated role-based coordination but shared structural gaps: no concurrency control, no escalation paths when agents disagreed ["Wave 1"](/reading/2026-05/2026-05-03t110032-getting-up-to-speed-on-multi-agent-systems-part-3-wave-1). By 2025, empirical papers including MAST, MAS-FIRE, and Silo-Bench put failure rates at 41–87% in production, with inter-agent reasoning failures proving structurally harder to fix than prompt-level issues ["Wave 2"](/reading/2026-05/2026-05-03t110046-getting-up-to-speed-on-multi-agent-systems-part-4-wave-2).
 
-Coordination structure is a recurring design variable. Convergent debate, adversarial debate, shared-notebook state, and the CALM theorem each suit different task shapes, and Meiklejohn argues that distributed systems theory offers formalisms the field has not yet adopted [Debate, State, and Coordination](/reading/2026-05/2026-05-03t110055-getting-up-to-speed-on-multi-agent-systems-part-5-debate). Output verification adds another dimension: modality shift, checking work in a different representation than it was produced, appears to be the strongest reliability lever [Verification Patterns](/reading/2026-05/2026-05-03t110102-getting-up-to-speed-on-multi-agent-systems-part-6).
+Coordination structure matters as much as model capability. Meiklejohn's survey of debate and state papers argues that the right interaction pattern depends on task structure: convergent debate, adversarial debate, and shared-notebook state each fit different problem shapes, and the CALM theorem offers a formal handle on when coordination is avoidable ["Debate, State, and Coordination"](/reading/2026-05/2026-05-03t110055-getting-up-to-speed-on-multi-agent-systems-part-5-debate). Verification follows similar logic: checking work in a different modality than it was produced — modality shift — is the key variable for catching errors ["Verification Patterns"](/reading/2026-05/2026-05-03t110102-getting-up-to-speed-on-multi-agent-systems-part-6).
 
-Production deployments are converging on a few practical patterns. Anthropic's Managed Agents service separates the agent harness, session log, and sandbox into stable, swappable interfaces, enabling multi-brain and multi-sandbox topologies while cutting p50 time-to-first-token by roughly 60% [Managed Agents](/reading/2026-05/2026-05-19t221631-scaling-managed-agents-decoupling-the-brain-from-the-hands). Claude Code's dynamic workflows let an orchestrator write its own orchestration scripts and spin up hundreds of parallel subagents for tasks like codebase migrations or security audits [Dynamic Workflows](/reading/2026-05/2026-05-28t140143-introducing-dynamic-workflows-in-claude-code). Cloudflare's Project Glasswing used parallel hunters, adversarial validators, and cross-repo tracers to improve vulnerability discovery across 50 repositories [Project Glasswing](/reading/2026-05/2026-05-18t091244-project-glasswing-what-mythos-showed-us). Multi-agent debate also surfaces in data generation: the BARRED framework uses multi-agent debate to produce synthetic training data for fine-tuning small classifiers [Vibe Training](/reading/2026-04/2026-04-28t140203-vibe-training-auto-train-a-small-language-model-for-your).
+Production deployments are catching up to the research. Anthropic's Managed Agents service separates the agent harness, session log, and sandbox into stable interfaces, enabling multi-brain, multi-sandbox topologies while cutting p50 time-to-first-token by roughly 60% [Managed Agents](/reading/2026-05/2026-05-19t221631-scaling-managed-agents-decoupling-the-brain-from-the-hands). Claude Code's dynamic workflows let Claude write its own orchestration scripts, spinning up hundreds of parallel subagents for codebase-wide migrations or security audits [Dynamic Workflows](/reading/2026-05/2026-05-28t140143-introducing-dynamic-workflows-in-claude-code). Cloudflare's Project Glasswing ran Anthropic's Mythos model through a harness of parallel hunters, adversarial validators, and cross-repo tracers to find vulnerabilities that generic coding agents missed [Project Glasswing](/reading/2026-05/2026-05-18t091244-project-glasswing-what-mythos-showed-us).
 
-Open problems identified by Meiklejohn include topology-to-reliability mapping, CRDTs for shared state, backpressure protocols, and failure recovery. The field is, in his framing, quietly rediscovering distributed systems without the vocabulary to name it [Open Questions](/reading/2026-05/2026-05-03t110130-getting-up-to-speed-on-multi-agent-systems-part-8-open).
+A recurring open question is whether the field has the vocabulary for what it is building. Meiklejohn argues MAS research is quietly rediscovering distributed systems — topology-to-reliability tradeoffs, CRDTs for shared state, backpressure protocols — without naming it as such ["Open Questions"](/reading/2026-05/2026-05-03t110130-getting-up-to-speed-on-multi-agent-systems-part-8-open). Benchmarks compound the problem: HumanEval and SWE-bench were designed for single agents and cannot measure coordination quality or failure recovery ["Benchmarks"](/reading/2026-05/2026-05-03t110114-getting-up-to-speed-on-multi-agent-systems-part-7).
+
+Multi-agent debate also has direct practical application beyond coordination. The BARRED framework generates synthetic training data through multi-agent debate to fine-tune small classifiers that outperform GPT-4.1 on domain-specific tasks [Vibe Training](/reading/2026-04/2026-04-28t140203-vibe-training-auto-train-a-small-language-model-for-your), showing that agent interaction is useful not only at inference time but as a data-generation mechanism.
