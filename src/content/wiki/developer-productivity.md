@@ -1,10 +1,10 @@
 ---
 title: Developer productivity
 summary: >-
-  Developer productivity spans individual tooling habits, team structures, and
-  AI-assisted workflows, with sources collectively questioning whether speed
-  gains from automation translate into durable output without accompanying
-  judgment, context, and organizational alignment.
+  Developer productivity spans tool choices, workflow design, and organizational
+  context — and the sources collectively argue that what limits output is rarely
+  raw coding speed, but clarity, ownership, and the costs that accumulate when
+  those are missing.
 sources:
   - 2026-04/2026-04-27t145041-agentic-coding-is-a-trap
   - >-
@@ -46,12 +46,12 @@ sources:
   - >-
     2026-06/2026-06-22t185420-code-smells-when-you-get-ai-to-write-your-frontend-tests
   - 2026-06/2026-06-30t173037-a-return-to-two-pizza-culture
-compiled_at: '2026-06-22T07:19:14.786Z'
+compiled_at: '2026-07-02T12:26:30.066Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 8449
-    output_tokens: 1198
+    input_tokens: 8954
+    output_tokens: 1384
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -62,17 +62,16 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.043317
-last_source_added: '2026-07-01T00:30:37.864Z'
+  cost_usd: 0.047622
 ---
-Productivity in software development is not a single variable. It spans the ergonomics of a shell session, the clarity of a CI pipeline, the coherence of a codebase's architecture, and the degree to which an organization shares enough context for work to compound rather than conflict.
+The standard model of developer productivity treats it as a throughput problem: write more code, faster, with fewer interruptions. The sources collected here complicate that picture from several angles.
 
-At the individual tool level, gains are often low-hanging. [Shell key bindings, history search, brace expansion, and script safety flags](/reading/2026-04/2026-04-30t231815-shell-tricks-that-actually-make-life-easier-and-save-your) address the friction developers accumulate across thousands of small operations. [Seven focused JS/TS libraries](/reading/2026-05/2026-05-12t165232-seven-cool-javascript-libraries-you-should-know-about) covering dead code elimination, URL state sync, pattern matching, and schema validation each trim a specific category of repetitive work. [Jujutsu's first-class conflict handling and auto-committed working copy](/reading/2026-05/2026-05-31t164554-jj-vcsjj) reframe version control as less interruptive, and [a concrete workflow for reviewing large pull requests using jj](/reading/2026-05/2026-05-31t164252-reviewing-large-changes-with-jujutsu) shows how that translates to reduced cognitive overhead in practice.
+At the tool layer, productivity gains are real but conditional. [TestDino](/reading/2026-04/2026-04-30t231348-testdino) and [Mendral's CI agent](/reading/2026-04/2026-04-30t195531-what-ci-actually-looks-like-at-a-100-person-team) represent the clearest case: automating test triage and CI failure analysis at PostHog's scale (575K weekly jobs, 33M test executions) demonstrably offloads mechanical work. [Shell tricks](/reading/2026-04/2026-04-30t231815-shell-tricks-that-actually-make-life-easier-and-save-your) and small, focused libraries like those in [the JavaScript library roundup](/reading/2026-05/2026-05-12t165232-seven-cool-javascript-libraries-you-should-know-about) operate at the same layer: reducing friction in tasks that repeat dozens of times per day. [Jujutsu's review workflow](/reading/2026-05/2026-05-31t164252-reviewing-large-changes-with-jujutsu) does the same for the cognitive overhead of large pull requests.
 
-At the systems level, CI at scale is a different problem. [Mendral's account of AI-assisted triage at PostHog](/reading/2026-04/2026-04-30t195531-what-ci-actually-looks-like-at-a-100-person-team) — 575K weekly jobs, 33M test executions — illustrates how human review of flaky tests stops being feasible past a threshold, and automated root-cause analysis with auto-opened fix PRs becomes the only viable path. [TestDino claims 6–8 hours of weekly savings](/reading/2026-04/2026-04-30t231348-testdino) through auto-categorized Playwright failures, pointing in the same direction.
+The AI coding tool question is where the sources diverge most sharply. [Lars Faye argues](/reading/2026-04/2026-04-27t145041-agentic-coding-is-a-trap) that full agentic workflows invert priorities, accelerate skill atrophy, and create vendor dependency, recommending LLMs as secondary delegation tools rather than primary drivers. [Christopher Meiklejohn's firsthand account](/reading/2026-05/2026-05-03t110355-babysitting-the-agent) of building with Claude illustrates the failure mode concretely: the agent declares completion after minimal verification, forcing the developer into manual spot-checking that erodes any time saved. Pete Millspaugh's "Slow Mode" proposal at Val Town goes further, [arguing for an agent design](/reading/2026-05/2026-05-19t193626-slow-mode) that keeps the programmer involved at every step to preserve learning and long-term code ownership. [Jappie Software identifies](/reading/2026-05/2026-05-17t204925-why-most-developers-cant-use-ai-effectively) structural barriers on the other side: weak type systems, organizational processes built for human-speed development, and lack of agent-management training explain why AI tools rarely deliver promised gains even when developers want to use them.
 
-The more contested territory is AI-assisted coding. Several sources converge on a common structural problem: AI tools accelerate code generation without addressing the organizational or cognitive preconditions for that code to be useful. [The Typical Set argues the real bottleneck was always shared context and specification clarity](/reading/2026-05/2026-05-06t110728-the-bottleneck-was-never-the-code), not code-writing speed, meaning agents amplify whatever alignment or misalignment already exists. [Jappie Software identifies five structural barriers](/reading/2026-05/2026-05-17t204925-why-most-developers-cant-use-ai-effectively) — weak type systems, organizational processes calibrated for human-speed development, and absent agent-management training — that explain why promised productivity gains rarely land. [Lars Faye warns that full agentic workflows accelerate skill atrophy](/reading/2026-04/2026-04-27t145041-agentic-coding-is-a-trap) and invert developer priorities toward speed over understanding. [Christopher Meiklejohn's two weeks building with Claude](/reading/2026-05/2026-05-03t110355-babysitting-the-agent) document the overhead of manually verifying what the agent declared complete.
+The code-quality dimension cuts across all of this. [Yusuf Aytas observes](/reading/2026-05/2026-05-22t091746-when-code-is-cheap-does-quality-still-matter) that AI lowers the cost of producing code but not the cost of owning it, so taste and judgment remain load-bearing. [The AI frontend test code-smells catalogue](/reading/2026-06/2026-06-22t185420-code-smells-when-you-get-ai-to-write-your-frontend-tests) documents over 20 recurring patterns, including over-mocking and testing the buggy implementation rather than intended behavior, that demonstrate how speed without judgment generates technical debt faster than any individual could manually. The Founder's Playbook [makes the same point for startups](/reading/2026-06/2026-06-17t130655-the-founders-playbook-building-an-ai-native-startup): agentic technical debt compounds because each AI session re-derives foundational decisions from scratch when no persistent context exists.
 
-Two responses to this problem have emerged. Val Town's proposed [Slow Mode agent](/reading/2026-05/2026-05-19t193626-slow-mode) trades short-term output for genuine understanding, keeping the programmer in the loop at every planning and implementation step. The AI-native startup playbook takes a different angle: [persistent context files and written architectural constraints](/reading/2026-06/2026-06-17t130655-the-founders-playbook-building-an-ai-native-startup) prevent session-to-session drift and keep AI a force multiplier rather than a source of entropy.
+Organizational factors impose a ceiling that tools cannot raise. [The Typical Set argues](/reading/2026-05/2026-05-06t110728-the-bottleneck-was-never-the-code) the bottleneck was never code volume but shared context, specification clarity, and management coherence. [Poor onboarding](/reading/2026-05/2026-05-08t112608-your-onboarding-is-a-hazing-ritual-and-you-call-it-agile) systematically destroys the early months of a new engineer's contribution window. [On-call burnout](/reading/2026-05/2026-05-19t134831-finite-attention-why-burnout-isnt-your-fault-and-how) stems from systems designed without regard for human attention limits. [Senior developer communication failures](/reading/2026-05/2026-05-13t060018-why-senior-developers-fail-to-communicate-their-expertise) reduce organizational leverage on the engineers who understand systems most deeply.
 
-Quality judgment remains a human responsibility regardless of output speed. [Yusuf Aytas notes that AI lowers code production cost but not ownership cost](/reading/2026-05/2026-05-22t091746-when-code-is-cheap-does-quality-still-matter), and LLMs can generate polished technical debt faster than any individual engineer. Organizational drag compounds individual tool choices: [poor onboarding structures](/reading/2026-05/2026-05-08t112608-your-onboarding-is-a-hazing-ritual-and-you-call-it-agile) and [on-call systems that exceed human attention limits](/reading/2026-05/2026-05-19t134831-finite-attention-why-burnout-isnt-your-fault-and-how) erode capacity in ways no individual tool improvement recovers.
+A consistent thread across sources is that faster code generation does not automatically translate to faster shipping or better outcomes. [Werner Vogels notes](/reading/2026-06/2026-06-30t173037-a-return-to-two-pizza-culture) that compressed prototyping time changes process design at Amazon, but the underlying discipline, working backwards from the customer, remains. [Fagner Brack's case](/reading/2026-04/2026-04-30t155134-learn-algorithms-for-interviews-forget-them-for-work) that algorithm interview skills weakly correlate with production performance points at the same gap: the skills that produce output in narrow, controlled conditions are not the skills that navigate ambiguous, messy systems. Productivity, across these sources, is ultimately about closing that gap.
