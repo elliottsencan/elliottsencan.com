@@ -1,10 +1,9 @@
 ---
 title: Distributed systems
 summary: >-
-  Distributed systems underpin modern infrastructure from container runtimes to
-  durable workflow engines, and the field's formalisms around coordination,
-  state, and failure are increasingly relevant to emerging multi-agent AI
-  architectures.
+  A field covering how independent processes coordinate across failure
+  boundaries, whose core problems of state, consistency, and fault tolerance
+  keep resurfacing in new contexts from multi-agent AI to durable execution.
 sources:
   - 2026-05/2026-05-01t112302-the-three-durable-function-forms
   - 2026-05/2026-05-03t105238-radar-or-the-missing-open-source-kubernetes-ui
@@ -24,12 +23,12 @@ sources:
     2026-06/2026-06-10t223404-how-to-read-distributed-traces-when-you-didnt-write-the-code
   - 2026-06/2026-06-21t231758-nasa-technical-report-20070005136
   - 2026-06/2026-06-30t185207-when-impressive-performance-gains-do-not-matter
-compiled_at: '2026-06-22T07:21:26.058Z'
+compiled_at: '2026-07-04T21:20:04.335Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 4090
-    output_tokens: 826
+    input_tokens: 4243
+    output_tokens: 768
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -40,15 +39,16 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.02466
-last_source_added: '2026-07-01T01:52:07.468Z'
+  cost_usd: 0.024249
 ---
-Distributed systems thinking shows up across several layers of the modern software stack. At the infrastructure level, Kubernetes clusters coordinate workloads across nodes, and tools like [Radar](/reading/2026-05/2026-05-03t105238-radar-or-the-missing-open-source-kubernetes-ui) address the observability gap that emerges when operators need to reason about topology, events, and deployments across multiple clusters simultaneously. Below Kubernetes, container isolation itself relies on Linux primitives, and [Ivan Velichko's walkthrough](/reading/2026-05/2026-05-04t231858-how-container-filesystem-works-building-a-docker-like) of assembling a container from scratch with mount namespaces and pivot_root shows how much distributed-systems-style isolation is baked into the kernel.
+Distributed systems is less a single technology than a recurring set of problems: how do independent processes share state, coordinate work, and recover from failures without a single point of control? The sources here show those problems appearing across wildly different contexts.
 
-At the application layer, durable execution frameworks solve the classic distributed problem of keeping stateful workflows alive across failures without long-running processes. [Jack Vanlightly's taxonomy](/reading/2026-05/2026-05-01t112302-the-three-durable-function-forms) of stateless functions, sessions, and actors maps the behavior-state continuum across platforms like Temporal, Restate, and DBOS. [Depot's CI orchestrator](/reading/2026-05/2026-05-19t110000-building-ci-with-lambda-durable-functions) applies this directly, using a two-layer Lambda hierarchy with callback-driven coordination to run checkpointed workflows without keeping a process alive.
+On the formal verification side, [SysMoBench](/reading/2026-05/2026-05-08t175639-can-llms-model-real-world-systems-in-tla) benchmarks LLMs on writing TLA+ specifications for real systems, finding near-perfect syntax scores but only ~46% conformance to actual behavior. The gap matters because TLA+ exists precisely to catch the edge cases that informal reasoning misses in distributed protocols.
 
-Observability in distributed systems requires reasoning about causality across service boundaries. [SigNoz's guide](/reading/2026-06/2026-06-10t223404-how-to-read-distributed-traces-when-you-didnt-write-the-code) to reading distributed traces covers span anatomy, critical-path analysis, and patterns like N+1 staircases, which are the practical tools for diagnosing failures in systems you didn't build.
+The same formalisms are being rediscovered, without the vocabulary, in multi-agent AI research. Christopher Meiklejohn's series argues directly that MAS researchers are reinventing distributed systems: [Part 5](/reading/2026-05/2026-05-03t110055-getting-up-to-speed-on-multi-agent-systems-part-5-debate) applies the CALM theorem to coordination structure, and [Part 8](/reading/2026-05/2026-05-03t110130-getting-up-to-speed-on-multi-agent-systems-part-8-open) maps open problems like CRDTs for shared state, backpressure protocols, and failure recovery directly onto classical distributed systems research.
 
-Formal verification is a harder problem. [SysMoBench](/reading/2026-05/2026-05-08t175639-can-llms-model-real-world-systems-in-tla) found that LLMs score near-perfect on TLA+ syntax but only around 46% on behavioral conformance, meaning they reproduce textbook protocols rather than faithfully modeling actual implementations. This is a significant gap when the goal is specifying real distributed systems.
+Durable execution is another surface where the same questions arise. [Jack Vanlightly's taxonomy](/reading/2026-05/2026-05-01t112302-the-three-durable-function-forms) maps stateless functions, sessions, and actors along a behavior-state continuum, showing how Temporal, Restate, DBOS, and Resonate each make different tradeoffs about where state lives and how failures are handled. [Depot's CI orchestrator](/reading/2026-05/2026-05-19t110000-building-ci-with-lambda-durable-functions) applies this in practice, using AWS Lambda durable functions with a two-layer hierarchy and callback-driven coordination to run stateful workflows without a long-lived process.
 
-Christopher Meiklejohn's multi-agent systems series argues that the MAS research community is quietly rediscovering distributed systems problems without the vocabulary to name them. [Part 5](/reading/2026-05/2026-05-03t110055-getting-up-to-speed-on-multi-agent-systems-part-5-debate) invokes the CALM theorem and notes that coordination structure must match task structure. [Part 8](/reading/2026-05/2026-05-03t110130-getting-up-to-speed-on-multi-agent-systems-part-8-open) maps open questions including CRDTs for shared agent state, backpressure protocols, and topology-to-reliability guarantees. The implication is that classical distributed systems theory offers formalisms the field needs but has not yet adopted.
+Observability across distributed boundaries has its own discipline. [SigNoz's trace-reading guide](/reading/2026-06/2026-06-10t223404-how-to-read-distributed-traces-when-you-didnt-write-the-code) covers span anatomy, critical-path analysis, and patterns like N+1 staircases, emphasizing that understanding a trace in unfamiliar code is a distinct skill from writing the code itself.
+
+Finally, [Colin Breck's piece on performance gains](/reading/2026-06/2026-06-30t185207-when-impressive-performance-gains-do-not-matter) is a useful corrective: pipeline backpressure and discrete capacity increments mean that local throughput improvements often do not change system-level outcomes, a point that applies anywhere components are coupled in a pipeline.
