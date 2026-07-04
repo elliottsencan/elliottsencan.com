@@ -1,10 +1,10 @@
 ---
 title: Production systems
 summary: >-
-  The infrastructure, operational patterns, and engineering discipline behind
-  keeping software running reliably at scale, spanning durable execution,
-  observability, testing strategy, deployment safety, and performance
-  optimization.
+  The engineering decisions that keep software running reliably in production,
+  from durable execution and observability to testing discipline, configuration
+  hazards, and the constraints that determine whether performance gains actually
+  matter.
 sources:
   - >-
     2026-04/2026-04-29t172018-how-to-build-scalable-web-apps-with-openais-privacy-filter
@@ -38,12 +38,12 @@ sources:
     2026-06/2026-06-18t090801-how-i-audit-a-legacy-rails-codebase-in-the-first-week
   - 2026-06/2026-06-21t130559-what-is-inference-engineering
   - 2026-06/2026-06-30t185207-when-impressive-performance-gains-do-not-matter
-compiled_at: '2026-06-22T07:20:33.651Z'
+compiled_at: '2026-07-04T21:26:13.346Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 6013
-    output_tokens: 1086
+    input_tokens: 6166
+    output_tokens: 1074
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -54,17 +54,18 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.034329
-last_source_added: '2026-07-01T01:52:07.468Z'
+  cost_usd: 0.034608
 ---
-Production systems are where abstractions meet consequences. Several sources here address a common core problem: how do you build software that survives failure, scales under load, and remains debuggable after the fact?
+Running software in production is a different discipline from building it. The gap between a working prototype and a system that survives real traffic, partial failures, and operational entropy is where most of the hard-won lessons live.
 
-Durable execution sits at one corner of this. [Temporal](/reading/2026-04/2026-04-30t231511-temporal) persists workflow state at every step so distributed applications recover from failures without manual reconciliation. Jack Vanlightly's taxonomy [of durable function forms](/reading/2026-05/2026-05-01t112302-the-three-durable-function-forms) extends this, breaking execution models into stateless functions, sessions, and actors across a behavior-state continuum, then mapping how Temporal, Restate, DBOS, and Resonate each implement these patterns. Depot takes a related approach in CI: their orchestrator [uses AWS Lambda durable functions](/reading/2026-05/2026-05-19t110000-building-ci-with-lambda-durable-functions) to run a stateful, checkpointed scheduler without keeping a long-lived process alive, avoiding the fragility of persistent servers.
+Durable execution addresses one of the most persistent failure modes in distributed systems: processes that die mid-workflow and leave no recoverable state. [Temporal](/reading/2026-04/2026-04-30t231511-temporal) persists workflow state at every step so applications recover automatically without manual reconciliation. Jack Vanlightly's taxonomy of [durable function forms](/reading/2026-05/2026-05-01t112302-the-three-durable-function-forms) — stateless functions, sessions, and actors — shows how Temporal, Restate, DBOS, and Resonate each implement these patterns along a behavior-state continuum. Depot's CI orchestrator takes a similar approach, using [AWS Lambda durable functions](/reading/2026-05/2026-05-19t110000-building-ci-with-lambda-durable-functions) to checkpoint a stateful workflow scheduler without keeping a long-lived process alive.
 
-Observability is the other side of reliability. [Distributed traces](/reading/2026-06/2026-06-10t223404-how-to-read-distributed-traces-when-you-didnt-write-the-code) give engineers a way into unfamiliar codebases, with span anatomy, critical-path analysis, and N+1 staircase patterns serving as diagnostic vocabulary. LangChain's Harrison Chase argues that [traces alone aren't enough](/reading/2026-05/2026-05-10t140531-agent-observability-needs-feedback-to-power-learning) for agentic systems; attaching feedback signals to traces is what turns observability into a learning loop. Anton Zaides distills production incident experience into [seven engineering rules](/reading/2026-06/2026-06-10t073045-the-unwritten-laws-of-software-engineering), with rollback-before-debugging and treating every external dependency as a future outage near the top.
+Observability is necessary but not sufficient. Distributed traces reveal what happened and where time went — a [practical guide to reading traces in unfamiliar codebases](/reading/2026-06/2026-06-10t223404-how-to-read-distributed-traces-when-you-didnt-write-the-code) covers span anatomy, critical-path analysis, and common patterns like N+1 staircases. LangChain's Harrison Chase makes the case that [traces alone don't improve agentic systems](/reading/2026-05/2026-05-10t140531-agent-observability-needs-feedback-to-power-learning): attaching feedback signals to traces is what turns observability into a learning loop.
 
-Testing strategy in production is its own discipline. The [Playwright staging-vs-production framework](/reading/2026-05/2026-05-15t120337-playwright-testing-in-staging-vs-production) outlines which flows belong where and what operational costs production testing carries. Emphere's approach to [testing a security tool](/reading/2026-06/2026-06-11t024225-testing-a-security-tool-like-it-can-hurt-people) goes further, using fixture invariants and red runs that prove the system fails loudly rather than silently overclaiming certainty.
+Testing strategy in production requires explicit decisions about what belongs in staging versus live environments. A [Playwright decision framework](/reading/2026-05/2026-05-15t120337-playwright-testing-in-staging-vs-production) covers which flows belong where and the operational costs of production testing. Emphere's approach to a container security tool goes further: [deterministic assurance with real-kernel runners and red runs](/reading/2026-06/2026-06-11t024225-testing-a-security-tool-like-it-can-hurt-people) that prove the system fails loudly rather than overclaims certainty.
 
-Deployment safety surfaces in the [merge queue incident post-mortem](/reading/2026-05/2026-05-03t150555-what-happens-if-a-merge-queue-builds-on-the-wrong-commit), where a GitHub bug silently deleted thousands of lines by building off the wrong base commit. Trunk avoided the incident through an architectural choice made before the bug existed.
+Configuration is a routine source of subtle production bugs. The [YAML Norway problem](/reading/2026-05/2026-05-18t113714-yaml-thats-norway-problem) — where `NO` parses as `false` — persists in widely used libraries more than a decade after the spec fixed it. A [GitHub merge queue bug](/reading/2026-05/2026-05-03t150555-what-happens-if-a-merge-queue-builds-on-the-wrong-commit) that silently deleted code from main branches illustrates how architectural choices at the tooling level propagate into production incidents.
 
-Performance at scale ties several threads together. Linear's [near-instant interface](/reading/2026-06/2026-06-11t111011-hows-linear-so-fast-a-technical-breakdown) depends on local-first IndexedDB sync, optimistic updates, and service worker precaching rather than faster servers. On the LLM side, Everpure's work on [KV cache persistence](/reading/2026-05/2026-05-20t073125-how-to-cut-llm-inference-costs-with-kv-caching) and [granular-prompt caching](/reading/2026-05/2026-05-20t073144-maximizing-llm-efficiency-granular-prompt-caching-with-pure) reframes the attention cache as a shared data asset injected from fast storage, cutting prefill costs by up to 20x. Anthropic's [self-service analytics stack](/reading/2026-06/2026-06-04t195339-how-anthropic-enables-self-service-data-analytics-with) shows a production AI system built on canonical datasets and a semantic layer to achieve 95% automation with measurable accuracy, avoiding the brittleness of open-ended warehouse access.
+Performance work in production is bounded by constraints that are easy to ignore. Colin Breck's analysis of [when impressive performance gains don't matter](/reading/2026-06/2026-06-30t185207-when-impressive-performance-gains-do-not-matter) identifies three: attention thresholds, discrete capacity increments, and pipeline backpressure — any of which can nullify an order-of-magnitude improvement. Anton Zaides's [unwritten laws of software engineering](/reading/2026-06/2026-06-10t073045-the-unwritten-laws-of-software-engineering), distilled from real incidents, reinforce the same instinct: roll back before debugging, and treat every external dependency as a future outage.
+
+At the infrastructure level, container isolation via [mount namespaces and pivot_root](/reading/2026-05/2026-05-04t231858-how-container-filesystem-works-building-a-docker-like) and LLM serving optimizations like [KV cache persistence](/reading/2026-05/2026-05-20t073125-how-to-cut-llm-inference-costs-with-kv-caching) both reflect the same underlying concern: reducing the cost and fragility of repeated work in live systems.

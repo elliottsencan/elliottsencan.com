@@ -1,9 +1,10 @@
 ---
 title: Responsive design
 summary: >-
-  Modern responsive design is shifting from viewport breakpoints toward
-  intrinsic CSS primitives — fluid sizing, container queries, and
-  component-level layouts — that adapt without explicit breakpoint declarations.
+  Responsive design is shifting from viewport breakpoints toward intrinsic,
+  component-aware layouts — using container queries, fluid clamp() values, and
+  modern CSS primitives that let components respond to their own context rather
+  than the screen size.
 sources:
   - 2026-04/2026-04-24t085352-building-a-ui-without-breakpoints
   - 2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp
@@ -17,12 +18,12 @@ sources:
     2026-06/2026-06-10t220929-navigating-the-age-old-problem-of-checkmarks-in-ui-with
   - >-
     2026-06/2026-06-30t213959-why-css-style-queries-are-a-bigger-deal-than-you-think
-compiled_at: '2026-06-18T21:53:59.568Z'
+compiled_at: '2026-07-04T21:26:56.640Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 3567
-    output_tokens: 666
+    input_tokens: 3679
+    output_tokens: 656
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -33,17 +34,12 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.020691
-last_source_added: '2026-07-01T04:39:59.931Z'
+  cost_usd: 0.020877
 ---
-The dominant pattern in responsive design for over a decade has been viewport breakpoints: pick a handful of pixel thresholds, write media queries for each, and override layout and type sizes at those points. A cluster of recent CSS writing argues this model should become the exception rather than the rule.
+The traditional model of responsive design anchors layout changes to viewport widths via media queries. [Building a UI Without Breakpoints](/reading/2026-04/2026-04-24t085352-building-a-ui-without-breakpoints) argues this model is increasingly a mismatch for component-first UIs, where a sidebar card has no idea what viewport it sits in. The proposed replacement combines intrinsic layout techniques, container queries, and container units so components respond to their own available space. Media queries are reserved for device capabilities and user preferences, not layout pivots.
 
-[Amit Sheen](/reading/2026-04/2026-04-24t085352-building-a-ui-without-breakpoints) makes the case directly: intrinsic grid layouts, `clamp()` fluid values, container units, and container queries do the work that breakpoints used to do, more accurately and with less code. Media queries get reserved for genuine device-capability differences — pointer type, color scheme preferences — not for pixel counts.
+Typography follows the same arc. [Modern Fluid Typography Using CSS Clamp](/reading/2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp) shows how `clamp()` eliminates discrete type breakpoints by interpolating between a minimum and maximum size across a defined viewport range. The math is mechanical once you have the two endpoint sizes and viewport widths, but accessibility requires care: using `rem` units in `clamp()` lets users who have set a browser font size preference see the scale honored. [Type Scale Graphs](/reading/2026-05/2026-05-05t183935-type-scale-graphs) from Utopia extends this by visualizing an entire modular type scale across the min-to-max viewport range, making the relationships between steps legible at a glance rather than only checkable in code.
 
-Fluid typography is the clearest demonstration of the shift. [Adrian Bece](/reading/2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp) walks through the math behind `clamp()` preferred-value parameters, including the case for `rem`-based values to preserve accessibility when users scale their browser's default font size. [Utopia](/reading/2026-05/2026-05-05t183935-type-scale-graphs) extends this with a graph-based visualisation of fluid type scales, making it easier to reason about how modular scale steps behave across the full viewport range rather than at discrete breakpoints.
+Beyond layout and typography, modern CSS is absorbing capabilities that previously required JavaScript libraries. [The Great CSS Expansion](/reading/2026-04/2026-04-30t231909-the-great-css-expansion) documents anchor positioning, scroll-driven animations, and view transitions landing as platform primitives, cutting hundreds of kilobytes of dependency weight. [CSS Style Queries](/reading/2026-06/2026-06-30t213959-why-css-style-queries-are-a-bigger-deal-than-you-think) extend container queries to CSS custom properties, letting a component change its own appearance when a parent sets a design token — a pattern that previously required preprocessors or build steps. Jim Nielsen's case for [separate HTML pages unified by CSS view transitions](/reading/2026-05/2026-05-05t091632-building-websites-with-llms) is a parallel move: reach for the platform before reaching for JavaScript.
 
-The broader CSS platform is catching up in ways that reinforce this direction. [Pavel Laptev](/reading/2026-04/2026-04-30t231909-the-great-css-expansion) documents how anchor positioning, scroll-driven animations, and view transitions are now native CSS features, replacing JavaScript libraries that previously handled those concerns. [Jim Nielsen](/reading/2026-05/2026-05-05t091632-building-websites-with-llms) approaches the same platform-native impulse from an architecture angle, arguing that CSS cross-document view transitions make separate linked HTML pages a viable and simpler alternative to JavaScript-powered navigation.
-
-[Sunkanmi Fafowora](/reading/2026-06/2026-06-10t220929-navigating-the-age-old-problem-of-checkmarks-in-ui-with) adds a progressive-enhancement note: the native CSS `::checkmark` pseudo-element can replace custom JavaScript dropdown implementations, though limited Safari and Firefox support means breakpoint-style fallback thinking still applies at the browser-capability level.
-
-Taken together, the pattern is consistent: write CSS that responds to its content and container first, use platform primitives before reaching for scripting or explicit overrides, and treat media queries as a targeted tool for capability detection.
+Taken together, these sources describe a consistent direction. Responsive design is decoupling from the viewport as the primary axis of control and distributing that intelligence into components, fluid values, and CSS primitives that respond to their immediate context.

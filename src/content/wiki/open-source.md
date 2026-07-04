@@ -1,9 +1,9 @@
 ---
 title: Open source
 summary: >-
-  Open source spans infrastructure, tooling, and LLM ecosystems, with sources
-  spanning Kubernetes UIs, local inference runtimes, version control, and
-  security vulnerabilities that arise from the ecosystem's openness.
+  Open source spans tooling, security risks, platform infrastructure, and
+  community trust, with sources ranging from local LLM runners to code forges,
+  supply-chain attacks, and performance-optimized libraries.
 sources:
   - 2026-04/2026-04-24t093356-unsloth
   - >-
@@ -36,12 +36,12 @@ sources:
   - 2026-06/2026-06-23t231556-if-i-could-make-my-own-github
   - 2026-07/2026-07-02t052125-jangles-bytepythia
   - 2026-07/2026-07-03t044356-project-gutenberg-document-33283
-compiled_at: '2026-06-22T07:17:18.261Z'
+compiled_at: '2026-07-04T21:25:16.446Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 9703
-    output_tokens: 1010
+    input_tokens: 10131
+    output_tokens: 1185
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -52,17 +52,20 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.044259
-last_source_added: '2026-07-03T11:43:56.187Z'
+  cost_usd: 0.048168
 ---
-Open source is both a licensing model and a social contract: code is public, forkable, and improvable by anyone. The sources collected here span enough of the stack to show what that contract looks like in practice, including its benefits and its failure modes.
+Open source is not a single phenomenon but a set of overlapping practices and tensions: releasing code publicly, building community infrastructure around it, and navigating the commercial pressures that often follow adoption.
 
-On the tooling side, [Radar](/reading/2026-05/2026-05-03t105219-radar-open-source-kubernetes-ui) is a single-binary, Apache 2.0 Kubernetes UI that consolidates topology, Helm, GitOps, and security audits into one interface, replacing the five-tool patchwork most platform teams assemble. The project is explicit that no cloud account is required, positioning openness as a guarantee against vendor lock-in. [Jujutsu](/reading/2026-05/2026-05-31t164554-jj-vcsjj) is a Git-compatible VCS that auto-commits the working copy and treats conflicts as first-class objects; it extends the open ecosystem around version control rather than replacing it. [oobabooga/textgen](/reading/2026-05/2026-05-05t071908-oobaboogatextgen) provides a fully offline desktop interface for running LLMs with an OpenAI-compatible API, and [Unsloth](/reading/2026-04/2026-04-24t093356-unsloth) offers custom training kernels delivering up to 30x faster fine-tuning than FlashAttention 2. Both depend on open model weights to function.
+Several sources here are open-source tools for running LLMs locally. [Unsloth](/reading/2026-04/2026-04-24t093356-unsloth) delivers fine-tuning and inference with custom kernels at dramatically lower memory cost than alternatives. [oobabooga/textgen](/reading/2026-05/2026-05-05t071908-oobaboogatextgen) offers a fully offline desktop app with an OpenAI-compatible API, multiple backends, and LoRA support. [Hindsight](/reading/2026-05/2026-05-03t173422-vectorize-iohindsight) is an open-source agent memory system benchmarked on LongMemEval. [Radar](/reading/2026-05/2026-05-03t105238-radar-or-the-missing-open-source-kubernetes-ui), released under Apache 2.0, collapses the typical Kubernetes toolchain into a single binary. These projects share a pattern: taking infrastructure that might otherwise be proprietary and making it inspectable, forkable, and self-hostable.
 
-The LLM local-inference space shows how open source can fragment. [Ollama](/reading/2026-05/2026-05-05t071447-friends-dont-let-friends-use-ollama) is criticized for obscuring its llama.cpp dependency, shipping inferior inference performance, introducing misleading model naming, and launching a closed-source GUI while pivoting toward a VC-funded cloud model. The piece frames this as a betrayal of open-source values by a project that built its reputation on them. Ollama's trajectory sits in contrast to tools like [Unsloth](/reading/2026-04/2026-04-24t093356-unsloth) and [oobabooga/textgen](/reading/2026-05/2026-05-05t071908-oobaboogatextgen) that remain local-first and transparent about their dependencies.
+That inspectability is not a complete safety guarantee. The [invisible Unicode supply-chain attack](/reading/2026-04/2026-04-30t231634-supply-chain-attack-using-invisible-code-hits-github-and) reported by Ars Technica placed malicious payloads in 151 npm and GitHub packages encoded in variation-selector characters, invisible to reviewers and static analysis. Open code is readable in principle; in practice, review capacity is finite and attackers exploit that gap.
 
-Openness also creates attack surface. Attackers uploaded 151 malicious npm and GitHub packages encoding payloads in invisible Unicode variation-selector characters, making them undetectable by code reviewers and static analysis tools while remaining executable at runtime [supply-chain attack](/reading/2026-04/2026-04-30t231634-supply-chain-attack-using-invisible-code-hits-github-and). The open registry model that makes npm useful is the same model that lets bad actors publish freely.
+Bug rates in open-source projects are another angle on the same problem. Daniel Stenberg's [analysis of curl's vulnerability history](/reading/2026-05/2026-05-02t094735-approaching-zero-bugs) found no measurable sign that AI-assisted static analysis is reducing latent bugs toward zero, even in a well-maintained project with decades of scrutiny.
 
-Daniel Stenberg's analysis of curl's bug history argues that even with AI-assisted static analysis, open-source projects show no measurable trend toward zero latent bugs [Approaching zero bugs](/reading/2026-05/2026-05-02t094735-approaching-zero-bugs). The implication is that openness enables inspection and contribution but does not automatically produce correctness.
+Platform trust is a recurring theme. David Bushell's [critique of GitHub](/reading/2026-05/2026-05-10t205349-github-is-sinking) argues that reliability and quality have deteriorated sharply under Microsoft, and recommends migration to Codeberg, Forgejo, or self-hosted forges. Mat Duggan's [wishlist for a better code forge](/reading/2026-06/2026-06-23t231556-if-i-could-make-my-own-github) is a concrete list of missing capabilities: pre-commit remote CI, stacked PRs as first-class citizens, signed and offline-usable Actions, and a smaller self-hostable unit. Both pieces reflect dissatisfaction with centralised gatekeeping of open-source infrastructure.
 
-Smaller open-source artifacts round out the picture: a zero-dependency npm package of Unicode spinner animations [unicode-animations](/reading/2026-06/2026-06-17t075738-gunnargray-devunicode-animations), a step-by-step optimization of Rust's image-rs blur function [image-rs](/reading/2026-05/2026-05-14t151252-5-faster-fastblur-in-image-rs), and an open-source agent memory system benchmarked against LongMemEval [hindsight](/reading/2026-05/2026-05-03t173422-vectorize-iohindsight). Each reflects the norm of publishing code publicly, accepting contributions, and building on prior work, which remains the connective tissue of most modern software development.
+Commercial drift is a distinct but related risk. The [critique of Ollama](/reading/2026-05/2026-05-05t071447-friends-dont-let-friends-use-ollama) argues the project obscured its llama.cpp dependency, ships inferior inference, introduced misleading model naming, launched a closed-source GUI, and is now pivoting toward VC-funded cloud services, betraying the local-first premise it launched on. This is a pattern the open-source ecosystem has seen repeatedly: a tool gains adoption on open principles, then monetises in ways that compromise them.
+
+Smaller open-source contributions also appear throughout these sources. [how-to-train-your-gpt](/reading/2026-05/2026-05-06t173338-raiyanyahyahow-to-train-your-gpt) is a fully annotated textbook for building a decoder-only LLM from scratch. [unicode-animations](/reading/2026-06/2026-06-17t075738-gunnargray-devunicode-animations) is a zero-dependency npm package of spinner frame data under MIT. Arthur Pastel's [optimisation of image-rs fast\_blur](/reading/2026-05/2026-05-14t151252-5-faster-fastblur-in-image-rs) is a contribution to the Rust image ecosystem. [Jujutsu](/reading/2026-05/2026-05-31t164554-jj-vcsjj) is a Git-compatible VCS with first-class conflict objects. These span the range from educational resources to utility libraries to core tooling, all released under permissive terms.
+
+Across these sources, open source functions simultaneously as a distribution model, a trust signal, a security surface, and a site of ongoing tension between community expectations and commercial incentives.
