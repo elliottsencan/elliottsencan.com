@@ -18,6 +18,7 @@ sources:
   - 2026-05/2026-05-18t113714-yaml-thats-norway-problem
   - 2026-06/2026-06-13t081411-signals-the-push-pull-based-algorithm
   - 2026-06/2026-06-17t075738-gunnargray-devunicode-animations
+  - 2026-07/2026-07-04t141323-the-vertical-codebase
 compiled_at: '2026-06-22T07:24:57.111Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -35,6 +36,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.034539
+last_source_added: '2026-07-04T21:13:23.217Z'
 ---
 Good API design is fundamentally about managing what callers need to know. The principle of deep modules, described in [AI Likes Deep Modules](/reading/2026-05/2026-05-04t231343-ai-likes-deep-modules), puts this directly: a small interface hiding a large implementation reduces cognitive load for both human developers and LLMs working with the codebase. Shallow modules that expose implementation detail create the opposite effect, spreading complexity outward.
 

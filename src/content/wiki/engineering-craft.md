@@ -51,6 +51,7 @@ sources:
   - 2026-06/2026-06-30t173037-a-return-to-two-pizza-culture
   - 2026-06/2026-06-30t185207-when-impressive-performance-gains-do-not-matter
   - 2026-07/2026-07-03t044356-project-gutenberg-document-33283
+  - 2026-07/2026-07-04t141323-the-vertical-codebase
 compiled_at: '2026-06-22T07:19:42.344Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -68,7 +69,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.039111
-last_source_added: '2026-07-03T11:43:56.187Z'
+last_source_added: '2026-07-04T21:13:23.217Z'
 ---
 Engineering craft is not a single technique but a cluster of dispositions that show up consistently across different layers of the stack. It includes knowing when to reach for a tool and when the tool is the problem, how to structure code so future readers can reason about it, and how to communicate what you built and why.
 
