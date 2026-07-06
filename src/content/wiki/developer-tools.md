@@ -21,6 +21,7 @@ sources:
   - 2026-05/2026-05-19t110000-building-ci-with-lambda-durable-functions
   - 2026-05/2026-05-27t181732-build-a-desktop-extension-with-mcpb
   - 2026-06/2026-06-04t163601-anthropicsdefending-code-reference-harness
+  - 2026-07/2026-07-05t170602-building-a-cloud
 compiled_at: '2026-06-22T07:12:35.962Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -38,6 +39,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.027405
+last_source_added: '2026-07-06T00:06:02.351Z'
 ---
 Developer tools in practice cover a wide surface: runtime optimization, infrastructure orchestration, documentation, security scanning, and UX research, all aimed at making software work easier to build and ship.
 

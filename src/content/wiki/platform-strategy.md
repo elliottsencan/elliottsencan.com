@@ -18,6 +18,7 @@ sources:
     2026-06/2026-06-17t130655-the-founders-playbook-building-an-ai-native-startup
   - 2026-06/2026-06-21t231454-spacex-and-the-sentient-sun
   - 2026-06/2026-06-22t170134-if-your-product-is-great-it-doesnt-need-to-be-good
+  - 2026-07/2026-07-05t170602-building-a-cloud
 compiled_at: '2026-06-22T07:25:29.655Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -35,7 +36,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.030057
-last_source_added: '2026-06-23T00:01:34.480Z'
+last_source_added: '2026-07-06T00:06:02.351Z'
 ---
 Platform strategy is the set of choices about which layer of a stack to own, what to expose to others, and where to draw the line between commodity infrastructure and defensible differentiation. Several sources illuminate different facets of the same core tension.
 
