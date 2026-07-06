@@ -1,9 +1,9 @@
 ---
 title: Observability
 summary: >-
-  Observability spans infrastructure, distributed systems, and AI agents — the
-  practice of making internal system state legible enough to debug, improve, and
-  govern behavior without guessing.
+  Observability spans infrastructure visibility, distributed tracing, and AI
+  agent monitoring — with a consistent tension between collecting data and
+  making that data actionable for the humans and systems that depend on it.
 sources:
   - 2026-05/2026-05-03t105219-radar-open-source-kubernetes-ui
   - 2026-05/2026-05-03t105238-radar-or-the-missing-open-source-kubernetes-ui
@@ -19,12 +19,12 @@ sources:
     2026-06/2026-06-10t223404-how-to-read-distributed-traces-when-you-didnt-write-the-code
   - 2026-06/2026-06-11t024225-testing-a-security-tool-like-it-can-hurt-people
   - 2026-06/2026-06-23t232444-repowise-devrepowise
-compiled_at: '2026-06-22T07:25:12.052Z'
+compiled_at: '2026-07-06T00:18:05.955Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 3500
-    output_tokens: 796
+    input_tokens: 3618
+    output_tokens: 804
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -35,17 +35,16 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.02244
-last_source_added: '2026-06-24T06:24:44.848Z'
+  cost_usd: 0.022914
 ---
-Observability means being able to infer what a system is doing from the outputs it exposes. In distributed infrastructure, that usually means traces, logs, and metrics. In AI systems, it increasingly means attaching feedback signals to those traces so that what you observe can actually change behavior.
+Observability starts with making the interior state of a system legible from its outputs. In practice, that means different things at different layers.
 
-For Kubernetes operators, observability has historically meant stitching together kubectl, Helm, and several other tools into a picture of cluster state. [Radar](/reading/2026-05/2026-05-03t105219-radar-open-source-kubernetes-ui) and its [companion landing page](/reading/2026-05/2026-05-03t105238-radar-or-the-missing-open-source-kubernetes-ui) consolidate topology, live traffic, events, and security audits into a single binary, treating the patchwork of tools as the problem to solve.
+At the infrastructure layer, tools like Radar address it by consolidating what platform teams currently piece together from kubectl and five or more separate utilities [Radar HQ](/reading/2026-05/2026-05-03t105238-radar-or-the-missing-open-source-kubernetes-ui). A single pane across topology, events, live traffic, and security checks reduces the cognitive cost of understanding cluster state [Product Hunt](/reading/2026-05/2026-05-03t105219-radar-open-source-kubernetes-ui).
 
-At the trace level, reading distributed traces in unfamiliar codebases is a skill of its own. [SigNoz's guide](/reading/2026-06/2026-06-10t223404-how-to-read-distributed-traces-when-you-didnt-write-the-code) covers span anatomy, critical-path analysis, and recognizing patterns like N+1 staircases — the mechanics of working backward from a slow span to the code responsible for it.
+At the application layer, distributed traces are the primary artifact. Reading a trace in an unfamiliar codebase requires understanding span anatomy, identifying the critical path, and recognizing patterns like N+1 staircases that point to specific root causes [SigNoz](/reading/2026-06/2026-06-10t223404-how-to-read-distributed-traces-when-you-didnt-write-the-code). The SigNoz guide makes the point that observability data is only useful if you can navigate from a span back to the responsible code.
 
-For agentic systems, traces alone are insufficient. [Harrison Chase at LangChain](/reading/2026-05/2026-05-10t140531-agent-observability-needs-feedback-to-power-learning) argues that attaching feedback signals — user ratings, indirect behavioral signals, LLM-as-judge, and deterministic rules — to traces is what converts observability into a learning loop across model, harness, and context layers. [Speakeasy's AI control plane overview](/reading/2026-05/2026-05-09t110721-ai-control-plane-architecture-and-vendors) frames observability as one pillar of enterprise AI governance alongside identity and policy enforcement.
+For AI and agentic systems, the definition of observability is actively being renegotiated. Traces of agent runs exist, but [Harrison Chase at LangChain](/reading/2026-05/2026-05-10t140531-agent-observability-needs-feedback-to-power-learning) argues that traces alone do not improve systems; feedback signals — user ratings, indirect behavioral signals, LLM-as-judge, deterministic rules — must be attached to traces to close the learning loop. Speakeasy's AI control plane framing treats observability as one pillar of enterprise governance alongside identity and policy enforcement [Speakeasy](/reading/2026-05/2026-05-09t110721-ai-control-plane-architecture-and-vendors).
 
-Two sources address a subtler failure mode: observability systems that produce more data than humans can process. [Abby Malson](/reading/2026-05/2026-05-19t134831-finite-attention-why-burnout-isnt-your-fault-and-how) argues that on-call burnout follows directly from systems designed to maximize data output without accounting for finite human attention, and proposes push-based, context-filtered alerting instead. [Anton Zaides](/reading/2026-06/2026-06-10t073045-the-unwritten-laws-of-software-engineering) reaches a compatible conclusion from incident retrospectives: roll back before you debug, because the ability to act quickly depends on the system state being legible in the first place.
+A recurring theme across sources is the gap between data volume and human attention. [Abby Malson](/reading/2026-05/2026-05-19t134831-finite-attention-why-burnout-isnt-your-fault-and-how) frames on-call burnout as a direct consequence of systems optimized to emit data without accounting for the limits of the people receiving it. More signals is not the same as better visibility. Anton Zaides makes a related point from the incident response side: the first move when something breaks should often be a rollback, not deeper investigation, because debugging a broken production system while it is still broken compounds the harm [manager.dev](/reading/2026-06/2026-06-10t073045-the-unwritten-laws-of-software-engineering).
 
-Finally, [Emphere's testing writeup](/reading/2026-06/2026-06-11t024225-testing-a-security-tool-like-it-can-hurt-people) touches observability from a testing angle — their eBPF container security tool must fail loudly rather than silently overclaim, which is a form of observable correctness: the system's uncertainty has to be visible to be trustworthy.
+Security tooling adds a further dimension. Emphere's approach to container observability — using eBPF and fixture invariants to ensure the system fails loudly rather than overclaiming certainty — points to the principle that observable systems must also be honest about the limits of their own visibility [Emphere](/reading/2026-06/2026-06-11t024225-testing-a-security-tool-like-it-can-hurt-people).
