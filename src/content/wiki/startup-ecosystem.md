@@ -1,9 +1,10 @@
 ---
 title: Startup ecosystem
 summary: >-
-  The startup ecosystem cycles through failure, structural cost shifts, and
-  capital concentration, with dead companies leaving reusable ideas and AI
-  pricing changes reshaping which business models are viable.
+  The startup ecosystem spans company formation, product strategy, failure
+  patterns, and infrastructure bets; across these sources, the recurring theme
+  is that market structure and pricing dynamics shape which startup ideas are
+  viable at any given moment.
 sources:
   - 2026-04/2026-04-30t231537-startupsrip
   - 2026-05/2026-05-03t103944-the-lobster-in-the-hot-pot
@@ -12,12 +13,14 @@ sources:
   - 2026-06/2026-06-21t231454-spacex-and-the-sentient-sun
   - 2026-06/2026-06-22t001042-how-to-leave
   - 2026-06/2026-06-22t170134-if-your-product-is-great-it-doesnt-need-to-be-good
-compiled_at: '2026-06-22T07:27:07.603Z'
+aliases:
+  - founder-resources
+compiled_at: '2026-07-06T00:22:03.191Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 2835
-    output_tokens: 560
+    input_tokens: 3072
+    output_tokens: 759
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -28,13 +31,16 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.016905
-last_source_added: '2026-06-23T00:01:34.480Z'
+  cost_usd: 0.020601
 ---
-The graveyard is instructive. [Startups.RIP](/reading/2026-04/2026-04-30t231537-startupsrip) catalogs over 1,700 dead YC startups and argues that failed ideas outlive the companies that first attempted them. A startup dying does not invalidate the problem it was solving; it often just means timing, execution, or cost structures were wrong. That framing matters when reading the current AI moment.
+The startup ecosystem is less a single institution than a set of overlapping bets: on which ideas are ready, on what infrastructure exists to support them, and on what it costs to build. These factors shift constantly, and what failed five years ago may be viable today.
 
-Cost structures are shifting fast. A 75x pricing gap between the cheapest and most expensive frontier models has collapsed the floor for AI-dependent products, opening freemium and consumer tiers that were unprofitable at 2025 rates [Chaturvedi](/reading/2026-05/2026-05-31t072101-the-ai-model-pricing-war-is-here-and-your-margins-depend-on). The practical advice for founders follows: build provider-agnostic from day one, because pricing will keep moving.
+[Startups.RIP](/reading/2026-04/2026-04-30t231537-startupsrip) catalogs over 1,700 dead YC companies and argues that failed startup ideas outlive the companies that first attempted them. The implication is that timing and infrastructure, not the core idea, determine survival. A startup that shut down in 2018 for cost or technical reasons may now be straightforwardly buildable.
 
-The risk is that cheap tokens encourage deep dependency before the bill comes due. Spörk at OpenTentacle argues that gradual LLM adoption erodes institutional knowledge the way a lobster fails to notice slowly heating water [Spörk](/reading/2026-05/2026-05-03t103944-the-lobster-in-the-hot-pot), and that the current NVIDIA-driven investment cycle sets up a cost shock once token prices surge. If that thesis is right, startups optimizing for today's pricing without hedging face a structural trap.
+That buildability is shaped in part by AI pricing. [Ayush Chaturvedi](/reading/2026-05/2026-05-31t072101-the-ai-model-pricing-war-is-here-and-your-margins-depend-on) documents a 75x gap between the cheapest and most expensive frontier models, arguing that the collapsed pricing floor opens business models, freemium products and bulk APIs among them, that were unprofitable at 2025 rates. The advice to build provider-agnostic from day one is essentially a structural argument: lock-in to any single provider is a business risk that the ecosystem now makes avoidable.
 
-At the capital-concentration end of the ecosystem, a16z profiles SpaceX as a case study in how infrastructure investment compounds [Andreessen and McGuiness](/reading/2026-06/2026-06-21t231454-spacex-and-the-sentient-sun): Starlink revenue funds Falcon reusability, which funds Starship cost reductions, which opens entirely new markets. The lesson for the broader ecosystem is that vertical integration and infrastructure ownership change what a company can attempt. Most startups operate far from that level of capital, but the structural point holds: durable positions come from stacking capabilities, not from riding a single cost curve down.
+Not everyone reads falling prices as straightforwardly good. [Christoph Spörk](/reading/2026-05/2026-05-03t103944-the-lobster-in-the-hot-pot) warns that current low token costs may reflect a speculative bubble driven by NVIDIA investment cycles. If prices surge once that bubble corrects, companies that built deep dependency on cheap inference will face a cost shock without the institutional knowledge to adapt, having offloaded too much cognition to LLMs along the way.
+
+At the infrastructure layer, [a16z's profile of SpaceX](/reading/2026-06/2026-06-21t231454-spacex-and-the-sentient-sun) illustrates how reusability and cost reduction at the infrastructure level, Falcon 9 launches, Starlink revenue, Starship's projected economics, stack toward entirely new categories of startup possibility: orbital data centers, lunar manufacturing, multiplanetary logistics. The pattern mirrors what cloud computing did for software startups in the 2000s: when foundational costs drop far enough, new layers of value become viable.
+
+On product strategy, [Paul Buchheit](/reading/2026-06/2026-06-22t170134-if-your-product-is-great-it-doesnt-need-to-be-good) offers a durable heuristic: a product that does two or three things exceptionally well can ignore everything else. Gmail and the iPod are his examples. For startups operating under resource constraints, this is less a philosophy than a survival strategy. You cannot out-execute a larger company on breadth, so the bet on depth is often the only viable one.

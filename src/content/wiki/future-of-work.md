@@ -1,9 +1,10 @@
 ---
 title: Future of work
 summary: >-
-  How automation, AI capability, and organizational design are reshaping what
-  workers do, which skills remain irreplaceable, and what happens when firms
-  optimize for output at the expense of human judgment and connection.
+  AI and automation are reshaping employment, skill transmission, and
+  organizational structure — raising questions about who bears the costs, what
+  tacit knowledge survives, and how institutions adapt when labor becomes
+  optionally human.
 sources:
   - >-
     2026-05/2026-05-02t155432-cognitive-offloading-and-ai-how-reliance-on-llms-affects
@@ -24,15 +25,12 @@ sources:
   - 2026-06/2026-06-22t001042-how-to-leave
   - 2026-06/2026-06-22t182141-the-systemic-decay-of-tech-hiring
   - 2026-06/2026-06-30t173037-a-return-to-two-pizza-culture
-aliases:
-  - automation-history
-  - labor-market
-compiled_at: '2026-06-22T07:22:20.387Z'
+compiled_at: '2026-07-06T00:14:54.351Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 3944
-    output_tokens: 794
+    input_tokens: 4278
+    output_tokens: 865
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -43,13 +41,14 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.023742
-last_source_added: '2026-07-01T00:30:37.864Z'
+  cost_usd: 0.025809
 ---
-The question of what work looks like under advancing automation has two distinct registers: the macroeconomic and the organizational. Kevin Drum's 2013 piece [Welcome, Robot Overlords](/reading/2026-05/2026-05-28t074225-welcome-robot-overlords-please-dont-fire-us) argued that unlike previous automation waves, human-level AI would permanently displace whole labor categories rather than redirect them. A decade later, Ethan Mollick's hands-on report with a frontier model [confirms the capability leap is real](/reading/2026-06/2026-06-09t190614-what-it-feels-like-to-work-with-mythos): multi-hour autonomous workflows, sub-agent delegation, and complex software delivery are here, but the human role has shifted from doing to commissioning.
+The near-term pressure of AI on work runs through several distinct threads: layoffs driven by competitive signaling rather than proven productivity gains, eroding skill pipelines, and a shift in human roles from doing to commissioning.
 
-At the firm level, the picture is less triumphant. Falk and Tsoukalas [argue that competitive pressure creates a strategic trap](/reading/2026-05/2026-05-02t155432-cognitive-offloading-and-ai-how-reliance-on-llms-affects): firms lay off workers prematurely to keep pace with rivals, even when automation's productivity gains remain uncertain, producing collectively suboptimal outcomes. The human skills being discarded are not trivially replaceable. Tacit knowledge, the pattern recognition and design intuition that experienced engineers carry, [is structurally inaccessible to AI tools](/reading/2026-05/2026-05-19t110710-the-tacit-dimension-why-your-best-engineers-cant-tell-you) and can only transfer through apprenticeship. Abednego Gomes adds that shipping AI-generated code without review [accelerates skill atrophy](/reading/2026-05/2026-05-14t223612-the-perils-of-ai-to-the-software-engineering-profession) and is incompatible with safety-critical systems.
+The economic dynamics are clearest in [The AI Layoff Trap](/reading/2026-05/2026-05-02t155432-cognitive-offloading-and-ai-how-reliance-on-llms-affects), which models how firms lay off workers prematurely under competitive pressure even when automation's productivity benefits remain uncertain. The result is a collectively suboptimal equilibrium: each firm defects because it fears being out-competed, and the aggregate outcome is worse than coordinated restraint would produce. Kevin Drum's older piece [Welcome, Robot Overlords](/reading/2026-05/2026-05-28t074225-welcome-robot-overlords-please-dont-fire-us) frames the longer horizon: unlike past automation waves that shifted labor to new sectors, sufficiently general AI may permanently displace entire classes of workers with no natural successor role.
 
-Organizational dysfunction compounds these pressures. Poor onboarding [systematically fails new hires](/reading/2026-05/2026-05-08t112608-your-onboarding-is-a-hazing-ritual-and-you-call-it-agile) while making the failure invisible to management, burning through exactly the junior talent that would otherwise develop the tacit knowledge firms now claim AI can substitute. Systems designed to maximize data output [ignore human attention limits](/reading/2026-05/2026-05-19t134831-finite-attention-why-burnout-isnt-your-fault-and-how), producing burnout as a structural outcome rather than an individual failing.
+Skill atrophy is a quieter casualty. [The Perils of AI to the Software Engineering Profession](/reading/2026-05/2026-05-14t223612-the-perils-of-ai-to-the-software-engineering-profession) argues that shipping AI-generated code without review degrades the engineer's own judgment over time, with serious consequences in safety-critical systems. The tacit knowledge problem compounds this: [The Tacit Dimension](/reading/2026-05/2026-05-19t110710-the-tacit-dimension-why-your-best-engineers-cant-tell-you) draws on Polanyi to argue that the most valuable engineering expertise, pattern recognition and design intuition, is structurally uncodifiable and can only pass through apprenticeship. If junior roles disappear first, the transmission chain breaks.
 
-At the customer-facing layer, Ghost in the Data [argues that automating away human connection](/reading/2026-06/2026-06-17t124905-the-competitive-moat-that-ai-cant-replicate) destroys trust and loyalty that no AI personalization engine can rebuild. The thread across these sources: efficiency gains are real, but the things being optimized away, tacit expertise, human contact, attention headroom, new-hire development, are not line items that reappear once cut.
+At the organizational level, the human role is shifting. Ethan Mollick's report on Claude 5 Fable [finds](/reading/2026-06/2026-06-09t190614-what-it-feels-like-to-work-with-mythos) the work moving from execution to commissioning: defining goals, reviewing outputs, deciding what counts as done. Werner Vogels [argues](/reading/2026-06/2026-06-30t173037-a-return-to-two-pizza-culture) that compressed prototyping cycles already justify reordering Amazon's own product process around hands-on iteration rather than upfront documentation.
+
+What organizations risk losing in this transition is harder to measure. [Ghost in the Data](/reading/2026-06/2026-06-17t124905-the-competitive-moat-that-ai-cant-replicate) documents how automating away human contact destroys trust and loyalty that no personalization engine reconstructs. And structural problems in hiring and onboarding, documented in [The Systemic Decay of Tech Hiring](/reading/2026-06/2026-06-22t182141-the-systemic-decay-of-tech-hiring) and [Your Onboarding Is a Hazing Ritual](/reading/2026-05/2026-05-08t112608-your-onboarding-is-a-hazing-ritual-and-you-call-it-agile), suggest that the institutions responsible for reproducing engineering talent were already failing before AI accelerated the pressure on them.
