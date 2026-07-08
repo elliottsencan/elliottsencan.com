@@ -1,9 +1,10 @@
 ---
 title: API design
 summary: >-
-  API design governs how software exposes functionality to callers, with
-  principles spanning interface narrowness, type safety, schema validation, and
-  the tradeoff between abstraction depth and surface complexity.
+  API design shapes how well software components can be composed, validated, and
+  understood; sources here address surface area, schema correctness, deep module
+  principles, and the trade-offs that accumulate when interfaces grow without
+  discipline.
 sources:
   - 2026-04/2026-04-23t150424-your-agent-loves-mcp-as-much-as-you-love-guis
   - >-
@@ -19,12 +20,12 @@ sources:
   - 2026-06/2026-06-13t081411-signals-the-push-pull-based-algorithm
   - 2026-06/2026-06-17t075738-gunnargray-devunicode-animations
   - 2026-07/2026-07-04t141323-the-vertical-codebase
-compiled_at: '2026-06-22T07:24:57.111Z'
+compiled_at: '2026-07-08T00:10:18.043Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 7893
-    output_tokens: 724
+    input_tokens: 8043
+    output_tokens: 799
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -35,15 +36,14 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.034539
-last_source_added: '2026-07-04T21:13:23.217Z'
+  cost_usd: 0.036114
 ---
-Good API design is fundamentally about managing what callers need to know. The principle of deep modules, described in [AI Likes Deep Modules](/reading/2026-05/2026-05-04t231343-ai-likes-deep-modules), puts this directly: a small interface hiding a large implementation reduces cognitive load for both human developers and LLMs working with the codebase. Shallow modules that expose implementation detail create the opposite effect, spreading complexity outward.
+Good API design is primarily a question of surface area. [Go Monk](/reading/2026-05/2026-05-04t231343-ai-likes-deep-modules) argues for deep modules: small, stable interfaces that hide large implementations. The contrast with shallow modules, which expose nearly as much complexity as they contain, shows why interface discipline matters for both human readers and LLMs trying to reason about a codebase.
 
-The same logic applies to component APIs. [A Better Way to Build Angular Components](/reading/2026-04/2026-04-30t232001-a-better-way-to-build-angular-components-from-inputs-to) argues that components accumulating dozens of inputs become unworkable; the fix is the Composite Components pattern, pushing concerns into directives and sub-components so each piece exposes only what it must.
+Runtime surprises from unexpected backend shapes are a direct cost of under-specified contracts. [Daniel Sogl](/reading/2026-04/2026-04-30t230851-from-flaky-to-flawless-angular-api-response-management-with) addresses this with Zod schema validation inside a custom RxJS operator, catching response mismatches at development time rather than in production. The same Zod approach appears in [Neciu Dan's library roundup](/reading/2026-05/2026-05-12t165232-seven-cool-javascript-libraries-you-should-know-about), where Orval is also noted for generating typed clients directly from OpenAPI specs, pushing contract enforcement earlier still.
 
-Type safety is a recurring mechanism for enforcing API contracts. [From Flaky to Flawless](/reading/2026-04/2026-04-30t230851-from-flaky-to-flawless-angular-api-response-management-with) shows how Zod schema validation inside a custom RxJS operator catches unexpected backend response shapes at development time rather than at runtime. Zod also appears in [Seven Cool JavaScript Libraries](/reading/2026-05/2026-05-12t165232-seven-cool-javascript-libraries-you-should-know-about) as a general-purpose runtime type validation tool. [Conductor](/reading/2026-04/2026-04-30t231709-conductor) takes this further at the product level, wrapping the qbXML and SOAP surface of QuickBooks Desktop behind a fully-typed Python, Node.js, and REST interface, abstracting away protocol complexity entirely.
+Interface bloat compounds the problem at the component level. [Kobi Hari](/reading/2026-04/2026-04-30t232001-a-better-way-to-build-angular-components-from-inputs-to) shows how Angular components accumulate dozens of inputs over time, and argues that refactoring toward the Composite Components pattern, distributing concerns into directives and sub-components, keeps each public API narrow and comprehensible. Angular's own Signal Forms documentation makes a related point about [form model design](/reading/2026-04/2026-04-30t231412-form-model-design-angular-signal-forms): prefer type specificity, avoid undefined, and keep a clear translation layer between the form model and the domain model.
 
-Data format choices carry their own API risks. [YAML? That's Norway Problem](/reading/2026-05/2026-05-18t113714-yaml-thats-norway-problem) illustrates how implicit type coercion in YAML — where the string `NO` parses as boolean false — can silently corrupt configuration data passed between systems, and how the fix in the YAML 1.2 spec went unimplemented in major libraries for over a decade.
+Data format choices can silently corrupt an API's contracts. The [YAML Norway problem](/reading/2026-05/2026-05-18t113714-yaml-thats-norway-problem) is an instructive case: the country code NO parses as a boolean false in YAML 1.1, a spec-level decision that persists in widely-used libraries despite being corrected in YAML 1.2. Serialization format semantics are part of the API contract whether they are documented or not.
 
-For AI agents specifically, [Your Agent Loves MCP as Much as You Love GUIs](/reading/2026-04/2026-04-23t150424-your-agent-loves-mcp-as-much-as-you-love-guis) argues that MCP-style interfaces are analogous to GUIs: useful for humans but inefficient for agents that can consume raw APIs and scripts directly, avoiding token overhead and composability constraints. The implication is that API surface should be designed with the actual consumer in mind, whether that consumer is a human, a framework, or an autonomous agent.
+[Conductor](/reading/2026-04/2026-04-30t231709-conductor) illustrates what a well-designed abstraction layer looks like in practice: a typed Python, Node.js, and REST surface over QuickBooks Desktop's qbXML and SOAP internals, turning a hostile legacy protocol into a clean, modern interface. The value is entirely in what the abstraction hides. That same logic runs through [Ajeesh Mohan's argument](/reading/2026-04/2026-04-23t150424-your-agent-loves-mcp-as-much-as-you-love-guis) that AI agents should prefer APIs and scripts over MCP's higher-level GUI-style interface when composability and token efficiency matter.
