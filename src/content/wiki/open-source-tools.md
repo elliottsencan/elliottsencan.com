@@ -1,9 +1,9 @@
 ---
 title: Open-source tools
 summary: >-
-  Open-source tools span development infrastructure, design assets, and workflow
-  utilities, with the common thread being publicly available source that
-  practitioners can inspect, modify, and redistribute.
+  Open-source tools span developer utilities, AI agent frameworks, design
+  assets, and learning resources, with the common thread that source
+  availability lets practitioners inspect, adapt, and extend what they use.
 sources:
   - 2026-04/2026-04-30t231027-munificentcraftinginterpreters
   - 2026-04/2026-04-30t232126-lostwarriorknowledge-base
@@ -11,12 +11,12 @@ sources:
   - 2026-05/2026-05-31t164252-reviewing-large-changes-with-jujutsu
   - 2026-06/2026-06-23t212845-vet-catch-your-coding-agents-mistakes
   - 2026-06/2026-06-25t195020-strands-agents
-compiled_at: '2026-06-22T07:26:54.501Z'
+compiled_at: '2026-07-08T00:19:14.358Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 2723
-    output_tokens: 385
+    input_tokens: 3023
+    output_tokens: 566
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -27,7 +27,10 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.013944
-last_source_added: '2026-06-26T02:50:20.282Z'
+  cost_usd: 0.017559
 ---
-The sources here illustrate how open-source tools operate across several distinct domains. At the infrastructure end, [Crafting Interpreters](/reading/2026-04/2026-04-30t231027-munificentcraftinginterpreters) publishes both the full book text and two complete interpreter implementations (jlox in Java, clox in C) in a single repository, making the educational artifact and the working code inseparable. At the workflow end, [LostWarrior/knowledge-base](/reading/2026-04/2026-04-30t232126-lostwarriorknowledge-base) is a zero-dependency bash CLI distributed under a Homebrew tap, structured so AI agents and humans can navigate project context from the same tiered markdown files. Ben Gesoff's [Jujutsu review workflow](/reading/2026-05/2026-05-31t164252-reviewing-large-changes-with-jujutsu) depends on jj, an open-source version-control system, to persist incremental review progress in commits rather than stashes. The [Micrographics Templates](/reading/2026-05/2026-05-02t145719-micrographics-templates-design-layouts) library distributes 50 Figma layouts as a free community file, extending open-source distribution norms into design tooling. Across these cases, open-source access enables inspection and adaptation rather than mere consumption.
+The breadth of open-source tooling visible across these sources resists a single category. [Crafting Interpreters](/reading/2026-04/2026-04-30t231027-munificentcraftinginterpreters) is a fully open book-and-codebase: the prose, the jlox Java interpreter, and the clox C interpreter all live in a public repository with a build system that weaves them together. [LostWarrior/knowledge-base](/reading/2026-04/2026-04-30t232126-lostwarriorknowledge-base) takes the opposite scale, a zero-dependency bash CLI that structures project context as tiered markdown files for both human and AI consumption. [Strands Agents](/reading/2026-06/2026-06-25t195020-strands-agents) lands at the framework end: a Python and TypeScript SDK extracted from Amazon production systems, covering observability, guardrails, memory, and multi-agent orchestration. [Vet](/reading/2026-06/2026-06-23t212845-vet-catch-your-coding-agents-mistakes) is narrower still, a local code review tool that reads an AI agent's conversation history alongside a diff to surface mistakes standard review misses.
+
+Two sources extend the pattern beyond software. The [Jujutsu review workflow](/reading/2026-05/2026-05-31t164252-reviewing-large-changes-with-jujutsu) documents a technique built around jj, an open version control system, using its commit model to persist code-review progress without stash gymnastics. The [Micrographics Templates](/reading/2026-05/2026-05-02t145719-micrographics-templates-design-layouts) library on Figma Community offers 50 customizable layouts and 40+ vector symbols under a free community license, bringing open-access distribution norms into design assets.
+
+The common thread is access to internals. Whether it is a book whose build pipeline is inspectable, a bash script with no hidden dependencies, or an agent SDK ported from production, each tool offers more than a black-box artifact.
