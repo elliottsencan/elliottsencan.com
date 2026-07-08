@@ -56,6 +56,7 @@ sources:
   - 2026-06/2026-06-23t212845-vet-catch-your-coding-agents-mistakes
   - 2026-06/2026-06-23t212958-how-ai-code-review-can-make-correct-code-worse
   - 2026-06/2026-06-23t232444-repowise-devrepowise
+  - 2026-07/2026-07-07t170607-the-software-engineering-war
 aliases:
   - ai-coding-assistants
 compiled_at: '2026-06-22T07:18:21.617Z'
@@ -75,7 +76,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.052641
-last_source_added: '2026-06-24T06:24:44.848Z'
+last_source_added: '2026-07-08T00:06:07.576Z'
 ---
 AI-assisted coding sits at the intersection of tooling and practice. The tools range from single-model autocomplete to orchestrated multi-agent pipelines that run for hours without human intervention. The practice debate is whether any given point on that spectrum actually delivers durable value.
 

@@ -47,6 +47,7 @@ sources:
     2026-06/2026-06-22t185420-code-smells-when-you-get-ai-to-write-your-frontend-tests
   - 2026-06/2026-06-30t173037-a-return-to-two-pizza-culture
   - 2026-07/2026-07-04t141323-the-vertical-codebase
+  - 2026-07/2026-07-07t170607-the-software-engineering-war
 compiled_at: '2026-06-22T07:19:14.786Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -64,7 +65,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.043317
-last_source_added: '2026-07-04T21:13:23.217Z'
+last_source_added: '2026-07-08T00:06:07.576Z'
 ---
 Productivity in software development is not a single variable. It spans the ergonomics of a shell session, the clarity of a CI pipeline, the coherence of a codebase's architecture, and the degree to which an organization shares enough context for work to compound rather than conflict.
 
