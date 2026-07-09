@@ -8,6 +8,7 @@ sources:
   - 2026-04/2026-04-29t171532-vision-language-models-better-faster-stronger
   - 2026-04/2026-04-30t231206-poolday
   - 2026-05/2026-05-05t071908-oobaboogatextgen
+  - 2026-07/2026-07-09t161342-ai-2040-plan-a
 compiled_at: '2026-06-22T07:26:46.378Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -25,6 +26,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.01329
+last_source_added: '2026-07-09T23:13:42.315Z'
 ---
 Multimodal AI refers to models and systems that operate across more than one data modality. The clearest survey of recent progress comes from [Hugging Face's 2025 VLM update](/reading/2026-04/2026-04-29t171532-vision-language-models-better-faster-stronger), which traces the field's shift from image-plus-text pipelines toward any-to-any architectures, mixture-of-experts decoders, and reasoning-capable vision language models. Smaller models have become competitive with earlier large ones, and multimodal RAG now lets systems retrieve and reason over visual documents, not just text.
 

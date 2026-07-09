@@ -34,6 +34,7 @@ sources:
   - 2026-06/2026-06-21t231454-spacex-and-the-sentient-sun
   - 2026-06/2026-06-23t212629-latchkey-credential-layer-for-local-ai-agents
   - 2026-07/2026-07-05t170602-building-a-cloud
+  - 2026-07/2026-07-09t161342-ai-2040-plan-a
 compiled_at: '2026-06-22T07:14:57.450Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -51,7 +52,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.038475
-last_source_added: '2026-07-06T00:06:02.351Z'
+last_source_added: '2026-07-09T23:13:42.315Z'
 ---
 AI infrastructure spans everything below the model weights: the compute strategies that determine where models run, the serving systems that make inference fast and cheap, the storage architectures that manage attention state, the hosting layers that run agents at scale, and the governance planes that control what those agents can touch.
 

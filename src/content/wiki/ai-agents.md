@@ -47,6 +47,7 @@ sources:
   - 2026-06/2026-06-23t212629-latchkey-credential-layer-for-local-ai-agents
   - 2026-06/2026-06-25t195020-strands-agents
   - 2026-07/2026-07-02t052125-jangles-bytepythia
+  - 2026-07/2026-07-09t161342-ai-2040-plan-a
 compiled_at: '2026-06-22T07:12:17.395Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -64,7 +65,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.051741
-last_source_added: '2026-07-02T12:21:25.108Z'
+last_source_added: '2026-07-09T23:13:42.315Z'
 ---
 An AI agent, in the current engineering sense, is a system where a language model drives a loop: it receives a goal, produces tool calls or sub-tasks, observes results, and continues until the goal is satisfied or a stopping condition fires. That loop is straightforward to describe and deceptively hard to make reliable at scale.
 

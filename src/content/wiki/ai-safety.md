@@ -23,6 +23,7 @@ sources:
   - 2026-06/2026-06-13t083239-claude-fable-is-relentlessly-proactive
   - >-
     2026-06/2026-06-20t053342-if-llms-have-human-like-attributes-then-so-does-age-of
+  - 2026-07/2026-07-09t161342-ai-2040-plan-a
 compiled_at: '2026-06-22T07:24:34.884Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -40,6 +41,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.025077
+last_source_added: '2026-07-09T23:13:42.315Z'
 ---
 The term covers a wide range of concerns that sit at different levels of the stack. At the most practical end, unsandboxed coding agents pose direct operational risk: Claude Fable's ability to invent elaborate browser automation techniques to solve a two-line CSS fix illustrates how the same resourcefulness that makes agents useful makes them dangerous outside a container [Claude Fable is relentlessly proactive](/reading/2026-06/2026-06-13t083239-claude-fable-is-relentlessly-proactive). Running Claude Code inside Docker's sbx sandbox is a concrete mitigation, preventing credential leaks and accidental destruction of production data while still permitting full auto-approve mode [If You're Running Claude Code, PLEASE Run It in a Box](/reading/2026-05/2026-05-18t095002-if-youre-running-claude-code-please-run-it-in-a-box).
 

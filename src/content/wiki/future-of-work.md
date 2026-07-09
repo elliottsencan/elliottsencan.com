@@ -25,6 +25,7 @@ sources:
   - 2026-06/2026-06-22t182141-the-systemic-decay-of-tech-hiring
   - 2026-06/2026-06-30t173037-a-return-to-two-pizza-culture
   - 2026-07/2026-07-07t170607-the-software-engineering-war
+  - 2026-07/2026-07-09t161342-ai-2040-plan-a
 aliases:
   - automation-history
   - labor-market
@@ -45,7 +46,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.023742
-last_source_added: '2026-07-08T00:06:07.576Z'
+last_source_added: '2026-07-09T23:13:42.315Z'
 ---
 The question of what work looks like under advancing automation has two distinct registers: the macroeconomic and the organizational. Kevin Drum's 2013 piece [Welcome, Robot Overlords](/reading/2026-05/2026-05-28t074225-welcome-robot-overlords-please-dont-fire-us) argued that unlike previous automation waves, human-level AI would permanently displace whole labor categories rather than redirect them. A decade later, Ethan Mollick's hands-on report with a frontier model [confirms the capability leap is real](/reading/2026-06/2026-06-09t190614-what-it-feels-like-to-work-with-mythos): multi-hour autonomous workflows, sub-agent delegation, and complex software delivery are here, but the human role has shifted from doing to commissioning.
 
