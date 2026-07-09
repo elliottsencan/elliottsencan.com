@@ -12,6 +12,7 @@ sources:
   - 2026-06/2026-06-21t231454-spacex-and-the-sentient-sun
   - 2026-06/2026-06-22t001042-how-to-leave
   - 2026-06/2026-06-22t170134-if-your-product-is-great-it-doesnt-need-to-be-good
+  - 2026-07/2026-07-09t070315-the-submarine
 compiled_at: '2026-06-22T07:27:07.603Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -29,7 +30,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.016905
-last_source_added: '2026-06-23T00:01:34.480Z'
+last_source_added: '2026-07-09T14:03:15.144Z'
 ---
 The graveyard is instructive. [Startups.RIP](/reading/2026-04/2026-04-30t231537-startupsrip) catalogs over 1,700 dead YC startups and argues that failed ideas outlive the companies that first attempted them. A startup dying does not invalidate the problem it was solving; it often just means timing, execution, or cost structures were wrong. That framing matters when reading the current AI moment.
 
