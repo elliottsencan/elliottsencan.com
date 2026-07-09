@@ -1,9 +1,9 @@
 ---
 title: Open source
 summary: >-
-  Open source spans infrastructure, tooling, and LLM ecosystems, with sources
-  spanning Kubernetes UIs, local inference runtimes, version control, and
-  security vulnerabilities that arise from the ecosystem's openness.
+  Open source software spans infrastructure tools, LLM fine-tuning libraries,
+  version control alternatives, and security risks, with recurring tensions
+  between community ideals, commercial pressures, and platform reliability.
 sources:
   - 2026-04/2026-04-24t093356-unsloth
   - >-
@@ -37,12 +37,12 @@ sources:
   - 2026-07/2026-07-02t052125-jangles-bytepythia
   - 2026-07/2026-07-03t044356-project-gutenberg-document-33283
   - 2026-07/2026-07-09t070315-the-submarine
-compiled_at: '2026-06-22T07:17:18.261Z'
+compiled_at: '2026-07-09T14:17:26.325Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 9703
-    output_tokens: 1010
+    input_tokens: 10253
+    output_tokens: 1002
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -53,17 +53,16 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.044259
-last_source_added: '2026-07-09T14:03:15.144Z'
+  cost_usd: 0.045789
 ---
-Open source is both a licensing model and a social contract: code is public, forkable, and improvable by anyone. The sources collected here span enough of the stack to show what that contract looks like in practice, including its benefits and its failure modes.
+Open source is not a single phenomenon but a diverse set of practices united by public access to source code and, usually, redistribution rights. The sources here illustrate that breadth: a Kubernetes UI, a version control system, LLM tooling, JavaScript libraries, and a meeting assistant all arrive under open licenses, and together they reveal recurring tensions within the ecosystem.
 
-On the tooling side, [Radar](/reading/2026-05/2026-05-03t105219-radar-open-source-kubernetes-ui) is a single-binary, Apache 2.0 Kubernetes UI that consolidates topology, Helm, GitOps, and security audits into one interface, replacing the five-tool patchwork most platform teams assemble. The project is explicit that no cloud account is required, positioning openness as a guarantee against vendor lock-in. [Jujutsu](/reading/2026-05/2026-05-31t164554-jj-vcsjj) is a Git-compatible VCS that auto-commits the working copy and treats conflicts as first-class objects; it extends the open ecosystem around version control rather than replacing it. [oobabooga/textgen](/reading/2026-05/2026-05-05t071908-oobaboogatextgen) provides a fully offline desktop interface for running LLMs with an OpenAI-compatible API, and [Unsloth](/reading/2026-04/2026-04-24t093356-unsloth) offers custom training kernels delivering up to 30x faster fine-tuning than FlashAttention 2. Both depend on open model weights to function.
+The infrastructure layer has seen renewed investment. [Radar](/reading/2026-05/2026-05-03t105238-radar-or-the-missing-open-source-kubernetes-ui) ships as a single Apache 2.0 binary that consolidates cluster topology, Helm, GitOps, and security audits, explicitly positioning itself against the patchwork of proprietary tools platform teams currently use. [Jujutsu](/reading/2026-05/2026-05-31t164554-jj-vcsjj) takes a similar stance in version control, offering Git compatibility while treating conflicts and working-copy state as first-class objects.
 
-The LLM local-inference space shows how open source can fragment. [Ollama](/reading/2026-05/2026-05-05t071447-friends-dont-let-friends-use-ollama) is criticized for obscuring its llama.cpp dependency, shipping inferior inference performance, introducing misleading model naming, and launching a closed-source GUI while pivoting toward a VC-funded cloud model. The piece frames this as a betrayal of open-source values by a project that built its reputation on them. Ollama's trajectory sits in contrast to tools like [Unsloth](/reading/2026-04/2026-04-24t093356-unsloth) and [oobabooga/textgen](/reading/2026-05/2026-05-05t071908-oobaboogatextgen) that remain local-first and transparent about their dependencies.
+LLM tooling is an area where open-source momentum is particularly visible but also contested. [Unsloth](/reading/2026-04/2026-04-24t093356-unsloth) offers custom kernels for fine-tuning with dramatically reduced memory requirements. [oobabooga/textgen](/reading/2026-05/2026-05-05t071908-oobaboogatextgen) provides a fully offline inference UI with an OpenAI-compatible API. Yet [Friends Don't Let Friends Use Ollama](/reading/2026-05/2026-05-05t071447-friends-dont-let-friends-use-ollama) documents how a project can erode its open-source character over time, arguing that Ollama obscured its llama.cpp dependency, shipped inferior performance, and is now following a VC-driven cloud pivot that contradicts its local-first origins. The warning is that open licensing at launch does not guarantee open practice over time.
 
-Openness also creates attack surface. Attackers uploaded 151 malicious npm and GitHub packages encoding payloads in invisible Unicode variation-selector characters, making them undetectable by code reviewers and static analysis tools while remaining executable at runtime [supply-chain attack](/reading/2026-04/2026-04-30t231634-supply-chain-attack-using-invisible-code-hits-github-and). The open registry model that makes npm useful is the same model that lets bad actors publish freely.
+Platform trust is a parallel concern. [GitHub is Sinking](/reading/2026-05/2026-05-10t205349-github-is-sinking) argues that Microsoft's stewardship has degraded reliability and quality to the point where migration to Codeberg, Forgejo, or self-hosted forges is prudent. [If I Could Make My Own GitHub](/reading/2026-06/2026-06-23t231556-if-i-could-make-my-own-github) extends this with a specific wishlist: pre-commit CI, stacked PRs as first-class citizens, signed Actions usable offline, and a self-hostable unit smaller than GitHub Enterprise. Both pieces reflect a community that built critical infrastructure on a platform it no longer fully trusts.
 
-Daniel Stenberg's analysis of curl's bug history argues that even with AI-assisted static analysis, open-source projects show no measurable trend toward zero latent bugs [Approaching zero bugs](/reading/2026-05/2026-05-02t094735-approaching-zero-bugs). The implication is that openness enables inspection and contribution but does not automatically produce correctness.
+Security is where openness cuts both ways. Public repositories make code auditable, but they also provide a distribution channel. [The supply-chain attack covered by Ars Technica](/reading/2026-04/2026-04-30t231634-supply-chain-attack-using-invisible-code-hits-github-and) describes 151 malicious npm and GitHub packages encoding payloads in invisible Unicode variation-selector characters, undetectable by reviewers or static analysis. [Daniel Stenberg's analysis of curl](/reading/2026-05/2026-05-02t094735-approaching-zero-bugs) adds that even mature, well-resourced open-source projects show no measurable progress toward zero latent bugs despite AI-assisted static analysis tools.
 
-Smaller open-source artifacts round out the picture: a zero-dependency npm package of Unicode spinner animations [unicode-animations](/reading/2026-06/2026-06-17t075738-gunnargray-devunicode-animations), a step-by-step optimization of Rust's image-rs blur function [image-rs](/reading/2026-05/2026-05-14t151252-5-faster-fastblur-in-image-rs), and an open-source agent memory system benchmarked against LongMemEval [hindsight](/reading/2026-05/2026-05-03t173422-vectorize-iohindsight). Each reflects the norm of publishing code publicly, accepting contributions, and building on prior work, which remains the connective tissue of most modern software development.
+Smaller open-source outputs are also represented: [unicode-animations](/reading/2026-06/2026-06-17t075738-gunnargray-devunicode-animations) is a zero-dependency npm package for terminal spinners, and [hindsight](/reading/2026-05/2026-05-03t173422-vectorize-iohindsight) is an open-source agent memory system targeting LongMemEval benchmarks. These illustrate that open source remains the default publication mode for tooling at every scale, from utilities to infrastructure.
