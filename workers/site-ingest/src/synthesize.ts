@@ -240,7 +240,12 @@ async function planSynthesis(
     // Skip only when the cluster matches the article's sources[] AND its body
     // is current. A `/link`-patched article matches on sources[] but its prose
     // still lags (isBodyStale), so it must be re-selected here.
-    if (!req.force && existing && setEquals(existing.sources, sourceSlugs) && !isBodyStale(existing)) {
+    if (
+      !req.force &&
+      existing &&
+      setEquals(existing.sources, sourceSlugs) &&
+      !isBodyStale(existing)
+    ) {
       continue;
     }
     targets.push({ topic, sources, ...(existing ? { existing } : {}) });

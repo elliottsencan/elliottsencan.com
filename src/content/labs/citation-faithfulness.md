@@ -7,7 +7,7 @@ lastRunDate: 2026-06-02T23:06:25-07:00
 tldr: Does the wiki say what its sources say? Two AI judges grade every citation; the headline is how often they agree.
 headlineMetric:
   label: Judge agreement
-  value: 89% · 103 claims
+  value: 89% · 167 claims
 tags:
   - eval
   - anthropic

@@ -7,7 +7,7 @@ lastRunDate: 2026-05-04T12:00:00-07:00
 tldr: What does the AI behind this site cost to run? Total spend so far, split by what it went on.
 headlineMetric:
   label: Spent so far
-  value: $3.73
+  value: $5.60
 tags:
   - cost
   - infra
