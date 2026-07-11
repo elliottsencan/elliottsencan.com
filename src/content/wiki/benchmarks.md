@@ -1,10 +1,10 @@
 ---
 title: Benchmarks
 summary: >-
-  Benchmarks measure AI model and system capability, but a recurring finding
-  across LLM, multi-agent, and vision-language research is that existing tests
-  routinely measure the wrong things or fail to capture the behaviors that
-  matter in production.
+  Benchmarks measure model or system capability, but their results are only as
+  meaningful as their design — a recurring problem across LLM, multi-agent, and
+  vision tasks, where tests built for one context are routinely applied to
+  contexts they cannot capture.
 sources:
   - 2026-04/2026-04-29t171532-vision-language-models-better-faster-stronger
   - 2026-04/2026-04-29t173553-canitrun-can-my-gpu-run-this-llm
@@ -44,12 +44,12 @@ sources:
     2026-06/2026-06-22t165934-the-token-compression-illusion-why-im-skeptical-of-rtk
   - 2026-06/2026-06-23t212958-how-ai-code-review-can-make-correct-code-worse
   - 2026-06/2026-06-30t185207-when-impressive-performance-gains-do-not-matter
-compiled_at: '2026-06-22T07:18:44.919Z'
+compiled_at: '2026-07-09T23:18:17.812Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 6204
-    output_tokens: 986
+    input_tokens: 6773
+    output_tokens: 1100
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -60,19 +60,20 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.033402
-last_source_added: '2026-07-01T01:52:07.468Z'
+  cost_usd: 0.036819
 ---
-A benchmark is only as useful as the gap it exposes. Across the sources collected here, the most consistent finding is that benchmark scores routinely flatter: models look capable on standard tests while failing on the specific properties the tests were supposed to proxy.
+A benchmark is only as useful as the gap it actually measures. Across LLM evaluation, multi-agent systems, and vision-language research, the same structural problem recurs: tests get designed for one purpose, then get applied to broader claims they cannot support.
 
-The clearest case is multi-agent systems. [Meiklejohn's Part 7](/reading/2026-05/2026-05-03t110114-getting-up-to-speed-on-multi-agent-systems-part-7) argues directly that HumanEval, SWE-bench, and similar suites were designed for single agents and cannot measure coordination quality, communication overhead, or failure recovery. When those numbers get applied to multi-agent pipelines, they tell you nothing about the things that actually break in production. That point is grounded empirically in [Part 4](/reading/2026-05/2026-05-03t110046-getting-up-to-speed-on-multi-agent-systems-part-4-wave-2), which surveys MAST, MAS-FIRE, and Silo-Bench: failure rates of 41-87% in deployed multi-agent systems, with inter-agent reasoning failures being structurally harder to fix than prompt-level issues. Good benchmarks had to be invented for the right failure mode.
+The sharpest articulation of this comes from Meiklejohn's survey of multi-agent systems [Part 7](/reading/2026-05/2026-05-03t110114-getting-up-to-speed-on-multi-agent-systems-part-7). HumanEval and SWE-bench were designed for single-agent coding tasks. When applied to multi-agent pipelines, they cannot measure coordination quality, communication overhead, or failure recovery, which are precisely the things that distinguish multi-agent architectures from single-agent ones. Numbers from those tests look legible, but they answer the wrong question. Imbue's pipeline experiment [on SWE-bench Pro](/reading/2026-06/2026-06-23t212958-how-ai-code-review-can-make-correct-code-worse) illustrates a downstream cost: running an implementer-reviewer-fixer loop against the benchmark revealed that weaker fixer agents broke correct code, a failure mode the benchmark wasn't built to surface.
 
-The same mismatch appears in formal verification. [SysMoBench](/reading/2026-05/2026-05-08t175639-can-llms-model-real-world-systems-in-tla) tests LLMs on generating TLA+ specs from real system code and finds near-perfect syntax scores paired with only roughly 46% conformance and 41% invariant scores. Models pass surface-level tests because they recite textbook protocols; they fail deeper tests because they are not modeling the actual implementation.
+SysMoBench runs into an analogous mismatch from the other direction [Can LLMs model real-world systems in TLA+?](/reading/2026-05/2026-05-08t175639-can-llms-model-real-world-systems-in-tla). Leading LLMs score near-perfect on TLA+ syntax, but only around 46% on conformance and 41% on invariant checks. The models are generating textbook protocol descriptions rather than faithfully modeling the actual systems in the source code. Syntax scores, the easy-to-measure proxy, look impressive; the meaningful scores do not.
 
-Reasoning effort adds another dimension. A [hands-on benchmark of Claude Opus 4.7](/reading/2026-05/2026-05-14t190300-opus-47-low-vs-medium-vs-high-vs-xhigh-vs-max-the-reasoning) across five effort levels on 29 real tasks found a non-monotonic curve: medium effort wins on pass rate and cost-efficiency, while higher effort levels spend more without improving quality. That result matters because it shows that benchmark design choices, including what effort level to use and how to define a pass, can reverse apparent conclusions about which model or setting is best.
+The RTK token-compression controversy is a miniature version of the same issue [The Token Compression Illusion](/reading/2026-06/2026-06-22t165934-the-token-compression-illusion-why-im-skeptical-of-rtk). Claimed 60-90% token savings are measured only on Bash output stripping, with no task-accuracy benchmarks to show the compression doesn't degrade downstream results. The metric exists; the benchmark that would justify trusting it does not.
 
-Task-completion horizons offer a different measurement frame. [Woodruff et al.](/reading/2026-06/2026-06-10t221112-estimating-no-cot-task-completion-time-horizons-of-frontier) measure how long a human task a frontier model can complete at 50% reliability without chain-of-thought reasoning, finding GPT-5.5 handles roughly 3-minute tasks and that capability doubles roughly every year since 2019. This framing sidesteps capability-on-a-fixed-task benchmarks in favor of a horizon that scales with time.
+Effort-level benchmarking adds a different wrinkle. A hands-on test of Claude Opus 4.7 across five reasoning-effort levels on 29 real tasks [found a non-monotonic curve](/reading/2026-05/2026-05-14t190300-opus-47-low-vs-medium-vs-high-vs-xhigh-vs-max-the-reasoning): medium effort outperformed high, xhigh, and max on pass rate, equivalence, and cost-efficiency. More compute did not monotonically improve results. This matches Colin Breck's broader argument [that impressive performance gains often don't change outcomes](/reading/2026-06/2026-06-30t185207-when-impressive-performance-gains-do-not-matter) when attention thresholds, discrete capacity increments, or pipeline backpressure absorb the improvement before it reaches the user.
 
-Benchmarks also appear as a comparison axis in tooling. The [AI Memory Systems comparison table](/reading/2026-06/2026-06-04t210834-ai-memory-systems-feature-comparison) lists benchmark support as one of its filterable columns across 74 systems, treating the presence or absence of benchmark results as a first-class property of a tool's maturity. [Plurai](/reading/2026-05/2026-05-04t235011-plurai) positions its evaluation models partly on a benchmark metric: sub-100ms latency and 8x lower cost than GPT-as-judge.
+On capability trajectory, a LessWrong analysis [estimating no-CoT task-completion time horizons](/reading/2026-06/2026-06-10t221112-estimating-no-cot-task-completion-time-horizons-of-frontier) finds GPT-5.5 handling roughly three-minute human tasks at 50% reliability, with a doubling time of about one year since 2019. The benchmark here is explicitly designed to track a capability trend over time rather than claim absolute performance, which is one of the cleaner uses of benchmark methodology in the surveyed sources.
 
-The through-line is that benchmark numbers travel faster than the methodological caveats attached to them. When tests are reused outside their design scope, they measure familiarity with textbook examples, single-agent performance, or surface syntax rather than the reliability, coordination, and semantic fidelity that deployed systems actually require.
+The AI memory systems comparison table [surveyed 74 systems](/reading/2026-06/2026-06-04t210834-ai-memory-systems-feature-comparison) across architecture, data model, search modes, and benchmark coverage. Listing whether a system has benchmark data at all is itself a meaningful signal; many do not.
+
+The consistent thread: a benchmark measures what it was designed to measure, and the field repeatedly applies tests outside their design envelope. The remedy isn't more benchmarks but better-scoped ones tied to the failure modes that actually matter in production.

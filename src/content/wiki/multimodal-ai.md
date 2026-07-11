@@ -1,20 +1,20 @@
 ---
 title: Multimodal AI
 summary: >-
-  AI systems that process and generate across multiple modalities, including
-  text, images, video, and audio, enabling richer inputs and more capable
-  agentic pipelines.
+  AI systems that process and generate across multiple input or output
+  modalities, including text, images, video, and audio, now powering everything
+  from local desktop inference to autonomous video production pipelines.
 sources:
   - 2026-04/2026-04-29t171532-vision-language-models-better-faster-stronger
   - 2026-04/2026-04-30t231206-poolday
   - 2026-05/2026-05-05t071908-oobaboogatextgen
   - 2026-07/2026-07-09t161342-ai-2040-plan-a
-compiled_at: '2026-06-22T07:26:46.378Z'
+compiled_at: '2026-07-09T23:25:59.663Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 2455
-    output_tokens: 395
+    input_tokens: 2622
+    output_tokens: 494
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -25,11 +25,12 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.01329
-last_source_added: '2026-07-09T23:13:42.315Z'
+  cost_usd: 0.015276
 ---
-Multimodal AI refers to models and systems that operate across more than one data modality. The clearest survey of recent progress comes from [Hugging Face's 2025 VLM update](/reading/2026-04/2026-04-29t171532-vision-language-models-better-faster-stronger), which traces the field's shift from image-plus-text pipelines toward any-to-any architectures, mixture-of-experts decoders, and reasoning-capable vision language models. Smaller models have become competitive with earlier large ones, and multimodal RAG now lets systems retrieve and reason over visual documents, not just text.
+Multimodal AI covers models and systems that work across more than one data modality. The clearest technical survey comes from [Vision Language Models (Better, Faster, Stronger)](/reading/2026-04/2026-04-29t171532-vision-language-models-better-faster-stronger), which maps the 2025 VLM landscape: any-to-any architectures, mixture-of-experts decoders, video understanding, multimodal RAG, and agentic VLM pipelines that take actions rather than just answer questions. Smaller models have closed much of the gap with frontier ones, making capable multimodal inference practical outside datacenter settings.
 
-Practical applications show up in production tools. [Poolday's Creator-1](/reading/2026-04/2026-04-30t231206-poolday) orchestrates over 100 generative models to handle video editing end-to-end, combining visual understanding, asset generation, and automated cuts into a single agentic workflow. That kind of pipeline depends on models that can interpret and produce across text, image, and video simultaneously.
+That local story is illustrated by [oobabooga/textgen](/reading/2026-05/2026-05-05t071908-oobaboogatextgen), a desktop app that runs LLMs fully offline and includes multimodal input alongside tool-calling and LoRA fine-tuning. Multimodal capability, once a cloud-only feature, is now part of the self-hosted stack.
 
-On the local inference side, [oobabooga/textgen](/reading/2026-05/2026-05-05t071908-oobaboogatextgen) supports multimodal input alongside its standard LLM backends, meaning multimodal capability is no longer limited to cloud APIs. The combination of smaller capable models and local tooling has meaningfully lowered the barrier to building with multimodal systems.
+On the production side, [Poolday](/reading/2026-04/2026-04-30t231206-poolday) shows multimodal AI as infrastructure: its Creator-1 platform orchestrates 100+ generative models to execute video edits end-to-end, handling cuts, AI asset generation, and project assembly without human handoffs at each step. The output is an editable project, not a static render, which reflects how multimodal pipelines are beginning to slot into creative workflows rather than replace them wholesale.
+
+[AI 2040: Plan A](/reading/2026-07/2026-07-09t161342-ai-2040-plan-a) treats multimodal capability as part of the broader trajectory toward systems powerful enough to warrant international governance, though it focuses on scaling and safety rather than modality specifics.

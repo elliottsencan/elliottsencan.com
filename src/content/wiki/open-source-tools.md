@@ -1,9 +1,9 @@
 ---
 title: Open-source tools
 summary: >-
-  Open-source tools span development infrastructure, design assets, and workflow
-  utilities, with the common thread being publicly available source that
-  practitioners can inspect, modify, and redistribute.
+  Open-source tools span compilers, CLIs, design libraries, version-control
+  workflows, and AI agent SDKs; what unites them is public availability of
+  source, enabling inspection, customization, and community-driven improvement.
 sources:
   - 2026-04/2026-04-30t231027-munificentcraftinginterpreters
   - 2026-04/2026-04-30t232126-lostwarriorknowledge-base
@@ -11,12 +11,12 @@ sources:
   - 2026-05/2026-05-31t164252-reviewing-large-changes-with-jujutsu
   - 2026-06/2026-06-23t212845-vet-catch-your-coding-agents-mistakes
   - 2026-06/2026-06-25t195020-strands-agents
-compiled_at: '2026-06-22T07:26:54.501Z'
+compiled_at: '2026-07-09T23:27:03.270Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 2723
-    output_tokens: 385
+    input_tokens: 3023
+    output_tokens: 622
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -27,7 +27,16 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.013944
-last_source_added: '2026-06-26T02:50:20.282Z'
+  cost_usd: 0.018399
 ---
-The sources here illustrate how open-source tools operate across several distinct domains. At the infrastructure end, [Crafting Interpreters](/reading/2026-04/2026-04-30t231027-munificentcraftinginterpreters) publishes both the full book text and two complete interpreter implementations (jlox in Java, clox in C) in a single repository, making the educational artifact and the working code inseparable. At the workflow end, [LostWarrior/knowledge-base](/reading/2026-04/2026-04-30t232126-lostwarriorknowledge-base) is a zero-dependency bash CLI distributed under a Homebrew tap, structured so AI agents and humans can navigate project context from the same tiered markdown files. Ben Gesoff's [Jujutsu review workflow](/reading/2026-05/2026-05-31t164252-reviewing-large-changes-with-jujutsu) depends on jj, an open-source version-control system, to persist incremental review progress in commits rather than stashes. The [Micrographics Templates](/reading/2026-05/2026-05-02t145719-micrographics-templates-design-layouts) library distributes 50 Figma layouts as a free community file, extending open-source distribution norms into design tooling. Across these cases, open-source access enables inspection and adaptation rather than mere consumption.
+The phrase covers a wide surface. [Crafting Interpreters](/reading/2026-04/2026-04-30t231027-munificentcraftinginterpreters) is a book whose full source, including two working Lox interpreter implementations in Java and C, lives in a public repository. The repo itself is the artifact: readers can build the interpreters, inspect every line, and submit corrections. That transparency is what makes it more than documentation.
+
+[LostWarrior/knowledge-base](/reading/2026-04/2026-04-30t232126-lostwarriorknowledge-base) takes a different angle, releasing a zero-dependency bash CLI for organizing project context as tiered markdown files. The zero-dependency constraint is a deliberate design choice common in open-source tooling aimed at wide portability: nothing to install beyond bash.
+
+Not all open-source tools are code utilities. The [Micrographics Templates](/reading/2026-05/2026-05-02t145719-micrographics-templates-design-layouts) Figma library extends the concept into design assets: 50 customizable layouts and 40-plus vector symbols released for public use via the Figma Community.
+
+[Vet](/reading/2026-06/2026-06-23t212845-vet-catch-your-coding-agents-mistakes) is an open-source local code review tool from Imbue that reads an AI agent's conversation history alongside the diff to surface mistakes standard review misses. Its openness matters because the trust problem it addresses, verifying what an autonomous agent actually did, benefits from auditable tooling.
+
+[Strands Agents](/reading/2026-06/2026-06-25t195020-strands-agents) is an open-source Python and TypeScript SDK derived from Amazon production systems, providing built-in observability, guardrails, and multi-agent orchestration. Publishing production-grade infrastructure as open source lowers the bar for teams building on top of it.
+
+The [Jujutsu review workflow](/reading/2026-05/2026-05-31t164252-reviewing-large-changes-with-jujutsu) is less a tool than a technique built on one: it depends on jj, an open-source version control system, to make large-change review tractable by using commits as review-progress bookmarks.
