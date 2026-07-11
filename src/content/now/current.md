@@ -1,8 +1,8 @@
 ---
 title: "Now"
 description: "What I'm working on right now."
-updated: 2026-07-05
-standfirst: "Deep in festival season, with the SSBD platform racing an August deadline and a steady diet of AI engineering writing in the margins"
+updated: 2026-07-11
+standfirst: "Settling in at Starlifter as the SSBD platform races its August deadline, AI engineering writing holding steady in the margins"
 ---
 
 ## Building
