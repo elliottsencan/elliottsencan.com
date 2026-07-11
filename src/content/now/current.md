@@ -2,7 +2,7 @@
 title: "Now"
 description: "What I'm working on right now."
 updated: 2026-07-11
-standfirst: "Settling in at Starlifter as the SSBD platform races its August deadline, AI engineering writing holding steady in the margins"
+standfirst: "Settling in at StarLifter building the enterprise decision layer, as the SSBD platform races its August deadline and AI engineering writing holds steady in the margins"
 ---
 
 ## Building
