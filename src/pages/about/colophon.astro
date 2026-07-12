@@ -1,6 +1,7 @@
 ---
 import Container from "@components/Container.astro";
 import EditorialRule from "@components/EditorialRule.astro";
+import LabeledRule from "@components/LabeledRule.astro";
 import Link from "@components/Link.astro";
 import PageHero from "@components/PageHero.astro";
 import { SITE } from "@consts";
@@ -28,25 +29,84 @@ import Layout from "@layouts/Layout.astro";
         </Fragment>
         <Fragment slot="title">Colophon</Fragment>
         <Fragment slot="summary">
-          Set in <em>Neue Montreal</em> for headings and interface text,
-          <em>Newsreader</em> for running copy, and <em>JetBrains Mono</em> for
-          code and machine-emitted marks. All three self-hosted as WOFF2.
+          Set in <em>Fraunces</em> for titles, <em>Newsreader</em> for running
+          copy, <em>Neue Montreal</em> for labels and interface text, and
+          <em>JetBrains Mono</em> for code and machine-emitted marks. All four
+          self-hosted as WOFF2.
         </Fragment>
       </PageHero>
 
+      <section class="space-y-4">
+        <LabeledRule>Type</LabeledRule>
+        <div class="space-y-4 text-base leading-relaxed text-black/85 dark:text-white/85">
+          <p>
+            Titles and headings are
+            <Link href="https://fonts.google.com/specimen/Fraunces" external>Fraunces</Link>
+            (Undercase Type), a variable serif served with its optical size
+            pinned so the display character holds at title sizes. Running copy
+            is
+            <Link href="https://fonts.google.com/specimen/Newsreader" external>Newsreader</Link>
+            (Production Type), a text serif drawn for on-screen reading.
+            Navigation, dates, and other small functional labels are
+            <Link href="https://pangrampangram.com/products/neue-montreal" external>PP Neue Montreal</Link>
+            (Pangram Pangram). Code and anything machine-emitted — provenance
+            marks, pipeline stats, citation numbers — is
+            <Link href="https://www.jetbrains.com/lp/mono/" external>JetBrains Mono</Link>.
+            Each face has one job: a name in the content is a serif, a label is
+            the grotesque, a machine value is mono.
+          </p>
+          <p>
+            One accent color — a terracotta — marks active navigation,
+            citations, and the forward links between
+            <Link href="/reading">/reading</Link> and
+            <Link href="/wiki">/wiki</Link>. Everything else is near-black on
+            white, or the reverse in dark mode. No entrance animations, no
+            background textures.
+          </p>
+        </div>
+      </section>
+
+      <section class="space-y-4">
+        <LabeledRule>Stack</LabeledRule>
+        <div class="space-y-4 text-base leading-relaxed text-black/85 dark:text-white/85">
+          <p>
+            Built with <Link href="https://astro.build/" external>Astro</Link> —
+            fully static output, no client framework — and
+            <Link href="https://tailwindcss.com/" external>Tailwind CSS</Link>.
+            Code blocks are rendered by
+            <Link href="https://expressive-code.com/" external>Expressive Code</Link>,
+            search by <Link href="https://pagefind.app/" external>Pagefind</Link>,
+            both indexed at build time. Hosted on Cloudflare Pages; every push
+            to main deploys.
+          </p>
+          <p>
+            The footer activity rail is generated at build time from the GitHub
+            GraphQL API, and a daily scheduled rebuild keeps it current without
+            a code push. If the API fails, the block omits itself rather than
+            failing the build.
+          </p>
+        </div>
+      </section>
+
+      <section class="space-y-4">
+        <LabeledRule>Pipeline</LabeledRule>
+        <div class="space-y-4 text-base leading-relaxed text-black/85 dark:text-white/85">
+          <p>
+            <Link href="/now">/now</Link>, <Link href="/reading">/reading</Link>,
+            and <Link href="/wiki">/wiki</Link> are written by a separate
+            Cloudflare Worker rather than by hand: it drafts /now weekly from
+            active projects and queued phone notes, commits reading entries
+            sent from an iOS Shortcut, and compiles wiki articles from clusters
+            of reading entries. The compiler is Claude, and anything
+            machine-written carries a ✱ provenance mark, set in mono. The full
+            mechanics are documented at
+            <Link href="/now/how-this-works">/now/how-this-works</Link>.
+          </p>
+        </div>
+      </section>
+
       <section class="space-y-6 text-base leading-relaxed text-black/85 dark:text-white/85">
-        <p>
-          Built with <Link href="https://astro.build/" external>Astro</Link>
-          and
-          <Link href="https://tailwindcss.com/" external>Tailwind CSS</Link>.
-          Search by
-          <Link href="https://pagefind.app/" external>Pagefind</Link>,
-          indexed at build time. Hosted on Cloudflare Pages.
-        </p>
-        <p>
-          Written in {SITE.LOCATION}. The footer activity rail is generated at
-          build time from the GitHub GraphQL API.
-        </p>
+        <p>Written in {SITE.LOCATION}.</p>
       </section>
 
       <EditorialRule />

@@ -1,6 +1,6 @@
 # Content workflow
 
-Internal reference for the voice-memo → Whisper → Claude → self-edit pipeline. Linear: 2TS-237. Public articulation lives at [`/process`](../src/pages/process.astro).
+Internal reference for the voice-memo → Whisper → Claude → self-edit pipeline. Linear: 2TS-237. Public articulation lives at [`/about/process`](../src/pages/about/process.astro).
 
 The thesis: the thinking is the signal. AI structures and edits; it does not author. Voice memo captures the reasoning, Claude turns raw transcript into an outline, you write the draft yourself.
 
@@ -55,7 +55,7 @@ Open the outline in your editor. Write the draft yourself. Claude is available f
 ## 5. Final pass
 
 - Read the post aloud. Anything that sounds like AI wrote it gets cut or rewritten.
-- Set `aiAssistance` honestly in the frontmatter. Definitions live at [`/process#ai-assistance-levels`](../src/pages/process.astro). If AI materially shaped the outline or edit, that's `heavy`. Don't under-flag.
+- Set `aiAssistance` honestly in the frontmatter. Definitions live at [`/about/process#ai-assistance-levels`](../src/pages/about/process.astro). If AI materially shaped the outline or edit, that's `heavy`. Don't under-flag.
 - Set `aiNote` to a one-liner describing what AI actually did for this post, if useful.
 
 ## Frontmatter
