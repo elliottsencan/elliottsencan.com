@@ -13,6 +13,8 @@ sources:
   - 2026-05/2026-05-15t120337-playwright-testing-in-staging-vs-production
   - >-
     2026-06/2026-06-22t185420-code-smells-when-you-get-ai-to-write-your-frontend-tests
+  - >-
+    2026-07/2026-07-13t233457-playwright-on-github-actions-the-setup-that-actually-runs
 compiled_at: '2026-07-09T23:22:09.646Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -30,6 +32,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.017115
+last_source_added: '2026-07-14T06:34:57.884Z'
 ---
 A flaky test is one that produces inconsistent results across identical runs, making CI signal unreliable and eroding trust in the test suite itself. At scale the problem compounds quickly: [Mendral's CI agent](https://www.mendral.com/blog/ci-at-scale) handles 33 million test executions per week at PostHog and spends significant effort tracing flaky tests to root causes before opening fix PRs automatically, because at that volume manual triage is untenable.
 

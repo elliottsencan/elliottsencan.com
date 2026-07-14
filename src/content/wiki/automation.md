@@ -15,6 +15,8 @@ sources:
     2026-05/2026-05-19t134831-finite-attention-why-burnout-isnt-your-fault-and-how
   - 2026-05/2026-05-28t074225-welcome-robot-overlords-please-dont-fire-us
   - 2026-06/2026-06-17t124905-the-competitive-moat-that-ai-cant-replicate
+  - >-
+    2026-07/2026-07-13t233457-playwright-on-github-actions-the-setup-that-actually-runs
 compiled_at: '2026-06-22T07:23:30.155Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -32,6 +34,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.019635
+last_source_added: '2026-07-14T06:34:57.884Z'
 ---
 Automation operates at multiple scales simultaneously. At the tooling level, it means eliminating friction from repetitive technical work: [Conductor](/reading/2026-04/2026-04-30t231709-conductor) abstracts away the qbXML and SOAP complexity of QuickBooks Desktop so developers never manually parse legacy protocols, while [SSH key workflows](/reading/2026-05/2026-05-04t231548-using-ssh-keys-to-make-connectivity-simpler-and-secure) replace repeated manual authentication across remote machines. Both cases share the same logic: identify a predictable, error-prone process and route around it.
 

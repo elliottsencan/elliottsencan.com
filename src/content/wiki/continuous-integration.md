@@ -19,6 +19,8 @@ sources:
   - 2026-05/2026-05-19t110000-building-ci-with-lambda-durable-functions
   - 2026-06/2026-06-23t212845-vet-catch-your-coding-agents-mistakes
   - 2026-06/2026-06-23t231556-if-i-could-make-my-own-github
+  - >-
+    2026-07/2026-07-13t233457-playwright-on-github-actions-the-setup-that-actually-runs
 compiled_at: '2026-07-09T23:19:17.482Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -36,6 +38,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.027276
+last_source_added: '2026-07-14T06:34:57.884Z'
 ---
 Continuous integration is the practice of merging code changes frequently and verifying each merge automatically. The shape of that verification layer has grown considerably more complex as teams scale, as AI agents write more of the code, and as the infrastructure itself becomes an attack surface.
 
