@@ -83,6 +83,8 @@ sources:
   - >-
     2026-06/2026-06-30t213959-why-css-style-queries-are-a-bigger-deal-than-you-think
   - 2026-07/2026-07-07t170607-the-software-engineering-war
+  - >-
+    2026-07/2026-07-14t210058-your-app-could-have-been-a-webpage-so-i-fixed-it-for-you
 compiled_at: '2026-07-09T23:29:48.525Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -100,6 +102,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.075789
+last_source_added: '2026-07-15T04:00:58.131Z'
 ---
 Software engineering is not a single discipline but a stack of concerns: how systems are designed, how code is written and reviewed, how it is tested and deployed, how knowledge transfers between practitioners, and who is accountable when things fail. The sources here span all of those layers, and a consistent thread runs through them: adding speed without adding understanding tends to produce problems at the next layer down.
 
