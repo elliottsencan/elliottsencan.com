@@ -21,6 +21,8 @@ sources:
   - 2026-06/2026-06-23t231556-if-i-could-make-my-own-github
   - >-
     2026-07/2026-07-13t233457-playwright-on-github-actions-the-setup-that-actually-runs
+  - >-
+    2026-07/2026-07-15t030225-ban-commitstransactions-using-ast-analysis-and-linters
 compiled_at: '2026-07-09T23:19:17.482Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -38,7 +40,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.027276
-last_source_added: '2026-07-14T06:34:57.884Z'
+last_source_added: '2026-07-15T10:02:25.491Z'
 ---
 Continuous integration is the practice of merging code changes frequently and verifying each merge automatically. The shape of that verification layer has grown considerably more complex as teams scale, as AI agents write more of the code, and as the infrastructure itself becomes an attack surface.
 

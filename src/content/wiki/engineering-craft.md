@@ -58,6 +58,8 @@ sources:
     2026-07/2026-07-13t233457-playwright-on-github-actions-the-setup-that-actually-runs
   - >-
     2026-07/2026-07-14t210058-your-app-could-have-been-a-webpage-so-i-fixed-it-for-you
+  - >-
+    2026-07/2026-07-15t030225-ban-commitstransactions-using-ast-analysis-and-linters
 compiled_at: '2026-07-09T23:21:56.143Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -75,7 +77,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.046389
-last_source_added: '2026-07-15T04:00:58.131Z'
+last_source_added: '2026-07-15T10:02:25.491Z'
 ---
 Craft in software engineering is not a single skill but a posture: the habit of caring about how something is built, not just whether it ships. Several threads run through the sources here, and they reinforce each other in ways that are worth naming directly.
 

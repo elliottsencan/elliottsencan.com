@@ -37,6 +37,8 @@ sources:
     2026-06/2026-06-18t090801-how-i-audit-a-legacy-rails-codebase-in-the-first-week
   - 2026-06/2026-06-21t130559-what-is-inference-engineering
   - 2026-06/2026-06-30t185207-when-impressive-performance-gains-do-not-matter
+  - >-
+    2026-07/2026-07-15t030225-ban-commitstransactions-using-ast-analysis-and-linters
 compiled_at: '2026-07-09T23:27:48.881Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -54,6 +56,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.033993
+last_source_added: '2026-07-15T10:02:25.491Z'
 ---
 Production systems are where abstractions meet reality. The gap between what software does in development and what it does under live load is where most interesting engineering problems live, and the sources here circle that gap from several angles.
 
