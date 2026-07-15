@@ -1,10 +1,9 @@
 ---
 title: Flaky tests
 summary: >-
-  Flaky tests fail intermittently without code changes, and eliminating them
-  requires tracing root causes across environment inconsistencies, brittle
-  selectors, AI-generated anti-patterns, and test coupling to implementation
-  details.
+  Tests that pass or fail non-deterministically, flaky tests erode CI trust,
+  waste engineering time, and require both tooling and authoring discipline to
+  contain.
 sources:
   - 2026-04/2026-04-30t195531-what-ci-actually-looks-like-at-a-100-person-team
   - 2026-04/2026-04-30t231348-testdino
@@ -15,12 +14,12 @@ sources:
     2026-06/2026-06-22t185420-code-smells-when-you-get-ai-to-write-your-frontend-tests
   - >-
     2026-07/2026-07-13t233457-playwright-on-github-actions-the-setup-that-actually-runs
-compiled_at: '2026-07-09T23:22:09.646Z'
+compiled_at: '2026-07-15T10:06:16.721Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 2815
-    output_tokens: 578
+    input_tokens: 2970
+    output_tokens: 618
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -31,13 +30,14 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.017115
-last_source_added: '2026-07-14T06:34:57.884Z'
+  cost_usd: 0.01818
 ---
-A flaky test is one that produces inconsistent results across identical runs, making CI signal unreliable and eroding trust in the test suite itself. At scale the problem compounds quickly: [Mendral's CI agent](https://www.mendral.com/blog/ci-at-scale) handles 33 million test executions per week at PostHog and spends significant effort tracing flaky tests to root causes before opening fix PRs automatically, because at that volume manual triage is untenable.
+A flaky test is one that produces inconsistent results across runs without any change to the code under test. The damage is practical: when tests fail randomly, engineers learn to ignore failures, which defeats the purpose of a test suite.
 
-Much of the flakiness in frontend suites comes from how tests are written. [Currents on UI refactors](/reading/2026-05/2026-05-05t135218-designing-playwright-tests-that-survive-ui-refactors) argues that tests break not primarily because selectors are fragile, but because they couple to implementation details: CSS classes, DOM structure, positional relationships. Selectors anchored to semantic roles, accessible names, and ARIA labels survive UI changes because those attributes travel with intent rather than structure.
+At scale the problem compounds. [PostHog's CI infrastructure](/reading/2026-04/2026-04-30t195531-what-ci-actually-looks-like-at-a-100-person-team) runs 33 million test executions weekly, and flaky tests are a primary triage target for their AI agent, which traces failures to root causes and opens fix PRs automatically. That workflow only exists because manual triage at that volume is untenable.
 
-AI-generated tests introduce their own class of flakiness sources. [How To Test Frontend](/reading/2026-06/2026-06-22t185420-code-smells-when-you-get-ai-to-write-your-frontend-tests) documents patterns such as over-mocking, testing only happy paths, and writing assertions that match a buggy implementation rather than intended behavior. Tests like that may pass consistently while catching nothing, which is a different failure mode than intermittent failures but contributes to the same loss of confidence in the suite.
+Tooling like [TestDino](/reading/2026-04/2026-04-30t231348-testdino) addresses the same problem at smaller scale by auto-categorizing failures as bugs, flaky tests, or UI changes, claiming to reclaim 6-8 hours of engineering time weekly. Both approaches treat flakiness as something to be detected and classified, not just retried.
 
-Tooling has moved to address detection and categorization. [TestDino](/reading/2026-04/2026-04-30t231348-testdino) auto-categorizes failures into bugs, flaky tests, and UI changes, reducing the time engineers spend classifying failures before they can act on them. Environment mismatch also contributes: [Currents on staging vs production](/reading/2026-05/2026-05-15t120337-playwright-testing-in-staging-vs-production) notes that certain failure modes only appear in production, meaning tests that pass in staging may flake or fail in ways attributable to environment rather than code, complicating root-cause analysis.
+Many flaky frontend tests trace back to how tests are written. [Currents Team on Playwright test design](/reading/2026-05/2026-05-15t120337-playwright-testing-in-staging-vs-production) notes that production environment differences introduce non-determinism that staging cannot reproduce. More fundamentally, [tests that couple to CSS classes, DOM position, or implementation details](/reading/2026-05/2026-05-05t135218-designing-playwright-tests-that-survive-ui-refactors) break on refactors that change nothing about behavior, which can look like flakiness even when the failure is deterministic. AI-generated tests make this worse: [common patterns include over-mocking and writing assertions against a buggy implementation](/reading/2026-06/2026-06-22t185420-code-smells-when-you-get-ai-to-write-your-frontend-tests) rather than intended behavior, producing tests that are simultaneously brittle and misleading.
+
+Infrastructure choices also matter. [Slow test suites push teams toward shortcuts](/reading/2026-07/2026-07-13t233457-playwright-on-github-actions-the-setup-that-actually-runs) like skipping or retrying rather than investigating, so reducing overall run time reduces the conditions that let flakiness go unaddressed.
