@@ -21,6 +21,8 @@ sources:
   - >-
     2026-07/2026-07-14t210058-your-app-could-have-been-a-webpage-so-i-fixed-it-for-you
   - 2026-07/2026-07-16t052353-boundary-aware-styling-in-css
+  - >-
+    2026-07/2026-07-16t080520-the-descent-what-happened-to-the-frontend-while-you-werent
 compiled_at: '2026-06-22T07:23:15.859Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -38,7 +40,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.021288
-last_source_added: '2026-07-16T12:23:53.956Z'
+last_source_added: '2026-07-16T15:05:20.763Z'
 ---
 Accessibility in web interfaces is not a single feature to bolt on but a consequence of many smaller technical decisions. Two areas where it surfaces repeatedly in CSS and typography work are unit choices and the handling of user preferences.
 

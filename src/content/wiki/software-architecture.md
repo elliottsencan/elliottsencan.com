@@ -55,6 +55,8 @@ sources:
   - 2026-07/2026-07-05t170602-building-a-cloud
   - >-
     2026-07/2026-07-15t030225-ban-commitstransactions-using-ast-analysis-and-linters
+  - >-
+    2026-07/2026-07-16t080520-the-descent-what-happened-to-the-frontend-while-you-werent
 compiled_at: '2026-07-09T23:29:08.850Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -72,7 +74,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.059991
-last_source_added: '2026-07-15T10:02:25.491Z'
+last_source_added: '2026-07-16T15:05:20.763Z'
 ---
 Architecture is the set of structural decisions that constrain everything built afterward. Choosing how to decompose a system, where to hold state, and how components communicate determines not just initial behavior but long-term maintainability and the cognitive load placed on every contributor.
 
