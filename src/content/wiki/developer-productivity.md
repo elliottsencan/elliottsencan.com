@@ -49,6 +49,7 @@ sources:
   - 2026-07/2026-07-07t170607-the-software-engineering-war
   - >-
     2026-07/2026-07-13t233457-playwright-on-github-actions-the-setup-that-actually-runs
+  - 2026-07/2026-07-16t043206-i-stopped-destructuring-everything
 compiled_at: '2026-07-09T23:19:47.357Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -66,7 +67,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.047508
-last_source_added: '2026-07-14T06:34:57.884Z'
+last_source_added: '2026-07-16T11:32:06.820Z'
 ---
 Productivity in software development resists simple measurement. Counting lines of code, features shipped, or AI-assisted commits misses the costs that accumulate on the other side of the ledger: cognitive debt, maintenance burden, and lost organizational knowledge.
 

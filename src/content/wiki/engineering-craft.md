@@ -60,6 +60,7 @@ sources:
     2026-07/2026-07-14t210058-your-app-could-have-been-a-webpage-so-i-fixed-it-for-you
   - >-
     2026-07/2026-07-15t030225-ban-commitstransactions-using-ast-analysis-and-linters
+  - 2026-07/2026-07-16t043206-i-stopped-destructuring-everything
 compiled_at: '2026-07-09T23:21:56.143Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -77,7 +78,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.046389
-last_source_added: '2026-07-15T10:02:25.491Z'
+last_source_added: '2026-07-16T11:32:06.820Z'
 ---
 Craft in software engineering is not a single skill but a posture: the habit of caring about how something is built, not just whether it ships. Several threads run through the sources here, and they reinforce each other in ways that are worth naming directly.
 
