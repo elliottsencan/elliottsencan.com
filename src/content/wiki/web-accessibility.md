@@ -1,9 +1,10 @@
 ---
 title: Web accessibility
 summary: >-
-  Web accessibility spans technical decisions across CSS, typography, and HTML
-  structure that determine whether interfaces remain usable for all people,
-  regardless of device, ability, or preference.
+  Web accessibility in modern front-end practice often surfaces through CSS
+  decisions: fluid typography units, progressive enhancement for custom
+  controls, and platform-native HTML over JavaScript-heavy abstractions all
+  carry direct accessibility consequences.
 sources:
   - 2026-04/2026-04-24t085352-building-a-ui-without-breakpoints
   - 2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp
@@ -20,12 +21,12 @@ sources:
   - 2026-06/2026-06-13t081411-signals-the-push-pull-based-algorithm
   - >-
     2026-07/2026-07-14t210058-your-app-could-have-been-a-webpage-so-i-fixed-it-for-you
-compiled_at: '2026-06-22T07:23:15.859Z'
+compiled_at: '2026-07-16T11:39:14.324Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 4351
-    output_tokens: 549
+    input_tokens: 4528
+    output_tokens: 698
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -36,13 +37,14 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.021288
-last_source_added: '2026-07-15T04:00:58.131Z'
+  cost_usd: 0.024054
 ---
-Accessibility in web interfaces is not a single feature to bolt on but a consequence of many smaller technical decisions. Two areas where it surfaces repeatedly in CSS and typography work are unit choices and the handling of user preferences.
+Accessibility rarely appears as its own subject in the sources tagged here; instead it surfaces as a constraint or consideration inside broader CSS and HTML discussions. The through-line is that technical choices made for layout, typography, and interactivity frequently determine whether content is accessible before a developer ever thinks to audit it.
 
-Fluid typography is a useful example. Using `clamp()` to scale font sizes across viewport widths produces smoother layouts, but the choice of unit matters for accessibility. [Adrian Bece's breakdown of CSS clamp](/reading/2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp) explains that viewport units in the preferred value of `clamp()` do not respond to the browser's base font size setting. Users who increase their default font size in browser preferences to improve readability will see no effect if sizes are expressed purely in `vw`. Using `rem`-based calculations, or mixing `rem` into the fluid formula, preserves that user control. This is not a minor edge case; it is the mechanism by which fluid typography either respects or silently overrides a user's explicit accessibility configuration.
+The clearest direct treatment appears in the fluid typography context. [Bece at Smashing Magazine](/reading/2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp) flags a concrete rem-unit concern: when `clamp()` preferred values are expressed in `px`-based viewport calculations rather than `rem`, the result ignores user browser font-size preferences. A user who has set their browser default to 20px will not see that preference honored if the clamp slope is hard-coded in pixel arithmetic. The fix is to convert viewport-relative calculations into rem-compatible expressions, preserving the fluid scaling while respecting user settings.
 
-At a layout level, [Amit Sheen's argument for breakpoint-free UIs](/reading/2026-04/2026-04-24t085352-building-a-ui-without-breakpoints) reframes media queries as the appropriate tool for device capabilities and user preferences, such as `prefers-reduced-motion` or `prefers-contrast`, rather than for viewport widths. Reserving media queries for capability and preference queries makes accessibility accommodations more intentional and less likely to be accidentally overridden by layout breakpoints.
+Progressive enhancement connects accessibility to control design. [Fafowora at Piccalilli](/reading/2026-06/2026-06-10t220929-navigating-the-age-old-problem-of-checkmarks-in-ui-with) contrasts JavaScript-heavy custom dropdown checkmarks, which tend to break keyboard navigation and screen reader announcements, against the CSS `::checkmark` pseudo-element. The CSS-native path inherits browser accessibility semantics automatically, though current browser support gaps mean progressive enhancement is the practical strategy: ship the CSS approach where it works, fall back to the JS implementation elsewhere.
 
-Progressive enhancement connects these concerns. [Sunkanmi Fafowora's comparison of custom dropdown checkmarks](/reading/2026-06/2026-06-10t220929-navigating-the-age-old-problem-of-checkmarks-in-ui-with) shows how JavaScript-heavy custom components often degrade badly when scripting is unavailable or slow, while the newer CSS `::checkmark` pseudo-element keeps interactive semantics in the platform layer. The tradeoff is browser support gaps, which makes the case for progressive enhancement as a strategy: deliver accessible baseline behavior first and enhance where supported.
+The platform-HTML argument also carries implicit accessibility weight. [Jim Nielsen](/reading/2026-05/2026-05-05t091632-building-websites-with-llms) advocates replacing JS-powered in-page interactions with separate linked HTML pages unified by CSS view transitions, and [Dan Q](/reading/2026-07/2026-07-14t210058-your-app-could-have-been-a-webpage-so-i-fixed-it-for-you) demonstrates the pattern by replacing an Android app delivering plain HTML with a direct webpage. Plain HTML with standard navigation carries built-in accessibility affordances that JavaScript-rendered equivalents must reconstruct manually. Similarly, Laptev's survey of modern CSS notes that native popovers and modals now handle focus trapping and ARIA roles that previously required JavaScript libraries to implement correctly.
+
+None of these sources treat accessibility as a primary topic, but collectively they argue the same position: choosing platform primitives and respecting user preferences at the CSS level is the most reliable path to accessible output, because it delegates correctness to the browser rather than requiring developers to replicate it in JavaScript.
