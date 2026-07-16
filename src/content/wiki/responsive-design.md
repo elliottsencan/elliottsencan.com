@@ -17,6 +17,7 @@ sources:
     2026-06/2026-06-10t220929-navigating-the-age-old-problem-of-checkmarks-in-ui-with
   - >-
     2026-06/2026-06-30t213959-why-css-style-queries-are-a-bigger-deal-than-you-think
+  - 2026-07/2026-07-16t052353-boundary-aware-styling-in-css
 compiled_at: '2026-07-09T23:28:32.511Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -34,6 +35,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.020907
+last_source_added: '2026-07-16T12:23:53.956Z'
 ---
 The classic responsive design model, built on viewport-width breakpoints and media queries, is under pressure from a more capable CSS platform. [Building a UI Without Breakpoints](/reading/2026-04/2026-04-24t085352-building-a-ui-without-breakpoints) argues the breakpoint model was always a workaround: modern CSS gives authors intrinsic layout tools, container queries, and container units so that components adapt to their own available space rather than the viewport's. Media queries survive in this picture, but their scope narrows to genuine device capabilities and user preferences, not layout thresholds.
 
