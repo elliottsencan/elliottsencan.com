@@ -27,6 +27,7 @@ sources:
   - 2026-06/2026-06-21t231758-nasa-technical-report-20070005136
   - >-
     2026-06/2026-06-22t165934-the-token-compression-illusion-why-im-skeptical-of-rtk
+  - 2026-07/2026-07-19t073255-its-always-tcpnodelay-every-damn-time
 compiled_at: '2026-07-09T23:28:16.466Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -44,6 +45,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.031017
+last_source_added: '2026-07-19T14:32:55.605Z'
 ---
 Across the sources here, a common argument recurs: reliability is a property you engineer into the structure of a system, not one you achieve by asking it nicely or testing after the fact.
 

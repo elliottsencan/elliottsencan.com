@@ -24,6 +24,7 @@ sources:
   - 2026-06/2026-06-21t231758-nasa-technical-report-20070005136
   - 2026-06/2026-06-30t185207-when-impressive-performance-gains-do-not-matter
   - 2026-07/2026-07-05t170602-building-a-cloud
+  - 2026-07/2026-07-19t073255-its-always-tcpnodelay-every-damn-time
 compiled_at: '2026-07-09T23:21:22.411Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -41,6 +42,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.026457
+last_source_added: '2026-07-19T14:32:55.605Z'
 ---
 The problems that define distributed systems keep resurfacing in contexts that don't always name themselves as such. Durable execution frameworks like Temporal, Restate, DBOS, and Resonate are one clear example: [Vanlightly's taxonomy](/reading/2026-05/2026-05-01t112302-the-three-durable-function-forms) of stateless functions, sessions, and actors maps directly onto the behavior-state tradeoffs that distributed systems designers have long navigated. Depot's CI orchestrator is another: it uses AWS Lambda durable functions with a two-layer hierarchy and callback-driven coordination to run stateful workflows without a persistent process, handling exactly the failure-recovery and checkpointing problems that distributed systems formalize [Scholten, Depot](/reading/2026-05/2026-05-19t110000-building-ci-with-lambda-durable-functions).
 

@@ -19,6 +19,7 @@ sources:
   - 2026-06/2026-06-11t111011-hows-linear-so-fast-a-technical-breakdown
   - 2026-06/2026-06-13t081411-signals-the-push-pull-based-algorithm
   - 2026-06/2026-06-21t231758-nasa-technical-report-20070005136
+  - 2026-07/2026-07-19t073255-its-always-tcpnodelay-every-damn-time
 compiled_at: '2026-06-22T07:23:01.456Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -36,6 +37,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.023103
+last_source_added: '2026-07-19T14:32:55.605Z'
 ---
 Systems design is less about picking the right algorithm and more about making structural decisions that hold up under real conditions. As [Fagner Brack notes](/reading/2026-04/2026-04-30t155134-learn-algorithms-for-interviews-forget-them-for-work), production engineering means reading tradeoffs and shipping incrementally against messy, unbounded inputs rather than solving clean, bounded problems in isolation.
 
