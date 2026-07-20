@@ -1,10 +1,9 @@
 ---
 title: Engineering craft
 summary: >-
-  Engineering craft is the accumulated discipline of writing, organizing, and
-  maintaining software well — spanning code design, tooling fluency,
-  communication, and the judgment to know when technical excellence actually
-  changes outcomes.
+  The practical wisdom that separates working software from good software: sound
+  judgment about tradeoffs, deliberate design, and the tacit knowledge that
+  accumulates through experience rather than formal process.
 sources:
   - 2026-04/2026-04-24t085352-building-a-ui-without-breakpoints
   - 2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp
@@ -64,12 +63,12 @@ sources:
   - >-
     2026-07/2026-07-16t080520-the-descent-what-happened-to-the-frontend-while-you-werent
   - 2026-07/2026-07-19t073255-its-always-tcpnodelay-every-damn-time
-compiled_at: '2026-07-09T23:21:56.143Z'
+compiled_at: '2026-07-20T19:45:05.641Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 8403
-    output_tokens: 1412
+    input_tokens: 9433
+    output_tokens: 1476
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -80,19 +79,22 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.046389
-last_source_added: '2026-07-19T14:32:55.605Z'
+  cost_usd: 0.050439
 ---
-Craft in software engineering is not a single skill but a posture: the habit of caring about how something is built, not just whether it ships. Several threads run through the sources here, and they reinforce each other in ways that are worth naming directly.
+Engineering craft is the layer of judgment between knowing how to write code and knowing what code to write. It shows up in small decisions — how to name a variable, whether to destructure an object, which abstraction boundary to draw — and in large ones: how to structure a codebase, when to optimize, what to defer. These decisions compound, and the gap between a codebase shaped by craft and one shaped by expedience grows over time.
 
-The most direct argument for craft is the one about ownership cost. [Yusuf Aytas](/reading/2026-05/2026-05-22t091746-when-code-is-cheap-does-quality-still-matter) notes that AI has lowered the cost of producing code but not the cost of living with it — taste and judgment remain necessary because LLMs generate polished technical debt faster than any individual ever could. [Abednego Gomes](/reading/2026-05/2026-05-14t223612-the-perils-of-ai-to-the-software-engineering-profession) pushes this further, arguing that shipping AI-generated code without review is incompatible with safety-critical systems and causes measurable skill atrophy over time. Both pieces frame craft not as aesthetic preference but as risk management.
+The most direct argument for craft as a discipline comes from the gap between interview performance and production performance. [Fagner Brack's critique of algorithm interviews](/reading/2026-04/2026-04-30t155134-learn-algorithms-for-interviews-forget-them-for-work) draws this line clearly: whiteboard algorithms test a trainable narrow skill, while real engineering requires reading tradeoffs, shipping incrementally, and handling messy unbounded inputs. The credential is not the competence.
 
-Good design principles are a recurring vehicle for that risk management. [Kobi Hari](/reading/2026-04/2026-04-30t232001-a-better-way-to-build-angular-components-from-inputs-to) argues that Angular components bloated with dozens of inputs should be refactored into composites so each concern stays encapsulated and APIs remain clean. [Go Monk](/reading/2026-05/2026-05-04t231343-ai-likes-deep-modules) makes a complementary point: deep modules — small interfaces hiding large implementations — reduce complexity for both humans and LLMs. [Henrique Teixeira](/reading/2026-06/2026-06-04t073318-single-responsibility-the-distorted-principle) corrects a common misreading of the Single Responsibility Principle, showing that over-granularizing classes violates the cognitive simplicity SRP is meant to provide. [Dominik TkDodo](/reading/2026-07/2026-07-04t141323-the-vertical-codebase) extends the organizing-by-cohesion argument to file structure, advocating domain verticals over horizontal technical layers.
+Competence of the kind that matters is often tacit. [Cekrem's essay on the tacit dimension](/reading/2026-05/2026-05-19t110710-the-tacit-dimension-why-your-best-engineers-cant-tell-you) draws on Michael Polanyi to argue that the most valuable engineering knowledge — pattern recognition, design intuition, unwritten conventions — is structurally inaccessible to articulation and therefore to AI tools. It can only be transmitted through apprenticeship. This creates a genuine problem as agentic coding spreads: the very practices that produce good software may be the ones most at risk of atrophy. [Abednego Gomes](/reading/2026-05/2026-05-14t223612-the-perils-of-ai-to-the-software-engineering-profession) calls the consequence directly — shipping AI-generated code without review or testing is not just risky for safety-critical systems, it is a form of skill erosion that degrades the profession.
 
-Craft at the system level means knowing which improvements actually matter. [Colin Breck](/reading/2026-06/2026-06-30t185207-when-impressive-performance-gains-do-not-matter) describes how attention thresholds, discrete capacity increments, and pipeline backpressure make even order-of-magnitude speedups irrelevant in practice. [Arthur Pastel](/reading/2026-05/2026-05-14t151252-5-faster-fastblur-in-image-rs) shows the flip side: when the bottleneck is real, systematic optimization — replacing float arithmetic with integer accumulators and costly division with reciprocal multiplication — yields a 5.9x speedup. Both pieces together illustrate the judgment call at the center of craft: knowing when to optimize and when not to bother.
+Craft shows up in how you read code as much as how you write it. [Ally Piechowski's git log workflow](/reading/2026-06/2026-06-18t024208-the-git-commands-i-run-before-reading-any-code) treats version history as diagnostic data: churn hotspots, bus factor, and bug clusters tell you where risk lives before you open a single file. The same author's [Rails audit process](/reading/2026-06/2026-06-18t090801-how-i-audit-a-legacy-rails-codebase-in-the-first-week) starts with stakeholder interviews to surface fear and knowledge gaps before running any tools. Both approaches reflect the same underlying instinct: understand the system before changing it.
 
-Tooling fluency is part of craft too. Christian Hofstede-Kuhn catalogs Readline bindings, history search, and script safety flags that reduce friction at the shell. [Ally Piechowski](/reading/2026-06/2026-06-18t024208-the-git-commands-i-run-before-reading-any-code) demonstrates how five git log commands can map codebase risk before reading a single file. [Ben Gesoff](/reading/2026-05/2026-05-31t164252-reviewing-large-changes-with-jujutsu) offers a Jujutsu workflow for reviewing large changes that trades cognitive overhead for progress persisted in version control.
+Good design is a form of craft too. [Kobi Hari's argument for the Composite Components pattern](/reading/2026-04/2026-04-30t232001-a-better-way-to-build-angular-components-from-inputs-to) targets Angular components bloated with dozens of inputs — a symptom of design that grew without deliberate limits. The fix is encapsulation: move concerns into directives and sub-components so each piece carries a coherent responsibility. [Henrique Teixeira's reading of the Single Responsibility Principle](/reading/2026-06/2026-06-04t073318-single-responsibility-the-distorted-principle) makes the same point from the theory side: SRP is about cohesive grouping under a single accountable responsibility, not about atomizing everything into one-liners. Over-granularization violates the cognitive simplicity the principle was meant to provide.
 
-Craft includes knowing what to trust. [lab174](/reading/2026-05/2026-05-18t113714-yaml-thats-norway-problem) traces YAML's Norway problem — a type-coercion bug where NO parses as false — through spec versions and shows that popular libraries still exhibit the issue a decade after the fix landed, a reminder that specification correctness and implementation reality diverge. [Anton Zaides](/reading/2026-06/2026-06-10t073045-the-unwritten-laws-of-software-engineering) distills production-incident lessons into rules like rolling back before debugging and treating every external dependency as a future outage.
+Abstraction quality is similarly tractable. [Go Monk's post on deep modules](/reading/2026-05/2026-05-04t231343-ai-likes-deep-modules) argues that small interfaces hiding large implementations reduce complexity for both humans and LLMs. Shallow modules — broad APIs wrapping thin logic — transfer cognitive load to every caller. The contrast maps onto [Yusuf Aytas's observation](/reading/2026-05/2026-05-22t091746-when-code-is-cheap-does-quality-still-matter) that AI lowers the cost of producing code but not the cost of owning it. Taste and judgment still determine whether the output is an asset or debt.
 
-Finally, craft extends to how engineers transmit and communicate what they know. [cekrem](/reading/2026-05/2026-05-19t110710-the-tacit-dimension-why-your-best-engineers-cant-tell-you) draws on Polanyi's philosophy of tacit knowledge to argue that the most valuable engineering expertise — pattern recognition, design intuition, unwritten conventions — is structurally inaccessible to AI tools and can only be passed on through apprenticeship. [Tuhin Nair](/reading/2026-05/2026-05-13t060018-why-senior-developers-fail-to-communicate-their-expertise) identifies a parallel gap in communication: senior developers frame problems as complexity management while the rest of the organization thinks in terms of uncertainty reduction, and bridging that gap is itself a craft skill. [Fagner Brack](/reading/2026-04/2026-04-30t155134-learn-algorithms-for-interviews-forget-them-for-work) makes the point from the hiring side: algorithm interviews test a narrow, trainable skill that weakly correlates with production performance, where real craft means reading tradeoffs and shipping incrementally against messy, unbounded inputs.
+The idiot index applied to code — the ratio of complexity in the output to the complexity of the underlying problem — is a useful heuristic here. [Speedrun's post](/reading/2026-06/2026-06-22t000701-the-idiot-index-for-code) argues that bloated, over-engineered code signals low-value work by the same logic that inflated manufacturing costs signal poor product design. The goal is not minimal code but proportionate code.
+
+Craft also demands honesty about limits. [Daniel Stenberg's analysis of curl's bug data](/reading/2026-05/2026-05-02t094735-approaching-zero-bugs) shows no measurable sign that AI-assisted static analysis is moving open-source projects toward zero latent bugs. [Colin Breck](/reading/2026-06/2026-06-30t185207-when-impressive-performance-gains-do-not-matter) adds that even real performance improvements often fail to change outcomes when attention thresholds, capacity increments, or pipeline backpressure absorb the gain. Both are arguments for grounding optimization in measurement rather than intuition.
+
+At the level of individual practice, craft is often about restraint. [Matt Smith's case against reflexive destructuring](/reading/2026-07/2026-07-16t043206-i-stopped-destructuring-everything) is a small example of a large principle: optimizing for writing code over reading it accumulates cognitive debt. [Anton Zaides's production rules](/reading/2026-06/2026-06-10t073045-the-unwritten-laws-of-software-engineering) — roll back before debugging, treat every external dependency as a future outage — encode the same instinct in operational terms. These are not algorithms. They are the residue of experience.

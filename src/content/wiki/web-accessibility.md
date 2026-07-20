@@ -1,9 +1,9 @@
 ---
 title: Web accessibility
 summary: >-
-  Web accessibility spans technical decisions across CSS, typography, and HTML
-  structure that determine whether interfaces remain usable for all people,
-  regardless of device, ability, or preference.
+  Web accessibility covers the design and technical practices that ensure UIs
+  work for all users, appearing across sources on fluid typography, progressive
+  enhancement, semantic HTML, and font-loading performance.
 sources:
   - 2026-04/2026-04-24t085352-building-a-ui-without-breakpoints
   - 2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp
@@ -23,12 +23,12 @@ sources:
   - 2026-07/2026-07-16t052353-boundary-aware-styling-in-css
   - >-
     2026-07/2026-07-16t080520-the-descent-what-happened-to-the-frontend-while-you-werent
-compiled_at: '2026-06-22T07:23:15.859Z'
+compiled_at: '2026-07-20T19:49:33.131Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 4351
-    output_tokens: 549
+    input_tokens: 4877
+    output_tokens: 751
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -39,13 +39,16 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.021288
-last_source_added: '2026-07-16T15:05:20.763Z'
+  cost_usd: 0.025896
 ---
-Accessibility in web interfaces is not a single feature to bolt on but a consequence of many smaller technical decisions. Two areas where it surfaces repeatedly in CSS and typography work are unit choices and the handling of user preferences.
+Web accessibility rarely appears as a standalone subject in the cited sources; instead it surfaces as a constraint that disciplines other design and engineering decisions.
 
-Fluid typography is a useful example. Using `clamp()` to scale font sizes across viewport widths produces smoother layouts, but the choice of unit matters for accessibility. [Adrian Bece's breakdown of CSS clamp](/reading/2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp) explains that viewport units in the preferred value of `clamp()` do not respond to the browser's base font size setting. Users who increase their default font size in browser preferences to improve readability will see no effect if sizes are expressed purely in `vw`. Using `rem`-based calculations, or mixing `rem` into the fluid formula, preserves that user control. This is not a minor edge case; it is the mechanism by which fluid typography either respects or silently overrides a user's explicit accessibility configuration.
+The clearest direct treatment comes from fluid typography. Adrian Bece's examination of CSS `clamp()` [warns explicitly](/reading/2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp) that mixing `px` and `rem` units in clamp expressions breaks user-configured font scaling. Browser default font sizes are a primary accessibility lever for users with low vision; if the preferred value of a clamp expression is expressed in `px`, scaling the browser's base size has no effect. The recommendation is to calculate preferred values in `rem` or use unit-consistent formulas so that user preferences propagate through the scale.
 
-At a layout level, [Amit Sheen's argument for breakpoint-free UIs](/reading/2026-04/2026-04-24t085352-building-a-ui-without-breakpoints) reframes media queries as the appropriate tool for device capabilities and user preferences, such as `prefers-reduced-motion` or `prefers-contrast`, rather than for viewport widths. Reserving media queries for capability and preference queries makes accessibility accommodations more intentional and less likely to be accidentally overridden by layout breakpoints.
+Progressive enhancement is a second thread. Sunkanmi Fafowora's piece on custom dropdown checkmarks [frames the CSS `::checkmark` pseudo-element](/reading/2026-06/2026-06-10t220929-navigating-the-age-old-problem-of-checkmarks-in-ui-with) as a progressively enhanced alternative to brittle JavaScript implementations, which carry implicit accessibility risks around focus management and keyboard interaction. The tension is that the native CSS path is more accessible in principle but still has incomplete browser support, so the fragile JS approach remains necessary as a fallback.
 
-Progressive enhancement connects these concerns. [Sunkanmi Fafowora's comparison of custom dropdown checkmarks](/reading/2026-06/2026-06-10t220929-navigating-the-age-old-problem-of-checkmarks-in-ui-with) shows how JavaScript-heavy custom components often degrade badly when scripting is unavailable or slow, while the newer CSS `::checkmark` pseudo-element keeps interactive semantics in the platform layer. The tradeoff is browser support gaps, which makes the case for progressive enhancement as a strategy: deliver accessible baseline behavior first and enhance where supported.
+Font loading intersects accessibility through readability and performance. The Linear performance breakdown [notes](/reading/2026-06/2026-06-11t111011-hows-linear-so-fast-a-technical-breakdown) that Inter is served as a variable woff2 with `font-display: optional`, a strategy that prevents invisible or flash-of-unstyled text, both of which degrade readability for users with cognitive or perceptual differences.
+
+The broader case for HTML-first architecture carries implicit accessibility weight. Jim Nielsen argues that replacing JS-powered in-page interactions with [separate linked HTML pages](/reading/2026-05/2026-05-05t091632-building-websites-with-llms) reduces complexity, and plain HTML navigation is inherently more accessible than custom JS routing. Dan Q's reversal of an Android app into a lightweight webpage [makes a parallel point](/reading/2026-07/2026-07-14t210058-your-app-could-have-been-a-webpage-so-i-fixed-it-for-you): the app wrapper imposed tracking and friction without functional gain, and the simpler HTML version is easier for all users, including those on assistive technology.
+
+Amit Sheen's argument for intrinsic layouts [also touches accessibility indirectly](/reading/2026-04/2026-04-24t085352-building-a-ui-without-breakpoints): reserving media queries for device capabilities and user preferences, rather than using them purely for visual breakpoints, keeps preference-based queries, such as `prefers-reduced-motion` or `prefers-contrast`, as first-class concerns rather than afterthoughts.
