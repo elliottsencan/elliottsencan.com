@@ -24,6 +24,7 @@ sources:
   - >-
     2026-06/2026-06-20t053342-if-llms-have-human-like-attributes-then-so-does-age-of
   - 2026-07/2026-07-09t161342-ai-2040-plan-a
+  - 2026-07/2026-07-20t215754-stop-using-opencode
 compiled_at: '2026-07-09T23:17:30.368Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -41,6 +42,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.026808
+last_source_added: '2026-07-21T04:57:54.933Z'
 ---
 The safety concerns surrounding AI systems do not reduce to a single problem. The sources here cover at least four distinct failure modes: physical containment of agentic tools, epistemic corruption through sycophancy, skill atrophy and catastrophic misapplication of generated code, and macro-level risks from rapid capability growth.
 

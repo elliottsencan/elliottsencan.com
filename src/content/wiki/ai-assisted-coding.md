@@ -56,6 +56,7 @@ sources:
   - 2026-06/2026-06-23t212958-how-ai-code-review-can-make-correct-code-worse
   - 2026-06/2026-06-23t232444-repowise-devrepowise
   - 2026-07/2026-07-07t170607-the-software-engineering-war
+  - 2026-07/2026-07-20t215754-stop-using-opencode
 aliases:
   - ai-coding-assistants
 compiled_at: '2026-07-09T23:16:39.532Z'
@@ -75,6 +76,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.059325
+last_source_added: '2026-07-21T04:57:54.933Z'
 ---
 AI-assisted coding sits on a spectrum. At one end, a developer asks a model to autocomplete a function or draft a test. At the other, a fully autonomous agent spins up hundreds of subagents, writes its own orchestration scripts, and runs for hours without human input. The tools, risks, and professional questions differ sharply depending on where on that spectrum a team is operating.
 

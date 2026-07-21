@@ -69,6 +69,7 @@ sources:
     2026-07/2026-07-15t030225-ban-commitstransactions-using-ast-analysis-and-linters
   - >-
     2026-07/2026-07-16t080520-the-descent-what-happened-to-the-frontend-while-you-werent
+  - 2026-07/2026-07-20t215754-stop-using-opencode
 compiled_at: '2026-07-09T23:20:38.067Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -86,7 +87,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.076125
-last_source_added: '2026-07-16T15:05:20.763Z'
+last_source_added: '2026-07-21T04:57:54.933Z'
 ---
 The breadth of developer tooling visible in these sources resists a single definition. What connects them is a shared concern: every tool described is either reducing the cost of a correct action or preventing the cost of an incorrect one. The range runs from shell Readline bindings [shell tricks](/reading/2026-04/2026-04-30t231815-shell-tricks-that-actually-make-life-easier-and-save-your) to multi-agent orchestration platforms [Claude Code dynamic workflows](/reading/2026-05/2026-05-28t140143-introducing-dynamic-workflows-in-claude-code), but the underlying logic is identical.
 
