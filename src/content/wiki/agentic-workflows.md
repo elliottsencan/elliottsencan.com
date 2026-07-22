@@ -65,6 +65,7 @@ sources:
   - 2026-06/2026-06-23t212958-how-ai-code-review-can-make-correct-code-worse
   - 2026-06/2026-06-25t195020-strands-agents
   - 2026-06/2026-06-30t173037-a-return-to-two-pizza-culture
+  - 2026-07/2026-07-21t224812-claude-code-mcp-on-13b-polymarket-trades
 compiled_at: '2026-07-09T23:15:22.664Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -82,6 +83,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.071415
+last_source_added: '2026-07-22T05:48:12.483Z'
 ---
 Agentic workflows sit at the intersection of a technical problem and an organizational one. The technical problem is getting an LLM to take a sequence of actions reliably across many steps without losing state, making unrecoverable mistakes, or silently lying about completion. The organizational problem is that faster code generation does not fix the underlying bottlenecks of shared context, specification clarity, and management coherence — it amplifies whatever alignment or misalignment already exists [the-bottleneck-was-never-the-code](/reading/2026-05/2026-05-06t110728-the-bottleneck-was-never-the-code).
 

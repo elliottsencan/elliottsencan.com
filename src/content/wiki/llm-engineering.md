@@ -58,6 +58,7 @@ sources:
   - >-
     2026-06/2026-06-21t192506-arch-router-aligning-llm-routing-with-human-preferences
   - 2026-06/2026-06-23t212958-how-ai-code-review-can-make-correct-code-worse
+  - 2026-07/2026-07-21t224812-claude-code-mcp-on-13b-polymarket-trades
 compiled_at: '2026-07-09T23:24:05.254Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -75,6 +76,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.057396
+last_source_added: '2026-07-22T05:48:12.483Z'
 ---
 LLM engineering is the practice of building software systems on top of large language models, from low-level training and inference optimization through agent architecture, harness design, and production observability. The sources here span that full range, and the recurring tension is between raw model capability and the engineering work needed to make that capability dependable.
 
