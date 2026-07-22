@@ -1,10 +1,10 @@
 ---
 title: Systems design
 summary: >-
-  Systems design spans how components are structured, isolated, and coordinated
-  to handle real-world complexity, covering tradeoffs in state management,
-  failure recovery, module boundaries, and the diagrams used to communicate it
-  all.
+  Systems design spans decisions about structure, tradeoffs, and failure modes
+  across software — from container isolation and durable execution to
+  local-first sync and reactive state — where the dominant challenge is managing
+  complexity under real-world constraints.
 sources:
   - >-
     2026-04/2026-04-30t155134-learn-algorithms-for-interviews-forget-them-for-work
@@ -20,12 +20,12 @@ sources:
   - 2026-06/2026-06-13t081411-signals-the-push-pull-based-algorithm
   - 2026-06/2026-06-21t231758-nasa-technical-report-20070005136
   - 2026-07/2026-07-19t073255-its-always-tcpnodelay-every-damn-time
-compiled_at: '2026-06-22T07:23:01.456Z'
+compiled_at: '2026-07-22T05:59:54.130Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 3971
-    output_tokens: 746
+    input_tokens: 4144
+    output_tokens: 807
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -36,17 +36,20 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.023103
-last_source_added: '2026-07-19T14:32:55.605Z'
+  cost_usd: 0.024537
 ---
-Systems design is less about picking the right algorithm and more about making structural decisions that hold up under real conditions. As [Fagner Brack notes](/reading/2026-04/2026-04-30t155134-learn-algorithms-for-interviews-forget-them-for-work), production engineering means reading tradeoffs and shipping incrementally against messy, unbounded inputs rather than solving clean, bounded problems in isolation.
+Systems design is less a discipline than a disposition: every architectural decision encodes assumptions about what will fail, what will scale, and what the humans maintaining the system will actually understand. The sources here range widely, but each one illuminates a layer of that problem.
 
-One recurring structural concern is how to handle state and failure in distributed systems. [Temporal](/reading/2026-04/2026-04-30t231511-temporal) addresses this by persisting workflow state at every step so applications recover from failures without manual reconciliation. [Jack Vanlightly's taxonomy](/reading/2026-05/2026-05-01t112302-the-three-durable-function-forms) goes further, mapping durable execution across three forms, stateless functions, sessions, and actors, showing how platforms like Temporal and Restate each position themselves along a behavior-state continuum.
+At the infrastructure level, containers illustrate how isolation is constructed rather than given. [Building a container from scratch](/reading/2026-05/2026-05-04t231858-how-container-filesystem-works-building-a-docker-like) shows that mount namespaces and `pivot_root` are the actual primitives behind Docker's apparent magic — understanding them makes the failure modes of containerized systems legible.
 
-At the infrastructure layer, [Ivan Velichko's container walkthrough](/reading/2026-05/2026-05-04t231858-how-container-filesystem-works-building-a-docker-like) illustrates how mount namespaces and root filesystem isolation compose into container primitives, a reminder that many systems-level abstractions are layered Linux mechanisms rather than novel inventions.
+Distributed workflows add a second layer of complexity. [Temporal](/reading/2026-04/2026-04-30t231511-temporal) persists workflow state at every step, offloading the failure-recovery problem from application code. [Jack Vanlightly's taxonomy](/reading/2026-05/2026-05-01t112302-the-three-durable-function-forms) of stateless functions, sessions, and actors across platforms like Temporal and Restate clarifies that "durable execution" is not a single pattern but a family of tradeoffs arranged along a behavior-state continuum.
 
-Module boundaries matter as much as infrastructure choices. [Henrique Teixeira's reading of SRP](/reading/2026-06/2026-06-04t073318-single-responsibility-the-distorted-principle) argues that the Single Responsibility Principle is about cohesive grouping under one accountable responsibility, not atomizing every behavior into its own class. Over-granularizing increases cognitive load without improving correctness.
+Network configuration is often where latency hides. [Marc Brooker's case for TCP_NODELAY](/reading/2026-07/2026-07-19t073255-its-always-tcpnodelay-every-damn-time) is a concrete example: Nagle's algorithm interacting with delayed ACKs silently degrades latency in datacenter environments where its original motivation no longer applies.
 
-Communicating system structure clearly is its own problem. [Billy Pilger's diagram analysis](/reading/2026-06/2026-06-11t083730-7-more-common-mistakes-in-architecture-diagrams) identifies pitfalls like unlabeled resources, fan traps, and overloaded master diagrams that obscure rather than reveal how systems actually behave.
+At the application layer, [Linear's architecture](/reading/2026-06/2026-06-11t111011-hows-linear-so-fast-a-technical-breakdown) demonstrates how local-first IndexedDB sync, optimistic updates, and aggressive code splitting combine to produce perceived instantaneity. These are not independent tricks but a coherent system-level commitment to moving latency off the critical path.
 
-Performance is also a design property, not just an optimization pass. [Linear's architecture](/reading/2026-06/2026-06-11t111011-hows-linear-so-fast-a-technical-breakdown) shows how local-first IndexedDB sync, service worker precaching, and optimistic updates combine into a system that feels instant because reads never wait on the network. Similarly, [the image-rs blur optimization](/reading/2026-05/2026-05-14t151252-5-faster-fastblur-in-image-rs) achieves a 5.9x speedup by replacing float arithmetic and division with integer accumulators and reciprocal multiplication, structural choices at the algorithm level that compound into measurable system behavior.
+Diagrams are where systems design gets communicated. [Common architecture diagram mistakes](/reading/2026-06/2026-06-11t083730-7-more-common-mistakes-in-architecture-diagrams) — unlabeled resources, fan traps, overloaded master diagrams — are not aesthetic failures; they produce misunderstandings that propagate into implementation decisions.
+
+Structural principles operate at the code level too. [The SRP article](/reading/2026-06/2026-06-04t073318-single-responsibility-the-distorted-principle) argues that over-granularizing modules under a misread "do one thing" rule produces fragmentation that makes a system harder to reason about, not easier. Cohesion is itself a systems property.
+
+Finally, [the algorithm-interview critique](/reading/2026-04/2026-04-30t155134-learn-algorithms-for-interviews-forget-them-for-work) names the gap between puzzle-solving and actual systems thinking: production engineering requires reading tradeoffs and handling messy, unbounded inputs, skills that narrow interview formats do not test.
