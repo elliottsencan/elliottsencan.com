@@ -89,6 +89,8 @@ sources:
   - 2026-07/2026-07-16t052353-boundary-aware-styling-in-css
   - >-
     2026-07/2026-07-16t080520-the-descent-what-happened-to-the-frontend-while-you-werent
+  - >-
+    2026-07/2026-07-23t215330-humanlayeradvanced-context-engineering-for-coding-agents
 compiled_at: '2026-07-09T23:29:48.525Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -106,7 +108,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.075789
-last_source_added: '2026-07-16T15:05:20.763Z'
+last_source_added: '2026-07-24T04:53:30.637Z'
 ---
 Software engineering is not a single discipline but a stack of concerns: how systems are designed, how code is written and reviewed, how it is tested and deployed, how knowledge transfers between practitioners, and who is accountable when things fail. The sources here span all of those layers, and a consistent thread runs through them: adding speed without adding understanding tends to produce problems at the next layer down.
 
