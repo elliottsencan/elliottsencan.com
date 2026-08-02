@@ -40,6 +40,7 @@ sources:
   - >-
     2026-07/2026-07-15t030225-ban-commitstransactions-using-ast-analysis-and-linters
   - 2026-07/2026-07-19t073255-its-always-tcpnodelay-every-damn-time
+  - 2026-08/2026-08-01t221438-in-house-llm-serving-at-netflix
 compiled_at: '2026-07-09T23:27:48.881Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -57,7 +58,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.033993
-last_source_added: '2026-07-19T14:32:55.605Z'
+last_source_added: '2026-08-02T05:14:38.751Z'
 ---
 Production systems are where abstractions meet reality. The gap between what software does in development and what it does under live load is where most interesting engineering problems live, and the sources here circle that gap from several angles.
 

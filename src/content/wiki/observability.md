@@ -20,6 +20,7 @@ sources:
     2026-06/2026-06-10t223404-how-to-read-distributed-traces-when-you-didnt-write-the-code
   - 2026-06/2026-06-11t024225-testing-a-security-tool-like-it-can-hurt-people
   - 2026-06/2026-06-23t232444-repowise-devrepowise
+  - 2026-08/2026-08-01t221438-in-house-llm-serving-at-netflix
 compiled_at: '2026-07-09T23:26:21.449Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -37,6 +38,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.024414
+last_source_added: '2026-08-02T05:14:38.751Z'
 ---
 At its core, observability is the practice of making a system's internal state readable from its outputs. In traditional infrastructure, that means logs, metrics, and traces surfaced through tooling that consolidates what would otherwise require juggling many separate utilities. [Radar](/reading/2026-05/2026-05-03t105238-radar-or-the-missing-open-source-kubernetes-ui) is a concrete example: platform teams typically piece together kubectl and five or more other tools to get a coherent picture of a Kubernetes cluster, and Radar's pitch is to collapse that into a single binary with unified topology, events, Helm state, and audit views.
 
