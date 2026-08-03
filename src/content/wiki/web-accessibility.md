@@ -1,9 +1,9 @@
 ---
 title: Web accessibility
 summary: >-
-  Web accessibility spans technical decisions across CSS, typography, and HTML
-  structure that determine whether interfaces remain usable for all people,
-  regardless of device, ability, or preference.
+  Web accessibility covers how design and implementation choices determine
+  whether interfaces work for all users, touching fluid typography, progressive
+  enhancement, semantic HTML, and platform primitives.
 sources:
   - 2026-04/2026-04-24t085352-building-a-ui-without-breakpoints
   - 2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp
@@ -23,12 +23,12 @@ sources:
   - 2026-07/2026-07-16t052353-boundary-aware-styling-in-css
   - >-
     2026-07/2026-07-16t080520-the-descent-what-happened-to-the-frontend-while-you-werent
-compiled_at: '2026-06-22T07:23:15.859Z'
+compiled_at: '2026-08-03T10:13:38.635Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 4351
-    output_tokens: 549
+    input_tokens: 4877
+    output_tokens: 788
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -39,13 +39,18 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.021288
-last_source_added: '2026-07-16T15:05:20.763Z'
+  cost_usd: 0.026451
 ---
-Accessibility in web interfaces is not a single feature to bolt on but a consequence of many smaller technical decisions. Two areas where it surfaces repeatedly in CSS and typography work are unit choices and the handling of user preferences.
+Web accessibility is not a discrete feature layer added after design is complete. It runs through decisions about typography, layout, interaction patterns, and how much of an interface depends on JavaScript to function at all.
 
-Fluid typography is a useful example. Using `clamp()` to scale font sizes across viewport widths produces smoother layouts, but the choice of unit matters for accessibility. [Adrian Bece's breakdown of CSS clamp](/reading/2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp) explains that viewport units in the preferred value of `clamp()` do not respond to the browser's base font size setting. Users who increase their default font size in browser preferences to improve readability will see no effect if sizes are expressed purely in `vw`. Using `rem`-based calculations, or mixing `rem` into the fluid formula, preserves that user control. This is not a minor edge case; it is the mechanism by which fluid typography either respects or silently overrides a user's explicit accessibility configuration.
+Fluid typography is one area where accessibility stakes are concrete. [Modern Fluid Typography Using CSS Clamp](/reading/2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp) notes that using `rem`-based min and max values inside `clamp()` is essential for respecting user font-size preferences set in the browser. Pixel values bypass those preferences entirely, meaning a user who has configured larger text in their OS or browser settings gets overridden. The article distinguishes this from a stylistic concern: it is a functional barrier for users with low vision.
 
-At a layout level, [Amit Sheen's argument for breakpoint-free UIs](/reading/2026-04/2026-04-24t085352-building-a-ui-without-breakpoints) reframes media queries as the appropriate tool for device capabilities and user preferences, such as `prefers-reduced-motion` or `prefers-contrast`, rather than for viewport widths. Reserving media queries for capability and preference queries makes accessibility accommodations more intentional and less likely to be accidentally overridden by layout breakpoints.
+Progressive enhancement is a closely related principle. [Navigating the age-old problem of checkmarks in UI with progressive enhancement](/reading/2026-06/2026-06-10t220929-navigating-the-age-old-problem-of-checkmarks-in-ui-with) argues that the JavaScript-heavy approach to custom dropdown checkmarks is fragile for users whose environments do not execute JS reliably, and that the CSS `::checkmark` pseudo-element represents a platform-native path that degrades more gracefully, even if its browser support is currently incomplete.
 
-Progressive enhancement connects these concerns. [Sunkanmi Fafowora's comparison of custom dropdown checkmarks](/reading/2026-06/2026-06-10t220929-navigating-the-age-old-problem-of-checkmarks-in-ui-with) shows how JavaScript-heavy custom components often degrade badly when scripting is unavailable or slow, while the newer CSS `::checkmark` pseudo-element keeps interactive semantics in the platform layer. The tradeoff is browser support gaps, which makes the case for progressive enhancement as a strategy: deliver accessible baseline behavior first and enhance where supported.
+Semantic HTML and minimal JavaScript surface elsewhere. [Jim Nielsen](/reading/2026-05/2026-05-05t091632-building-websites-with-llms) argues that separate linked HTML pages unified by CSS view transitions are simpler to build and maintain than in-page JavaScript interactions, and the accessibility implication is direct: standard anchor navigation works with screen readers and keyboard users without additional instrumentation. [Dan Q](/reading/2026-07/2026-07-14t210058-your-app-could-have-been-a-webpage-so-i-fixed-it-for-you) makes the same argument from a different angle, showing that replacing an Android app with a plain webpage removed tracking and reduced friction for all users, not just those with assistive needs.
+
+Layout decisions carry accessibility weight too. [Building a UI Without Breakpoints](/reading/2026-04/2026-04-24t085352-building-a-ui-without-breakpoints) reserves media queries for device capabilities and user preferences specifically, rather than viewport width. That framing positions `prefers-reduced-motion`, `prefers-contrast`, and similar media features as first-class layout inputs rather than afterthoughts, which is structurally an accessibility argument about respecting user-declared preferences.
+
+Font loading affects perceived accessibility as well. [How Linear achieves its speed](/reading/2026-06/2026-06-11t111011-hows-linear-so-fast-a-technical-breakdown) notes font-loading best practices as part of a performance architecture; invisible or flashing text during font swap is a usability issue that disproportionately affects users on slower connections or lower-powered devices.
+
+The thread across these sources is that accessibility outcomes follow from the choice of primitives. Platform HTML, CSS custom properties, and fluid units tend to preserve user preferences automatically. JavaScript-dependent or pixel-fixed implementations tend to override them, often silently.
