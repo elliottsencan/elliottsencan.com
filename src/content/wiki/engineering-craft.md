@@ -1,10 +1,10 @@
 ---
 title: Engineering craft
 summary: >-
-  Engineering craft is the accumulated discipline of writing, organizing, and
-  maintaining software well — spanning code design, tooling fluency,
-  communication, and the judgment to know when technical excellence actually
-  changes outcomes.
+  Engineering craft is the set of judgment-driven practices that separate
+  working code from good code — spanning module design, tooling fluency,
+  communication, and the tacit knowledge that accumulates only through
+  experience.
 sources:
   - 2026-04/2026-04-24t085352-building-a-ui-without-breakpoints
   - 2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp
@@ -65,12 +65,12 @@ sources:
     2026-07/2026-07-16t080520-the-descent-what-happened-to-the-frontend-while-you-werent
   - 2026-07/2026-07-19t073255-its-always-tcpnodelay-every-damn-time
   - 2026-08/2026-08-03t025839-dont-be-a-meat-proxy
-compiled_at: '2026-07-09T23:21:56.143Z'
+compiled_at: '2026-08-03T19:34:33.009Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 8403
-    output_tokens: 1412
+    input_tokens: 9567
+    output_tokens: 1585
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -81,19 +81,22 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.046389
-last_source_added: '2026-08-03T09:58:39.571Z'
+  cost_usd: 0.052476
 ---
-Craft in software engineering is not a single skill but a posture: the habit of caring about how something is built, not just whether it ships. Several threads run through the sources here, and they reinforce each other in ways that are worth naming directly.
+Engineering craft resists a clean definition because it is not a single skill but a density of overlapping judgments. It shows up in decisions about how to structure a module, when to roll back instead of debug, how to read a codebase before touching it, and how to communicate a tradeoff to someone who does not care about implementation details.
 
-The most direct argument for craft is the one about ownership cost. [Yusuf Aytas](/reading/2026-05/2026-05-22t091746-when-code-is-cheap-does-quality-still-matter) notes that AI has lowered the cost of producing code but not the cost of living with it — taste and judgment remain necessary because LLMs generate polished technical debt faster than any individual ever could. [Abednego Gomes](/reading/2026-05/2026-05-14t223612-the-perils-of-ai-to-the-software-engineering-profession) pushes this further, arguing that shipping AI-generated code without review is incompatible with safety-critical systems and causes measurable skill atrophy over time. Both pieces frame craft not as aesthetic preference but as risk management.
+At the design level, the craft is about managing complexity. [AI Likes Deep Modules](/reading/2026-05/2026-05-04t231343-ai-likes-deep-modules) argues that small interfaces hiding large implementations reduce the cognitive surface area that both humans and LLMs must hold in mind. [Single Responsibility, the Distorted Principle](/reading/2026-06/2026-06-04t073318-single-responsibility-the-distorted-principle) extends this by showing how SRP is widely misread as "do one thing" when it actually means grouping behaviors under a single coherent responsibility; over-granularizing is its own kind of failure. [A Better Way to Build Angular Components](/reading/2026-04/2026-04-30t232001-a-better-way-to-build-angular-components-from-inputs-to) applies the same logic to component APIs, arguing that bloated input lists should be broken apart into directives and sub-components so each concern stays encapsulated.
 
-Good design principles are a recurring vehicle for that risk management. [Kobi Hari](/reading/2026-04/2026-04-30t232001-a-better-way-to-build-angular-components-from-inputs-to) argues that Angular components bloated with dozens of inputs should be refactored into composites so each concern stays encapsulated and APIs remain clean. [Go Monk](/reading/2026-05/2026-05-04t231343-ai-likes-deep-modules) makes a complementary point: deep modules — small interfaces hiding large implementations — reduce complexity for both humans and LLMs. [Henrique Teixeira](/reading/2026-06/2026-06-04t073318-single-responsibility-the-distorted-principle) corrects a common misreading of the Single Responsibility Principle, showing that over-granularizing classes violates the cognitive simplicity SRP is meant to provide. [Dominik TkDodo](/reading/2026-07/2026-07-04t141323-the-vertical-codebase) extends the organizing-by-cohesion argument to file structure, advocating domain verticals over horizontal technical layers.
+Code organization follows the same logic at a larger scale. [The Vertical Codebase](/reading/2026-07/2026-07-04t141323-the-vertical-codebase) argues for organizing by domain rather than technical layer, showing that colocation by functionality improves cohesion and discoverability. The approach also pays dividends for AI agents, which reason better over code that is already grouped by intent.
 
-Craft at the system level means knowing which improvements actually matter. [Colin Breck](/reading/2026-06/2026-06-30t185207-when-impressive-performance-gains-do-not-matter) describes how attention thresholds, discrete capacity increments, and pipeline backpressure make even order-of-magnitude speedups irrelevant in practice. [Arthur Pastel](/reading/2026-05/2026-05-14t151252-5-faster-fastblur-in-image-rs) shows the flip side: when the bottleneck is real, systematic optimization — replacing float arithmetic with integer accumulators and costly division with reciprocal multiplication — yields a 5.9x speedup. Both pieces together illustrate the judgment call at the center of craft: knowing when to optimize and when not to bother.
+Craft also means knowing what not to build. [The Idiot Index for Code](/reading/2026-06/2026-06-22t000701-the-idiot-index-for-code) borrows a manufacturing concept to argue that bloated, over-engineered code signals low-value work in the same way inflated production costs do. [Building Websites With LLMs](/reading/2026-05/2026-05-05t091632-building-websites-with-llms) makes a related point: replacing JavaScript-powered in-page interactions with plain linked HTML pages, unified by CSS view transitions, is often simpler to build and maintain than progressive enhancement stacks.
 
-Tooling fluency is part of craft too. Christian Hofstede-Kuhn catalogs Readline bindings, history search, and script safety flags that reduce friction at the shell. [Ally Piechowski](/reading/2026-06/2026-06-18t024208-the-git-commands-i-run-before-reading-any-code) demonstrates how five git log commands can map codebase risk before reading a single file. [Ben Gesoff](/reading/2026-05/2026-05-31t164252-reviewing-large-changes-with-jujutsu) offers a Jujutsu workflow for reviewing large changes that trades cognitive overhead for progress persisted in version control.
+On the tooling side, craft is knowing your instruments well enough to stop fighting them. [Shell Tricks That Actually Make Life Easier](/reading/2026-04/2026-04-30t231815-shell-tricks-that-actually-make-life-easier-and-save-your) catalogs Readline bindings, history search, and script safety flags that most engineers use only partially. [The Git Commands I Run Before Reading Any Code](/reading/2026-06/2026-06-18t024208-the-git-commands-i-run-before-reading-any-code) shows how churn hotspots, bus factor queries, and firefighting frequency give a faster read on a codebase's risk profile than opening any single file. [Reviewing Large Changes with Jujutsu](/reading/2026-05/2026-05-31t164252-reviewing-large-changes-with-jujutsu) describes a concrete workflow for reviewing large pull requests without losing state, persisting progress in version control rather than in memory.
 
-Craft includes knowing what to trust. [lab174](/reading/2026-05/2026-05-18t113714-yaml-thats-norway-problem) traces YAML's Norway problem — a type-coercion bug where NO parses as false — through spec versions and shows that popular libraries still exhibit the issue a decade after the fix landed, a reminder that specification correctness and implementation reality diverge. [Anton Zaides](/reading/2026-06/2026-06-10t073045-the-unwritten-laws-of-software-engineering) distills production-incident lessons into rules like rolling back before debugging and treating every external dependency as a future outage.
+Craft also lives in the unglamorous work of understanding what is actually slow. [5x Faster fast_blur in image-rs](/reading/2026-05/2026-05-14t151252-5-faster-fastblur-in-image-rs) walks through a step-by-step Rust optimization, replacing float arithmetic with integer accumulators and division with reciprocal multiplication for a 5.9x speedup. But [When Impressive Performance Gains Do Not Matter](/reading/2026-06/2026-06-30t185207-when-impressive-performance-gains-do-not-matter) is the necessary counterweight: attention thresholds, discrete capacity increments, and pipeline backpressure mean that even order-of-magnitude improvements often change nothing in practice.
 
-Finally, craft extends to how engineers transmit and communicate what they know. [cekrem](/reading/2026-05/2026-05-19t110710-the-tacit-dimension-why-your-best-engineers-cant-tell-you) draws on Polanyi's philosophy of tacit knowledge to argue that the most valuable engineering expertise — pattern recognition, design intuition, unwritten conventions — is structurally inaccessible to AI tools and can only be passed on through apprenticeship. [Tuhin Nair](/reading/2026-05/2026-05-13t060018-why-senior-developers-fail-to-communicate-their-expertise) identifies a parallel gap in communication: senior developers frame problems as complexity management while the rest of the organization thinks in terms of uncertainty reduction, and bridging that gap is itself a craft skill. [Fagner Brack](/reading/2026-04/2026-04-30t155134-learn-algorithms-for-interviews-forget-them-for-work) makes the point from the hiring side: algorithm interviews test a narrow, trainable skill that weakly correlates with production performance, where real craft means reading tradeoffs and shipping incrementally against messy, unbounded inputs.
+AI tools complicate the picture. [When Code Is Cheap, Does Quality Still Matter?](/reading/2026-05/2026-05-22t091746-when-code-is-cheap-does-quality-still-matter) argues that LLMs lower the cost of producing code but not the cost of owning it, and that taste and judgment remain the scarce resource. [The Perils of AI to the Software Engineering Profession](/reading/2026-05/2026-05-14t223612-the-perils-of-ai-to-the-software-engineering-profession) is more direct: shipping AI-generated code without review causes skill atrophy and is incompatible with safety-critical systems. [Code Smells When You Get AI to Write Your Frontend Tests](/reading/2026-06/2026-06-22t185420-code-smells-when-you-get-ai-to-write-your-frontend-tests) documents the recurring patterns AI tools introduce when generating tests, including over-mocking and testing the buggy implementation rather than intended behavior.
+
+Much of craft is tacit. [The Tacit Dimension](/reading/2026-05/2026-05-19t110710-the-tacit-dimension-why-your-best-engineers-cant-tell-you) draws on Polanyi to argue that pattern recognition, design intuition, and unwritten conventions are structurally inaccessible to AI and can only be transmitted through apprenticeship. [Why Senior Developers Fail to Communicate Their Expertise](/reading/2026-05/2026-05-13t060018-why-senior-developers-fail-to-communicate-their-expertise) adds that even experienced engineers struggle to articulate their knowledge, because they reason in terms of complexity management while the rest of the business thinks in terms of uncertainty reduction.
+
+[Learn Algorithms for Interviews, Forget Them for Work](/reading/2026-04/2026-04-30t155134-learn-algorithms-for-interviews-forget-them-for-work) frames the gap between credentialing and craft most clearly: algorithm interviews test a narrow, trainable skill that correlates weakly with production performance. Real engineering is reading tradeoffs, shipping incrementally, and building systems that handle messy, unbounded real-world inputs. The craft, in other words, is everything the interview does not test.

@@ -1,9 +1,9 @@
 ---
 title: Developer tools
 summary: >-
-  Discrete software tools that extend what practitioners can build, debug,
-  deploy, or understand, spanning LLM fine-tuning, CI orchestration,
-  documentation, security scanning, Kubernetes management, and more.
+  A broad category spanning LLM fine-tuning rigs, GPU compatibility checkers, CI
+  orchestrators, documentation platforms, Kubernetes UIs, and security harnesses
+  — tools that reduce friction at specific points in a software or AI workflow.
 sources:
   - 2026-04/2026-04-24t093356-unsloth
   - 2026-04/2026-04-29t173553-canitrun-can-my-gpu-run-this-llm
@@ -24,12 +24,12 @@ sources:
   - 2026-07/2026-07-05t170602-building-a-cloud
   - >-
     2026-07/2026-07-14t210058-your-app-could-have-been-a-webpage-so-i-fixed-it-for-you
-compiled_at: '2026-07-09T23:21:01.735Z'
+compiled_at: '2026-08-03T19:33:31.022Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 4567
-    output_tokens: 1061
+    input_tokens: 4748
+    output_tokens: 853
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -40,15 +40,16 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.029616
-last_source_added: '2026-07-15T04:00:58.131Z'
+  cost_usd: 0.027039
 ---
-The category is broad almost to the point of uselessness, but a few coherent threads run through the sources here. The first is local-first or self-hosted tooling that reduces dependence on cloud vendors. [Unsloth](/reading/2026-04/2026-04-24t093356-unsloth) delivers up to 30x faster LLM fine-tuning with 90% less memory by writing custom kernels, letting practitioners run training on consumer hardware. [CanItRun](/reading/2026-04/2026-04-29t173553-canitrun-can-my-gpu-run-this-llm) takes the prerequisite step further, calculating before you even start whether a given GPU's VRAM can handle a specific model and at what quantization level. [openagentd](/reading/2026-05/2026-05-03t173528-lthoanggopenagentd) and [Helply](/reading/2026-05/2026-05-14t222554-piyush-mishra-00helply) both run locally on the desktop, the former as a cockpit for multi-agent teams and the latter as a meeting assistant with local LLM backend support.
+Developer tools are utilities that target a specific bottleneck in a workflow rather than expressing a general philosophy. The sources here span a wide range of that spectrum, but a few patterns emerge.
 
-A second thread is infrastructure tooling that hides operational complexity. [Temporal](/reading/2026-04/2026-04-30t231511-temporal) persists workflow state at every step so distributed applications recover from failures without custom reconciliation logic. [Depot CI](/reading/2026-05/2026-05-19t110000-building-ci-with-lambda-durable-functions) applies a similar idea to continuous integration, using AWS Lambda durable functions to run a stateful, checkpointed scheduler without a long-lived process. [Radar](/reading/2026-05/2026-05-03t105219-radar-open-source-kubernetes-ui) consolidates Kubernetes topology, Helm, GitOps, live traffic, and security checks into a single open-source binary.
+On the LLM side, [Unsloth](/reading/2026-04/2026-04-24t093356-unsloth) cuts training time and VRAM requirements for local fine-tuning through custom kernels, while [CanItRun](/reading/2026-04/2026-04-29t173553-canitrun-can-my-gpu-run-this-llm) lets developers check hardware compatibility before committing to a model, estimating quantization levels and tokens-per-second from VRAM constraints. Both address the same friction from different angles: getting a model running locally without surprises.
 
-Documentation and developer experience tools form a third cluster. [Mintlify](/reading/2026-04/2026-04-30t231435-mintlify) targets both human readers and LLMs, supporting llms.txt and MCP alongside standard docs. [Angular Signal Forms](/reading/2026-04/2026-04-30t231412-form-model-design-angular-signal-forms) represents framework-level tooling that shapes how developers model data. [Crafting Interpreters](/reading/2026-04/2026-04-30t231027-munificentcraftinginterpreters) sits at the educational end: a complete book and two interpreter implementations whose build system weaves code and prose into one artifact.
+Documentation and interface tooling sits at another common pain point. [Mintlify](/reading/2026-04/2026-04-30t231435-mintlify) positions itself as an AI-native docs platform that serves knowledge to both humans and LLMs via llms.txt and MCP. [Radar](/reading/2026-05/2026-05-03t105219-radar-open-source-kubernetes-ui) consolidates Kubernetes observability into a single binary with no cloud dependency. Both reduce the overhead of maintaining context across complex systems.
 
-Security is a recurring concern across the ecosystem. The [Ars Technica report on Unicode supply-chain attacks](/reading/2026-04/2026-04-30t231634-supply-chain-attack-using-invisible-code-hits-github-and) shows that 151 malicious npm and GitHub packages hid payloads in invisible variation-selector characters, bypassing both code review and static analysis. [Anthropic's defending-code reference harness](/reading/2026-06/2026-06-04t163601-anthropicsdefending-code-reference-harness) responds to that class of threat with an agentic pipeline for autonomous vulnerability discovery and patching, using gVisor sandboxing. The [MCPB packaging guide](/reading/2026-05/2026-05-27t181732-build-a-desktop-extension-with-mcpb) shows MCP becoming a distribution primitive, bundling local servers into single-click installers for Claude Desktop.
+Orchestration and reliability tools address a different class of problem. [Temporal](/reading/2026-04/2026-04-30t231511-temporal) persists workflow state at every step so distributed applications recover from failures without manual reconciliation. [Depot's CI orchestrator](/reading/2026-05/2026-05-19t110000-building-ci-with-lambda-durable-functions) applies a similar durable-execution pattern to CI scheduling via AWS Lambda, using a two-layer hierarchy to avoid long-lived processes.
 
-[Poolday](/reading/2026-04/2026-04-30t231206-poolday) and [Optimal Workshop](/reading/2026-04/2026-04-30t231745-optimal-vs-usertesting) sit at opposite ends of the spectrum: one automates video production through 100+ generative models, the other offers UX research infrastructure spanning card sorting to AI synthesis. Both reflect the broader pattern of tools that absorb previously manual workflows into automated or AI-assisted pipelines.
+Security is where tooling gaps create real damage. An Ars Technica report on [invisible Unicode supply-chain attacks](/reading/2026-04/2026-04-30t231634-supply-chain-attack-using-invisible-code-hits-github-and) shows that 151 malicious npm packages encoded payloads in variation-selector characters, invisible to code reviewers and static analysis tools. The [Anthropic defending-code harness](/reading/2026-06/2026-06-04t163601-anthropicsdefending-code-reference-harness) is a direct response to this class of problem: an agentic pipeline using Claude for autonomous vulnerability discovery and patching with gVisor sandboxing.
+
+Finally, a recurring theme across these sources is distribution format. [Claude's .mcpb guide](/reading/2026-05/2026-05-27t181732-build-a-desktop-extension-with-mcpb) packages a local MCP server as a single-click bundle. [Dan Q's critique of app culture](/reading/2026-07/2026-07-14t210058-your-app-could-have-been-a-webpage-so-i-fixed-it-for-you) argues that unnecessary app wrappers impose costs on developers and users alike when a webpage would suffice. Both, from opposite directions, are arguments about how distribution choices shape developer and user experience.
