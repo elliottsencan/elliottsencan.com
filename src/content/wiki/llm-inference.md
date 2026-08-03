@@ -1,10 +1,9 @@
 ---
 title: LLM inference
 summary: >-
-  LLM inference covers how language models generate tokens from a prompt —
-  spanning hardware constraints, serving architecture, caching strategies,
-  quantization, routing, and cost — and has become its own engineering
-  discipline as scale and cost pressures intensify.
+  LLM inference covers the full stack of serving language model outputs
+  efficiently, from low-level kernel optimizations and quantization to caching
+  strategies, routing, and the hardware constraints that govern what runs where.
 sources:
   - 2026-04/2026-04-24t093356-unsloth
   - >-
@@ -35,12 +34,14 @@ sources:
   - >-
     2026-06/2026-06-22t165934-the-token-compression-illusion-why-im-skeptical-of-rtk
   - 2026-08/2026-08-01t221438-in-house-llm-serving-at-netflix
-compiled_at: '2026-07-09T23:24:32.534Z'
+aliases:
+  - machine-learning
+compiled_at: '2026-08-03T10:09:13.020Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 5481
-    output_tokens: 1219
+    input_tokens: 5664
+    output_tokens: 1456
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -51,17 +52,22 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.034728
-last_source_added: '2026-08-02T05:14:38.751Z'
+  cost_usd: 0.038832
 ---
-LLM inference is the process of running a trained language model to generate output given an input prompt. At the hardware level, the bottleneck is VRAM: a model's weights, the KV cache, and activation overhead must all fit on the available GPU. Tools like [CanItRun](/reading/2026-04/2026-04-29t173553-canitrun-can-my-gpu-run-this-llm) make this concrete, calculating compatible quantization levels and estimated tokens-per-second for a given GPU and model combination.
+LLM inference is the process of generating tokens from a trained model in response to a prompt. It sits downstream of training and fine-tuning, but in production it consumes most of the engineering effort and nearly all of the compute cost. The sources here collectively trace inference from first principles through to large-scale serving infrastructure.
 
-Quantization is one of the primary levers for fitting larger models into constrained hardware. [Unsloth](/reading/2026-04/2026-04-24t093356-unsloth) applies custom kernels to achieve up to 30x faster throughput and 90% less memory than FlashAttention 2, supporting FP8 and LoRA workflows. [oobabooga/textgen](/reading/2026-05/2026-05-05t071908-oobaboogatextgen) exposes multiple backends including GGUF/llama.cpp for fully offline local serving. The critical assessment in [Friends Don't Let Friends Use Ollama](/reading/2026-05/2026-05-05t071447-friends-dont-let-friends-use-ollama) argues that Ollama, while popular, delivers inferior inference performance compared to llama.cpp directly and obscures that dependency behind a proprietary layer.
+At the most fundamental level, [How to Train Your GPT](/reading/2026-05/2026-05-06t173338-raiyanyahyahow-to-train-your-gpt) walks through building an inference engine from scratch, covering the attention mechanism, RoPE embeddings, and the autoregressive decoding loop. That foundation matters because the optimizations higher up the stack, quantization, caching, speculative decoding, all work by modifying some piece of that loop.
 
-At the serving level, the KV cache is the most consequential optimization target. Recomputing attention states on every request is expensive; persisting and reusing them is not. Everpure's engineering posts show two complementary approaches: [injecting cached attention states from fast NFS/S3 storage via RDMA](/reading/2026-05/2026-05-20t073157-20x-faster-inference-with-the-first-kv-cache-for-s3-and-nfs) for up to 20x faster inference, and [granular-prompt caching](/reading/2026-05/2026-05-20t073144-maximizing-llm-efficiency-granular-prompt-caching-with-pure) that segments prompts into reusable chunks so only changed tokens are processed. A complementary piece on [KV caching strategy](/reading/2026-05/2026-05-20t073125-how-to-cut-llm-inference-costs-with-kv-caching) frames the cache as a shared data asset that can cut prefill costs by up to 20x in enterprise deployments.
+[CanItRun](/reading/2026-04/2026-04-29t173553-canitrun-can-my-gpu-run-this-llm) makes the hardware constraint legible: VRAM is the binding constraint for local inference, and quantization level determines whether a model fits at all, with tokens-per-second as the resulting performance metric. [Unsloth](/reading/2026-04/2026-04-24t093356-unsloth) addresses the same constraint with custom CUDA kernels that reduce memory usage by up to 90% compared to FlashAttention 2.
 
-Token-level compression is a related but distinct approach. [headroom](/reading/2026-06/2026-06-20t145835-chopratejasheadroom) compresses tool outputs and RAG chunks before they reach the model, claiming 60-95% token reduction. A skeptical counterpoint on [RTK's token compression claims](/reading/2026-06/2026-06-22t165934-the-token-compression-illusion-why-im-skeptical-of-rtk) argues that compression metrics without task-accuracy benchmarks are vanity numbers and that stripping content risks silent data loss in agent pipelines.
+The KV cache is the central optimization target for throughput. Three pieces from Everpure Engineering argue that the cache should be treated as a persistent, shared data asset rather than something recomputed per request. [Injecting cached attention states via RDMA](/reading/2026-05/2026-05-20t073125-how-to-cut-llm-inference-costs-with-kv-caching) can cut prefill costs by up to 20x. [Pure KVA's granular-prompt caching](/reading/2026-05/2026-05-20t073144-maximizing-llm-efficiency-granular-prompt-caching-with-pure) segments prompts into reusable chunks so only changed tokens are reprocessed. [Persisting KV state to S3 and NFS](/reading/2026-05/2026-05-20t073157-20x-faster-inference-with-the-first-kv-cache-for-s3-and-nfs) delivers up to 20x faster inference without modifying model architecture.
 
-At the API and routing layer, inference is increasingly a dispatch problem. [DigitalOcean's Inference Router](/reading/2026-06/2026-06-21t192306-how-we-built-digitalocean-inference-router) uses a 30B MoE model to match each request to the best-fit model for cost, latency, or quality. [Arch-Router](/reading/2026-06/2026-06-21t192506-arch-router-aligning-llm-routing-with-human-preferences) achieves similar alignment with a compact 1.5B model trained on human preferences, requiring no retraining when new models are added. The [AI model pricing war](/reading/2026-05/2026-05-31t072101-the-ai-model-pricing-war-is-here-and-your-margins-depend-on) adds economic urgency: a 75x spread between the cheapest and most expensive frontier APIs means routing and provider-agnostic architecture directly determine margin.
+A related approach is compressing the context before it reaches the model. [Headroom](/reading/2026-06/2026-06-20t145835-chopratejasheadroom) claims 60-95% token reduction by compressing tool outputs and RAG chunks. [The Token Compression Illusion](/reading/2026-06/2026-06-22t165934-the-token-compression-illusion-why-im-skeptical-of-rtk) pushes back on that framing, arguing compression metrics that strip only Bash output are vanity numbers and that task-accuracy benchmarks are the right measure, not raw token counts.
 
-[Inference Engineering as a discipline](/reading/2026-06/2026-06-21t130559-what-is-inference-engineering) encompasses all of this: quantization, speculative decoding, caching, parallelism, and disaggregation. Reasoning budget also matters; a benchmark of [Claude Opus 4.7 across five effort levels](/reading/2026-05/2026-05-14t190300-opus-47-low-vs-medium-vs-high-vs-xhigh-vs-max-the-reasoning) found a non-monotonic curve where medium effort outperformed higher settings on both quality and cost, suggesting that more compute at inference time is not always better.
+[What is Inference Engineering](/reading/2026-06/2026-06-21t130559-what-is-inference-engineering) surveys the full technique stack in production: quantization, speculative decoding, caching, tensor parallelism, and prefill-decode disaggregation. [Netflix's in-house serving infrastructure](/reading/2026-08/2026-08-01t221438-in-house-llm-serving-at-netflix) shows what that looks like at scale, choosing vLLM over TensorRT-LLM and building an OpenAI-compatible API surface with batched constrained decoding.
+
+At the API layer, routing has emerged as a distinct problem. [DigitalOcean's Inference Router](/reading/2026-06/2026-06-21t192306-how-we-built-digitalocean-inference-router) uses a 30B mixture-of-experts model to match each request to the best-fit model for cost, latency, or quality. [Arch-Router](/reading/2026-06/2026-06-21t192506-arch-router-aligning-llm-routing-with-human-preferences) proposes a compact 1.5B routing model that aligns with user-defined preferences without retraining when new models are added.
+
+Cost is the connective tissue across all of this. [The AI model pricing war](/reading/2026-05/2026-05-31t072101-the-ai-model-pricing-war-is-here-and-your-margins-depend-on) documents a 75x spread between the cheapest and most expensive frontier APIs, making inference cost a first-class product decision. [The Opus 4.7 reasoning curve benchmark](/reading/2026-05/2026-05-14t190300-opus-47-low-vs-medium-vs-high-vs-xhigh-vs-max-the-reasoning) finds that higher reasoning-effort settings often spend more compute without improving output quality, confirming that the right inference configuration is empirical, not assumed.
+
+For local inference specifically, [the critique of Ollama](/reading/2026-05/2026-05-05t071447-friends-dont-let-friends-use-ollama) and the description of [oobabooga/textgen](/reading/2026-05/2026-05-05t071908-oobaboogatextgen) as an alternative illustrate that local serving is a contested space, with meaningful differences in performance, transparency, and community trust across tools. [Running Claude Code via LM Studio](/reading/2026-05/2026-05-12t215147-running-claude-code-with-a-local-model-via-lm-studio) shows a practical hybrid: cloud tooling redirected to a local inference server through an OpenAI-compatible endpoint.
