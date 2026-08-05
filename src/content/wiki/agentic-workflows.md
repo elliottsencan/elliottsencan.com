@@ -68,6 +68,8 @@ sources:
   - 2026-07/2026-07-21t224812-claude-code-mcp-on-13b-polymarket-trades
   - >-
     2026-07/2026-07-23t215330-humanlayeradvanced-context-engineering-for-coding-agents
+  - >-
+    2026-08/2026-08-05t072544-use-your-brain-engineering-standards-in-the-age-of-llms
 compiled_at: '2026-07-09T23:15:22.664Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -85,7 +87,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.071415
-last_source_added: '2026-07-24T04:53:30.637Z'
+last_source_added: '2026-08-05T14:25:44.991Z'
 ---
 Agentic workflows sit at the intersection of a technical problem and an organizational one. The technical problem is getting an LLM to take a sequence of actions reliably across many steps without losing state, making unrecoverable mistakes, or silently lying about completion. The organizational problem is that faster code generation does not fix the underlying bottlenecks of shared context, specification clarity, and management coherence — it amplifies whatever alignment or misalignment already exists [the-bottleneck-was-never-the-code](/reading/2026-05/2026-05-06t110728-the-bottleneck-was-never-the-code).
 

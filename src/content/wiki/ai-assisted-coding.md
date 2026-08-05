@@ -60,6 +60,8 @@ sources:
   - >-
     2026-07/2026-07-23t215330-humanlayeradvanced-context-engineering-for-coding-agents
   - 2026-08/2026-08-03t025839-dont-be-a-meat-proxy
+  - >-
+    2026-08/2026-08-05t072544-use-your-brain-engineering-standards-in-the-age-of-llms
 aliases:
   - ai-coding-assistants
 compiled_at: '2026-07-09T23:16:39.532Z'
@@ -79,7 +81,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.059325
-last_source_added: '2026-08-03T09:58:39.571Z'
+last_source_added: '2026-08-05T14:25:44.991Z'
 ---
 AI-assisted coding sits on a spectrum. At one end, a developer asks a model to autocomplete a function or draft a test. At the other, a fully autonomous agent spins up hundreds of subagents, writes its own orchestration scripts, and runs for hours without human input. The tools, risks, and professional questions differ sharply depending on where on that spectrum a team is operating.
 
