@@ -20,6 +20,7 @@ sources:
   - >-
     2026-06/2026-06-03t105229-putting-code-under-a-microscope-wavelet-based-context-for
   - 2026-06/2026-06-20t145835-chopratejasheadroom
+  - 2026-08/2026-08-10t220951-gvzdvclaudish-to-english
 compiled_at: '2026-06-22T07:21:46.091Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -37,6 +38,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.027609
+last_source_added: '2026-08-11T05:09:51.080Z'
 ---
 LLM tooling refers to the growing layer of software that sits between raw model APIs and working applications: runtimes for local inference, servers that expose context to models, utilities for compressing or structuring knowledge, and packaging formats that make integrations distributable.
 

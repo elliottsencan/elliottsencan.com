@@ -41,6 +41,7 @@ sources:
   - >-
     2026-07/2026-07-14t210058-your-app-could-have-been-a-webpage-so-i-fixed-it-for-you
   - 2026-07/2026-07-20t215754-stop-using-opencode
+  - 2026-08/2026-08-10t220951-gvzdvclaudish-to-english
 compiled_at: '2026-07-09T23:26:48.803Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -58,7 +59,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.047904
-last_source_added: '2026-07-21T04:57:54.933Z'
+last_source_added: '2026-08-11T05:09:51.080Z'
 ---
 Open source is both a distribution model and a social contract: code is public, forkable, and improvable by anyone, but that openness creates exposure and demands ongoing stewardship from maintainers and communities.
 
