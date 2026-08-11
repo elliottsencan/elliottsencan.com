@@ -53,6 +53,7 @@ sources:
   - 2026-08/2026-08-03t025839-dont-be-a-meat-proxy
   - >-
     2026-08/2026-08-05t072544-use-your-brain-engineering-standards-in-the-age-of-llms
+  - 2026-08/2026-08-11t004752-danielmiesslerlifeos
 compiled_at: '2026-07-09T23:19:47.357Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -70,7 +71,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.047508
-last_source_added: '2026-08-05T14:25:44.991Z'
+last_source_added: '2026-08-11T07:47:52.055Z'
 ---
 Productivity in software development resists simple measurement. Counting lines of code, features shipped, or AI-assisted commits misses the costs that accumulate on the other side of the ledger: cognitive debt, maintenance burden, and lost organizational knowledge.
 

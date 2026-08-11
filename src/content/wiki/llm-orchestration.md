@@ -35,6 +35,7 @@ sources:
   - 2026-06/2026-06-23t161552-the-coming-loop
   - 2026-06/2026-06-25t195020-strands-agents
   - 2026-07/2026-07-02t052125-jangles-bytepythia
+  - 2026-08/2026-08-11t004752-danielmiesslerlifeos
 compiled_at: '2026-07-09T23:25:00.468Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -52,6 +53,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.035358
+last_source_added: '2026-08-11T07:47:52.055Z'
 ---
 Orchestration is the layer between a raw model and a useful system. It decides when a model runs, what context it receives, which tools it can call, and how its outputs are validated or handed off. The sources here span that entire problem: from theoretical coordination papers to production harness designs to arguments about where custom orchestration is and isn't worth building.
 

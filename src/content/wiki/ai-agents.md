@@ -48,6 +48,7 @@ sources:
   - 2026-06/2026-06-25t195020-strands-agents
   - 2026-07/2026-07-02t052125-jangles-bytepythia
   - 2026-07/2026-07-09t161342-ai-2040-plan-a
+  - 2026-08/2026-08-11t004752-danielmiesslerlifeos
 compiled_at: '2026-07-09T23:15:57.578Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -65,6 +66,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.052296
+last_source_added: '2026-08-11T07:47:52.055Z'
 ---
 An AI agent, in practice, is an LLM embedded in a loop: it receives a goal, selects tools, observes results, and iterates until done or stuck. That loop can be simple — a single model running sequentially — or elaborate, with specialized sub-agents handing work between each other. The central tension across most current writing on the topic is not whether agents work, but how to keep them reliable when the scope of their autonomy grows.
 
