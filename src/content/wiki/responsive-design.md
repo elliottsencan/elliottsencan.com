@@ -1,9 +1,9 @@
 ---
 title: Responsive design
 summary: >-
-  Responsive design is shifting away from viewport breakpoints toward intrinsic,
-  component-aware CSS — fluid sizing, container queries, and platform primitives
-  that let layouts and typography adapt without media-query thresholds.
+  Modern responsive design is moving away from viewport breakpoints toward
+  intrinsic layouts, container queries, fluid values, and CSS primitives that
+  let components adapt to their own context rather than the page width.
 sources:
   - 2026-04/2026-04-24t085352-building-a-ui-without-breakpoints
   - 2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp
@@ -18,12 +18,12 @@ sources:
   - >-
     2026-06/2026-06-30t213959-why-css-style-queries-are-a-bigger-deal-than-you-think
   - 2026-07/2026-07-16t052353-boundary-aware-styling-in-css
-compiled_at: '2026-07-09T23:28:32.511Z'
+compiled_at: '2026-08-11T08:01:49.563Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 3679
-    output_tokens: 658
+    input_tokens: 3835
+    output_tokens: 667
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -34,13 +34,12 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.020907
-last_source_added: '2026-07-16T12:23:53.956Z'
+  cost_usd: 0.02151
 ---
-The classic responsive design model, built on viewport-width breakpoints and media queries, is under pressure from a more capable CSS platform. [Building a UI Without Breakpoints](/reading/2026-04/2026-04-24t085352-building-a-ui-without-breakpoints) argues the breakpoint model was always a workaround: modern CSS gives authors intrinsic layout tools, container queries, and container units so that components adapt to their own available space rather than the viewport's. Media queries survive in this picture, but their scope narrows to genuine device capabilities and user preferences, not layout thresholds.
+The classic responsive design model -- media queries keyed to viewport widths -- is under sustained pressure from a set of newer CSS capabilities that shift adaptation from the page level to the component level. [Amit Sheen's case against breakpoints](/reading/2026-04/2026-04-24t085352-building-a-ui-without-breakpoints) is the clearest statement of this shift: intrinsic layouts, `clamp()` for fluid sizing, container units, and container queries can handle the vast majority of layout adaptation, leaving media queries for genuine device-capability concerns like pointer type or user preference.
 
-Typography is a central case. [Modern Fluid Typography Using CSS Clamp](/reading/2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp) details how `clamp()` produces font sizes that scale continuously between two viewport widths, replacing the stepped jumps of breakpoint-keyed type rules. The math maps minimum and maximum font sizes to viewport bounds, and the piece flags an accessibility concern: using `rem`-based clamp values preserves user font-size preferences in a way that `px`-based equivalents do not. [Utopia's type scale graph](/reading/2026-05/2026-05-05t183935-type-scale-graphs) makes this fluid scale legible by plotting every step across the viewport range, revealing whether the relationships within a modular scale hold at all sizes.
+Fluid typography sits at the center of this approach. `clamp()` interpolates a font size between a minimum and maximum across a viewport range, removing the stepped jumps that breakpoint-based type scaling produces. [Adrian Bece's treatment of the math](/reading/2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp) covers how to derive the preferred value from two breakpoint/size pairs, and flags a real accessibility concern: viewport-relative units inside `clamp()` can override a user's browser font-size preference, making `rem`-anchored minimum and maximum values important. [Utopia's graph view](/reading/2026-05/2026-05-05t183935-type-scale-graphs) extends this by plotting an entire fluid modular scale across its min and max viewport extents, making the relationships between steps visible at a glance.
 
-The broader CSS platform expansion reinforces the trend. [The Great CSS Expansion](/reading/2026-04/2026-04-30t231909-the-great-css-expansion) documents how anchor positioning, scroll-driven animations, view transitions, and native popovers now replace JavaScript libraries that previously handled layout and interaction work. [CSS Style Queries](/reading/2026-06/2026-06-30t213959-why-css-style-queries-are-a-bigger-deal-than-you-think) extend this further: components can now react to parent CSS custom properties as stateful design tokens, removing the need for preprocessor logic to manage theming and state. Taken together, these features push responsive behavior into the component and property layers rather than the document-width layer.
+Beyond typography, the broader CSS platform now covers a range of interaction and layout problems that previously required JavaScript. [Pavel Laptev's survey of modern CSS](/reading/2026-04/2026-04-30t231909-the-great-css-expansion) catalogues anchor positioning, scroll-driven animations, view transitions, and native popovers as capabilities that displace large JS libraries. [CSS style queries](/reading/2026-06/2026-06-30t213959-why-css-style-queries-are-a-bigger-deal-than-you-think) add another layer: components can now react to parent CSS custom properties as stateful design tokens, a pattern that previously needed Sass or build tooling. [Boundary-aware styling via the `view()` function](/reading/2026-07/2026-07-16t052353-boundary-aware-styling-in-css) pushes further, using scroll-driven animation infrastructure to style elements based on proximity to container edges without any scrolling involved.
 
-Structurally, [Jim Nielsen's case for linked HTML pages](/reading/2026-05/2026-05-05t091632-building-websites-with-llms) touches responsive design obliquely: using CSS cross-document view transitions to stitch separate pages together avoids the JavaScript complexity that often complicates responsive progressive enhancement, keeping each page simple and self-contained.
+Responsive design increasingly means designing systems -- fluid scales, container-relative units, intrinsic grids -- rather than writing rules for discrete breakpoints.
