@@ -1,9 +1,10 @@
 ---
 title: Responsive design
 summary: >-
-  Responsive design is shifting away from viewport breakpoints toward intrinsic,
-  component-aware CSS — fluid sizing, container queries, and platform primitives
-  that let layouts and typography adapt without media-query thresholds.
+  Modern responsive design is moving away from viewport breakpoints toward
+  intrinsic CSS layouts, container queries, fluid scaling, and platform
+  primitives that let components adapt to their own context rather than the page
+  width.
 sources:
   - 2026-04/2026-04-24t085352-building-a-ui-without-breakpoints
   - 2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp
@@ -18,12 +19,12 @@ sources:
   - >-
     2026-06/2026-06-30t213959-why-css-style-queries-are-a-bigger-deal-than-you-think
   - 2026-07/2026-07-16t052353-boundary-aware-styling-in-css
-compiled_at: '2026-07-09T23:28:32.511Z'
+compiled_at: '2026-08-11T05:23:10.493Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 3679
-    output_tokens: 658
+    input_tokens: 3835
+    output_tokens: 651
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -34,13 +35,12 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.020907
-last_source_added: '2026-07-16T12:23:53.956Z'
+  cost_usd: 0.02127
 ---
-The classic responsive design model, built on viewport-width breakpoints and media queries, is under pressure from a more capable CSS platform. [Building a UI Without Breakpoints](/reading/2026-04/2026-04-24t085352-building-a-ui-without-breakpoints) argues the breakpoint model was always a workaround: modern CSS gives authors intrinsic layout tools, container queries, and container units so that components adapt to their own available space rather than the viewport's. Media queries survive in this picture, but their scope narrows to genuine device capabilities and user preferences, not layout thresholds.
+The classic responsive design model, built on viewport-width media queries at a handful of breakpoints, is under sustained pressure from newer CSS capabilities. [Amit Sheen](/reading/2026-04/2026-04-24t085352-building-a-ui-without-breakpoints) argues the breakpoint model was always a workaround for layout primitives that didn't yet exist. With CSS Grid, Flexbox, container queries, and `clamp()` now broadly supported, components can respond to their own available space rather than the viewport, and most layout decisions can be made without any media query at all.
 
-Typography is a central case. [Modern Fluid Typography Using CSS Clamp](/reading/2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp) details how `clamp()` produces font sizes that scale continuously between two viewport widths, replacing the stepped jumps of breakpoint-keyed type rules. The math maps minimum and maximum font sizes to viewport bounds, and the piece flags an accessibility concern: using `rem`-based clamp values preserves user font-size preferences in a way that `px`-based equivalents do not. [Utopia's type scale graph](/reading/2026-05/2026-05-05t183935-type-scale-graphs) makes this fluid scale legible by plotting every step across the viewport range, revealing whether the relationships within a modular scale hold at all sizes.
+Fluid scaling sits at the center of this shift. `clamp()` lets a value interpolate smoothly between a minimum and maximum, eliminating the stepped jumps that breakpoints produce. [Adrian Bece](/reading/2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp) covers the math for deriving the preferred value from two known font-size and viewport pairs, and flags accessibility risks when viewport units displace `rem` — users who set a browser font size preference lose that control. [Utopia's graph view](/reading/2026-05/2026-05-05t183935-type-scale-graphs) extends this, letting designers see how every step of a fluid modular scale behaves across the full viewport range at once, making scale relationships legible before any code ships.
 
-The broader CSS platform expansion reinforces the trend. [The Great CSS Expansion](/reading/2026-04/2026-04-30t231909-the-great-css-expansion) documents how anchor positioning, scroll-driven animations, view transitions, and native popovers now replace JavaScript libraries that previously handled layout and interaction work. [CSS Style Queries](/reading/2026-06/2026-06-30t213959-why-css-style-queries-are-a-bigger-deal-than-you-think) extend this further: components can now react to parent CSS custom properties as stateful design tokens, removing the need for preprocessor logic to manage theming and state. Taken together, these features push responsive behavior into the component and property layers rather than the document-width layer.
+Beyond layout and type, the broader CSS platform has expanded in ways that reduce reliance on JavaScript-powered responsive patterns. [Pavel Laptev](/reading/2026-04/2026-04-30t231909-the-great-css-expansion) documents how anchor positioning, scroll-driven animations, and view transitions now replace large JS libraries. [Mike Herchel](/reading/2026-06/2026-06-30t213959-why-css-style-queries-are-a-bigger-deal-than-you-think) adds that CSS style queries, now at Baseline, let components react to parent CSS variable state without Sass or build tooling. [Preethi Sam](/reading/2026-07/2026-07-16t052353-boundary-aware-styling-in-css) shows the `view()` function can style elements by their proximity to container edges, a capability that previously required JavaScript measurement.
 
-Structurally, [Jim Nielsen's case for linked HTML pages](/reading/2026-05/2026-05-05t091632-building-websites-with-llms) touches responsive design obliquely: using CSS cross-document view transitions to stitch separate pages together avoids the JavaScript complexity that often complicates responsive progressive enhancement, keeping each page simple and self-contained.
+Sheen's framing reserves media queries for genuine device capability and user preference signals, not layout pivots. That distinction matters: the sources collectively treat responsive design less as a grid of breakpoints and more as a system where each component knows its own constraints.
