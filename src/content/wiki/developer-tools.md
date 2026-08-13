@@ -1,9 +1,9 @@
 ---
 title: Developer tools
 summary: >-
-  Discrete software tools that extend what practitioners can build, debug,
-  deploy, or understand, spanning LLM fine-tuning, CI orchestration,
-  documentation, security scanning, Kubernetes management, and more.
+  Software tools that support developers across the full build cycle, from LLM
+  fine-tuning and CI orchestration to documentation platforms, security
+  scanners, and local AI agents.
 sources:
   - 2026-04/2026-04-24t093356-unsloth
   - 2026-04/2026-04-29t173553-canitrun-can-my-gpu-run-this-llm
@@ -25,12 +25,12 @@ sources:
   - >-
     2026-07/2026-07-14t210058-your-app-could-have-been-a-webpage-so-i-fixed-it-for-you
   - 2026-08/2026-08-10t220951-gvzdvclaudish-to-english
-compiled_at: '2026-07-09T23:21:01.735Z'
+compiled_at: '2026-08-13T21:11:53.858Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 4567
-    output_tokens: 1061
+    input_tokens: 4895
+    output_tokens: 1229
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -41,15 +41,18 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.029616
-last_source_added: '2026-08-11T05:09:51.080Z'
+  cost_usd: 0.03312
 ---
-The category is broad almost to the point of uselessness, but a few coherent threads run through the sources here. The first is local-first or self-hosted tooling that reduces dependence on cloud vendors. [Unsloth](/reading/2026-04/2026-04-24t093356-unsloth) delivers up to 30x faster LLM fine-tuning with 90% less memory by writing custom kernels, letting practitioners run training on consumer hardware. [CanItRun](/reading/2026-04/2026-04-29t173553-canitrun-can-my-gpu-run-this-llm) takes the prerequisite step further, calculating before you even start whether a given GPU's VRAM can handle a specific model and at what quantization level. [openagentd](/reading/2026-05/2026-05-03t173528-lthoanggopenagentd) and [Helply](/reading/2026-05/2026-05-14t222554-piyush-mishra-00helply) both run locally on the desktop, the former as a cockpit for multi-agent teams and the latter as a meeting assistant with local LLM backend support.
+Developer tooling spans a wide range of problems: accelerating model training, managing distributed workflows, securing the software supply chain, and making infrastructure legible. What the sources here share is a focus on reducing friction at specific, concrete pain points rather than offering abstract platforms.
 
-A second thread is infrastructure tooling that hides operational complexity. [Temporal](/reading/2026-04/2026-04-30t231511-temporal) persists workflow state at every step so distributed applications recover from failures without custom reconciliation logic. [Depot CI](/reading/2026-05/2026-05-19t110000-building-ci-with-lambda-durable-functions) applies a similar idea to continuous integration, using AWS Lambda durable functions to run a stateful, checkpointed scheduler without a long-lived process. [Radar](/reading/2026-05/2026-05-03t105219-radar-open-source-kubernetes-ui) consolidates Kubernetes topology, Helm, GitOps, live traffic, and security checks into a single open-source binary.
+On the LLM side, [Unsloth](/reading/2026-04/2026-04-24t093356-unsloth) delivers custom CUDA kernels that cut fine-tuning memory overhead by 90% and speed training up to 30x versus FlashAttention 2, making local model training viable on consumer hardware. Before training anything, [CanItRun](/reading/2026-04/2026-04-29t173553-canitrun-can-my-gpu-run-this-llm) lets a developer check whether their GPU can even load a given open-weight model, calculating compatible quantization levels and expected tokens-per-second from VRAM capacity.
 
-Documentation and developer experience tools form a third cluster. [Mintlify](/reading/2026-04/2026-04-30t231435-mintlify) targets both human readers and LLMs, supporting llms.txt and MCP alongside standard docs. [Angular Signal Forms](/reading/2026-04/2026-04-30t231412-form-model-design-angular-signal-forms) represents framework-level tooling that shapes how developers model data. [Crafting Interpreters](/reading/2026-04/2026-04-30t231027-munificentcraftinginterpreters) sits at the educational end: a complete book and two interpreter implementations whose build system weaves code and prose into one artifact.
+Documentation and workflow tooling show a similar pattern of solving narrow problems well. [Mintlify](/reading/2026-04/2026-04-30t231435-mintlify) builds documentation that serves both human readers and LLMs via llms.txt and MCP integration. [Temporal](/reading/2026-04/2026-04-30t231511-temporal) persists workflow state at every step so distributed applications recover from failures without manual reconciliation. [Depot CI](/reading/2026-05/2026-05-19t110000-building-ci-with-lambda-durable-functions) takes a similar durability approach for CI orchestration, running a stateful, checkpointed scheduler on AWS Lambda without keeping a long-lived process alive.
 
-Security is a recurring concern across the ecosystem. The [Ars Technica report on Unicode supply-chain attacks](/reading/2026-04/2026-04-30t231634-supply-chain-attack-using-invisible-code-hits-github-and) shows that 151 malicious npm and GitHub packages hid payloads in invisible variation-selector characters, bypassing both code review and static analysis. [Anthropic's defending-code reference harness](/reading/2026-06/2026-06-04t163601-anthropicsdefending-code-reference-harness) responds to that class of threat with an agentic pipeline for autonomous vulnerability discovery and patching, using gVisor sandboxing. The [MCPB packaging guide](/reading/2026-05/2026-05-27t181732-build-a-desktop-extension-with-mcpb) shows MCP becoming a distribution primitive, bundling local servers into single-click installers for Claude Desktop.
+Local AI agent tooling is a growing cluster. [openagentd](/reading/2026-05/2026-05-03t173528-lthoanggopenagentd) provides a desktop cockpit for running multi-agent teams against 15 LLM providers with persistent memory and built-in observability. [Helply](/reading/2026-05/2026-05-14t222554-piyush-mishra-00helply) is an Electron meeting assistant with real-time transcription and AI answers, supporting both cloud and local backends. Poolday's Creator-1 orchestrates 100+ generative models to execute video edits end-to-end via a multi-agent pipeline. [Anthropic's MCPB guide](/reading/2026-05/2026-05-27t181732-build-a-desktop-extension-with-mcpb) shows how to package a local MCP server as a single-click bundle for Claude Desktop.
 
-[Poolday](/reading/2026-04/2026-04-30t231206-poolday) and [Optimal Workshop](/reading/2026-04/2026-04-30t231745-optimal-vs-usertesting) sit at opposite ends of the spectrum: one automates video production through 100+ generative models, the other offers UX research infrastructure spanning card sorting to AI synthesis. Both reflect the broader pattern of tools that absorb previously manual workflows into automated or AI-assisted pipelines.
+Infrastructure visibility gets its own entry: [Radar](/reading/2026-05/2026-05-03t105219-radar-open-source-kubernetes-ui) is an open-source Kubernetes UI consolidating topology, Helm, GitOps, live traffic, and security checks in a single binary, with MCP support for AI agents. [Building a Cloud](/reading/2026-07/2026-07-05t170602-building-a-cloud) argues from a different angle, contending that current cloud platforms are built on wrong abstractions and need to be rethought from scratch.
+
+Security tooling appears in two forms here. [Anthropic's defending-code reference harness](/reading/2026-06/2026-06-04t163601-anthropicsdefending-code-reference-harness) demonstrates autonomous vulnerability discovery and patching via an agentic pipeline with gVisor sandboxing. The [invisible Unicode supply-chain attack](/reading/2026-04/2026-04-30t231634-supply-chain-attack-using-invisible-code-hits-github-and) report is a reminder of what current tools miss: 151 malicious npm packages encoded payloads in variation-selector characters that bypassed code review and static analysis entirely.
+
+Several sources illustrate how tooling shapes practice beyond raw capability. [Crafting Interpreters](/reading/2026-04/2026-04-30t231027-munificentcraftinginterpreters) is a build system that weaves prose and code into a publishable book, itself a tool for teaching language implementation. [Angular Signal Forms](/reading/2026-04/2026-04-30t231412-form-model-design-angular-signal-forms) specifies how a framework's form model API should be designed for type safety and clarity. [Dan Q's webpage replacement](/reading/2026-07/2026-07-14t210058-your-app-could-have-been-a-webpage-so-i-fixed-it-for-you) and [claudish-to-english](/reading/2026-08/2026-08-10t220951-gvzdvclaudish-to-english) each represent the smallest class of tool: a single developer solving a specific annoyance, then publishing the fix.
