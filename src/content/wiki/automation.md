@@ -1,9 +1,10 @@
 ---
 title: Automation
 summary: >-
-  Automation spans from discrete API integrations to economy-wide labor
-  displacement, raising questions about what tasks machines should absorb, what
-  costs that absorption creates, and where human presence remains irreplaceable.
+  Automation removes human steps from repetitive work, but its costs — to labor
+  markets, human connection, and cognitive load — are as important as its
+  efficiency gains, and the cited sources together trace that tension across
+  software, economics, and system design.
 sources:
   - 2026-04/2026-04-30t231709-conductor
   - >-
@@ -20,12 +21,14 @@ sources:
   - 2026-08/2026-08-11t004752-danielmiesslerlifeos
   - >-
     2026-08/2026-08-13t140446-agentic-ai-testing-what-it-means-for-your-playwright-test
-compiled_at: '2026-06-22T07:23:30.155Z'
+aliases:
+  - automation-history
+compiled_at: '2026-08-13T21:09:03.772Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 3175
-    output_tokens: 674
+    input_tokens: 3632
+    output_tokens: 963
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -36,13 +39,14 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.019635
-last_source_added: '2026-08-13T21:04:46.619Z'
+  cost_usd: 0.025341
 ---
-Automation operates at multiple scales simultaneously. At the tooling level, it means eliminating friction from repetitive technical work: [Conductor](/reading/2026-04/2026-04-30t231709-conductor) abstracts away the qbXML and SOAP complexity of QuickBooks Desktop so developers never manually parse legacy protocols, while [SSH key workflows](/reading/2026-05/2026-05-04t231548-using-ssh-keys-to-make-connectivity-simpler-and-secure) replace repeated manual authentication across remote machines. Both cases share the same logic: identify a predictable, error-prone process and route around it.
+Automation shows up differently depending on the layer you're examining: a CI pipeline caching browser binaries [Playwright on GitHub Actions](/reading/2026-07/2026-07-13t233457-playwright-on-github-actions-the-setup-that-actually-runs), an API wrapper that eliminates SOAP boilerplate from QuickBooks Desktop integrations [Conductor](/reading/2026-04/2026-04-30t231709-conductor), SSH key workflows that replace manual credential handling [Using SSH Keys](/reading/2026-05/2026-05-04t231548-using-ssh-keys-to-make-connectivity-simpler-and-secure), or an AI harness routing tasks toward a user-defined "Ideal State" [LifeOS](/reading/2026-08/2026-08-11t004752-danielmiesslerlifeos). At the implementation level, the goal is consistent: replace a step a human would otherwise perform manually with something that runs reliably without attention.
 
-At the product level, automation changes what software can do in real time. [Helply](/reading/2026-05/2026-05-14t222554-piyush-mishra-00helply) demonstrates this with live meeting transcription and AI-generated answers, offloading cognitive work that previously required manual note-taking and retrieval. The design question becomes not whether to automate a task but how to surface the output without adding new attention costs. [Finite Attention](/reading/2026-05/2026-05-19t134831-finite-attention-why-burnout-isnt-your-fault-and-how) makes that cost explicit: systems that maximize data output without filtering for relevance shift cognitive burden onto on-call workers, producing burnout even when the underlying automation is technically sound.
+The harder questions live above that layer. Kevin Drum's 2013 piece [Welcome, Robot Overlords](/reading/2026-05/2026-05-28t074225-welcome-robot-overlords-please-dont-fire-us) argued that unlike previous automation waves, AI-driven automation won't just shift labor into new sectors; it will eliminate entire classes of workers permanently, because sufficiently general intelligence competes across domains simultaneously. A more recent economic theory paper [The AI Layoff Trap](/reading/2026-05/2026-05-02t155432-cognitive-offloading-and-ai-how-reliance-on-llms-affects) adds a structural wrinkle: competitive pressure can push firms to lay off workers before automation's productivity gains are confirmed, producing collectively suboptimal outcomes even when no individual firm is acting irrationally. The disagreement between these two isn't about direction but about mechanism — Drum focuses on long-run technological displacement, the arXiv paper on near-term strategic dynamics.
 
-At the economic scale, the consequences grow harder to manage. [Kevin Drum's 2013 analysis](/reading/2026-05/2026-05-28t074225-welcome-robot-overlords-please-dont-fire-us) argued that intelligent machines, unlike earlier automation waves, will permanently displace entire labor categories rather than shift workers into new sectors. [Falk and Tsoukalas](/reading/2026-05/2026-05-02t155432-cognitive-offloading-and-ai-how-reliance-on-llms-affects) add a game-theoretic layer: competitive pressure can push firms to automate and reduce headcount before the productivity gains are certain, producing collectively suboptimal outcomes even when each firm acts rationally.
+A third cost rarely shows up in economic models: what gets destroyed when automation removes human contact from a service. [The Competitive Moat That AI Can't Replicate](/reading/2026-06/2026-06-17t124905-the-competitive-moat-that-ai-cant-replicate) argues that organizations automating away branch staff, phone lines, or personal relationships lose trust and loyalty that no personalization engine can reconstruct afterward, because the value was in the human interaction itself, not in the information it conveyed.
 
-What automation cannot substitute for is also becoming clearer. [Ghost in the Data](/reading/2026-06/2026-06-17t124905-the-competitive-moat-that-ai-cant-replicate) argues that organizations automating away direct human contact — branch closures, metric-driven service decisions — destroy trust that no personalization engine can rebuild. The throughline across all these sources is that automation transfers work, it does not eliminate it; the work shifts to integration, design, policy, or the human relationships that remain.
+On-call and alerting systems surface a related but more operational version of this problem. [Finite Attention](/reading/2026-05/2026-05-19t134831-finite-attention-why-burnout-isnt-your-fault-and-how) argues that systems designed to maximize data output without accounting for human attention limits produce burnout structurally, and that the fix is automation designed around cognitive constraints, surfacing only relevant context rather than raw signal volume. Automation here is both the cause of the problem and the proposed remedy, but oriented differently: toward filtering rather than throughput.
+
+The agentic end of automation — where AI takes multi-step actions rather than executing a fixed script — introduces a new design question about how much autonomy to grant. [Agentic AI Testing](/reading/2026-08/2026-08-13t140446-agentic-ai-testing-what-it-means-for-your-playwright-test) frames this as a spectrum from fully specified to fully adaptive workflows, where the right level depends on the risk profile of the task. [Helply](/reading/2026-05/2026-05-14t222554-piyush-mishra-00helply), a meeting assistant that answers questions in real time from live transcription, sits closer to the bounded end — augmenting human attention rather than replacing human judgment outright.
