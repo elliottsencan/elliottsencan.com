@@ -1,8 +1,8 @@
 ---
 title: "Now"
 description: "What I'm working on right now."
-updated: 2026-07-11
-standfirst: "Settling in at StarLifter building the enterprise decision layer, as the SSBD platform races its August deadline and AI engineering writing holds steady in the margins"
+updated: 2026-08-16
+standfirst: "Deep in the final push before festival gates open, with AI engineering reading running heavy and a new staff role at StarLifter holding the background"
 ---
 
 ## Building
@@ -17,10 +17,12 @@ High standards exist to make difficult things simple.
 
 ## Reading / Listening
 
-Heavy on AI engineering reading lately. The piece on agentic engineering from System Design newsletter was a useful reference pass on agent loops, context rot, and multi-agent orchestration. Armin Ronacher's "The Coming Loop" is worth reading slowly: his argument is that outer harness loops orchestrating coding agents amplify LLMs' worst tendencies and risk producing codebases that require machine participation to maintain. The vertical codebase piece made a solid case for domain-colocation over technical layers, and landed differently after spending time thinking about how agents navigate unfamiliar repos.
+Reading has been heavily AI-engineering-flavored lately, with a recurring theme: the gap between what agents can do in a demo and what they do to a codebase over time. The humanlayer "lights-off software factory" piece and Paolo Galeone's "Use Your Brain" essay are good complements. One argues the training problem means no harness can fix quality drift; the other calls for CI discipline and code ownership so AI stays an amplifier. "Don't be a meat proxy" makes a related point about the cognitive work of actually reading and synthesizing AI output before passing it on.
 
-Also worked through a few pieces on inference routing, including the DigitalOcean Inference Router architecture writeup and the Pragmatic Engineer breakdown of inference engineering. Good mental models for a layer of the stack that's moving fast.
+Also read through the LifeOS repo, which is an interesting practical attempt at persistent agent memory and goal tracking. And the Netflix in-house LLM serving writeup is worth the time if you're thinking about inference at scale: engine selection rationale, batched constrained decoding, the full stack.
+
+On the lighter end, the TCP_NODELAY piece is a good reminder that Nagle's algorithm is still silently killing latency in systems that should know better.
 
 ## Making
 
-Same Same But Different is weeks out. Platform work and festival prep are running in parallel.
+Same Same But Different is a week out. Platform work and festival prep are running in parallel.
