@@ -1,9 +1,10 @@
 ---
 title: Web accessibility
 summary: >-
-  Web accessibility spans technical decisions across CSS, typography, and HTML
-  structure that determine whether interfaces remain usable for all people,
-  regardless of device, ability, or preference.
+  Web accessibility concerns how design and implementation choices affect
+  whether UIs work for everyone — covering semantic structure, user preference
+  support, font sizing, progressive enhancement, and platform-native elements
+  over custom JavaScript.
 sources:
   - 2026-04/2026-04-24t085352-building-a-ui-without-breakpoints
   - 2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp
@@ -23,12 +24,12 @@ sources:
   - 2026-07/2026-07-16t052353-boundary-aware-styling-in-css
   - >-
     2026-07/2026-07-16t080520-the-descent-what-happened-to-the-frontend-while-you-werent
-compiled_at: '2026-06-22T07:23:15.859Z'
+compiled_at: '2026-08-24T18:55:59.663Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 4351
-    output_tokens: 549
+    input_tokens: 4877
+    output_tokens: 712
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -39,13 +40,14 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.021288
-last_source_added: '2026-07-16T15:05:20.763Z'
+  cost_usd: 0.025311
 ---
-Accessibility in web interfaces is not a single feature to bolt on but a consequence of many smaller technical decisions. Two areas where it surfaces repeatedly in CSS and typography work are unit choices and the handling of user preferences.
+Web accessibility cuts across visual design, markup choices, and interaction patterns. Several of the sources here treat it as a constraint that shapes how CSS features should be used rather than a separate checklist to satisfy after the fact.
 
-Fluid typography is a useful example. Using `clamp()` to scale font sizes across viewport widths produces smoother layouts, but the choice of unit matters for accessibility. [Adrian Bece's breakdown of CSS clamp](/reading/2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp) explains that viewport units in the preferred value of `clamp()` do not respond to the browser's base font size setting. Users who increase their default font size in browser preferences to improve readability will see no effect if sizes are expressed purely in `vw`. Using `rem`-based calculations, or mixing `rem` into the fluid formula, preserves that user control. This is not a minor edge case; it is the mechanism by which fluid typography either respects or silently overrides a user's explicit accessibility configuration.
+Fluid typography is the clearest example. Using `clamp()` with `rem` units matters because users who increase their browser's default font size expect that preference to be respected. [Adrian Bece's breakdown of CSS clamp](/reading/2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp) flags that `px`-based clamp values ignore those user settings entirely, making rem the correct unit for accessible fluid type. The [Utopia graph view](/reading/2026-05/2026-05-05t183935-type-scale-graphs) reinforces this by giving designers a way to see how sizes behave across the full viewport range, making it easier to catch scales that collapse too small at narrow widths.
 
-At a layout level, [Amit Sheen's argument for breakpoint-free UIs](/reading/2026-04/2026-04-24t085352-building-a-ui-without-breakpoints) reframes media queries as the appropriate tool for device capabilities and user preferences, such as `prefers-reduced-motion` or `prefers-contrast`, rather than for viewport widths. Reserving media queries for capability and preference queries makes accessibility accommodations more intentional and less likely to be accidentally overridden by layout breakpoints.
+Progressive enhancement is another throughline. [Sunkanmi Fafowora's piece on custom checkmarks](/reading/2026-06/2026-06-10t220929-navigating-the-age-old-problem-of-checkmarks-in-ui-with) argues that the new CSS `::checkmark` pseudo-element is the accessible path forward for dropdown UI, because it keeps semantics in the platform rather than rebuilding them in JavaScript. The trade-off is current browser support gaps, so progressive enhancement means the baseline still needs to work.
 
-Progressive enhancement connects these concerns. [Sunkanmi Fafowora's comparison of custom dropdown checkmarks](/reading/2026-06/2026-06-10t220929-navigating-the-age-old-problem-of-checkmarks-in-ui-with) shows how JavaScript-heavy custom components often degrade badly when scripting is unavailable or slow, while the newer CSS `::checkmark` pseudo-element keeps interactive semantics in the platform layer. The tradeoff is browser support gaps, which makes the case for progressive enhancement as a strategy: deliver accessible baseline behavior first and enhance where supported.
+The broader push toward platform primitives connects here too. [Pavel Laptev's survey of modern CSS capabilities](/reading/2026-04/2026-04-30t231909-the-great-css-expansion) notes that native popovers, modals, and anchor positioning carry built-in accessibility behaviors that JavaScript-based equivalents have to reconstruct manually, often imperfectly. Similarly, [Dan Q's reversal of an app back into a webpage](/reading/2026-07/2026-07-14t210058-your-app-could-have-been-a-webpage-so-i-fixed-it-for-you) and [Jim Nielsen's argument for separate HTML pages over JS-powered interactions](/reading/2026-05/2026-05-05t091632-building-websites-with-llms) both point to semantic, navigable HTML as the more accessible default, with JavaScript added only where it genuinely improves the experience.
+
+[Amit Sheen's case for intrinsic layouts](/reading/2026-04/2026-04-24t085352-building-a-ui-without-breakpoints) reserves media queries for device capabilities and user preferences specifically, which includes prefers-reduced-motion and other accessibility-relevant signals. Treating those queries as the right place for preference-driven styling, rather than viewport hacks, is a structural accessibility decision.

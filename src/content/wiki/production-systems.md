@@ -1,9 +1,9 @@
 ---
 title: Production systems
 summary: >-
-  The engineering decisions that determine how software behaves under real load,
-  covering durability, observability, testing discipline, performance
-  constraints, and the operational costs of failure.
+  How software actually behaves under real load, across the full stack from
+  networking defaults to workflow durability, observability, and the operational
+  disciplines that keep distributed systems running.
 sources:
   - >-
     2026-04/2026-04-29t172018-how-to-build-scalable-web-apps-with-openais-privacy-filter
@@ -41,12 +41,12 @@ sources:
     2026-07/2026-07-15t030225-ban-commitstransactions-using-ast-analysis-and-linters
   - 2026-07/2026-07-19t073255-its-always-tcpnodelay-every-damn-time
   - 2026-08/2026-08-01t221438-in-house-llm-serving-at-netflix
-compiled_at: '2026-07-09T23:27:48.881Z'
+compiled_at: '2026-08-24T18:53:17.102Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 6166
-    output_tokens: 1033
+    input_tokens: 6701
+    output_tokens: 1044
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -57,19 +57,14 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.033993
-last_source_added: '2026-08-02T05:14:38.751Z'
+  cost_usd: 0.035763
 ---
-Production systems are where abstractions meet reality. The gap between what software does in development and what it does under live load is where most interesting engineering problems live, and the sources here circle that gap from several angles.
+Production systems is the broad category covering how software runs in reality: the infrastructure choices, failure modes, operational practices, and architectural patterns that separate a working prototype from a system that holds up under load, partial failure, and accumulated complexity.
 
-Durability is one axis. [Temporal](/reading/2026-04/2026-04-30t231511-temporal) persists workflow state at every step so distributed applications recover from failures automatically. [Jack Vanlightly's taxonomy](/reading/2026-05/2026-05-01t112302-the-three-durable-function-forms) maps durable execution into three forms — stateless functions, sessions, and actors — and shows how Temporal, Restate, DBOS, and Resonate each implement them. [Depot's CI orchestrator](/reading/2026-05/2026-05-19t110000-building-ci-with-lambda-durable-functions) applies the same principle differently, using AWS Lambda durable functions to run a stateful, checkpointed workflow scheduler without keeping a long-lived process alive.
+At the networking layer, invisible defaults can silently degrade performance. [Marc Brooker's analysis](/reading/2026-07/2026-07-19t073255-its-always-tcpnodelay-every-damn-time) of Nagle's algorithm shows how a decades-old buffering heuristic still causes latency spikes in modern datacenters because the Nagle/delayed-ACK interaction was never fixed, it was just worked around at the application layer. Similar silent costs appear at the data layer: [Depot's CI orchestrator](/reading/2026-05/2026-05-19t110000-building-ci-with-lambda-durable-functions) uses AWS Lambda durable functions with checkpointed state to avoid keeping long-lived processes alive, and [Temporal's durable execution model](/reading/2026-04/2026-04-30t231511-temporal) persists workflow state at every step so distributed applications recover from failures without manual reconciliation. [Jack Vanlightly's taxonomy](/reading/2026-05/2026-05-01t112302-the-three-durable-function-forms) of durable execution into stateless functions, sessions, and actors provides a conceptual map for how platforms like Temporal, Restate, DBOS, and Resonate implement these patterns differently.
 
-Failure modes in production are rarely dramatic. The GitHub merge queue bug described by [Trunk](/reading/2026-05/2026-05-03t150555-what-happens-if-a-merge-queue-builds-on-the-wrong-commit) silently deleted thousands of lines from main branches because temp branches were built off the wrong base commit. [The Unwritten Laws of Software Engineering](/reading/2026-06/2026-06-10t073045-the-unwritten-laws-of-software-engineering) draws the same lesson in principle: roll back before debugging, and treat every external dependency as a future outage.
+When systems do fail, observability is what makes recovery tractable. [SigNoz's guide to distributed traces](/reading/2026-06/2026-06-10t223404-how-to-read-distributed-traces-when-you-didnt-write-the-code) covers span anatomy and critical-path analysis for codebases you didn't write. [LangChain's argument](/reading/2026-05/2026-05-10t140531-agent-observability-needs-feedback-to-power-learning) that traces alone are insufficient for agentic systems points toward a harder truth: observability only becomes actionable when feedback signals are attached to traces so the system can learn from them. [Colin Breck's post](/reading/2026-06/2026-06-30t185207-when-impressive-performance-gains-do-not-matter) adds a constraint worth internalizing: even order-of-magnitude improvements fail to change outcomes when attention thresholds, discrete capacity increments, or pipeline backpressure absorb the gains before they reach the bottleneck.
 
-Observability is the mechanism for understanding what actually happened. [Distributed traces](/reading/2026-06/2026-06-10t223404-how-to-read-distributed-traces-when-you-didnt-write-the-code) let engineers read unfamiliar codebases by examining span anatomy and critical-path analysis rather than source code alone. [LangChain's Harrison Chase](/reading/2026-05/2026-05-10t140531-agent-observability-needs-feedback-to-power-learning) extends this: traces alone don't improve agentic systems; feedback signals attached to traces are what turn observability into a learning loop.
+Testing in production is a distinct discipline from staging. [Currents' decision framework](/reading/2026-05/2026-05-15t120337-playwright-testing-in-staging-vs-production) for Playwright tests spells out which flows belong in each environment and what the operational costs of production testing actually look like. [Emphere's approach](/reading/2026-06/2026-06-11t024225-testing-a-security-tool-like-it-can-hurt-people) to testing a container security tool adds the harder requirement: red runs that prove the system fails loudly when it overclaims certainty, not just green runs that confirm happy paths.
 
-Testing discipline connects staging and production concerns. [Currents](/reading/2026-05/2026-05-15t120337-playwright-testing-in-staging-vs-production) provides a decision framework for splitting Playwright tests between environments, including the operational costs of testing in production. [Emphere](/reading/2026-06/2026-06-11t024225-testing-a-security-tool-like-it-can-hurt-people) takes a harder line with their container security tool, using red runs that prove the system fails loudly when it overclaims certainty.
-
-Performance has its own traps. [Colin Breck](/reading/2026-06/2026-06-30t185207-when-impressive-performance-gains-do-not-matter) identifies three constraints — attention thresholds, discrete capacity increments, and pipeline backpressure — that explain why order-of-magnitude improvements often fail to change outcomes. [Linear's architecture](/reading/2026-06/2026-06-11t111011-hows-linear-so-fast-a-technical-breakdown) illustrates the other side: local-first IndexedDB sync, optimistic updates, and aggressive code splitting compound into perceived near-instant performance. LLM inference has its own cost dynamics; [KV caching](/reading/2026-05/2026-05-20t073125-how-to-cut-llm-inference-costs-with-kv-caching) treated as a persistent shared asset rather than a per-request computation can cut prefill costs by up to 20x.
-
-Configuration correctness is an underrated production concern. [YAML's Norway problem](/reading/2026-05/2026-05-18t113714-yaml-thats-norway-problem) — where the country code NO parses as false — persists in popular libraries a decade after the spec fixed it, illustrating how configuration formats carry silent failure modes into production deployments.
+Architectural choices compound over time. [Linear's performance breakdown](/reading/2026-06/2026-06-11t111011-hows-linear-so-fast-a-technical-breakdown) attributes near-instant UI to local-first IndexedDB sync, optimistic updates, and aggressive code splitting. [Trunk's post-mortem of a GitHub merge queue bug](/reading/2026-05/2026-05-03t150555-what-happens-if-a-merge-queue-builds-on-the-wrong-commit) shows how a single architectural choice, never pushing temp branches to main, avoided a silent deletion of thousands of lines from production branches. [Anton Zaides' distillation](/reading/2026-06/2026-06-10t073045-the-unwritten-laws-of-software-engineering) of hard-won production rules arrives at a similar conclusion: roll back before debugging, and treat every external dependency as a future outage. These are not abstractions; they are the residue of real incidents.
