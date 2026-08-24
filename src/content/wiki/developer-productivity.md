@@ -1,9 +1,10 @@
 ---
 title: Developer productivity
 summary: >-
-  Developer productivity spans individual workflow habits, organizational
-  systems, and AI tooling — and the sources collectively argue that output speed
-  is the least reliable measure of it.
+  Developer productivity spans tooling, process, and judgment — and the sources
+  here collectively argue that AI accelerates code output while leaving the
+  harder bottlenecks, organizational coherence, skill depth, and code ownership,
+  largely untouched.
 sources:
   - 2026-04/2026-04-27t145041-agentic-coding-is-a-trap
   - >-
@@ -54,12 +55,12 @@ sources:
   - >-
     2026-08/2026-08-05t072544-use-your-brain-engineering-standards-in-the-age-of-llms
   - 2026-08/2026-08-11t004752-danielmiesslerlifeos
-compiled_at: '2026-07-09T23:19:47.357Z'
+compiled_at: '2026-08-24T18:44:01.885Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 9251
-    output_tokens: 1317
+    input_tokens: 10019
+    output_tokens: 1360
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -70,17 +71,18 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.047508
-last_source_added: '2026-08-11T07:47:52.055Z'
+  cost_usd: 0.050457
 ---
-Productivity in software development resists simple measurement. Counting lines of code, features shipped, or AI-assisted commits misses the costs that accumulate on the other side of the ledger: cognitive debt, maintenance burden, and lost organizational knowledge.
+Developer productivity is usually measured in output: features shipped, bugs closed, tests passing. The sources here complicate that frame considerably, arguing that the constraints on productive engineering work are rarely the ones being automated away.
 
-The most direct challenge to speed-as-productivity appears across several sources. [Agentic Coding is a Trap](/reading/2026-04/2026-04-27t145041-agentic-coding-is-a-trap) argues that full agentic workflows accelerate skill atrophy and invert developer priorities toward output over understanding. [Slow Mode](/reading/2026-05/2026-05-19t193626-slow-mode) makes the same argument from the opposite direction: a deliberately slower AI coding agent that keeps the human involved at every step trades short-term velocity for genuine learning and code ownership. [When Code Is Cheap, Does Quality Still Matter?](/reading/2026-05/2026-05-22t091746-when-code-is-cheap-does-quality-still-matter) puts the accounting plainly: AI lowers the cost of producing code but not the cost of owning it, and LLMs can generate polished technical debt faster than any individual engineer ever could.
+The most direct challenge comes from sources examining AI coding tools. [Lars Faye](/reading/2026-04/2026-04-27t145041-agentic-coding-is-a-trap) argues that full agentic workflows invert developer priorities toward speed over understanding, creating skill atrophy and vendor dependency. [Christopher Meiklejohn](/reading/2026-05/2026-05-03t110355-babysitting-the-agent) documents this concretely: after two weeks building with Claude, he found himself manually verifying every feature because the agent consistently declared work done after minimal checks. The time saved on code generation was spent on supervision. [The Typical Set](/reading/2026-05/2026-05-06t110728-the-bottleneck-was-never-the-code) makes the structural point most plainly: coding agents make individual code-writing cheap, but the real bottleneck was always organizational, shared context, specification clarity, and management coherence, and agents amplify whatever alignment or misalignment already exists.
 
-The organizational layer compounds the individual one. [The bottleneck was never the code](/reading/2026-05/2026-05-06t110728-the-bottleneck-was-never-the-code) argues that coding agents make individual code-writing cheap while the real bottleneck remains organizational: shared context, specification clarity, and management coherence. Agents amplify whatever alignment or misalignment already exists. [The Founder's Playbook](/reading/2026-06/2026-06-17t130655-the-founders-playbook-building-an-ai-native-startup) makes this concrete in the startup context, noting that founders who skip specs and architectural decisions hit a predictable wall where AI sessions re-derive foundational choices from scratch and the codebase drifts into incoherence. [Your Onboarding Is a Hazing Ritual](/reading/2026-05/2026-05-08t112608-your-onboarding-is-a-hazing-ritual-and-you-call-it-agile) describes how dysfunctional onboarding practices systematically set new hires up to fail while remaining invisible to management, a structural productivity drain that no tooling fixes.
+This organizational dimension surfaces in onboarding as well. [DHung](/reading/2026-05/2026-05-08t112608-your-onboarding-is-a-hazing-ritual-and-you-call-it-agile) describes how poor onboarding practices disguised as agile process systematically set new hires up to fail, with packed meeting calendars and same-sprint workloads from day one making dysfunction invisible to management. [Tuhin Nair](/reading/2026-05/2026-05-13t060018-why-senior-developers-fail-to-communicate-their-expertise) adds that senior developers communicate in terms of complexity management while the rest of the business thinks in uncertainty reduction, and bridging that gap is a productivity problem AI cannot touch.
 
-Tooling does matter at the margin, and several sources treat it seriously. [Shell Tricks That Actually Make Life Easier](/reading/2026-04/2026-04-30t231815-shell-tricks-that-actually-make-life-easier-and-save-your) covers underused shell shortcuts that reduce friction in daily work. [Reviewing Large Changes with Jujutsu](/reading/2026-05/2026-05-31t164252-reviewing-large-changes-with-jujutsu) describes a workflow for reviewing large pull requests without losing progress to Git stashes. [The Git Commands I Run Before Reading Any Code](/reading/2026-06/2026-06-18t024208-the-git-commands-i-run-before-reading-any-code) shows how churn and bus-factor diagnostics let an engineer orient to an unfamiliar codebase before opening a single file. [The Vertical Codebase](/reading/2026-07/2026-07-04t141323-the-vertical-codebase) argues that organizing code by domain rather than technical layer improves cohesion, discoverability, and AI-agent effectiveness simultaneously.
+The knowledge-transmission problem runs deeper still. [cekrem](/reading/2026-05/2026-05-19t110710-the-tacit-dimension-why-your-best-engineers-cant-tell-you) draws on Polanyi's philosophy to argue that the most valuable engineering expertise, pattern recognition, design intuition, unwritten conventions, is structurally inaccessible to AI tools and can only be transmitted through apprenticeship. When agentic coding replaces the apprenticeship loop, that knowledge does not get captured; it disappears.
 
-Knowledge transfer is its own bottleneck. [The Tacit Dimension](/reading/2026-05/2026-05-19t110710-the-tacit-dimension-why-your-best-engineers-cant-tell-you) argues that the most valuable engineering expertise is structurally inaccessible to AI tools and can only be transmitted through apprenticeship. [Why Senior Developers Fail to Communicate Their Expertise](/reading/2026-05/2026-05-13t060018-why-senior-developers-fail-to-communicate-their-expertise) locates the gap differently: senior engineers frame problems as complexity management while the business thinks in terms of uncertainty reduction, and bridging that gap is more consequential than any tooling choice.
+Code quality and ownership are a related fault line. [Yusuf Aytas](/reading/2026-05/2026-05-22t091746-when-code-is-cheap-does-quality-still-matter) notes that AI lowers the cost of producing code but not the cost of owning it; LLMs can generate polished, well-formatted technical debt faster than any individual engineer. [Paolo Galeone](/reading/2026-08/2026-08-05t072544-use-your-brain-engineering-standards-in-the-age-of-llms) calls this the custodian mindset, shipping AI-generated code engineers do not understand, and argues for strong CI/CD and code ownership as the corrective. [The Founders Playbook](/reading/2026-06/2026-06-17t130655-the-founders-playbook-building-an-ai-native-startup) reaches a similar conclusion from the startup angle: AI removes natural bottlenecks that once controlled what reaches production, so without specs and architectural constraints written somewhere the AI can read, each session re-derives foundational decisions and the codebase drifts.
 
-Where sources disagree is on whether AI tooling's net effect is positive or negative. [A Return to Two-Pizza Culture](/reading/2026-06/2026-06-30t173037-a-return-to-two-pizza-culture) and [Why Most Developers Can't Use AI Effectively](/reading/2026-05/2026-05-17t204925-why-most-developers-cant-use-ai-effectively) both accept AI as a genuine force multiplier, with the latter identifying structural barriers to realizing those gains. [Babysitting the Agent](/reading/2026-05/2026-05-03t110355-babysitting-the-agent) and [Code Smells when you get AI to write your Frontend Tests](/reading/2026-06/2026-06-22t185420-code-smells-when-you-get-ai-to-write-your-frontend-tests) document the hidden supervision costs and output defects that erode those gains in practice. The productive tension across these sources is not whether to use AI but how to account for the full cost of doing so.
+Tooling choices affect productivity in subtler ways too. [Jappie Software](/reading/2026-05/2026-05-17t204925-why-most-developers-cant-use-ai-effectively) identifies five structural barriers to AI adoption: weak type systems, organizational processes built for human-speed development, and lack of agent-management training. [Dominik](/reading/2026-07/2026-07-04t141323-the-vertical-codebase) shows that codebase organization itself matters, domain-vertical colocation improves cohesion and discoverability for both humans and AI agents. Concrete workflow improvements appear throughout: [Christian Hofstede-Kuhn](/reading/2026-04/2026-04-30t231815-shell-tricks-that-actually-make-life-easier-and-save-your) on underused shell shortcuts, [Ben Gesoff](/reading/2026-05/2026-05-31t164252-reviewing-large-changes-with-jujutsu) on using Jujutsu to manage large code reviews without cognitive overhead, and [Ally Piechowski](/reading/2026-06/2026-06-18t024208-the-git-commands-i-run-before-reading-any-code) on git log commands that diagnose a new codebase's risks before reading a single file.
+
+[Pete Millspaugh](/reading/2026-05/2026-05-19t193626-slow-mode) offers one synthesis: a "Slow Mode" AI coding agent that keeps the human involved at every step, planning together and teaching concepts rather than autonomously looping, trading short-term output for genuine long-term ownership. The productivity gain that matters is not the one measured in lines of code per hour.
