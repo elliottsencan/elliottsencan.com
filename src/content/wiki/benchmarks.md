@@ -44,6 +44,8 @@ sources:
     2026-06/2026-06-22t165934-the-token-compression-illusion-why-im-skeptical-of-rtk
   - 2026-06/2026-06-23t212958-how-ai-code-review-can-make-correct-code-worse
   - 2026-06/2026-06-30t185207-when-impressive-performance-gains-do-not-matter
+  - >-
+    2026-08/2026-08-29t130644-reducing-zods-memory-footprint-by-an-order-of-magnitude
 compiled_at: '2026-07-09T23:18:17.812Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -61,6 +63,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.036819
+last_source_added: '2026-08-29T20:06:44.872Z'
 ---
 A benchmark is only as useful as the gap it actually measures. Across LLM evaluation, multi-agent systems, and vision-language research, the same structural problem recurs: tests get designed for one purpose, then get applied to broader claims they cannot support.
 

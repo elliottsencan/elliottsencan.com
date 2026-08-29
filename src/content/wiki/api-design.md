@@ -19,6 +19,8 @@ sources:
   - 2026-06/2026-06-13t081411-signals-the-push-pull-based-algorithm
   - 2026-06/2026-06-17t075738-gunnargray-devunicode-animations
   - 2026-07/2026-07-04t141323-the-vertical-codebase
+  - >-
+    2026-08/2026-08-29t130644-reducing-zods-memory-footprint-by-an-order-of-magnitude
 compiled_at: '2026-07-09T23:17:51.765Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -36,6 +38,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.036459
+last_source_added: '2026-08-29T20:06:44.872Z'
 ---
 Good API design is fundamentally about managing the boundary between a caller and an implementation. The shape of that boundary determines how much cognitive load the caller carries and how freely the implementation can change.
 
