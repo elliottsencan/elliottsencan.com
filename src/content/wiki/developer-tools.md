@@ -1,9 +1,9 @@
 ---
 title: Developer tools
 summary: >-
-  Discrete software tools that extend what practitioners can build, debug,
-  deploy, or understand, spanning LLM fine-tuning, CI orchestration,
-  documentation, security scanning, Kubernetes management, and more.
+  Software and platforms that help developers build, run, debug, and understand
+  systems more effectively, spanning LLM tooling, infrastructure, CI,
+  documentation, and security.
 sources:
   - 2026-04/2026-04-24t093356-unsloth
   - 2026-04/2026-04-29t173553-canitrun-can-my-gpu-run-this-llm
@@ -25,12 +25,12 @@ sources:
   - >-
     2026-07/2026-07-14t210058-your-app-could-have-been-a-webpage-so-i-fixed-it-for-you
   - 2026-08/2026-08-10t220951-gvzdvclaudish-to-english
-compiled_at: '2026-07-09T23:21:01.735Z'
+compiled_at: '2026-08-29T20:14:43.922Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 4567
-    output_tokens: 1061
+    input_tokens: 4895
+    output_tokens: 990
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -41,15 +41,16 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.029616
-last_source_added: '2026-08-11T05:09:51.080Z'
+  cost_usd: 0.029535
 ---
-The category is broad almost to the point of uselessness, but a few coherent threads run through the sources here. The first is local-first or self-hosted tooling that reduces dependence on cloud vendors. [Unsloth](/reading/2026-04/2026-04-24t093356-unsloth) delivers up to 30x faster LLM fine-tuning with 90% less memory by writing custom kernels, letting practitioners run training on consumer hardware. [CanItRun](/reading/2026-04/2026-04-29t173553-canitrun-can-my-gpu-run-this-llm) takes the prerequisite step further, calculating before you even start whether a given GPU's VRAM can handle a specific model and at what quantization level. [openagentd](/reading/2026-05/2026-05-03t173528-lthoanggopenagentd) and [Helply](/reading/2026-05/2026-05-14t222554-piyush-mishra-00helply) both run locally on the desktop, the former as a cockpit for multi-agent teams and the latter as a meeting assistant with local LLM backend support.
+The category spans a wide range of concerns: local LLM fine-tuning and inference, infrastructure management, CI orchestration, documentation, security scanning, and even reclaiming simplicity from unnecessary complexity.
 
-A second thread is infrastructure tooling that hides operational complexity. [Temporal](/reading/2026-04/2026-04-30t231511-temporal) persists workflow state at every step so distributed applications recover from failures without custom reconciliation logic. [Depot CI](/reading/2026-05/2026-05-19t110000-building-ci-with-lambda-durable-functions) applies a similar idea to continuous integration, using AWS Lambda durable functions to run a stateful, checkpointed scheduler without a long-lived process. [Radar](/reading/2026-05/2026-05-03t105219-radar-open-source-kubernetes-ui) consolidates Kubernetes topology, Helm, GitOps, live traffic, and security checks into a single open-source binary.
+On the LLM side, [Unsloth](/reading/2026-04/2026-04-24t093356-unsloth) delivers custom kernels for fine-tuning and running models locally, cutting memory overhead by up to 90% compared to FlashAttention 2. Complementing that, [CanItRun](/reading/2026-04/2026-04-29t173553-canitrun-can-my-gpu-run-this-llm) lets developers check whether a specific GPU's VRAM can actually run a given open-weight model, surfacing compatible quantization levels and estimated throughput before any setup begins. Both tools address the practical friction of working with large models outside cloud infrastructure.
 
-Documentation and developer experience tools form a third cluster. [Mintlify](/reading/2026-04/2026-04-30t231435-mintlify) targets both human readers and LLMs, supporting llms.txt and MCP alongside standard docs. [Angular Signal Forms](/reading/2026-04/2026-04-30t231412-form-model-design-angular-signal-forms) represents framework-level tooling that shapes how developers model data. [Crafting Interpreters](/reading/2026-04/2026-04-30t231027-munificentcraftinginterpreters) sits at the educational end: a complete book and two interpreter implementations whose build system weaves code and prose into one artifact.
+Infrastructure tooling appears at several levels. [Radar](/reading/2026-05/2026-05-03t105219-radar-open-source-kubernetes-ui) consolidates Kubernetes topology, Helm, GitOps, live traffic, and security checks into a single open-source binary with no cloud account required. [Temporal](/reading/2026-04/2026-04-30t231511-temporal) takes on a different layer, persisting workflow state at every step so distributed applications recover from failures automatically. [Depot CI](/reading/2026-05/2026-05-19t110000-building-ci-with-lambda-durable-functions) applies similar durability thinking to CI orchestration, using AWS Lambda durable functions to run a stateful, checkpointed scheduler without a long-lived process.
 
-Security is a recurring concern across the ecosystem. The [Ars Technica report on Unicode supply-chain attacks](/reading/2026-04/2026-04-30t231634-supply-chain-attack-using-invisible-code-hits-github-and) shows that 151 malicious npm and GitHub packages hid payloads in invisible variation-selector characters, bypassing both code review and static analysis. [Anthropic's defending-code reference harness](/reading/2026-06/2026-06-04t163601-anthropicsdefending-code-reference-harness) responds to that class of threat with an agentic pipeline for autonomous vulnerability discovery and patching, using gVisor sandboxing. The [MCPB packaging guide](/reading/2026-05/2026-05-27t181732-build-a-desktop-extension-with-mcpb) shows MCP becoming a distribution primitive, bundling local servers into single-click installers for Claude Desktop.
+Documentation and local agent tooling have also matured into dedicated products. [Mintlify](/reading/2026-04/2026-04-30t231435-mintlify) serves documentation to both human users and LLMs, with support for llms.txt and MCP. [lthoangg/openagentd](/reading/2026-05/2026-05-03t173528-lthoanggopenagentd) provides a desktop cockpit for local multi-agent workflows with persistent memory and built-in observability, while [Helply](/reading/2026-05/2026-05-14t222554-piyush-mishra-00helply) offers an Electron-based meeting assistant supporting both cloud and local LLM backends.
 
-[Poolday](/reading/2026-04/2026-04-30t231206-poolday) and [Optimal Workshop](/reading/2026-04/2026-04-30t231745-optimal-vs-usertesting) sit at opposite ends of the spectrum: one automates video production through 100+ generative models, the other offers UX research infrastructure spanning card sorting to AI synthesis. Both reflect the broader pattern of tools that absorb previously manual workflows into automated or AI-assisted pipelines.
+Security tooling surfaces as a recurring theme. An [Ars Technica report](/reading/2026-04/2026-04-30t231634-supply-chain-attack-using-invisible-code-hits-github-and) documents attackers embedding payloads in invisible Unicode characters across 151 npm and GitHub packages, evading static analysis entirely. Anthropic's [defending-code-reference-harness](/reading/2026-06/2026-06-04t163601-anthropicsdefending-code-reference-harness) responds to this class of threat with an agentic pipeline for autonomous vulnerability discovery and patching, using gVisor sandboxing to contain the process.
+
+A quieter thread runs through several sources: skepticism about unnecessary complexity. [Dan Q's post](/reading/2026-07/2026-07-14t210058-your-app-could-have-been-a-webpage-so-i-fixed-it-for-you) replaces a tracking-laden Android app with a lightweight webpage. David Crawshaw [argues](/reading/2026-07/2026-07-05t170602-building-a-cloud) that cloud platforms rest on fundamentally wrong abstractions. The [Crafting Interpreters repo](/reading/2026-04/2026-04-30t231027-munificentcraftinginterpreters) sits in this spirit too: a complete, readable implementation of two interpreters as a learning artifact, with a build system that weaves code and prose together.
