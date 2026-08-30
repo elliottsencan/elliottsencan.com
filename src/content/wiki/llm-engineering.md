@@ -63,6 +63,7 @@ sources:
     2026-07/2026-07-23t215330-humanlayeradvanced-context-engineering-for-coding-agents
   - 2026-08/2026-08-01t221438-in-house-llm-serving-at-netflix
   - 2026-08/2026-08-03t025839-dont-be-a-meat-proxy
+  - 2026-08/2026-08-29t224355-how-llms-actually-work
 compiled_at: '2026-07-09T23:24:05.254Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -80,7 +81,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.057396
-last_source_added: '2026-08-03T09:58:39.571Z'
+last_source_added: '2026-08-30T05:43:55.936Z'
 ---
 LLM engineering is the practice of building software systems on top of large language models, from low-level training and inference optimization through agent architecture, harness design, and production observability. The sources here span that full range, and the recurring tension is between raw model capability and the engineering work needed to make that capability dependable.
 

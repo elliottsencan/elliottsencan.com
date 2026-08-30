@@ -43,6 +43,7 @@ sources:
     2026-06/2026-06-22t165934-the-token-compression-illusion-why-im-skeptical-of-rtk
   - >-
     2026-07/2026-07-23t215330-humanlayeradvanced-context-engineering-for-coding-agents
+  - 2026-08/2026-08-29t224355-how-llms-actually-work
 compiled_at: '2026-07-09T23:18:51.770Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -60,7 +61,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.048063
-last_source_added: '2026-07-24T04:53:30.637Z'
+last_source_added: '2026-08-30T05:43:55.936Z'
 ---
 Context engineering names the discipline of deciding what goes into an LLM's context window, how it is structured, when it arrives, and what gets discarded. As AI agents move from single-turn assistants to long-running systems, the quality of that window increasingly determines whether the system works or not.
 

@@ -36,6 +36,7 @@ sources:
   - 2026-07/2026-07-05t170602-building-a-cloud
   - 2026-07/2026-07-09t161342-ai-2040-plan-a
   - 2026-08/2026-08-01t221438-in-house-llm-serving-at-netflix
+  - 2026-08/2026-08-29t224355-how-llms-actually-work
 compiled_at: '2026-07-09T23:17:09.653Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -53,7 +54,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.037479
-last_source_added: '2026-08-02T05:14:38.751Z'
+last_source_added: '2026-08-30T05:43:55.936Z'
 ---
 AI infrastructure spans the full stack beneath the model itself: the hardware and networking that serve tokens cheaply, the hosting abstractions that let agents run reliably, the routing and caching layers that manage cost and latency, and the governance and credential plumbing that makes all of it safe to operate in production.
 

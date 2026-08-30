@@ -35,6 +35,7 @@ sources:
   - >-
     2026-06/2026-06-22t165934-the-token-compression-illusion-why-im-skeptical-of-rtk
   - 2026-08/2026-08-01t221438-in-house-llm-serving-at-netflix
+  - 2026-08/2026-08-29t224355-how-llms-actually-work
 compiled_at: '2026-07-09T23:24:32.534Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -52,7 +53,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.034728
-last_source_added: '2026-08-02T05:14:38.751Z'
+last_source_added: '2026-08-30T05:43:55.936Z'
 ---
 LLM inference is the process of running a trained language model to generate output given an input prompt. At the hardware level, the bottleneck is VRAM: a model's weights, the KV cache, and activation overhead must all fit on the available GPU. Tools like [CanItRun](/reading/2026-04/2026-04-29t173553-canitrun-can-my-gpu-run-this-llm) make this concrete, calculating compatible quantization levels and estimated tokens-per-second for a given GPU and model combination.
 
