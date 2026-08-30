@@ -1,10 +1,10 @@
 ---
 title: LLM inference
 summary: >-
-  LLM inference covers how language models generate tokens from a prompt —
-  spanning hardware constraints, serving architecture, caching strategies,
-  quantization, routing, and cost — and has become its own engineering
-  discipline as scale and cost pressures intensify.
+  LLM inference covers the full stack of running trained language models to
+  produce outputs, from low-level kernel optimization and memory management to
+  routing, caching, quantization, and the cost tradeoffs that shape how and
+  where models get deployed.
 sources:
   - 2026-04/2026-04-24t093356-unsloth
   - >-
@@ -36,12 +36,12 @@ sources:
     2026-06/2026-06-22t165934-the-token-compression-illusion-why-im-skeptical-of-rtk
   - 2026-08/2026-08-01t221438-in-house-llm-serving-at-netflix
   - 2026-08/2026-08-29t224355-how-llms-actually-work
-compiled_at: '2026-07-09T23:24:32.534Z'
+compiled_at: '2026-08-30T05:55:22.153Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 5481
-    output_tokens: 1219
+    input_tokens: 5814
+    output_tokens: 1471
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -52,17 +52,18 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.034728
-last_source_added: '2026-08-30T05:43:55.936Z'
+  cost_usd: 0.039507
 ---
-LLM inference is the process of running a trained language model to generate output given an input prompt. At the hardware level, the bottleneck is VRAM: a model's weights, the KV cache, and activation overhead must all fit on the available GPU. Tools like [CanItRun](/reading/2026-04/2026-04-29t173553-canitrun-can-my-gpu-run-this-llm) make this concrete, calculating compatible quantization levels and estimated tokens-per-second for a given GPU and model combination.
+At the lowest level, inference is a memory-bandwidth problem. A model's weights must move from storage into GPU VRAM, and how much fits determines which models can run at all. [CanItRun](/reading/2026-04/2026-04-29t173553-canitrun-can-my-gpu-run-this-llm) makes this concrete by calculating VRAM requirements from model weights, KV cache size, and activation overhead, then surfacing compatible quantization levels and estimated tokens-per-second. Quantization is one of the primary levers inference engineers pull: reducing weight precision shrinks memory footprint at some cost to output quality. [Unsloth](/reading/2026-04/2026-04-24t093356-unsloth) goes further with custom kernels that deliver up to 30x faster training throughput and 90% less memory usage compared to FlashAttention 2, illustrating how much performance headroom exists between naive and optimized implementations.
 
-Quantization is one of the primary levers for fitting larger models into constrained hardware. [Unsloth](/reading/2026-04/2026-04-24t093356-unsloth) applies custom kernels to achieve up to 30x faster throughput and 90% less memory than FlashAttention 2, supporting FP8 and LoRA workflows. [oobabooga/textgen](/reading/2026-05/2026-05-05t071908-oobaboogatextgen) exposes multiple backends including GGUF/llama.cpp for fully offline local serving. The critical assessment in [Friends Don't Let Friends Use Ollama](/reading/2026-05/2026-05-05t071447-friends-dont-let-friends-use-ollama) argues that Ollama, while popular, delivers inferior inference performance compared to llama.cpp directly and obscures that dependency behind a proprietary layer.
+The KV cache sits at the center of inference efficiency. Because attention recomputes key-value pairs for every token in context, caching those states avoids redundant work. [How LLMs Actually Work](/reading/2026-08/2026-08-29t224355-how-llms-actually-work) explains the mechanism clearly. The Everpure Engineering team extends this into an architectural argument: treating the KV cache as a persistent, shared data asset injected via RDMA rather than recomputed per request can reduce prefill costs by up to 20x [How to Cut LLM Inference Costs with KV Caching](/reading/2026-05/2026-05-20t073125-how-to-cut-llm-inference-costs-with-kv-caching), and their Pure KVA system supports granular-prompt caching that segments prompts into reusable chunks so only changed tokens get processed [Maximizing LLM Efficiency](/reading/2026-05/2026-05-20t073144-maximizing-llm-efficiency-granular-prompt-caching-with-pure), with persistence across sessions on NFS and S3 [20x Faster Inference](/reading/2026-05/2026-05-20t073157-20x-faster-inference-with-the-first-kv-cache-for-s3-and-nfs).
 
-At the serving level, the KV cache is the most consequential optimization target. Recomputing attention states on every request is expensive; persisting and reusing them is not. Everpure's engineering posts show two complementary approaches: [injecting cached attention states from fast NFS/S3 storage via RDMA](/reading/2026-05/2026-05-20t073157-20x-faster-inference-with-the-first-kv-cache-for-s3-and-nfs) for up to 20x faster inference, and [granular-prompt caching](/reading/2026-05/2026-05-20t073144-maximizing-llm-efficiency-granular-prompt-caching-with-pure) that segments prompts into reusable chunks so only changed tokens are processed. A complementary piece on [KV caching strategy](/reading/2026-05/2026-05-20t073125-how-to-cut-llm-inference-costs-with-kv-caching) frames the cache as a shared data asset that can cut prefill costs by up to 20x in enterprise deployments.
+Token count is another cost axis. [chopratejas/headroom](/reading/2026-06/2026-06-20t145835-chopratejasheadroom) compresses tool outputs and RAG chunks before they reach the model, claiming 60-95% token reduction. That claim is contested: [The Token Compression Illusion](/reading/2026-06/2026-06-22t165934-the-token-compression-illusion-why-im-skeptical-of-rtk) argues similar tools report vanity metrics by stripping only Bash output, skip task-accuracy benchmarks, and risk silent data loss in agent pipelines.
 
-Token-level compression is a related but distinct approach. [headroom](/reading/2026-06/2026-06-20t145835-chopratejasheadroom) compresses tool outputs and RAG chunks before they reach the model, claiming 60-95% token reduction. A skeptical counterpoint on [RTK's token compression claims](/reading/2026-06/2026-06-22t165934-the-token-compression-illusion-why-im-skeptical-of-rtk) argues that compression metrics without task-accuracy benchmarks are vanity numbers and that stripping content risks silent data loss in agent pipelines.
+[What is Inference Engineering](/reading/2026-06/2026-06-21t130559-what-is-inference-engineering) frames the discipline broadly, covering speculative decoding, parallelism strategies, and disaggregation alongside caching and quantization. Netflix's production account adds specificity: their team chose vLLM over TensorRT-LLM for its flexibility, built an OpenAI-compatible API surface, and runs batched constrained decoding at scale [In-House LLM Serving at Netflix](/reading/2026-08/2026-08-01t221438-in-house-llm-serving-at-netflix).
 
-At the API and routing layer, inference is increasingly a dispatch problem. [DigitalOcean's Inference Router](/reading/2026-06/2026-06-21t192306-how-we-built-digitalocean-inference-router) uses a 30B MoE model to match each request to the best-fit model for cost, latency, or quality. [Arch-Router](/reading/2026-06/2026-06-21t192506-arch-router-aligning-llm-routing-with-human-preferences) achieves similar alignment with a compact 1.5B model trained on human preferences, requiring no retraining when new models are added. The [AI model pricing war](/reading/2026-05/2026-05-31t072101-the-ai-model-pricing-war-is-here-and-your-margins-depend-on) adds economic urgency: a 75x spread between the cheapest and most expensive frontier APIs means routing and provider-agnostic architecture directly determine margin.
+Routing is increasingly treated as an inference-layer concern rather than an application concern. DigitalOcean's Inference Router uses a 30B MoE orchestrator model to match each request to the best-fit model for cost, latency, or quality [How We Built DigitalOcean Inference Router](/reading/2026-06/2026-06-21t192306-how-we-built-digitalocean-inference-router). The Arch-Router paper proposes a 1.5B preference-aligned alternative that maps queries to user-defined domains without retraining when new models are added [Arch-Router](/reading/2026-06/2026-06-21t192506-arch-router-aligning-llm-routing-with-human-preferences).
 
-[Inference Engineering as a discipline](/reading/2026-06/2026-06-21t130559-what-is-inference-engineering) encompasses all of this: quantization, speculative decoding, caching, parallelism, and disaggregation. Reasoning budget also matters; a benchmark of [Claude Opus 4.7 across five effort levels](/reading/2026-05/2026-05-14t190300-opus-47-low-vs-medium-vs-high-vs-xhigh-vs-max-the-reasoning) found a non-monotonic curve where medium effort outperformed higher settings on both quality and cost, suggesting that more compute at inference time is not always better.
+On the local side, the tooling landscape is contested. [Friends Don't Let Friends Use Ollama](/reading/2026-05/2026-05-05t071447-friends-dont-let-friends-use-ollama) argues Ollama ships inferior inference performance relative to llama.cpp directly, while [oobabooga/textgen](/reading/2026-05/2026-05-05t071908-oobaboogatextgen) and [Running Claude Code with a Local Model via LM Studio](/reading/2026-05/2026-05-12t215147-running-claude-code-with-a-local-model-via-lm-studio) represent the broader ecosystem of local inference servers with OpenAI-compatible APIs.
+
+At the API layer, pricing has collapsed. A 75x gap between the cheapest and most expensive frontier models has opened up business models that were previously unviable [The AI Model Pricing War](/reading/2026-05/2026-05-31t072101-the-ai-model-pricing-war-is-here-and-your-margins-depend-on). Reasoning-effort levels add another variable: benchmarking Claude Opus 4.7 across five effort tiers found a non-monotonic curve where medium effort outperformed higher settings on pass rate and cost-efficiency [Opus 4.7 Low vs Medium vs High](/reading/2026-05/2026-05-14t190300-opus-47-low-vs-medium-vs-high-vs-xhigh-vs-max-the-reasoning).
