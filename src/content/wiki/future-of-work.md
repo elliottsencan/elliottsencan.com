@@ -27,6 +27,7 @@ sources:
   - 2026-07/2026-07-07t170607-the-software-engineering-war
   - 2026-07/2026-07-09t161342-ai-2040-plan-a
   - 2026-08/2026-08-03t025839-dont-be-a-meat-proxy
+  - 2026-08/2026-08-31t131721-the-i-dont-know-claude-wrote-this-pandemic
 aliases:
   - wealth-inequality
 compiled_at: '2026-07-09T23:22:50.106Z'
@@ -46,7 +47,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.029391
-last_source_added: '2026-08-03T09:58:39.571Z'
+last_source_added: '2026-08-31T20:17:21.368Z'
 ---
 The future of work is not a single question about whether machines replace humans. It is a cluster of overlapping problems about organizational structure, skill transmission, hiring, and what kinds of value humans uniquely provide.
 

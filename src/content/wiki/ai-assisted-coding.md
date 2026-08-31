@@ -63,6 +63,7 @@ sources:
   - >-
     2026-08/2026-08-05t072544-use-your-brain-engineering-standards-in-the-age-of-llms
   - 2026-08/2026-08-10t220951-gvzdvclaudish-to-english
+  - 2026-08/2026-08-31t131721-the-i-dont-know-claude-wrote-this-pandemic
 aliases:
   - ai-coding-assistants
 compiled_at: '2026-07-09T23:16:39.532Z'
@@ -82,7 +83,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.059325
-last_source_added: '2026-08-11T05:09:51.080Z'
+last_source_added: '2026-08-31T20:17:21.368Z'
 ---
 AI-assisted coding sits on a spectrum. At one end, a developer asks a model to autocomplete a function or draft a test. At the other, a fully autonomous agent spins up hundreds of subagents, writes its own orchestration scripts, and runs for hours without human input. The tools, risks, and professional questions differ sharply depending on where on that spectrum a team is operating.
 

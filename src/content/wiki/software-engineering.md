@@ -95,6 +95,7 @@ sources:
     2026-08/2026-08-05t072544-use-your-brain-engineering-standards-in-the-age-of-llms
   - >-
     2026-08/2026-08-29t130644-reducing-zods-memory-footprint-by-an-order-of-magnitude
+  - 2026-08/2026-08-31t131721-the-i-dont-know-claude-wrote-this-pandemic
 compiled_at: '2026-07-09T23:29:48.525Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -112,7 +113,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.075789
-last_source_added: '2026-08-29T20:06:44.872Z'
+last_source_added: '2026-08-31T20:17:21.368Z'
 ---
 Software engineering is not a single discipline but a stack of concerns: how systems are designed, how code is written and reviewed, how it is tested and deployed, how knowledge transfers between practitioners, and who is accountable when things fail. The sources here span all of those layers, and a consistent thread runs through them: adding speed without adding understanding tends to produce problems at the next layer down.
 

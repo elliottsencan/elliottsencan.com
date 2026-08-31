@@ -69,6 +69,7 @@ sources:
     2026-08/2026-08-05t072544-use-your-brain-engineering-standards-in-the-age-of-llms
   - >-
     2026-08/2026-08-29t130644-reducing-zods-memory-footprint-by-an-order-of-magnitude
+  - 2026-08/2026-08-31t131721-the-i-dont-know-claude-wrote-this-pandemic
 compiled_at: '2026-07-09T23:21:56.143Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -86,7 +87,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.046389
-last_source_added: '2026-08-29T20:06:44.872Z'
+last_source_added: '2026-08-31T20:17:21.368Z'
 ---
 Craft in software engineering is not a single skill but a posture: the habit of caring about how something is built, not just whether it ships. Several threads run through the sources here, and they reinforce each other in ways that are worth naming directly.
 
