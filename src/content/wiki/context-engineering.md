@@ -1,10 +1,9 @@
 ---
 title: Context engineering
 summary: >-
-  Context engineering is the practice of deliberately constructing what an LLM
-  receives in its context window — structuring, compressing, persisting, and
-  retrieving information so agents produce reliable output across tasks and
-  sessions.
+  Context engineering is the practice of deliberately constructing, compressing,
+  and maintaining the information fed to an LLM — treating the context window as
+  the primary design surface for agent reliability and accuracy.
 sources:
   - >-
     2026-04/2026-04-27t114138-scaling-managed-agents-decoupling-the-brain-from-the-hands
@@ -44,12 +43,12 @@ sources:
   - >-
     2026-07/2026-07-23t215330-humanlayeradvanced-context-engineering-for-coding-agents
   - 2026-08/2026-08-29t224355-how-llms-actually-work
-compiled_at: '2026-07-09T23:18:51.770Z'
+compiled_at: '2026-08-31T22:31:17.892Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 8791
-    output_tokens: 1446
+    input_tokens: 9112
+    output_tokens: 1257
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -60,19 +59,18 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.048063
-last_source_added: '2026-08-30T05:43:55.936Z'
+  cost_usd: 0.046191
 ---
-Context engineering names the discipline of deciding what goes into an LLM's context window, how it is structured, when it arrives, and what gets discarded. As AI agents move from single-turn assistants to long-running systems, the quality of that window increasingly determines whether the system works or not.
+Context engineering starts from a simple observation: model weights are fixed at inference time, so the only lever a developer controls in real time is what goes into the context window. How that window is populated, structured, compressed, and maintained determines whether an agent produces useful output or drifts into incoherence.
 
-The phrase captures a shift in where the hard problems live. [The Typical Set](/reading/2026-05/2026-05-06t110728-the-bottleneck-was-never-the-code) argues that code generation is no longer the bottleneck: the real constraints are specification clarity and shared organizational context, and agents amplify whatever alignment or misalignment already exists. Context engineering is what turns that observation into a practice.
+The most basic form of the problem is selection and structure. [Anthropic's self-service analytics stack](/reading/2026-06/2026-06-04t195339-how-anthropic-enables-self-service-data-analytics-with) solved it by building canonical datasets, a semantic layer, and curated skill docs so Claude always routes to governed sources rather than searching freely. OpenAI's internal data agent takes a layered approach — schema metadata, human annotations, code enrichment, institutional docs, and a self-improving memory — to cover [600+ petabytes across 70,000 datasets](/reading/2026-06/2026-06-04t194244-inside-openais-in-house-data-agent). In both cases the heavy lifting is curation, not model capability.
 
-At the structural level, several sources treat the context window itself as a state container. The 12-factor-agents project [Factor 5](/reading/2026-05/2026-05-19t174452-humanlayer12-factor-agents) argues that execution state and business state should both be inferred from a single context-window-derived thread, making the system trivially serializable, debuggable, and resumable. Anthropic's [Managed Agents](/reading/2026-05/2026-05-19t221631-scaling-managed-agents-decoupling-the-brain-from-the-hands) service externalizes the session log as a stable interface so the harness and sandbox can evolve independently. Their [long-running agent harness](/reading/2026-05/2026-05-19t221035-effective-harnesses-for-long-running-agents) uses a progress file and feature list to maintain coherent state across many context windows without drift.
+Long-running agents make this harder because a single context window is not enough. Anthropic's harness work uses an initializer agent to scaffold a feature list and a progress file that a second incremental agent reads at the start of each new window, so state survives across resets. The 12-factor-agents project makes a related argument: if you design the context carefully enough, [execution state and business state can collapse into a single serializable thread](/reading/2026-05/2026-05-19t174452-humanlayer12-factor-agents), eliminating a whole class of synchronization bugs.
 
-Memory design is a recurring sub-problem. The zerostack agent [uses plain Markdown files](/reading/2026-06/2026-06-11t023620-designing-memory-for-zerostack-plain-files-no-vector-store) with regex retrieval rather than vector stores, a deliberate choice driven by RAM constraints and provider neutrality. [Storybloq](/reading/2026-05/2026-05-11t155625-storybloqstorybloq) persists session context across Claude Code sessions via a `.story/` directory of JSON files. A more principled critique from [Jakedismo](/reading/2026-06/2026-06-11t090709-agent-memory-is-a-belief-maintenance-problem-not-a-storage) reframes memory as a belief-maintenance problem: systems that store assertions without provenance, confidence, or revision history propagate stale information into later context windows.
+Compression and retrieval sit alongside selection. The Karpathy LLM-wiki pattern replaces RAG with model-compiled Markdown files that synthesize across documents; practitioners report [superior cross-document reasoning but structural hallucination propagation if ingest goes wrong](/reading/2026-04/2026-04-30t232201-building-karpathys-llm-wiki-honest-takeaways), making lint checks mandatory. PageIndex builds hierarchical tree indexes so an LLM can reason over document structure rather than vector similarity, hitting [98.7% accuracy on FinanceBench](/reading/2026-05/2026-05-06t171355-vectifyaipageindex). At the token level, the headroom library compresses tool outputs and RAG chunks before they reach the model, [claiming 60-95% reduction without quality loss](/reading/2026-06/2026-06-20t145835-chopratejasheadroom), though a critical counterpoint from Mroczek argues that [compression metrics without task-accuracy benchmarks are vanity numbers](/reading/2026-06/2026-06-22t165934-the-token-compression-illusion-why-im-skeptical-of-rtk).
 
-Retrieval is the other axis. The Karpathy LLM-wiki pattern, documented in two Reddit threads, builds curated Markdown knowledge bases that an LLM queries holistically. [One builder](/reading/2026-04/2026-04-30t232201-building-karpathys-llm-wiki-honest-takeaways) reports that cross-document synthesis is genuinely superior to RAG for curated research, but that hallucinations baked in at ingest propagate structurally, making a lint step non-negotiable. [VectifyAI's PageIndex](/reading/2026-05/2026-05-06t171355-vectifyaipageindex) takes a different angle, replacing vector similarity with LLM reasoning over hierarchical tree indexes, achieving 98.7% accuracy on FinanceBench. Recursive Language Models [as described by dbreunig](/reading/2026-06/2026-06-04t194033-the-potential-of-rlms) address context rot by keeping data in a REPL and letting the model pull selectively into token space.
+Memory is context engineering across sessions. Approaches range from plain Markdown files with regex retrieval — the [zerostack design](/reading/2026-06/2026-06-11t023620-designing-memory-for-zerostack-plain-files-no-vector-store) and [LostWarrior/knowledge-base](/reading/2026-04/2026-04-30t232126-lostwarriorknowledge-base) both argue that no vector store is needed for many workloads — to the more structured belief-maintenance view, which holds that [storing assertions without provenance, confidence, or revision history causes agents to act on stale or contradictory information](/reading/2026-06/2026-06-11t090709-agent-memory-is-a-belief-maintenance-problem-not-a-storage). The harness-forge project treats context construction itself as something to be [optimized via a propose-score-Pareto loop](/reading/2026-06/2026-06-14t091145-001tmfharness-forge) rather than designed once and left alone.
 
-Compression matters when context is scarce or expensive. [Headroom](/reading/2026-06/2026-06-20t145835-chopratejasheadroom) compresses tool outputs and RAG chunks before they reach the model, claiming 60-95% token reduction. KV caching [treated as a persistent data asset](/reading/2026-05/2026-05-20t073125-how-to-cut-llm-inference-costs-with-kv-caching) can reduce prefill costs by up to 20x. A skeptical counterpoint from [Przemek Mroczek](/reading/2026-06/2026-06-22t165934-the-token-compression-illusion-why-im-skeptical-of-rtk) warns that compression tools advertising 60-90% savings are often measuring vanity metrics rather than task accuracy, and that silent data loss in agent pipelines is a real risk.
+At the infrastructure level, KV caching means that [stable prefixes injected from fast storage rather than recomputed can cut prefill costs by up to 20x](/reading/2026-05/2026-05-20t073125-how-to-cut-llm-inference-costs-with-kv-caching), making context structure a performance decision as well as a correctness one. Recursive Language Models push the idea further by keeping data in a REPL environment and [letting the model pull selectively into token space](/reading/2026-06/2026-06-04t194033-the-potential-of-rlms) rather than loading everything upfront.
 
-At the tooling layer, [WaveScope](/reading/2026-06/2026-06-03t105229-putting-code-under-a-microscope-wavelet-based-context-for) generates multi-resolution structural views of source code via wavelet transforms, providing token-efficient context without language-specific parsers. OpenAI's [internal data agent](/reading/2026-06/2026-06-04t194244-inside-openais-in-house-data-agent) stacks schema metadata, human annotations, code enrichment, and self-improving memory to query 600+ petabytes accurately. Anthropic's [analytics stack](/reading/2026-06/2026-06-04t195339-how-anthropic-enables-self-service-data-analytics-with) achieves 95% accuracy through canonical datasets and curated skill docs; a [critique from Genloop](/reading/2026-06/2026-06-04t194416-what-anthropic-got-right-about-agentic-analytics-and-got) notes that replicating that accuracy requires months of senior data engineering most organizations cannot afford, which is itself an argument for treating context construction as a first-class engineering investment.
+The organizational dimension matters too. Coding agents amplify existing alignment or misalignment; [the real bottleneck is shared context and specification clarity](/reading/2026-05/2026-05-06t110728-the-bottleneck-was-never-the-code), not code-writing speed. Context engineering, in that framing, is as much a coordination practice as a technical one.
