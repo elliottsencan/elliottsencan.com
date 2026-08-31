@@ -1,10 +1,9 @@
 ---
 title: Engineering craft
 summary: >-
-  Engineering craft is the accumulated discipline of writing, organizing, and
-  maintaining software well — spanning code design, tooling fluency,
-  communication, and the judgment to know when technical excellence actually
-  changes outcomes.
+  Engineering craft is the discipline of building software with deliberate
+  judgment — choosing the right abstraction, reading tradeoffs, owning your
+  code, and transmitting tacit knowledge that tools alone cannot supply.
 sources:
   - 2026-04/2026-04-24t085352-building-a-ui-without-breakpoints
   - 2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp
@@ -70,12 +69,12 @@ sources:
   - >-
     2026-08/2026-08-29t130644-reducing-zods-memory-footprint-by-an-order-of-magnitude
   - 2026-08/2026-08-31t131721-the-i-dont-know-claude-wrote-this-pandemic
-compiled_at: '2026-07-09T23:21:56.143Z'
+compiled_at: '2026-08-31T22:34:29.997Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 8403
-    output_tokens: 1412
+    input_tokens: 10087
+    output_tokens: 1540
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -86,19 +85,22 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.046389
-last_source_added: '2026-08-31T20:17:21.368Z'
+  cost_usd: 0.053361
 ---
-Craft in software engineering is not a single skill but a posture: the habit of caring about how something is built, not just whether it ships. Several threads run through the sources here, and they reinforce each other in ways that are worth naming directly.
+Engineering craft names the set of practices, habits, and dispositions that separate workmanlike code production from considered construction. It covers everything from how you structure a module to how you read a codebase you have never touched before, and the sources here return repeatedly to a few tensions: depth vs. surface, ownership vs. delegation, and the transmissible vs. the tacit.
 
-The most direct argument for craft is the one about ownership cost. [Yusuf Aytas](/reading/2026-05/2026-05-22t091746-when-code-is-cheap-does-quality-still-matter) notes that AI has lowered the cost of producing code but not the cost of living with it — taste and judgment remain necessary because LLMs generate polished technical debt faster than any individual ever could. [Abednego Gomes](/reading/2026-05/2026-05-14t223612-the-perils-of-ai-to-the-software-engineering-profession) pushes this further, arguing that shipping AI-generated code without review is incompatible with safety-critical systems and causes measurable skill atrophy over time. Both pieces frame craft not as aesthetic preference but as risk management.
+The most direct framing comes from [Fagner Brack](/reading/2026-04/2026-04-30t155134-learn-algorithms-for-interviews-forget-them-for-work), who distinguishes the narrow, trainable skill that interview processes reward from the broader judgment production work actually requires: reading tradeoffs, shipping incrementally, and handling messy real-world inputs. Interview performance and engineering craft are loosely coupled at best.
 
-Good design principles are a recurring vehicle for that risk management. [Kobi Hari](/reading/2026-04/2026-04-30t232001-a-better-way-to-build-angular-components-from-inputs-to) argues that Angular components bloated with dozens of inputs should be refactored into composites so each concern stays encapsulated and APIs remain clean. [Go Monk](/reading/2026-05/2026-05-04t231343-ai-likes-deep-modules) makes a complementary point: deep modules — small interfaces hiding large implementations — reduce complexity for both humans and LLMs. [Henrique Teixeira](/reading/2026-06/2026-06-04t073318-single-responsibility-the-distorted-principle) corrects a common misreading of the Single Responsibility Principle, showing that over-granularizing classes violates the cognitive simplicity SRP is meant to provide. [Dominik TkDodo](/reading/2026-07/2026-07-04t141323-the-vertical-codebase) extends the organizing-by-cohesion argument to file structure, advocating domain verticals over horizontal technical layers.
+On the structural side, several sources argue that good craft means hiding complexity behind clean boundaries. [Go Monk](/reading/2026-05/2026-05-04t231343-ai-likes-deep-modules) makes the case for deep modules: small interfaces concealing large implementations reduce the cognitive surface a reader must hold in mind, and this matters for both human collaborators and LLM tools. [Kobi Hari](/reading/2026-04/2026-04-30t232001-a-better-way-to-build-angular-components-from-inputs-to) reaches the same conclusion from Angular: component APIs bloated with dozens of inputs should be decomposed using the Composite Components pattern so each concern stays encapsulated. [Henrique Teixeira](/reading/2026-06/2026-06-04t073318-single-responsibility-the-distorted-principle) traces a related failure mode in how teams apply the Single Responsibility Principle — interpreting it as "do only one thing" rather than "group behaviors under one accountable concern", which produces over-granularized classes that are harder to understand, not easier.
 
-Craft at the system level means knowing which improvements actually matter. [Colin Breck](/reading/2026-06/2026-06-30t185207-when-impressive-performance-gains-do-not-matter) describes how attention thresholds, discrete capacity increments, and pipeline backpressure make even order-of-magnitude speedups irrelevant in practice. [Arthur Pastel](/reading/2026-05/2026-05-14t151252-5-faster-fastblur-in-image-rs) shows the flip side: when the bottleneck is real, systematic optimization — replacing float arithmetic with integer accumulators and costly division with reciprocal multiplication — yields a 5.9x speedup. Both pieces together illustrate the judgment call at the center of craft: knowing when to optimize and when not to bother.
+Code organization extends to file and folder topology. [Dominik (TkDodo)](/reading/2026-07/2026-07-04t141323-the-vertical-codebase) argues for organizing frontends by domain verticals rather than horizontal technical layers, so related code is colocated and discoverable. [Matt Smith](/reading/2026-07/2026-07-16t043206-i-stopped-destructuring-everything) makes a smaller but related point about JavaScript style: reflexive destructuring optimizes for writing, not reading, and keeping the original object reference can preserve context that scattered variable names lose.
 
-Tooling fluency is part of craft too. Christian Hofstede-Kuhn catalogs Readline bindings, history search, and script safety flags that reduce friction at the shell. [Ally Piechowski](/reading/2026-06/2026-06-18t024208-the-git-commands-i-run-before-reading-any-code) demonstrates how five git log commands can map codebase risk before reading a single file. [Ben Gesoff](/reading/2026-05/2026-05-31t164252-reviewing-large-changes-with-jujutsu) offers a Jujutsu workflow for reviewing large changes that trades cognitive overhead for progress persisted in version control.
+Craft also requires understanding what you ship. [Arthur Pastel](/reading/2026-05/2026-05-14t151252-5-faster-fastblur-in-image-rs) demonstrates this through a step-by-step optimization of Rust's `fast_blur`, replacing float arithmetic with integer accumulators and costly division with reciprocal multiplication to achieve a 5.9x speedup — the kind of work that requires knowing what the machine is actually doing. [Marc Brooker](/reading/2026-07/2026-07-19t073255-its-always-tcpnodelay-every-damn-time) offers a systems-level parallel: Nagle's algorithm silently degrades latency because engineers accept defaults without knowing why the default exists.
 
-Craft includes knowing what to trust. [lab174](/reading/2026-05/2026-05-18t113714-yaml-thats-norway-problem) traces YAML's Norway problem — a type-coercion bug where NO parses as false — through spec versions and shows that popular libraries still exhibit the issue a decade after the fix landed, a reminder that specification correctness and implementation reality diverge. [Anton Zaides](/reading/2026-06/2026-06-10t073045-the-unwritten-laws-of-software-engineering) distills production-incident lessons into rules like rolling back before debugging and treating every external dependency as a future outage.
+Ownership under AI pressure is a recurring theme. [Paolo Galeone](/reading/2026-08/2026-08-05t072544-use-your-brain-engineering-standards-in-the-age-of-llms) argues that LLMs are pushing engineers into a custodian mindset — shipping generated code they do not understand — and that CI/CD discipline and genuine code ownership are what keep AI as an amplifier rather than a replacement for understanding. [Yusuf Aytas](/reading/2026-05/2026-05-22t091746-when-code-is-cheap-does-quality-still-matter) adds that AI lowers the cost of producing code but not of owning it; taste and judgment still matter because LLMs can generate polished technical debt faster than any individual engineer. [Abednego Gomes](/reading/2026-05/2026-05-14t223612-the-perils-of-ai-to-the-software-engineering-profession) makes the hardest version of this point: shipping AI-generated code without review is incompatible with safety-critical systems, and the habit atrophies the skills that review requires.
 
-Finally, craft extends to how engineers transmit and communicate what they know. [cekrem](/reading/2026-05/2026-05-19t110710-the-tacit-dimension-why-your-best-engineers-cant-tell-you) draws on Polanyi's philosophy of tacit knowledge to argue that the most valuable engineering expertise — pattern recognition, design intuition, unwritten conventions — is structurally inaccessible to AI tools and can only be passed on through apprenticeship. [Tuhin Nair](/reading/2026-05/2026-05-13t060018-why-senior-developers-fail-to-communicate-their-expertise) identifies a parallel gap in communication: senior developers frame problems as complexity management while the rest of the organization thinks in terms of uncertainty reduction, and bridging that gap is itself a craft skill. [Fagner Brack](/reading/2026-04/2026-04-30t155134-learn-algorithms-for-interviews-forget-them-for-work) makes the point from the hiring side: algorithm interviews test a narrow, trainable skill that weakly correlates with production performance, where real craft means reading tradeoffs and shipping incrementally against messy, unbounded inputs.
+Transmitting craft is its own challenge. [Tuhin Nair](/reading/2026-05/2026-05-13t060018-why-senior-developers-fail-to-communicate-their-expertise) observes that senior engineers communicate in terms of complexity management while the rest of the business thinks in terms of uncertainty reduction, and the translation gap makes expertise invisible. [cekrem](/reading/2026-05/2026-05-19t110710-the-tacit-dimension-why-your-best-engineers-cant-tell-you) goes further, drawing on Michael Polanyi to argue that pattern recognition, design intuition, and unwritten conventions are structurally inaccessible to AI tools and can only move through apprenticeship.
+
+Practical craft shows up in tooling habits too. [Anton Zaides](/reading/2026-06/2026-06-10t073045-the-unwritten-laws-of-software-engineering) distills production-incident experience into rules like rolling back before debugging and treating every external dependency as a future outage. [Ally Piechowski](/reading/2026-06/2026-06-18t024208-the-git-commands-i-run-before-reading-any-code) shows how five `git log` commands can diagnose churn hotspots, bus factor, and bug clusters before opening a single file. [Ben Gesoff](/reading/2026-05/2026-05-31t164252-reviewing-large-changes-with-jujutsu) describes a workflow for reviewing large changes with Jujutsu by squashing reviewed files into an empty parent commit, preserving progress in version control rather than in a reviewer's head.
+
+The picture that emerges is consistent: engineering craft is a discipline of deliberate understanding — of the runtime, the abstraction, the codebase history, and the person who will read your code next. AI tools change the economics of production without changing what understanding means.
