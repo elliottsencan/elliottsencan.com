@@ -1,15 +1,15 @@
 ---
 title: "Now"
 description: "What I'm working on right now."
-updated: 2026-07-11
-standfirst: "Settling in at StarLifter building the enterprise decision layer, as the SSBD platform races its August deadline and AI engineering writing holds steady in the margins"
+updated: 2026-09-06
+standfirst: "Post-festival, settling deeper into StarLifter's decision layer work, with the site's eval pipeline and some pointed reading on AI and engineering judgment filling the margins"
 ---
 
 ## Building
 
-The festival platform for Same Same But Different is the most time-pressured thing on my plate. It's a backend-first system handling ticketing, scheduling, maps, and push notifications for around 7,500 attendees, with a hard ship date before the festival gates open August 24. Currently in the maps and notifications stretch, which is the last big milestone before readiness work begins.
+The SSBD festival platform shipped before the August 24 gates. That deadline is behind us, which is a relief. The backend-first system handled ticketing, scheduling, maps, and push notifications for around 7,500 attendees. Post-festival wrap and any follow-on platform work will surface as the next milestone takes shape.
 
-The portfolio site is also in flight, working through an eval layer milestone. The core question I keep returning to: whether per-claim sidecar scores actually catch the synthesis failures I notice by eye when the wiki recompiles, or whether they're a false signal.
+The portfolio site is still in flight, working through an eval layer milestone. The core question I keep returning to: whether per-claim sidecar scores actually catch the synthesis failures I notice by eye when the wiki recompiles, or whether they're a false signal. Synthesis-quality eval (Tier 2) is the next thing on the runway, building on the citation-faithfulness work that landed earlier.
 
 ## Thinking about
 
@@ -17,10 +17,10 @@ High standards exist to make difficult things simple.
 
 ## Reading / Listening
 
-Heavy on AI engineering reading lately. The piece on agentic engineering from System Design newsletter was a useful reference pass on agent loops, context rot, and multi-agent orchestration. Armin Ronacher's "The Coming Loop" is worth reading slowly: his argument is that outer harness loops orchestrating coding agents amplify LLMs' worst tendencies and risk producing codebases that require machine participation to maintain. The vertical codebase piece made a solid case for domain-colocation over technical layers, and landed differently after spending time thinking about how agents navigate unfamiliar repos.
+The reading lately has converged on a theme: cognitive ownership in the age of AI-generated code. "Don't be a meat proxy" and "The 'I don't know, Claude wrote this' pandemic" both make the same underlying point from different angles. Relaying or shipping AI output you don't understand isn't delegation, it's offloading the understanding to whoever has to read it next. The Paolo Galeone piece on engineering standards argues for strong CI/CD and code ownership as the floor, with AI as an amplifier rather than a replacement for judgment. All three are worth reading together.
 
-Also worked through a few pieces on inference routing, including the DigitalOcean Inference Router architecture writeup and the Pragmatic Engineer breakdown of inference engineering. Good mental models for a layer of the stack that's moving fast.
+On the technical side, the Netflix in-house LLM serving writeup is a solid tour of what running the full serving stack actually looks like at scale: engine selection tradeoffs, deployment strategies, batched constrained decoding. And the Zod 4.5 memory footprint post is a nice concrete piece of systems thinking, lazily memoizing prototype getters cutting per-schema heap usage up to 10x by simply not allocating for methods you never call.
 
 ## Making
 
-Same Same But Different is weeks out. Platform work and festival prep are running in parallel.
+Same Same But Different came off. Festival is done for the year.
