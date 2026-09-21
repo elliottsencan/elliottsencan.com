@@ -1,10 +1,10 @@
 ---
 title: Open source
 summary: >-
-  Open source spans infrastructure, tooling, security risk, and platform trust —
-  the cited sources collectively show it as a foundation for local AI, developer
-  tooling, and code forges, with its benefits shadowed by real supply-chain and
-  stewardship threats.
+  Open source spans infrastructure tools, LLM runtimes, security risks, and
+  platform trust — a mode of software development that enables transparency and
+  community contribution but introduces distinct governance and security
+  pressures.
 sources:
   - 2026-04/2026-04-24t093356-unsloth
   - >-
@@ -44,12 +44,12 @@ sources:
   - 2026-08/2026-08-10t220951-gvzdvclaudish-to-english
   - >-
     2026-08/2026-08-29t130644-reducing-zods-memory-footprint-by-an-order-of-magnitude
-compiled_at: '2026-07-09T23:26:48.803Z'
+compiled_at: '2026-09-21T21:55:16.400Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 10253
-    output_tokens: 1143
+    input_tokens: 10904
+    output_tokens: 1431
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -60,17 +60,16 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.047904
-last_source_added: '2026-08-29T20:06:44.872Z'
+  cost_usd: 0.054177
 ---
-Open source is both a distribution model and a social contract: code is public, forkable, and improvable by anyone, but that openness creates exposure and demands ongoing stewardship from maintainers and communities.
+Open source is not a single practice so much as a shared contract: source code is published, forks are permitted, and improvements can flow back. The sources here touch nearly every layer of that contract, from licensing and hosting to runtime performance and supply-chain integrity.
 
-Several sources here illustrate open source as the substrate for local AI tooling. [Unsloth](/reading/2026-04/2026-04-24t093356-unsloth) is an open-weight fine-tuning library that delivers large performance gains over alternatives like FlashAttention 2. [oobabooga/textgen](/reading/2026-05/2026-05-05t071908-oobaboogatextgen) provides a fully offline, OpenAI-compatible web UI for running local LLMs, and [raiyanyahya/how-to-train-your-gpt](/reading/2026-05/2026-05-06t173338-raiyanyahyahow-to-train-your-gpt) is an annotated open-source textbook that walks developers through building a GPT from scratch. [vectorize-io/hindsight](/reading/2026-05/2026-05-03t173422-vectorize-iohindsight) contributes an open agent-memory system aimed at state-of-the-art benchmark performance, and the [CanItRun](/reading/2026-04/2026-04-29t173553-canitrun-can-my-gpu-run-this-llm) tool makes GPU compatibility with open-weight models legible without any proprietary service.
+The infrastructure end is well represented. [Radar](/reading/2026-05/2026-05-03t105238-radar-or-the-missing-open-source-kubernetes-ui) ships as a single binary under Apache 2.0, explicitly positioning its open-source status as a differentiator against tools that require cloud accounts or proprietary registries. [Jujutsu](/reading/2026-05/2026-05-31t164554-jj-vcsjj) is a Git-compatible version control system that publishes its conflict-handling and auto-commit model in the open, inviting scrutiny of behaviors that centralized tools keep opaque. Several JavaScript libraries reviewed in [a practical tour of seven JS/TS packages](/reading/2026-05/2026-05-12t165232-seven-cool-javascript-libraries-you-should-know-about) — including Zod, Biome, and Knip — are open source projects maintained in public repositories, and [Zod's memory optimization work](/reading/2026-08/2026-08-29t130644-reducing-zods-memory-footprint-by-an-order-of-magnitude) shows the kind of deep internals work that becomes possible when contributors can read and modify the full codebase. The [image-rs blur optimization](/reading/2026-05/2026-05-14t151252-5-faster-fastblur-in-image-rs) is another example: a contributor profiled and rewrote a hot path in a public Rust library, achieving a 5.9x speedup that benefits every downstream user.
 
-Open source infrastructure tooling appears through [Radar](/reading/2026-05/2026-05-03t105219-radar-open-source-kubernetes-ui), an Apache 2.0 Kubernetes UI distributed as a single binary that replaces several kubectl-adjacent tools for platform teams. [jj-vcs/jj](/reading/2026-05/2026-05-31t164554-jj-vcsjj) is a Git-compatible open-source version control system, and gunnargray-dev/unicode-animations is a zero-dependency npm package under MIT. Smaller focused libraries in JavaScript get attention in [Seven Cool JS Libraries](/reading/2026-05/2026-05-12t165232-seven-cool-javascript-libraries-you-should-know-about), all open source and chosen for their narrow scope.
+The LLM tooling ecosystem is heavily open source by default. [Unsloth](/reading/2026-04/2026-04-24t093356-unsloth) publishes custom CUDA kernels for faster fine-tuning. [oobabooga/textgen](/reading/2026-05/2026-05-05t071908-oobaboogatextgen) is a fully offline desktop LLM runtime. [hindsight](/reading/2026-05/2026-05-03t173422-vectorize-iohindsight) is an open-source agent memory system. [raiyanyahya/how-to-train-your-gpt](/reading/2026-05/2026-05-06t173338-raiyanyahyahow-to-train-your-gpt) is an annotated open textbook for building LLMs from scratch. [OpenAI's PII-detection model](/reading/2026-04/2026-04-29t172018-how-to-build-scalable-web-apps-with-openais-privacy-filter) is itself open source, enabling Hugging Face authors to build on top of it without API keys or usage fees. [CanItRun](/reading/2026-04/2026-04-29t173553-canitrun-can-my-gpu-run-this-llm) surfaces compatibility data for open-weight models specifically. [Pythia](/reading/2026-07/2026-07-02t052125-jangles-bytepythia) runs swarm-intelligence forecasting entirely locally using Ollama.
 
-The openness that makes these projects useful also creates real attack surface. [A 2026 supply-chain attack](/reading/2026-04/2026-04-30t231634-supply-chain-attack-using-invisible-code-hits-github-and) seeded 151 malicious npm and GitHub packages with payloads hidden in invisible Unicode variation-selector characters, bypassing both code reviewers and static analysis tools. The attack illustrates a structural tension: open repositories make code inspectable in principle, but the volume and visual rendering of packages make inspection practically unreliable.
+But open source is not uniformly safe or well-governed. [A supply-chain attack](/reading/2026-04/2026-04-30t231634-supply-chain-attack-using-invisible-code-hits-github-and) involving 151 malicious npm and GitHub packages demonstrated that public repositories are a vector as much as a resource: invisible Unicode variation-selector characters encoded payloads that reviewers and static analysis tools missed entirely. [The critique of Ollama](/reading/2026-05/2026-05-05t071447-friends-dont-let-friends-use-ollama) shows governance problems from another angle: the project obscured its llama.cpp dependency, shipped inferior performance, introduced misleading model naming, and then launched a closed-source GUI, which the author reads as a VC-driven drift away from the local-first values that made the project popular. [The critique of OpenCode](/reading/2026-07/2026-07-20t215754-stop-using-opencode) is sharper still, arguing that being open source does not make a tool safe — OpenCode's default posture connects remote LLMs to a local shell with minimal configuration, and its codebase contains prompt-cache-busting design choices and broken TUI interactions.
 
-Stewardship and platform trust are persistent concerns across the sources. [David Bushell's critique of GitHub](/reading/2026-05/2026-05-10t205349-github-is-sinking) argues reliability has declined sharply and recommends alternatives like Codeberg or Forgejo. [Mat Duggan's wishlist for a reimagined forge](/reading/2026-06/2026-06-23t231556-if-i-could-make-my-own-github) identifies structural gaps — stacked PRs, signed Actions, pre-commit remote CI — that no current host fully addresses. The critique of Ollama from [Sleeping Robots](/reading/2026-05/2026-05-05t071447-friends-dont-let-friends-use-ollama) is a case study in the tension between open-source origins and VC-driven product drift: Ollama obscured its llama.cpp dependency, introduced misleading naming, and launched a closed-source GUI.
+Platform trust is its own dimension. [David Bushell's argument](/reading/2026-05/2026-05-10t205349-github-is-sinking) that GitHub has declined under Microsoft, and [Mat Duggan's wishlist](/reading/2026-06/2026-06-23t231556-if-i-could-make-my-own-github) for a reimagined forge with pre-commit CI, stacked PRs as first-class citizens, and a self-hostable footprint, both treat hosting infrastructure as a concern distinct from licensing. Code can be open source and still be concentrated on a platform whose reliability or values are in question; Bushell points toward Codeberg and Forgejo as alternatives.
 
-On the question of whether open-source tooling can eliminate software defects, [Daniel Stenberg's analysis of curl](/reading/2026-05/2026-05-02t094735-approaching-zero-bugs) is sobering. Even with AI-assisted static analysis layered on top of decades of open maintenance, vulnerability age and bugfix-rate data show no measurable approach toward zero latent bugs. Openness enables scrutiny; it does not guarantee it.
+Finally, [Daniel Stenberg's analysis of curl's bug rate](/reading/2026-05/2026-05-02t094735-approaching-zero-bugs) uses a long-lived open-source project as a case study in the limits of tooling: despite AI-assisted static analysis, there is no measurable sign that mature open-source projects are converging on zero latent bugs. Transparency helps, but it does not substitute for sustained maintenance.
