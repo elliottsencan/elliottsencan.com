@@ -1,10 +1,10 @@
 ---
 title: LLM inference
 summary: >-
-  LLM inference covers how language models generate tokens from a prompt —
-  spanning hardware constraints, serving architecture, caching strategies,
-  quantization, routing, and cost — and has become its own engineering
-  discipline as scale and cost pressures intensify.
+  LLM inference covers the full stack of serving a trained language model — from
+  the math of token generation to the engineering decisions around cost, speed,
+  quantization, caching, and routing that determine whether a deployment is
+  viable at scale.
 sources:
   - 2026-04/2026-04-24t093356-unsloth
   - >-
@@ -36,12 +36,12 @@ sources:
     2026-06/2026-06-22t165934-the-token-compression-illusion-why-im-skeptical-of-rtk
   - 2026-08/2026-08-01t221438-in-house-llm-serving-at-netflix
   - 2026-08/2026-08-29t224355-how-llms-actually-work
-compiled_at: '2026-07-09T23:24:32.534Z'
+compiled_at: '2026-09-28T23:07:12.226Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 5481
-    output_tokens: 1219
+    input_tokens: 5814
+    output_tokens: 1405
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -52,17 +52,18 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.034728
-last_source_added: '2026-08-30T05:43:55.936Z'
+  cost_usd: 0.038517
 ---
-LLM inference is the process of running a trained language model to generate output given an input prompt. At the hardware level, the bottleneck is VRAM: a model's weights, the KV cache, and activation overhead must all fit on the available GPU. Tools like [CanItRun](/reading/2026-04/2026-04-29t173553-canitrun-can-my-gpu-run-this-llm) make this concrete, calculating compatible quantization levels and estimated tokens-per-second for a given GPU and model combination.
+At the mechanical level, inference is the process of running a forward pass through a transformer to produce the next token, repeated until the output is complete. [How LLMs Actually Work](https://www.0xkato.xyz/how-llms-actually-work/) walks through the components involved: tokenization, embeddings, positional encoding, attention, and the KV cache that stores intermediate attention states so they don't have to be recomputed on every step. [raiyanyahya/how-to-train-your-gpt](https://github.com/raiyanyahya/how-to-train-your-gpt) approaches the same ground from an implementation angle, building the inference engine alongside the training loop so the distinction between the two phases stays concrete.
 
-Quantization is one of the primary levers for fitting larger models into constrained hardware. [Unsloth](/reading/2026-04/2026-04-24t093356-unsloth) applies custom kernels to achieve up to 30x faster throughput and 90% less memory than FlashAttention 2, supporting FP8 and LoRA workflows. [oobabooga/textgen](/reading/2026-05/2026-05-05t071908-oobaboogatextgen) exposes multiple backends including GGUF/llama.cpp for fully offline local serving. The critical assessment in [Friends Don't Let Friends Use Ollama](/reading/2026-05/2026-05-05t071447-friends-dont-let-friends-use-ollama) argues that Ollama, while popular, delivers inferior inference performance compared to llama.cpp directly and obscures that dependency behind a proprietary layer.
+The KV cache is the central lever for inference cost. [How to Cut LLM Inference Costs with KV Caching](https://blog.everpuredata.com/purely-technical/cut-llm-inference-costs-with-kv-caching/) argues that treating it as a persistent, shared data asset injected via RDMA rather than recomputed per request can cut prefill costs by up to 20x. Everpure's follow-on pieces extend this: [granular-prompt caching](https://blog.everpuredata.com/purely-technical/llm-efficiency-granular-prompt-caching-pure-kva/) segments prompts into reusable chunks so only changed tokens are processed, and [Pure KVA on S3 and NFS](https://blog.everpuredata.com/purely-technical/20x-faster-inference-first-kv-cache-for-s3-and-nfs/) persists attention states across sessions on standard storage without touching model architecture.
 
-At the serving level, the KV cache is the most consequential optimization target. Recomputing attention states on every request is expensive; persisting and reusing them is not. Everpure's engineering posts show two complementary approaches: [injecting cached attention states from fast NFS/S3 storage via RDMA](/reading/2026-05/2026-05-20t073157-20x-faster-inference-with-the-first-kv-cache-for-s3-and-nfs) for up to 20x faster inference, and [granular-prompt caching](/reading/2026-05/2026-05-20t073144-maximizing-llm-efficiency-granular-prompt-caching-with-pure) that segments prompts into reusable chunks so only changed tokens are processed. A complementary piece on [KV caching strategy](/reading/2026-05/2026-05-20t073125-how-to-cut-llm-inference-costs-with-kv-caching) frames the cache as a shared data asset that can cut prefill costs by up to 20x in enterprise deployments.
+Beyond caching, [What is Inference Engineering](https://newsletter.pragmaticengineer.com/p/what-is-inference-engineering) catalogs the broader toolkit: quantization, speculative decoding, batching, parallelism, and disaggregation. Netflix's production account [In-House LLM Serving at Netflix](https://netflixtechblog.com/in-house-llm-serving-at-netflix-a5a8e799ea2c) adds operational texture, choosing vLLM over TensorRT-LLM and building an OpenAI-compatible API surface with batched constrained decoding at scale.
 
-Token-level compression is a related but distinct approach. [headroom](/reading/2026-06/2026-06-20t145835-chopratejasheadroom) compresses tool outputs and RAG chunks before they reach the model, claiming 60-95% token reduction. A skeptical counterpoint on [RTK's token compression claims](/reading/2026-06/2026-06-22t165934-the-token-compression-illusion-why-im-skeptical-of-rtk) argues that compression metrics without task-accuracy benchmarks are vanity numbers and that stripping content risks silent data loss in agent pipelines.
+Local inference has its own set of tradeoffs. [CanItRun](https://canitrun.dev/) reduces the entry question to VRAM constraints, quantization levels, and estimated tokens-per-second. [oobabooga/textgen](https://github.com/oobabooga/textgen) and [Unsloth](https://unsloth.ai/) both target local deployments, with Unsloth claiming up to 30x faster throughput and 90% less memory than FlashAttention 2 via custom kernels. [Friends Don't Let Friends Use Ollama](https://sleepingrobots.com/dreams/stop-using-ollama/) argues that Ollama ships inferior inference performance relative to its llama.cpp dependency and is drifting toward a cloud model, undermining its local-first premise. [Running Claude Code with a Local Model via LM Studio](https://zackreed.me/posts/using-claude-code-with-local-model/) illustrates the practical friction: redirecting API calls to a locally served model surfaces edge cases like whitespace injection in long URLs.
 
-At the API and routing layer, inference is increasingly a dispatch problem. [DigitalOcean's Inference Router](/reading/2026-06/2026-06-21t192306-how-we-built-digitalocean-inference-router) uses a 30B MoE model to match each request to the best-fit model for cost, latency, or quality. [Arch-Router](/reading/2026-06/2026-06-21t192506-arch-router-aligning-llm-routing-with-human-preferences) achieves similar alignment with a compact 1.5B model trained on human preferences, requiring no retraining when new models are added. The [AI model pricing war](/reading/2026-05/2026-05-31t072101-the-ai-model-pricing-war-is-here-and-your-margins-depend-on) adds economic urgency: a 75x spread between the cheapest and most expensive frontier APIs means routing and provider-agnostic architecture directly determine margin.
+At the API layer, routing has become its own discipline. [DigitalOcean's Inference Router](https://www.digitalocean.com/blog/inference-router-architecture) uses a 30B MoE model to match each request to the best-fit backend by cost, latency, or quality. [Arch-Router](https://arxiv.org/abs/2506.16655) proposes a compact 1.5B alternative that aligns routing with user-defined preferences without retraining when new models are added. Pricing pressure makes routing decisions increasingly consequential: [The AI Model Pricing War](https://superframeworks.com/articles/ai-model-pricing-war-indie-hackers) documents a 75x spread between cheapest and most expensive frontier models, making provider-agnostic architectures a practical necessity.
 
-[Inference Engineering as a discipline](/reading/2026-06/2026-06-21t130559-what-is-inference-engineering) encompasses all of this: quantization, speculative decoding, caching, parallelism, and disaggregation. Reasoning budget also matters; a benchmark of [Claude Opus 4.7 across five effort levels](/reading/2026-05/2026-05-14t190300-opus-47-low-vs-medium-vs-high-vs-xhigh-vs-max-the-reasoning) found a non-monotonic curve where medium effort outperformed higher settings on both quality and cost, suggesting that more compute at inference time is not always better.
+Token compression is a related cost lever with contested reliability. [chopratejas/headroom](https://github.com/chopratejas/headroom) claims 60-95% token reduction by compressing tool outputs before they reach the model, but [The Token Compression Illusion](https://mroczek.dev/articles/the-token-compression-illusion-why-im-skeptical-of-rtk/) pushes back, arguing such numbers are vanity metrics that strip only Bash output and risk silent data loss in agent pipelines without task-accuracy benchmarks to justify the trade-off.
+
+Reasoning budget is a newer inference variable. [Opus 4.7 reasoning curve benchmarks](https://www.stet.sh/blog/opus-47-graphql-reasoning-curve) find that more compute effort does not monotonically improve output quality; medium effort outperformed high, xhigh, and max on pass rate and cost-efficiency across 29 real tasks. [Estimating No-CoT Task Horizons](https://www.lesswrong.com/posts/SieLowPgNgRSPGhFw/estimating-no-cot-task-completion-time-horizons-of-frontier) adds that even without chain-of-thought, frontier models are completing roughly three-minute human tasks at 50% reliability, a capability that has doubled annually since 2019.
