@@ -1,9 +1,10 @@
 ---
 title: Web accessibility
 summary: >-
-  Web accessibility spans technical decisions across CSS, typography, and HTML
-  structure that determine whether interfaces remain usable for all people,
-  regardless of device, ability, or preference.
+  Web accessibility covers the design and implementation decisions that make web
+  content usable for the widest range of people, with the cited sources touching
+  it primarily through fluid typography, progressive enhancement, and semantic
+  HTML choices.
 sources:
   - 2026-04/2026-04-24t085352-building-a-ui-without-breakpoints
   - 2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp
@@ -23,12 +24,12 @@ sources:
   - 2026-07/2026-07-16t052353-boundary-aware-styling-in-css
   - >-
     2026-07/2026-07-16t080520-the-descent-what-happened-to-the-frontend-while-you-werent
-compiled_at: '2026-06-22T07:23:15.859Z'
+compiled_at: '2026-10-06T00:00:03.416Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 4351
-    output_tokens: 549
+    input_tokens: 4877
+    output_tokens: 715
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -39,13 +40,16 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.021288
-last_source_added: '2026-07-16T15:05:20.763Z'
+  cost_usd: 0.025356
 ---
-Accessibility in web interfaces is not a single feature to bolt on but a consequence of many smaller technical decisions. Two areas where it surfaces repeatedly in CSS and typography work are unit choices and the handling of user preferences.
+Web accessibility in practice is less often a single discipline and more often a constraint that surfaces across decisions about typography, markup, interaction patterns, and layout. The sources here approach it from several angles rather than as a dedicated subject.
 
-Fluid typography is a useful example. Using `clamp()` to scale font sizes across viewport widths produces smoother layouts, but the choice of unit matters for accessibility. [Adrian Bece's breakdown of CSS clamp](/reading/2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp) explains that viewport units in the preferred value of `clamp()` do not respond to the browser's base font size setting. Users who increase their default font size in browser preferences to improve readability will see no effect if sizes are expressed purely in `vw`. Using `rem`-based calculations, or mixing `rem` into the fluid formula, preserves that user control. This is not a minor edge case; it is the mechanism by which fluid typography either respects or silently overrides a user's explicit accessibility configuration.
+The most direct treatment comes from [Adrian Bece's piece on fluid typography](/reading/2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp), which flags a concrete accessibility hazard: using `px` units in `clamp()` calculations breaks user-initiated browser zoom and text size preferences, because pixel values do not scale with the browser's root font size. The fix is to derive all size values from `rem`, ensuring that users who have set a larger base font size in their browser settings actually get larger text. This is a clear example of an implementation detail that looks cosmetic but carries real accessibility weight.
 
-At a layout level, [Amit Sheen's argument for breakpoint-free UIs](/reading/2026-04/2026-04-24t085352-building-a-ui-without-breakpoints) reframes media queries as the appropriate tool for device capabilities and user preferences, such as `prefers-reduced-motion` or `prefers-contrast`, rather than for viewport widths. Reserving media queries for capability and preference queries makes accessibility accommodations more intentional and less likely to be accidentally overridden by layout breakpoints.
+Progressive enhancement is the other accessibility-adjacent thread. [Sunkanmi Fafowora's piece on CSS `::checkmark`](/reading/2026-06/2026-06-10t220929-navigating-the-age-old-problem-of-checkmarks-in-ui-with) argues that replacing fragile JavaScript-driven custom dropdowns with native CSS pseudo-elements is a progressive enhancement win: browsers that support `::checkmark` get the styled experience, and browsers that do not fall back gracefully rather than breaking. The underlying principle is that leaning on platform primitives reduces the surface area where custom code can produce inaccessible results.
 
-Progressive enhancement connects these concerns. [Sunkanmi Fafowora's comparison of custom dropdown checkmarks](/reading/2026-06/2026-06-10t220929-navigating-the-age-old-problem-of-checkmarks-in-ui-with) shows how JavaScript-heavy custom components often degrade badly when scripting is unavailable or slow, while the newer CSS `::checkmark` pseudo-element keeps interactive semantics in the platform layer. The tradeoff is browser support gaps, which makes the case for progressive enhancement as a strategy: deliver accessible baseline behavior first and enhance where supported.
+Semantic HTML as a foundation for accessibility runs implicitly through [Jim Nielsen's argument](/reading/2026-05/2026-05-05t091632-building-websites-with-llms) for replacing JS-powered in-page interactions with separate linked HTML pages, and through [Dan Q's observation](/reading/2026-07/2026-07-14t210058-your-app-could-have-been-a-webpage-so-i-fixed-it-for-you) that an Android app wrapping plain HTML was strictly worse than just serving that HTML as a webpage. Both cases point to the same pattern: JavaScript-heavy or app-wrapped delivery layers add complexity without adding accessibility value, and often subtract it by obscuring the underlying document structure from assistive technology.
+
+[Pavel Laptev's survey of modern CSS capabilities](/reading/2026-04/2026-04-30t231909-the-great-css-expansion) is relevant in the same vein: replacing JavaScript libraries for popovers, modals, and anchor positioning with native CSS and HTML primitives means those components inherit built-in browser accessibility behaviors rather than requiring custom ARIA management.
+
+None of these sources address accessibility as their primary subject. What they collectively illustrate is that many accessibility outcomes are downstream of architectural and implementation choices, and that the platform's native primitives tend to be more accessible by default than the custom abstractions built on top of them.
