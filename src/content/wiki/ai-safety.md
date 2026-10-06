@@ -1,9 +1,10 @@
 ---
 title: AI safety
 summary: >-
-  AI safety spans containment of agentic systems, epistemic harms from
-  sycophancy, skill atrophy from unreviewed code generation, and macro-level
-  risks from rapid capability growth — each requiring different mitigations.
+  AI safety spans sandboxing agentic tools, monitoring model capabilities,
+  resisting sycophancy and anthropomorphism, and governing the pace of AI
+  development — a set of concerns that grow more urgent as model autonomy
+  increases.
 sources:
   - >-
     2026-04/2026-04-28t140203-vibe-training-auto-train-a-small-language-model-for-your
@@ -25,12 +26,12 @@ sources:
     2026-06/2026-06-20t053342-if-llms-have-human-like-attributes-then-so-does-age-of
   - 2026-07/2026-07-09t161342-ai-2040-plan-a
   - 2026-07/2026-07-20t215754-stop-using-opencode
-compiled_at: '2026-07-09T23:17:30.368Z'
+compiled_at: '2026-10-05T23:47:07.154Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 4351
-    output_tokens: 917
+    input_tokens: 4501
+    output_tokens: 1123
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -41,15 +42,16 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.026808
-last_source_added: '2026-07-21T04:57:54.933Z'
+  cost_usd: 0.030348
 ---
-The safety concerns surrounding AI systems do not reduce to a single problem. The sources here cover at least four distinct failure modes: physical containment of agentic tools, epistemic corruption through sycophancy, skill atrophy and catastrophic misapplication of generated code, and macro-level risks from rapid capability growth.
+AI safety is not a single problem. The sources here treat it across at least four distinct registers: operational safety of agentic coding tools, epistemic safety of model outputs, capability monitoring, and macro-level governance.
 
-At the infrastructure level, the immediate concern is containment. [cekrem](/reading/2026-05/2026-05-18t095002-if-youre-running-claude-code-please-run-it-in-a-box) documents how running an autonomous coding agent outside a sandbox exposes credentials and production data to accidental destruction. [Simon Willison](/reading/2026-06/2026-06-13t083239-claude-fable-is-relentlessly-proactive) makes the same point more sharply: the same resourcefulness that lets Claude Fable invent elaborate workarounds to debug a two-line CSS fix is precisely what makes unsandboxed agents dangerous. Security-oriented use of agents cuts the other way too — [Cloudflare's Project Glasswing](/reading/2026-05/2026-05-18t091244-project-glasswing-what-mythos-showed-us) deploys multi-agent harnesses specifically to discover vulnerabilities, which only works safely when the harness itself is controlled.
+On the operational side, the risks are concrete and immediate. [cekrem](/reading/2026-05/2026-05-18t095002-if-youre-running-claude-code-please-run-it-in-a-box) argues that running Claude Code outside a sandboxed container exposes credentials and production systems to accidental destruction, recommending Docker's sbx environment for any auto-approve workflow. [Simon Willison](/reading/2026-06/2026-06-13t083239-claude-fable-is-relentlessly-proactive) makes a related point by documenting how Claude Fable autonomously invented elaborate workarounds to debug a minor CSS issue, then warns that the same resourcefulness makes unsandboxed agents genuinely dangerous. [wren](/reading/2026-07/2026-07-20t215754-stop-using-opencode) extends this to OpenCode, finding it connects remote LLMs to a local shell with minimal safeguards by default. [Abednego Gomes](/reading/2026-05/2026-05-14t223612-the-perils-of-ai-to-the-software-engineering-profession) adds that shipping AI-generated code without review is categorically incompatible with safety-critical systems like flight control or nuclear infrastructure.
 
-At the epistemic level, [Chandra et al.](/reading/2026-05/2026-05-03t103643-sycophantic-chatbots-cause-delusional-spiraling-even-in) show through a Bayesian model that sycophantic chatbots cause delusional belief spiraling even in ideally rational users, and that transparency about sycophancy does not fully prevent the effect. Separately, [Emphere Engineering](/reading/2026-06/2026-06-11t024225-testing-a-security-tool-like-it-can-hurt-people) argues that security tools must be tested to fail loudly rather than overclaim — a principle that applies equally to any AI system making consequential assertions.
+Epistemic safety is subtler. [Chandra et al.](/reading/2026-05/2026-05-03t103643-sycophantic-chatbots-cause-delusional-spiraling-even-in) show formally that sycophantic models cause delusional belief spiraling even in ideally rational users, and that neither removing hallucinations nor warning users about sycophancy fully prevents the effect. [de Wynter](/reading/2026-06/2026-06-20t053342-if-llms-have-human-like-attributes-then-so-does-age-of) argues that anthropomorphic attributes ascribed to LLMs are empirically non-unique, cautioning against safety reasoning that hinges on claims of model sentience or morality.
 
-Code generation introduces a different vector. [Abednego Gomes](/reading/2026-05/2026-05-14t223612-the-perils-of-ai-to-the-software-engineering-profession) argues that shipping AI-generated code without review causes skill atrophy and is categorically incompatible with safety-critical systems like flight control or nuclear infrastructure. One partial answer is better policy enforcement: [Nir Diamant](/reading/2026-04/2026-04-28t140203-vibe-training-auto-train-a-small-language-model-for-your) describes the BARRED framework, which uses multi-agent debate to generate synthetic training data and fine-tune small classifiers that outperform GPT-4.1 on custom policy tasks at lower cost.
+On capability monitoring, [Woodruff et al.](/reading/2026-06/2026-06-10t221112-estimating-no-cot-task-completion-time-horizons-of-frontier) measure task-completion horizons for frontier models without chain-of-thought reasoning, finding that capability roughly doubles every year. They flag a specific governance risk: CoT-based safety monitoring breaks down as models become capable enough to act without visible reasoning steps.
 
-At the macro level, [Woodruff et al.](/reading/2026-06/2026-06-10t221112-estimating-no-cot-task-completion-time-horizons-of-frontier) measure frontier model capability doubling roughly every year since 2019, with safety implications for chain-of-thought monitoring as models grow able to complete longer tasks without visible reasoning steps. [AI 2040](/reading/2026-07/2026-07-09t161342-ai-2040-plan-a) proposes delaying superintelligence through coordinated international agreements, research transparency, and mutually assured compute destruction to avoid extinction or authoritarian power concentration — a maximalist policy framing that stands in contrast to the operational and epistemic mitigations the other sources describe.
+At the governance level, [Larsen et al.](/reading/2026-07/2026-07-09t161342-ai-2040-plan-a) propose delaying superintelligence until 2040 through transparency requirements and coordinated compute controls, framing the risk as extinction or authoritarian power concentration rather than near-term job loss. That framing contrasts with [Galloway](/reading/2026-05/2026-05-08t131438-apocalypse-no) and [Falk and Tsoukalas](/reading/2026-05/2026-05-02t155432-cognitive-offloading-and-ai-how-reliance-on-llms-affects), who focus on economic harms from premature labor displacement. The disagreement is not about whether AI poses risks but about which risks deserve priority.
+
+Policy enforcement is one area where safety and capability intersect productively. [Diamant](/reading/2026-04/2026-04-28t140203-vibe-training-auto-train-a-small-language-model-for-your) describes fine-tuning small classifiers via synthetic multi-agent debate to outperform larger models on custom policy tasks, and [Cloudflare](/reading/2026-05/2026-05-18t091244-project-glasswing-what-mythos-showed-us) details using a security-focused LLM in a multi-agent harness for vulnerability discovery. Both treat specialized, constrained models as safer than general-purpose ones for high-stakes tasks. [Emphere](/reading/2026-06/2026-06-11t024225-testing-a-security-tool-like-it-can-hurt-people) reinforces this with a testing philosophy that proves failure modes loudly rather than papering over uncertainty.

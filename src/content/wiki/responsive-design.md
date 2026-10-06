@@ -1,9 +1,9 @@
 ---
 title: Responsive design
 summary: >-
-  Responsive design is shifting away from viewport breakpoints toward intrinsic,
-  component-aware CSS — fluid sizing, container queries, and platform primitives
-  that let layouts and typography adapt without media-query thresholds.
+  Modern responsive design is moving away from viewport breakpoints toward
+  intrinsic layouts, fluid values, and container-aware CSS — letting components
+  respond to their own context rather than the global viewport.
 sources:
   - 2026-04/2026-04-24t085352-building-a-ui-without-breakpoints
   - 2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp
@@ -18,12 +18,12 @@ sources:
   - >-
     2026-06/2026-06-30t213959-why-css-style-queries-are-a-bigger-deal-than-you-think
   - 2026-07/2026-07-16t052353-boundary-aware-styling-in-css
-compiled_at: '2026-07-09T23:28:32.511Z'
+compiled_at: '2026-10-05T23:58:10.237Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 3679
-    output_tokens: 658
+    input_tokens: 3835
+    output_tokens: 680
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -34,13 +34,12 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.020907
-last_source_added: '2026-07-16T12:23:53.956Z'
+  cost_usd: 0.021705
 ---
-The classic responsive design model, built on viewport-width breakpoints and media queries, is under pressure from a more capable CSS platform. [Building a UI Without Breakpoints](/reading/2026-04/2026-04-24t085352-building-a-ui-without-breakpoints) argues the breakpoint model was always a workaround: modern CSS gives authors intrinsic layout tools, container queries, and container units so that components adapt to their own available space rather than the viewport's. Media queries survive in this picture, but their scope narrows to genuine device capabilities and user preferences, not layout thresholds.
+The dominant mental model for responsive design, fixed breakpoints at common viewport widths, is under sustained pressure from a generation of CSS features that make it largely unnecessary. [Building a UI Without Breakpoints](/reading/2026-04/2026-04-24t085352-building-a-ui-without-breakpoints) makes the clearest version of this case: intrinsic layouts, `clamp()` for fluid sizing, container units, and container queries let components adapt to their own available space rather than a global viewport state. Media queries survive, but their appropriate scope narrows to device capabilities and user preferences, not layout pivots.
 
-Typography is a central case. [Modern Fluid Typography Using CSS Clamp](/reading/2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp) details how `clamp()` produces font sizes that scale continuously between two viewport widths, replacing the stepped jumps of breakpoint-keyed type rules. The math maps minimum and maximum font sizes to viewport bounds, and the piece flags an accessibility concern: using `rem`-based clamp values preserves user font-size preferences in a way that `px`-based equivalents do not. [Utopia's type scale graph](/reading/2026-05/2026-05-05t183935-type-scale-graphs) makes this fluid scale legible by plotting every step across the viewport range, revealing whether the relationships within a modular scale hold at all sizes.
+Fluid typography is one of the more fully developed applications of this approach. [Modern Fluid Typography Using CSS Clamp](/reading/2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp) covers the math for deriving `clamp()` preferred values from two known type sizes at two known viewport widths, along with the accessibility case for rem-based units. [Type Scale Graphs](/reading/2026-05/2026-05-05t183935-type-scale-graphs) extends that into visual tooling: Utopia's graph view plots each step in a fluid modular scale across the viewport range, making scale relationships legible at a glance.
 
-The broader CSS platform expansion reinforces the trend. [The Great CSS Expansion](/reading/2026-04/2026-04-30t231909-the-great-css-expansion) documents how anchor positioning, scroll-driven animations, view transitions, and native popovers now replace JavaScript libraries that previously handled layout and interaction work. [CSS Style Queries](/reading/2026-06/2026-06-30t213959-why-css-style-queries-are-a-bigger-deal-than-you-think) extend this further: components can now react to parent CSS custom properties as stateful design tokens, removing the need for preprocessor logic to manage theming and state. Taken together, these features push responsive behavior into the component and property layers rather than the document-width layer.
+Container queries and style queries push responsive logic further down the component tree. [CSS Style Queries](/reading/2026-06/2026-06-30t213959-why-css-style-queries-are-a-bigger-deal-than-you-think) have reached Baseline, letting components react to parent CSS custom properties as stateful design tokens without Sass or build tooling. [Boundary-Aware Styling in CSS](/reading/2026-07/2026-07-16t052353-boundary-aware-styling-in-css) takes this further, repurposing the `view()` scroll-driven animation function to style elements based on their proximity to container edges, with no scrolling required.
 
-Structurally, [Jim Nielsen's case for linked HTML pages](/reading/2026-05/2026-05-05t091632-building-websites-with-llms) touches responsive design obliquely: using CSS cross-document view transitions to stitch separate pages together avoids the JavaScript complexity that often complicates responsive progressive enhancement, keeping each page simple and self-contained.
+The broader CSS platform expansion provides the surrounding context. [The Great CSS Expansion](/reading/2026-04/2026-04-30t231909-the-great-css-expansion) documents how native CSS now handles anchor positioning, popovers, scroll animations, and view transitions, displacing JavaScript libraries that once filled those gaps. [Progressive enhancement for checkmarks](/reading/2026-06/2026-06-10t220929-navigating-the-age-old-problem-of-checkmarks-in-ui-with) illustrates the same dynamic at a smaller scale: the `::checkmark` pseudo-element is the platform-native path, though browser support gaps still push some teams toward JavaScript fallbacks.
