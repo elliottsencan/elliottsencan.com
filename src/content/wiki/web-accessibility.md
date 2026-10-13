@@ -1,9 +1,9 @@
 ---
 title: Web accessibility
 summary: >-
-  Web accessibility spans technical decisions across CSS, typography, and HTML
-  structure that determine whether interfaces remain usable for all people,
-  regardless of device, ability, or preference.
+  Web accessibility concerns how design and technical choices affect usability
+  for all users, surfacing across decisions about typography, layout, HTML
+  semantics, and progressive enhancement.
 sources:
   - 2026-04/2026-04-24t085352-building-a-ui-without-breakpoints
   - 2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp
@@ -23,12 +23,12 @@ sources:
   - 2026-07/2026-07-16t052353-boundary-aware-styling-in-css
   - >-
     2026-07/2026-07-16t080520-the-descent-what-happened-to-the-frontend-while-you-werent
-compiled_at: '2026-06-22T07:23:15.859Z'
+compiled_at: '2026-10-13T00:23:59.925Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 4351
-    output_tokens: 549
+    input_tokens: 4877
+    output_tokens: 695
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -39,13 +39,14 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.021288
-last_source_added: '2026-07-16T15:05:20.763Z'
+  cost_usd: 0.025056
 ---
-Accessibility in web interfaces is not a single feature to bolt on but a consequence of many smaller technical decisions. Two areas where it surfaces repeatedly in CSS and typography work are unit choices and the handling of user preferences.
+Web accessibility is not a single feature to bolt on but a consequence of accumulated decisions across typography, layout, markup, and interaction patterns. Several sources here touch it from different angles without making it their primary subject, which is itself instructive: accessibility concerns tend to surface as side conditions on other design choices.
 
-Fluid typography is a useful example. Using `clamp()` to scale font sizes across viewport widths produces smoother layouts, but the choice of unit matters for accessibility. [Adrian Bece's breakdown of CSS clamp](/reading/2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp) explains that viewport units in the preferred value of `clamp()` do not respond to the browser's base font size setting. Users who increase their default font size in browser preferences to improve readability will see no effect if sizes are expressed purely in `vw`. Using `rem`-based calculations, or mixing `rem` into the fluid formula, preserves that user control. This is not a minor edge case; it is the mechanism by which fluid typography either respects or silently overrides a user's explicit accessibility configuration.
+Fluid typography is a clear example. [Modern Fluid Typography Using CSS Clamp](/reading/2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp) flags that using `px` units inside `clamp()` expressions breaks browser zoom behavior for users who rely on increased base font sizes. The fix is to express minimum and maximum values in `rem`, so that user-defined font preferences cascade correctly. This is a technical detail with real consequences: a visually appealing fluid scale can silently override a user's accessibility settings if the units are wrong.
 
-At a layout level, [Amit Sheen's argument for breakpoint-free UIs](/reading/2026-04/2026-04-24t085352-building-a-ui-without-breakpoints) reframes media queries as the appropriate tool for device capabilities and user preferences, such as `prefers-reduced-motion` or `prefers-contrast`, rather than for viewport widths. Reserving media queries for capability and preference queries makes accessibility accommodations more intentional and less likely to be accidentally overridden by layout breakpoints.
+Progressive enhancement is a related pressure point. [Navigating the age-old problem of checkmarks in UI with progressive enhancement](/reading/2026-06/2026-06-10t220929-navigating-the-age-old-problem-of-checkmarks-in-ui-with) contrasts a fragile JavaScript-driven custom dropdown implementation against the emerging CSS `::checkmark` pseudo-element. The argument is that CSS-native solutions are more amenable to progressive enhancement, meaning the interface degrades gracefully when a feature is unsupported rather than breaking entirely. Browser support gaps make this a live tradeoff rather than a settled question.
 
-Progressive enhancement connects these concerns. [Sunkanmi Fafowora's comparison of custom dropdown checkmarks](/reading/2026-06/2026-06-10t220929-navigating-the-age-old-problem-of-checkmarks-in-ui-with) shows how JavaScript-heavy custom components often degrade badly when scripting is unavailable or slow, while the newer CSS `::checkmark` pseudo-element keeps interactive semantics in the platform layer. The tradeoff is browser support gaps, which makes the case for progressive enhancement as a strategy: deliver accessible baseline behavior first and enhance where supported.
+Semantic HTML is another thread. [Your 'App' Could Have Been a Webpage](/reading/2026-07/2026-07-14t210058-your-app-could-have-been-a-webpage-so-i-fixed-it-for-you) and [Building Websites With LLMs](/reading/2026-05/2026-05-05t091632-building-websites-with-llms) both argue, from different starting points, that replacing JavaScript-heavy interactions with plain HTML and CSS produces simpler, more maintainable results. Plain HTML carries semantic meaning that assistive technologies can consume directly; JavaScript-constructed UIs routinely strip that meaning out and must re-add it manually through ARIA, which is error-prone.
+
+Media queries for user preferences represent a fourth dimension. [Building a UI Without Breakpoints](/reading/2026-04/2026-04-24t085352-building-a-ui-without-breakpoints) distinguishes between viewport breakpoints, which should be replaced by intrinsic layouts, and preference queries like `prefers-reduced-motion` or `prefers-contrast`, which remain the appropriate mechanism for responding to user accessibility settings. The distinction matters: collapsing all media queries into "legacy" thinking discards a tool that accessibility specifically depends on.
