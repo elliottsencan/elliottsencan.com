@@ -1,10 +1,10 @@
 ---
 title: Open source
 summary: >-
-  Open source spans infrastructure, tooling, security risk, and platform trust —
-  the cited sources collectively show it as a foundation for local AI, developer
-  tooling, and code forges, with its benefits shadowed by real supply-chain and
-  stewardship threats.
+  Open source spans a broad continuum of practice: shared infrastructure
+  maintained over decades, new tools released under permissive licenses, and
+  platforms that host the work — each carrying distinct sustainability,
+  security, and governance pressures.
 sources:
   - 2026-04/2026-04-24t093356-unsloth
   - >-
@@ -44,12 +44,12 @@ sources:
   - 2026-08/2026-08-10t220951-gvzdvclaudish-to-english
   - >-
     2026-08/2026-08-29t130644-reducing-zods-memory-footprint-by-an-order-of-magnitude
-compiled_at: '2026-07-09T23:26:48.803Z'
+compiled_at: '2026-10-19T22:13:01.027Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 10253
-    output_tokens: 1143
+    input_tokens: 10904
+    output_tokens: 1267
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -60,17 +60,18 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.047904
-last_source_added: '2026-08-29T20:06:44.872Z'
+  cost_usd: 0.051717
 ---
-Open source is both a distribution model and a social contract: code is public, forkable, and improvable by anyone, but that openness creates exposure and demands ongoing stewardship from maintainers and communities.
+Open source is less a single practice than a set of overlapping commitments: publishing source code, accepting contributions, and operating under licenses that let others use, modify, and redistribute the work. What the sources here collectively illustrate is that these commitments create real tensions — between transparency and security, between community governance and commercial pressure, between the ideal of shared maintenance and the reality of infrastructure held together by individuals.
 
-Several sources here illustrate open source as the substrate for local AI tooling. [Unsloth](/reading/2026-04/2026-04-24t093356-unsloth) is an open-weight fine-tuning library that delivers large performance gains over alternatives like FlashAttention 2. [oobabooga/textgen](/reading/2026-05/2026-05-05t071908-oobaboogatextgen) provides a fully offline, OpenAI-compatible web UI for running local LLMs, and [raiyanyahya/how-to-train-your-gpt](/reading/2026-05/2026-05-06t173338-raiyanyahyahow-to-train-your-gpt) is an annotated open-source textbook that walks developers through building a GPT from scratch. [vectorize-io/hindsight](/reading/2026-05/2026-05-03t173422-vectorize-iohindsight) contributes an open agent-memory system aimed at state-of-the-art benchmark performance, and the [CanItRun](/reading/2026-04/2026-04-29t173553-canitrun-can-my-gpu-run-this-llm) tool makes GPU compatibility with open-weight models legible without any proprietary service.
+Some of the clearest examples are tools where openness is the primary value proposition. [Radar](/reading/2026-05/2026-05-03t105238-radar-or-the-missing-open-source-kubernetes-ui) ships as a single Apache 2.0 binary with no cloud account required, positioning itself explicitly against the proprietary dashboard market. [Unsloth](/reading/2026-04/2026-04-24t093356-unsloth) makes LLM fine-tuning accessible at consumer hardware scale and publishes its custom kernels openly. [oobabooga/textgen](/reading/2026-05/2026-05-05t071908-oobaboogatextgen) provides fully offline local LLM inference with an OpenAI-compatible API. [Hindsight](/reading/2026-05/2026-05-03t173422-vectorize-iohindsight) open-sources a biomimetic agent memory system with reproducible benchmark results. These projects share a pattern: openness is used to establish trust, enable auditability, and allow users to run the software without depending on a vendor.
 
-Open source infrastructure tooling appears through [Radar](/reading/2026-05/2026-05-03t105219-radar-open-source-kubernetes-ui), an Apache 2.0 Kubernetes UI distributed as a single binary that replaces several kubectl-adjacent tools for platform teams. [jj-vcs/jj](/reading/2026-05/2026-05-31t164554-jj-vcsjj) is a Git-compatible open-source version control system, and gunnargray-dev/unicode-animations is a zero-dependency npm package under MIT. Smaller focused libraries in JavaScript get attention in [Seven Cool JS Libraries](/reading/2026-05/2026-05-12t165232-seven-cool-javascript-libraries-you-should-know-about), all open source and chosen for their narrow scope.
+But open publication creates an attack surface. [A supply-chain attack documented by Ars Technica](/reading/2026-04/2026-04-30t231634-supply-chain-attack-using-invisible-code-hits-github-and) involved 151 malicious npm and GitHub packages that encoded payloads in invisible Unicode variation-selector characters — undetectable to reviewers and static analysis tools but executable at runtime. The attack succeeded precisely because open repositories are trusted as transparent. A related concern appears in the critique of [OpenCode](/reading/2026-07/2026-07-20t215754-stop-using-opencode), which argues that the tool's open-source status did not prevent serious security vulnerabilities and a reckless default configuration that connects remote LLMs to a local shell.
 
-The openness that makes these projects useful also creates real attack surface. [A 2026 supply-chain attack](/reading/2026-04/2026-04-30t231634-supply-chain-attack-using-invisible-code-hits-github-and) seeded 151 malicious npm and GitHub packages with payloads hidden in invisible Unicode variation-selector characters, bypassing both code reviewers and static analysis tools. The attack illustrates a structural tension: open repositories make code inspectable in principle, but the volume and visual rendering of packages make inspection practically unreliable.
+License transparency does not automatically mean good maintenance. Daniel Stenberg's analysis of [curl's bug trajectory](/reading/2026-05/2026-05-02t094735-approaching-zero-bugs) shows that even a mature, well-scrutinized open-source project accumulates latent vulnerabilities at a steady rate, and that AI-assisted static analysis has not yet produced a measurable decline. Open source shifts quality responsibility onto maintainers and contributors; the tooling does not lift that burden automatically.
 
-Stewardship and platform trust are persistent concerns across the sources. [David Bushell's critique of GitHub](/reading/2026-05/2026-05-10t205349-github-is-sinking) argues reliability has declined sharply and recommends alternatives like Codeberg or Forgejo. [Mat Duggan's wishlist for a reimagined forge](/reading/2026-06/2026-06-23t231556-if-i-could-make-my-own-github) identifies structural gaps — stacked PRs, signed Actions, pre-commit remote CI — that no current host fully addresses. The critique of Ollama from [Sleeping Robots](/reading/2026-05/2026-05-05t071447-friends-dont-let-friends-use-ollama) is a case study in the tension between open-source origins and VC-driven product drift: Ollama obscured its llama.cpp dependency, introduced misleading naming, and launched a closed-source GUI.
+The hosting layer is its own dimension. [David Bushell's critique of GitHub](/reading/2026-05/2026-05-10t205349-github-is-sinking) argues that Microsoft's stewardship has degraded reliability and quality, and recommends migrating to Codeberg, Forgejo, or self-hosted forges. [Mat Duggan's wishlist](/reading/2026-06/2026-06-23t231556-if-i-could-make-my-own-github) adds concrete missing features: signed and offline-usable CI actions, stacked PRs as first-class objects, and a self-hostable unit smaller than GitHub Enterprise. Both pieces reflect a concern that the infrastructure underlying open source is itself becoming a single point of failure under a commercial operator.
 
-On the question of whether open-source tooling can eliminate software defects, [Daniel Stenberg's analysis of curl](/reading/2026-05/2026-05-02t094735-approaching-zero-bugs) is sobering. Even with AI-assisted static analysis layered on top of decades of open maintenance, vulnerability age and bugfix-rate data show no measurable approach toward zero latent bugs. Openness enables scrutiny; it does not guarantee it.
+Commercial pressure also shapes projects from within. The [critique of Ollama](/reading/2026-05/2026-05-05t071447-friends-dont-let-friends-use-ollama) traces how a project that began as a local-first tool obscured its llama.cpp dependency, introduced misleading model naming, launched a closed-source GUI, and pivoted toward a VC-backed cloud model. The open-source label persisted while the project's actual commitments shifted.
+
+Smaller library releases — [unicode-animations](/reading/2026-06/2026-06-17t075738-gunnargray-devunicode-animations), [Zod](/reading/2026-08/2026-08-29t130644-reducing-zods-memory-footprint-by-an-order-of-magnitude), the JavaScript libraries surveyed by [Neciu Dan](/reading/2026-05/2026-05-12t165232-seven-cool-javascript-libraries-you-should-know-about), [image-rs](/reading/2026-05/2026-05-14t151252-5-faster-fastblur-in-image-rs), [Jujutsu](/reading/2026-05/2026-05-31t164554-jj-vcsjj) — represent a different register of open source: focused, maintainer-driven tools where the license question is largely settled and the real work is technical quality. These projects illustrate that open source encompasses everything from hobbyist experiments to critical shared infrastructure, and that the governance and security challenges scale with adoption rather than intent.
