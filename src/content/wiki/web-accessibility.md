@@ -1,9 +1,9 @@
 ---
 title: Web accessibility
 summary: >-
-  Web accessibility spans technical decisions across CSS, typography, and HTML
-  structure that determine whether interfaces remain usable for all people,
-  regardless of device, ability, or preference.
+  Web accessibility spans semantic HTML, progressive enhancement, and CSS
+  practices that ensure interfaces remain usable regardless of browser
+  capability, assistive technology, or user preference.
 sources:
   - 2026-04/2026-04-24t085352-building-a-ui-without-breakpoints
   - 2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp
@@ -23,12 +23,12 @@ sources:
   - 2026-07/2026-07-16t052353-boundary-aware-styling-in-css
   - >-
     2026-07/2026-07-16t080520-the-descent-what-happened-to-the-frontend-while-you-werent
-compiled_at: '2026-06-22T07:23:15.859Z'
+compiled_at: '2026-11-03T00:46:22.331Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 4351
-    output_tokens: 549
+    input_tokens: 4877
+    output_tokens: 699
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -39,13 +39,16 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.021288
-last_source_added: '2026-07-16T15:05:20.763Z'
+  cost_usd: 0.025116
 ---
-Accessibility in web interfaces is not a single feature to bolt on but a consequence of many smaller technical decisions. Two areas where it surfaces repeatedly in CSS and typography work are unit choices and the handling of user preferences.
+Web accessibility is not a single technique but a set of interlocking decisions made across HTML structure, CSS, and JavaScript. The sources here touch it from several angles, and the common thread is that platform-native approaches tend to serve accessibility better than JavaScript-heavy workarounds.
 
-Fluid typography is a useful example. Using `clamp()` to scale font sizes across viewport widths produces smoother layouts, but the choice of unit matters for accessibility. [Adrian Bece's breakdown of CSS clamp](/reading/2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp) explains that viewport units in the preferred value of `clamp()` do not respond to the browser's base font size setting. Users who increase their default font size in browser preferences to improve readability will see no effect if sizes are expressed purely in `vw`. Using `rem`-based calculations, or mixing `rem` into the fluid formula, preserves that user control. This is not a minor edge case; it is the mechanism by which fluid typography either respects or silently overrides a user's explicit accessibility configuration.
+Progressive enhancement is the clearest expression of this. [Sunkanmi Fafowora's piece on checkmarks](/reading/2026-06/2026-06-10t220929-navigating-the-age-old-problem-of-checkmarks-in-ui-with) argues that the CSS `::checkmark` pseudo-element, despite patchy browser support, represents the right direction: a declarative, progressively enhanced alternative to fragile JavaScript-driven custom dropdowns that often break screen readers and keyboard navigation. The article is candid that browser support gaps mean the JavaScript path persists for now, but it frames that as a temporary cost.
 
-At a layout level, [Amit Sheen's argument for breakpoint-free UIs](/reading/2026-04/2026-04-24t085352-building-a-ui-without-breakpoints) reframes media queries as the appropriate tool for device capabilities and user preferences, such as `prefers-reduced-motion` or `prefers-contrast`, rather than for viewport widths. Reserving media queries for capability and preference queries makes accessibility accommodations more intentional and less likely to be accidentally overridden by layout breakpoints.
+Fluid typography introduces its own accessibility surface. [Adrian Bece's guide to CSS clamp](/reading/2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp) flags that using px units inside clamp() breaks user font-size preferences set in the browser. Rem units preserve those preferences; px units override them. This is a concrete failure mode that fluid-type implementations can introduce without deliberate attention, and it is one reason Bece recommends rem-based calculations throughout.
 
-Progressive enhancement connects these concerns. [Sunkanmi Fafowora's comparison of custom dropdown checkmarks](/reading/2026-06/2026-06-10t220929-navigating-the-age-old-problem-of-checkmarks-in-ui-with) shows how JavaScript-heavy custom components often degrade badly when scripting is unavailable or slow, while the newer CSS `::checkmark` pseudo-element keeps interactive semantics in the platform layer. The tradeoff is browser support gaps, which makes the case for progressive enhancement as a strategy: deliver accessible baseline behavior first and enhance where supported.
+Semantic HTML itself is an accessibility foundation. [Jim Nielsen](/reading/2026-05/2026-05-05t091632-building-websites-with-llms) and [Dan Q](/reading/2026-07/2026-07-14t210058-your-app-could-have-been-a-webpage-so-i-fixed-it-for-you) both argue from different angles that over-engineering interfaces with JavaScript imposes costs on users, and one of those costs is degraded accessibility: JavaScript-dependent interactions can fail for users with assistive technologies or constrained environments. Dan Q's case is especially pointed, having reverse-engineered an app that wrapped plain HTML in an Android shell, reintroducing the page as a lightweight webpage stripped of the app's tracking overhead.
+
+Media queries for user preferences are another access-layer concern. [Amit Sheen's breakpoints piece](/reading/2026-04/2026-04-24t085352-building-a-ui-without-breakpoints) recommends reserving media queries not for viewport widths but for device capabilities and user preferences such as prefers-reduced-motion and prefers-color-scheme. This framing positions those queries as accessibility hooks rather than layout tools.
+
+The broader pattern across these sources: accessibility is most durable when it follows platform primitives, uses units that respect user settings, and avoids JavaScript paths that can silently degrade.
