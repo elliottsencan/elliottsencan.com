@@ -1,10 +1,10 @@
 ---
 title: Observability
 summary: >-
-  Observability spans infrastructure, distributed systems, and AI agents — the
-  practice of making system internals legible through traces, events, and
-  feedback signals so engineers can understand, debug, and improve what they've
-  built.
+  Observability is the practice of making system internals legible through
+  traces, logs, and metrics — with current work extending that foundation into
+  feedback loops for AI agents, human-attention constraints for on-call work,
+  and unified dashboards for complex infrastructure.
 sources:
   - 2026-05/2026-05-03t105219-radar-open-source-kubernetes-ui
   - 2026-05/2026-05-03t105238-radar-or-the-missing-open-source-kubernetes-ui
@@ -21,12 +21,12 @@ sources:
   - 2026-06/2026-06-11t024225-testing-a-security-tool-like-it-can-hurt-people
   - 2026-06/2026-06-23t232444-repowise-devrepowise
   - 2026-08/2026-08-01t221438-in-house-llm-serving-at-netflix
-compiled_at: '2026-07-09T23:26:21.449Z'
+compiled_at: '2026-11-10T01:23:02.763Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 3618
-    output_tokens: 904
+    input_tokens: 3801
+    output_tokens: 832
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -37,17 +37,14 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.024414
-last_source_added: '2026-08-02T05:14:38.751Z'
+  cost_usd: 0.023883
 ---
-At its core, observability is the practice of making a system's internal state readable from its outputs. In traditional infrastructure, that means logs, metrics, and traces surfaced through tooling that consolidates what would otherwise require juggling many separate utilities. [Radar](/reading/2026-05/2026-05-03t105238-radar-or-the-missing-open-source-kubernetes-ui) is a concrete example: platform teams typically piece together kubectl and five or more other tools to get a coherent picture of a Kubernetes cluster, and Radar's pitch is to collapse that into a single binary with unified topology, events, Helm state, and audit views.
+The classical definition of observability is deceptively simple: given a system's outputs, can you determine its internal state? In practice, the question is always about tooling, signal design, and how much cognitive work you force onto the people watching. [SigNoz's distributed tracing guide](/reading/2026-06/2026-06-10t223404-how-to-read-distributed-traces-when-you-didnt-write-the-code) makes this concrete, walking through span anatomy, critical-path analysis, and N+1 staircase patterns as the vocabulary for reading unfamiliar code under production pressure. The guide assumes you will often be debugging systems you did not build, which is the normal case.
 
-Distributed tracing is the most structured form of infrastructure observability. A trace links spans across services, exposing the critical path and common failure patterns like N+1 query staircases. [SigNoz's guide](/reading/2026-06/2026-06-10t223404-how-to-read-distributed-traces-when-you-didnt-write-the-code) walks through reading those traces in unfamiliar codebases — span anatomy, how to identify the bottleneck, how to trace a slow span back to the responsible code. The practical skill matters because most engineers debug systems they didn't write.
+Kubernetes observability has its own tooling gap. [Radar](/reading/2026-05/2026-05-03t105238-radar-or-the-missing-open-source-kubernetes-ui) exists because platform teams typically stitch together kubectl plus several other tools to get a coherent view of cluster state. The tool collapses topology, events, Helm, GitOps, image inspection, and audit data into one interface, with no cloud account required. The same project is [listed on Product Hunt](/reading/2026-05/2026-05-03t105219-radar-open-source-kubernetes-ui) with the addition of live traffic and MCP for AI agents.
 
-Observability also has a human cost that raw tooling ignores. [Abby Malson](/reading/2026-05/2026-05-19t134831-finite-attention-why-burnout-isnt-your-fault-and-how) argues that on-call burnout follows directly from systems designed to maximize data output without accounting for how much human attention is finite. More signals without filtering doesn't improve legibility; it degrades it. The answer isn't less observability but smarter surface area — push-based alerting that delivers only relevant context when needed.
+For AI systems specifically, observability is not yet solved by traces alone. [Harrison Chase at LangChain](/reading/2026-05/2026-05-10t140531-agent-observability-needs-feedback-to-power-learning) argues that traces are inert without feedback signals attached — user ratings, indirect behavioral signals, LLM-as-judge scores, and deterministic rule outputs. Without that feedback layer, you can see what an agent did but cannot systematically improve it. The [Speakeasy AI control plane overview](/reading/2026-05/2026-05-09t110721-ai-control-plane-architecture-and-vendors) frames observability as one pillar of a broader governance layer that also covers identity, policy enforcement, and tool routing across every AI system in an enterprise.
 
-For AI agents, observability gains a second dimension. Traces of agent runs are necessary but not sufficient. [Harrison Chase at LangChain](/reading/2026-05/2026-05-10t140531-agent-observability-needs-feedback-to-power-learning) argues that attaching feedback signals to traces — user ratings, indirect behavioral signals, LLM-as-judge evaluations, and deterministic rules — is what converts observability into a learning loop. Without feedback, you can see what an agent did but not whether it was right. The [AI control plane architecture](/reading/2026-05/2026-05-09t110721-ai-control-plane-architecture-and-vendors) described by Speakeasy makes observability a first-class governance concern: every agent action and system call should be traceable and policy-auditable across the enterprise.
+On-call observability has a human cost that pure instrumentation cannot address. [Abby Malson](/reading/2026-05/2026-05-19t134831-finite-attention-why-burnout-isnt-your-fault-and-how) argues that systems designed to maximize data output without accounting for human attention limits cause burnout structurally, and proposes push-based multi-bot architectures that surface only relevant context. The implication is that more data is not better observability; relevant, timely signals are.
 
-A related pressure appears in analytics stacks built on top of agents. [Ayush Gupta's critique of Anthropic's agentic analytics work](/reading/2026-06/2026-06-04t194416-what-anthropic-got-right-about-agentic-analytics-and-got) notes that high accuracy in that setting required months of data engineering and warehouse reshaping most teams can't afford — meaning observability of AI pipelines is only as good as the underlying data infrastructure.
-
-Finally, observability applies to security tooling too. [Emphere's engineering post](/reading/2026-06/2026-06-11t024225-testing-a-security-tool-like-it-can-hurt-people) describes building a container security platform where the system must fail loudly and explicitly when it can't be certain — abstaining rather than overclaiming. That's observability applied to the tool itself: making the confidence and uncertainty of a security signal legible, not just the signal.
+[Anton Zaides's engineering rules](/reading/2026-06/2026-06-10t073045-the-unwritten-laws-of-software-engineering) note that rollback should precede debugging during incidents, treating observability as a prerequisite for action rather than an end in itself. [Netflix's LLM serving writeup](/reading/2026-08/2026-08-01t221438-in-house-llm-serving-at-netflix) surfaces the same theme at infrastructure scale, where deployment strategies and batching decisions only make sense when you can observe throughput and latency precisely.
