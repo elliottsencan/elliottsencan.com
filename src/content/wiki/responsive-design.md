@@ -1,9 +1,10 @@
 ---
 title: Responsive design
 summary: >-
-  Responsive design is shifting away from viewport breakpoints toward intrinsic,
-  component-aware CSS — fluid sizing, container queries, and platform primitives
-  that let layouts and typography adapt without media-query thresholds.
+  Modern responsive design is shifting from viewport breakpoints toward
+  intrinsic, component-aware layouts using container queries, fluid clamp()
+  values, and CSS primitives that let components respond to their own context
+  rather than the page's dimensions.
 sources:
   - 2026-04/2026-04-24t085352-building-a-ui-without-breakpoints
   - 2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp
@@ -18,12 +19,12 @@ sources:
   - >-
     2026-06/2026-06-30t213959-why-css-style-queries-are-a-bigger-deal-than-you-think
   - 2026-07/2026-07-16t052353-boundary-aware-styling-in-css
-compiled_at: '2026-07-09T23:28:32.511Z'
+compiled_at: '2026-11-24T04:02:19.810Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 3679
-    output_tokens: 658
+    input_tokens: 3835
+    output_tokens: 654
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -34,13 +35,12 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.020907
-last_source_added: '2026-07-16T12:23:53.956Z'
+  cost_usd: 0.021315
 ---
-The classic responsive design model, built on viewport-width breakpoints and media queries, is under pressure from a more capable CSS platform. [Building a UI Without Breakpoints](/reading/2026-04/2026-04-24t085352-building-a-ui-without-breakpoints) argues the breakpoint model was always a workaround: modern CSS gives authors intrinsic layout tools, container queries, and container units so that components adapt to their own available space rather than the viewport's. Media queries survive in this picture, but their scope narrows to genuine device capabilities and user preferences, not layout thresholds.
+The viewport-breakpoint model that dominated responsive design for over a decade is being displaced by a more component-centric approach. [Building a UI Without Breakpoints](/reading/2026-04/2026-04-24t085352-building-a-ui-without-breakpoints) argues that media queries should be reserved for device capabilities and user preferences, while layout and sizing decisions belong to intrinsic CSS — container queries, `min()`/`max()`/`clamp()`, and container units — so components adapt to whatever space they actually occupy.
 
-Typography is a central case. [Modern Fluid Typography Using CSS Clamp](/reading/2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp) details how `clamp()` produces font sizes that scale continuously between two viewport widths, replacing the stepped jumps of breakpoint-keyed type rules. The math maps minimum and maximum font sizes to viewport bounds, and the piece flags an accessibility concern: using `rem`-based clamp values preserves user font-size preferences in a way that `px`-based equivalents do not. [Utopia's type scale graph](/reading/2026-05/2026-05-05t183935-type-scale-graphs) makes this fluid scale legible by plotting every step across the viewport range, revealing whether the relationships within a modular scale hold at all sizes.
+Fluid typography sits at the center of this shift. [Modern Fluid Typography Using CSS Clamp](/reading/2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp) covers how `clamp()` replaces stepped font-size breakpoints with a continuous scale between a minimum and maximum, and flags an accessibility concern: mixing `rem` with viewport units can override user browser font-size preferences. [Utopia's type scale graph view](/reading/2026-05/2026-05-05t183935-type-scale-graphs) makes the math more legible by plotting a fluid modular scale across the full viewport range, surfacing relationships that are hard to reason about in raw CSS.
 
-The broader CSS platform expansion reinforces the trend. [The Great CSS Expansion](/reading/2026-04/2026-04-30t231909-the-great-css-expansion) documents how anchor positioning, scroll-driven animations, view transitions, and native popovers now replace JavaScript libraries that previously handled layout and interaction work. [CSS Style Queries](/reading/2026-06/2026-06-30t213959-why-css-style-queries-are-a-bigger-deal-than-you-think) extend this further: components can now react to parent CSS custom properties as stateful design tokens, removing the need for preprocessor logic to manage theming and state. Taken together, these features push responsive behavior into the component and property layers rather than the document-width layer.
+Container queries extend the same thinking to components. [CSS Style Queries](/reading/2026-06/2026-06-30t213959-why-css-style-queries-are-a-bigger-deal-than-you-think) have reached Baseline support, letting components respond to parent CSS custom properties as stateful design tokens — a pattern that previously required Sass or build tooling. [Boundary-aware styling](/reading/2026-07/2026-07-16t052353-boundary-aware-styling-in-css) pushes further, repurposing the `view()` scroll-driven animation function to style elements based on their proximity to container edges without any JavaScript.
 
-Structurally, [Jim Nielsen's case for linked HTML pages](/reading/2026-05/2026-05-05t091632-building-websites-with-llms) touches responsive design obliquely: using CSS cross-document view transitions to stitch separate pages together avoids the JavaScript complexity that often complicates responsive progressive enhancement, keeping each page simple and self-contained.
+Broader CSS capability growth supports this direction. [The Great CSS Expansion](/reading/2026-04/2026-04-30t231909-the-great-css-expansion) documents how anchor positioning, popovers, and view transitions now replace large JavaScript libraries, reducing the surface area where layout logic had to live outside CSS entirely. [Cross-document view transitions](/reading/2026-05/2026-05-05t091632-building-websites-with-llms) similarly allow separate HTML pages to feel continuous without JavaScript-managed state, reinforcing that the platform itself is absorbing responsibilities that once required scripting.
