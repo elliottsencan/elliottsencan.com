@@ -1,9 +1,10 @@
 ---
 title: AI infrastructure
 summary: >-
-  The systems, abstractions, and operational layers that make AI models usable
-  at scale, from compute and caching to routing, governance, agent hosting, and
-  credential management.
+  The systems, abstractions, and economic pressures beneath modern AI
+  deployments: inference serving, caching, routing, agent hosting, control
+  planes, and the storage and networking layers that determine cost and latency
+  at scale.
 sources:
   - 2026-04/2026-04-24t162154-he-came-he-saw-he-cooked
   - >-
@@ -37,12 +38,12 @@ sources:
   - 2026-07/2026-07-09t161342-ai-2040-plan-a
   - 2026-08/2026-08-01t221438-in-house-llm-serving-at-netflix
   - 2026-08/2026-08-29t224355-how-llms-actually-work
-compiled_at: '2026-07-09T23:17:09.653Z'
+compiled_at: '2026-11-24T03:51:07.334Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 6668
-    output_tokens: 1165
+    input_tokens: 7001
+    output_tokens: 1325
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -53,15 +54,18 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.037479
-last_source_added: '2026-08-30T05:43:55.936Z'
+  cost_usd: 0.040878
 ---
-AI infrastructure spans the full stack beneath the model itself: the hardware and networking that serve tokens cheaply, the hosting abstractions that let agents run reliably, the routing and caching layers that manage cost and latency, and the governance and credential plumbing that makes all of it safe to operate in production.
+AI infrastructure names the layer between raw model weights and working product: the hardware, software, and architectural decisions that determine whether a deployment is fast, cheap, and governable. The sources here span that stack from silicon to governance.
 
-On the compute and serving side, inference is becoming its own discipline. [Philip Kiely's breakdown of inference engineering](/reading/2026-06/2026-06-21t130559-what-is-inference-engineering) covers quantization, speculative decoding, parallelism, and disaggregation as first-class techniques rather than implementation details. A recurring theme across sources is that prefill is expensive, and caching is the main lever. Everpure argues that treating the KV cache as a persistent shared data asset, injected via RDMA rather than recomputed, can cut prefill costs by up to 20x [see the cost analysis](/reading/2026-05/2026-05-20t073125-how-to-cut-llm-inference-costs-with-kv-caching) and their [granular-prompt caching extension](/reading/2026-05/2026-05-20t073144-maximizing-llm-efficiency-granular-prompt-caching-with-pure). Pure Storage's KVA takes this further by persisting attention states across sessions on NFS and S3, delivering the same 20x throughput improvement over standard Ethernet [without model changes](/reading/2026-05/2026-05-20t073157-20x-faster-inference-with-the-first-kv-cache-for-s3-and-nfs).
+Inference serving is the most operationally visible layer. [Netflix's in-house LLM platform](/reading/2026-08/2026-08-01t221438-in-house-llm-serving-at-netflix) chose vLLM over TensorRT-LLM for engine flexibility and runs OpenAI-compatible APIs with batched constrained decoding, treating inference as a first-class engineering discipline. [Gergely Orosz's interview with a Baseten engineer](/reading/2026-06/2026-06-21t130559-what-is-inference-engineering) formalizes this as "inference engineering" — a specialization covering quantization, speculative decoding, parallelism, and disaggregation. The common thread is that inference is not a commodity; every technique represents a real cost-latency tradeoff.
 
-Model routing sits adjacent to caching as a cost-control mechanism. DigitalOcean's Inference Router uses a 30B MoE model to match requests to the best-fit model for cost, latency, or quality [at runtime](/reading/2026-06/2026-06-21t192306-how-we-built-digitalocean-inference-router). The companion Arch-Router research proposes a compact 1.5B preference-aligned routing model that can accommodate new models without retraining [via domain-action mapping](/reading/2026-06/2026-06-21t192506-arch-router-aligning-llm-routing-with-human-preferences). Meanwhile the pricing floor for tokens has collapsed, with a 75x gap between cheapest and most expensive frontier models, making provider-agnostic routing a structural necessity [rather than an optimization](/reading/2026-05/2026-05-31t072101-the-ai-model-pricing-war-is-here-and-your-margins-depend-on).
+KV caching sits at the center of inference cost reduction. Three Everpure posts argue that recomputing attention states per request is wasteful. [Persistent KV caches on NFS and S3](/reading/2026-05/2026-05-20t073157-20x-faster-inference-with-the-first-kv-cache-for-s3-and-nfs) can cut prefill costs by up to 20x; [granular-prompt caching](/reading/2026-05/2026-05-20t073144-maximizing-llm-efficiency-granular-prompt-caching-with-pure) segments prompts into reusable chunks so only changed tokens are processed. [The conceptual case for this](/reading/2026-05/2026-05-20t073125-how-to-cut-llm-inference-costs-with-kv-caching) frames the KV cache as a data asset to be managed, not a side effect to be discarded. The KV cache's mechanics are grounded further in [a plain-language explanation of transformer internals](/reading/2026-08/2026-08-29t224355-how-llms-actually-work).
 
-Agent hosting introduces a different class of infrastructure problems. Anthropic's Managed Agents architecture separates the agent harness, session log, and sandbox into stable, swappable interfaces so that model upgrades don't break running clients [by design](/reading/2026-04/2026-04-27t114138-scaling-managed-agents-decoupling-the-brain-from-the-hands). Governance sits on top of that: the enterprise AI control plane unifies identity, policy enforcement, tool routing, and observability across every agent and system [in a single layer](/reading/2026-05/2026-05-09t110721-ai-control-plane-architecture-and-vendors), and MCP has emerged as the protocol layer that makes auditable, policy-aware proxying possible at scale [between agents and resources](/reading/2026-06/2026-06-02t212937-no-mcp-is-definitely-not-dead-the-nsa-agrees). Credential management is a related but undersolved problem; Latchkey handles it by encrypting API tokens on-device so agents authenticate against external services without ever seeing raw credentials [locally](/reading/2026-06/2026-06-23t212629-latchkey-credential-layer-for-local-ai-agents).
+Routing is an emerging peer to caching as a cost lever. [DigitalOcean's Inference Router](/reading/2026-06/2026-06-21t192306-how-we-built-digitalocean-inference-router) uses a 30B MoE model to match each request to the best available model for the given cost, latency, or quality constraint. The [Arch-Router paper](/reading/2026-06/2026-06-21t192506-arch-router-aligning-llm-routing-with-human-preferences) proposes a 1.5B preference-aligned routing model that maps queries to domains without retraining when new models are added. With a 75x spread between the cheapest and most expensive frontier APIs, [provider-agnostic architecture](/reading/2026-05/2026-05-31t072101-the-ai-model-pricing-war-is-here-and-your-margins-depend-on) is now a margin question, not an engineering preference.
 
-At the opposite end of the complexity axis, some builders are deliberately shedding infrastructure. zerostack's agent memory uses plain Markdown files and regex retrieval, no vector store, no daemon, no embeddings, motivated by RAM constraints and provider neutrality [rather than naivety](/reading/2026-06/2026-06-11t023620-designing-memory-for-zerostack-plain-files-no-vector-store). The Ollama critique makes a parallel point from the local inference side: defaults and packaging choices that obscure llama.cpp dependencies and degrade performance can impose real infrastructure debt [on practitioners](/reading/2026-05/2026-05-05t071447-friends-dont-let-friends-use-ollama). Infrastructure simplicity is its own design goal, not a fallback.
+Above the inference layer, agent hosting introduces its own infrastructure concerns. [Anthropic's Managed Agents](/reading/2026-04/2026-04-27t114138-scaling-managed-agents-decoupling-the-brain-from-the-hands) separates the agent harness, session log, and sandbox into stable interfaces so the runtime can evolve without breaking clients. The [AI control plane](/reading/2026-05/2026-05-09t110721-ai-control-plane-architecture-and-vendors) adds a governance layer: unified identity, policy enforcement, tool routing, and observability across all agents. [Latchkey](/reading/2026-06/2026-06-23t212629-latchkey-credential-layer-for-local-ai-agents) addresses credential management specifically, keeping tokens encrypted on-device so agents authenticate without ever seeing raw secrets.
+
+Not all infrastructure needs are complex. [Zerostack's memory subsystem](/reading/2026-06/2026-06-11t023157-memory-design-zerostack) stores agent state in plain Markdown files with regex retrieval, skipping vector stores entirely on the grounds that minimal RAM and provider neutrality matter more than semantic search precision. Meanwhile, [Zetaphor's critique of Ollama](/reading/2026-05/2026-05-05t071447-friends-dont-let-friends-use-ollama) illustrates how infrastructure choices carry organizational weight: abstraction layers that obscure dependencies and VC-driven cloud pivots can undermine local-first commitments that users originally chose the tool for.
+
+At the furthest horizon, [the AI 2040 policy scenario](/reading/2026-07/2026-07-09t161342-ai-2040-plan-a) and [a16z's orbital data center framing](/reading/2026-06/2026-06-21t231454-spacex-and-the-sentient-sun) both treat physical compute capacity as a geopolitical variable, not just an engineering one. Infrastructure at that scale is inseparable from questions of who controls the hardware and where it sits.

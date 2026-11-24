@@ -1,9 +1,9 @@
 ---
 title: Production systems
 summary: >-
-  The engineering decisions that determine how software behaves under real load,
-  covering durability, observability, testing discipline, performance
-  constraints, and the operational costs of failure.
+  The engineering concerns that surface when software runs at scale in live
+  environments: reliability, observability, failure recovery, performance, and
+  the operational discipline those properties demand.
 sources:
   - >-
     2026-04/2026-04-29t172018-how-to-build-scalable-web-apps-with-openais-privacy-filter
@@ -41,12 +41,12 @@ sources:
     2026-07/2026-07-15t030225-ban-commitstransactions-using-ast-analysis-and-linters
   - 2026-07/2026-07-19t073255-its-always-tcpnodelay-every-damn-time
   - 2026-08/2026-08-01t221438-in-house-llm-serving-at-netflix
-compiled_at: '2026-07-09T23:27:48.881Z'
+compiled_at: '2026-11-24T04:01:37.508Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
   usage:
-    input_tokens: 6166
-    output_tokens: 1033
+    input_tokens: 6701
+    output_tokens: 1137
     cache_creation_input_tokens: 0
     cache_read_input_tokens: 0
   model: claude-sonnet-4-6
@@ -57,19 +57,16 @@ compile_cost:
     cache_read_per_million: 0.3
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
-  cost_usd: 0.033993
-last_source_added: '2026-08-02T05:14:38.751Z'
+  cost_usd: 0.037158
 ---
-Production systems are where abstractions meet reality. The gap between what software does in development and what it does under live load is where most interesting engineering problems live, and the sources here circle that gap from several angles.
+Production systems expose the gap between software that works in development and software that holds up under real load, real failures, and real users. The sources here cluster around four recurring concerns: failure recovery, observability, performance constraints, and the unglamorous discipline of keeping things running.
 
-Durability is one axis. [Temporal](/reading/2026-04/2026-04-30t231511-temporal) persists workflow state at every step so distributed applications recover from failures automatically. [Jack Vanlightly's taxonomy](/reading/2026-05/2026-05-01t112302-the-three-durable-function-forms) maps durable execution into three forms — stateless functions, sessions, and actors — and shows how Temporal, Restate, DBOS, and Resonate each implement them. [Depot's CI orchestrator](/reading/2026-05/2026-05-19t110000-building-ci-with-lambda-durable-functions) applies the same principle differently, using AWS Lambda durable functions to run a stateful, checkpointed workflow scheduler without keeping a long-lived process alive.
+Failure recovery is the most fundamental. [Temporal](/reading/2026-04/2026-04-30t231511-temporal) persists workflow state at every step so distributed applications recover automatically without manual reconciliation. [Jack Vanlightly's taxonomy](/reading/2026-05/2026-05-01t112302-the-three-durable-function-forms) maps this idea across stateless functions, sessions, and actors, showing how platforms like Temporal, Restate, DBOS, and Resonate implement different points on a behavior-state continuum. [Depot CI](/reading/2026-05/2026-05-19t110000-building-ci-with-lambda-durable-functions) applies the same pattern to CI orchestration, using AWS Lambda durable functions and callback-driven coordination to run a stateful scheduler without keeping a long-lived process alive.
 
-Failure modes in production are rarely dramatic. The GitHub merge queue bug described by [Trunk](/reading/2026-05/2026-05-03t150555-what-happens-if-a-merge-queue-builds-on-the-wrong-commit) silently deleted thousands of lines from main branches because temp branches were built off the wrong base commit. [The Unwritten Laws of Software Engineering](/reading/2026-06/2026-06-10t073045-the-unwritten-laws-of-software-engineering) draws the same lesson in principle: roll back before debugging, and treat every external dependency as a future outage.
+Observability in production means more than collecting traces. [SigNoz's guide](/reading/2026-06/2026-06-10t223404-how-to-read-distributed-traces-when-you-didnt-write-the-code) covers span anatomy, critical-path analysis, and N+1 staircase patterns as tools for reading unfamiliar systems. [LangChain's Harrison Chase](/reading/2026-05/2026-05-10t140531-agent-observability-needs-feedback-to-power-learning) goes further: for agentic systems, traces without attached feedback signals don't improve anything. The learning loop requires connecting user ratings, indirect behavior signals, and deterministic rules back to the traces that generated them.
 
-Observability is the mechanism for understanding what actually happened. [Distributed traces](/reading/2026-06/2026-06-10t223404-how-to-read-distributed-traces-when-you-didnt-write-the-code) let engineers read unfamiliar codebases by examining span anatomy and critical-path analysis rather than source code alone. [LangChain's Harrison Chase](/reading/2026-05/2026-05-10t140531-agent-observability-needs-feedback-to-power-learning) extends this: traces alone don't improve agentic systems; feedback signals attached to traces are what turn observability into a learning loop.
+Performance constraints in production are rarely where engineers expect them. [Colin Breck](/reading/2026-06/2026-06-30t185207-when-impressive-performance-gains-do-not-matter) identifies three reasons an order-of-magnitude improvement can still change nothing: attention thresholds, discrete capacity increments, and pipeline backpressure. Meanwhile, [Marc Brooker](/reading/2026-07/2026-07-19t073255-its-always-tcpnodelay-every-damn-time) points to a subtler performance trap: Nagle's algorithm interacting with delayed ACKs silently kills latency on modern datacenter hardware, and TCP_NODELAY should simply be the default. At the LLM serving layer, [Netflix's platform team](/reading/2026-08/2026-08-01t221438-in-house-llm-serving-at-netflix) chose vLLM over TensorRT-LLM and built an in-house stack covering engine selection, model packaging, and batched constrained decoding, while [Everpure's KV cache work](/reading/2026-05/2026-05-20t073125-how-to-cut-llm-inference-costs-with-kv-caching) argues that treating attention states as a persistent shared asset rather than recomputing them can cut prefill costs by up to 20x.
 
-Testing discipline connects staging and production concerns. [Currents](/reading/2026-05/2026-05-15t120337-playwright-testing-in-staging-vs-production) provides a decision framework for splitting Playwright tests between environments, including the operational costs of testing in production. [Emphere](/reading/2026-06/2026-06-11t024225-testing-a-security-tool-like-it-can-hurt-people) takes a harder line with their container security tool, using red runs that prove the system fails loudly when it overclaims certainty.
+Operational discipline shows up in smaller decisions that compound. [Playwright testing guidance](/reading/2026-05/2026-05-15t120337-playwright-testing-in-staging-vs-production) draws a practical boundary between which test flows belong in staging and which require production. [The Trunk post on merge queues](/reading/2026-05/2026-05-03t150555-what-happens-if-a-merge-queue-builds-on-the-wrong-commit) shows how a single architectural choice — never pushing temp branches to main — insulated one team from a GitHub bug that silently deleted thousands of lines from other repos. [Anton Zaides](/reading/2026-06/2026-06-10t073045-the-unwritten-laws-of-software-engineering) distills the same intuition into rules: roll back before debugging, treat every external dependency as a future outage. [Emphere's testing approach](/reading/2026-06/2026-06-11t024225-testing-a-security-tool-like-it-can-hurt-people) extends this to correctness guarantees, using red runs that prove a system fails loudly when it overclaims rather than silently emitting wrong answers.
 
-Performance has its own traps. [Colin Breck](/reading/2026-06/2026-06-30t185207-when-impressive-performance-gains-do-not-matter) identifies three constraints — attention thresholds, discrete capacity increments, and pipeline backpressure — that explain why order-of-magnitude improvements often fail to change outcomes. [Linear's architecture](/reading/2026-06/2026-06-11t111011-hows-linear-so-fast-a-technical-breakdown) illustrates the other side: local-first IndexedDB sync, optimistic updates, and aggressive code splitting compound into perceived near-instant performance. LLM inference has its own cost dynamics; [KV caching](/reading/2026-05/2026-05-20t073125-how-to-cut-llm-inference-costs-with-kv-caching) treated as a persistent shared asset rather than a per-request computation can cut prefill costs by up to 20x.
-
-Configuration correctness is an underrated production concern. [YAML's Norway problem](/reading/2026-05/2026-05-18t113714-yaml-thats-norway-problem) — where the country code NO parses as false — persists in popular libraries a decade after the spec fixed it, illustrating how configuration formats carry silent failure modes into production deployments.
+Across all of this, the through-line is the same: production surfaces assumptions that development conceals, and the engineering work is building systems that survive contact with reality.
