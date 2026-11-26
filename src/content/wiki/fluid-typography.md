@@ -13,6 +13,7 @@ sources:
   - 2026-05/2026-05-06t163329-multi-stroke-text-effect-in-css
   - >-
     2026-06/2026-06-30t213959-why-css-style-queries-are-a-bigger-deal-than-you-think
+  - 2026-11/2026-11-26t125554-css-clamp-calculator-fluid-typography-type-scale
 aliases:
   - fluid-typographies
 compiled_at: '2026-07-09T23:22:25.953Z'
@@ -32,6 +33,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.019578
+last_source_added: '2026-11-26T20:55:54.907Z'
 ---
 Fluid typography replaces the old pattern of defining separate font sizes at discrete breakpoints with a continuous scaling function. The core tool is CSS `clamp()`, which takes a minimum value, a preferred value (usually a viewport-relative expression), and a maximum value. [Adrian Bece's deep dive](/reading/2026-04/2026-04-24t085927-modern-fluid-typography-using-css-clamp) covers the math in detail: the preferred value is derived from two known font sizes at two known viewport widths, producing a linear interpolation that fits naturally inside `clamp()`. He also flags an accessibility concern worth noting: using `rem` units for the minimum and maximum values respects user font-size preferences in a way that `px` values do not.
 

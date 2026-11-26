@@ -25,6 +25,7 @@ sources:
   - >-
     2026-07/2026-07-14t210058-your-app-could-have-been-a-webpage-so-i-fixed-it-for-you
   - 2026-08/2026-08-10t220951-gvzdvclaudish-to-english
+  - 2026-11/2026-11-26t125554-css-clamp-calculator-fluid-typography-type-scale
 compiled_at: '2026-07-09T23:21:01.735Z'
 compiled_with: claude-sonnet-4-6
 compile_cost:
@@ -42,7 +43,7 @@ compile_cost:
     cache_write_5m_per_million: 3.75
     priced_at: '2026-04-30'
   cost_usd: 0.029616
-last_source_added: '2026-08-11T05:09:51.080Z'
+last_source_added: '2026-11-26T20:55:54.907Z'
 ---
 The category is broad almost to the point of uselessness, but a few coherent threads run through the sources here. The first is local-first or self-hosted tooling that reduces dependence on cloud vendors. [Unsloth](/reading/2026-04/2026-04-24t093356-unsloth) delivers up to 30x faster LLM fine-tuning with 90% less memory by writing custom kernels, letting practitioners run training on consumer hardware. [CanItRun](/reading/2026-04/2026-04-29t173553-canitrun-can-my-gpu-run-this-llm) takes the prerequisite step further, calculating before you even start whether a given GPU's VRAM can handle a specific model and at what quantization level. [openagentd](/reading/2026-05/2026-05-03t173528-lthoanggopenagentd) and [Helply](/reading/2026-05/2026-05-14t222554-piyush-mishra-00helply) both run locally on the desktop, the former as a cockpit for multi-agent teams and the latter as a meeting assistant with local LLM backend support.
 
